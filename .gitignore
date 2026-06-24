@@ -1,0 +1,32 @@
+# ── Credentials — NE JAMAIS PUSHER ──
+*.json
+freeride-automation-*.json
+
+# ── Photos riders (données personnelles) ──
+PPRIDERS/
+
+# ── Données / fichiers générés ──
+output/
+flags/
+*.xlsx
+*.xls
+
+# ── Cache Python ──
+__pycache__/
+*.pyc
+*.pyo
+
+# ── macOS ──
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Logs / divers ──
+*.log
+venv/
+.env
+env/
+
+# ── Fichier script temporaire ──
+download_logos.command
+rebuild_riders.py

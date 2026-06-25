@@ -2,6 +2,9 @@
 *.json
 freeride-automation-*.json
 
+# ── Config locale (IDs / URLs privées) ──
+config.py
+
 # ── Photos riders (données personnelles) ──
 PPRIDERS/
 

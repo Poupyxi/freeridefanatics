@@ -65,22 +65,57 @@ HTML = r"""<!DOCTYPE html>
 
   .layout {
     display: grid;
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 380px 1fr;
     gap: 0;
     height: calc(100vh - 65px);
   }
 
   /* ── PANNEAU GAUCHE ── */
-  .panel {
-    background: #222;
-    border-right: 1px solid #333;
-    overflow-y: auto;
-    padding: 20px;
+  .panel-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    background: #222;
+    border-right: 1px solid #333;
+    overflow: hidden;
+  }
+  .panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 20px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-content: start;
+    align-items: stretch;
+  }
+  .panel-actions {
+    padding: 12px 20px 16px;
+    background: #222;
+    border-top: 1px solid #2e2e2e;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
+  /* ── Reset par section ── */
+  .section-reset-btn {
+    font-size: 0.78rem; background: transparent; border: none;
+    color: #aaa; cursor: pointer; padding: 2px 7px; border-radius: 4px;
+    transition: color .15s, background .15s; margin-right: 2px; flex-shrink: 0;
+  }
+  .section-reset-btn:hover { color: #C8D400; background: rgba(200,212,0,0.08); }
+
+  /* ── Undo button ── */
+  .btn-undo {
+    background: transparent; border: 1px solid #2e2e2e; border-radius: 6px;
+    color: #555; font-size: 0.78rem; padding: 7px 12px; cursor: pointer;
+    transition: all .15s; text-align: center; letter-spacing: 0;
+  }
+  .btn-undo:hover:not(:disabled) { border-color: #C8D400; color: #C8D400; }
+  .btn-undo:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ── Collapsible sections ── */
   .section-title {
     font-size: 0.7rem;
     letter-spacing: 2px;
@@ -89,29 +124,119 @@ HTML = r"""<!DOCTYPE html>
     margin-bottom: 8px;
     font-weight: 700;
   }
+  .collapsible {
+    border: 1px solid #2e2e2e;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .collapsible-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    background: #1e1e1e;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s;
+  }
+  .collapsible-header:hover { background: #252525; }
+  .collapsible-header .section-title { margin-bottom: 0; }
+  .collapsible-arrow {
+    font-size: 0.65rem;
+    color: #555;
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+  .collapsible-body {
+    display: none;
+    padding: 12px;
+    border-top: 1px solid #2e2e2e;
+  }
+  .collapsible.open .collapsible-body { display: block; }
 
   select, input[type=range] { width: 100%; }
 
   select {
-    background: #333;
+    background: #2a2a2a;
     color: #eee;
     border: 1px solid #444;
     border-radius: 6px;
-    padding: 10px 12px;
-    font-size: 0.95rem;
+    padding: 4px 6px;
+    font-size: 0.9rem;
     cursor: pointer;
-    appearance: none;
+    width: 100%;
   }
   select:focus { outline: none; border-color: #C8D400; }
+  select option { padding: 6px 8px; }
+  select option:checked, select option:hover {
+    background: #C8D400;
+    color: #111;
+  }
+
+  /* ── Rider filters ── */
+  .rider-filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .search-input {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: #eee;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: #C8D400; }
+  .search-input::placeholder { color: #555; }
+  .gender-toggle {
+    display: flex;
+    background: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .gender-btn {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: #555;
+    border: none;
+    background: transparent;
+    transition: all .15s;
+    letter-spacing: 0.5px;
+  }
+  .gender-btn:hover { color: #aaa; }
+  .gender-btn.active-f { background: #1a003a; color: #c084fc; }
+  .gender-btn.active-m { background: #001a2a; color: #60c0f0; }
+  .gender-separator { width: 1px; background: #3a3a3a; }
 
   .slider-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 6px;
   }
-  .slider-label { font-size: 0.82rem; color: #aaa; width: 120px; flex-shrink: 0; }
-  .slider-val { font-size: 0.82rem; color: #C8D400; width: 42px; text-align: right; flex-shrink: 0; }
+  .slider-label { font-size: 0.8rem; color: #aaa; width: 105px; flex-shrink: 0; }
+  input.slider-val {
+    font-size: 0.82rem; color: #C8D400; width: 50px; text-align: right; flex-shrink: 0;
+    background: transparent; border: 1px solid transparent; border-radius: 4px;
+    outline: none; padding: 2px 4px; cursor: text; font-family: inherit;
+    transition: border-color .15s, background .15s;
+    -moz-appearance: textfield;
+  }
+  input.slider-val:hover { border-color: #3a3a3a; }
+  input.slider-val:focus { border-color: #C8D400; background: #1a1a1a; color: #fff; }
+  input.slider-val::-webkit-outer-spin-button,
+  input.slider-val::-webkit-inner-spin-button { -webkit-appearance: none; }
   input[type=range] {
     accent-color: #C8D400;
     flex: 1;
@@ -284,6 +409,98 @@ HTML = r"""<!DOCTYPE html>
     margin-top: 8px;
     display: none;
   }
+
+  /* ── Edition inline ── */
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 5px 8px;
+    align-items: start;
+  }
+  .edit-grid label {
+    font-size: 0.73rem;
+    color: #777;
+    text-align: right;
+    padding-top: 6px;
+  }
+  .edit-input {
+    background: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    border-radius: 5px;
+    padding: 5px 8px;
+    color: #eee;
+    font-size: 0.82rem;
+    outline: none;
+    width: 100%;
+    transition: border-color .15s;
+    font-family: inherit;
+  }
+  .edit-input:focus { border-color: #C8D400; }
+  textarea.edit-input { resize: vertical; min-height: 46px; }
+  .edit-reset {
+    grid-column: 1/-1;
+    font-size: 0.72rem;
+    color: #555;
+    cursor: pointer;
+    text-align: right;
+    margin-top: 2px;
+    transition: color .15s;
+  }
+  .edit-reset:hover { color: #C8D400; }
+
+  /* ── Verrous sliders ── */
+  .lock-btn {
+    font-size: 0.8rem; background: transparent; border: none;
+    cursor: pointer; color: #383838; padding: 0 1px; flex-shrink: 0;
+    transition: color .15s; line-height: 1;
+  }
+  .lock-btn:hover { color: #888; }
+  .lock-btn.locked { color: #C8D400; }
+  .slider-row.locked input[type=range] { opacity: 0.3; pointer-events: none; }
+  .slider-row.locked input.slider-val  { opacity: 0.5; pointer-events: none; }
+
+  /* ── Profils ── */
+  .profile-save-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .profile-name-input {
+    flex: 1; background: #1a1a1a; border: 1px solid #3a3a3a;
+    border-radius: 5px; padding: 6px 8px; color: #eee;
+    font-size: 0.82rem; outline: none; transition: border-color .15s;
+    font-family: inherit;
+  }
+  .profile-name-input:focus { border-color: #C8D400; }
+  .btn-save-profile {
+    background: #252800; border: 1px solid #3a3a00; border-radius: 5px;
+    color: #C8D400; font-size: 0.78rem; font-weight: 700;
+    padding: 6px 10px; cursor: pointer; white-space: nowrap;
+    transition: all .15s;
+  }
+  .btn-save-profile:hover { background: #333300; border-color: #C8D400; }
+  .profile-list { display: flex; flex-direction: column; gap: 5px; }
+  .profile-item {
+    display: flex; align-items: center; gap: 6px;
+    background: #1e1e1e; border: 1px solid #2e2e2e;
+    border-radius: 6px; padding: 6px 8px;
+    transition: border-color .15s;
+  }
+  .profile-item:hover { border-color: #3a3a3a; }
+  .profile-item-name {
+    flex: 1; font-size: 0.82rem; color: #ccc; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .profile-item-name:hover { color: #C8D400; }
+  .profile-load-btn {
+    font-size: 0.72rem; background: #252800; border: 1px solid #3a3a00;
+    border-radius: 4px; color: #C8D400; padding: 3px 7px; cursor: pointer;
+    flex-shrink: 0; transition: all .15s;
+  }
+  .profile-load-btn:hover { background: #333300; }
+  .profile-del-btn {
+    font-size: 0.75rem; background: transparent; border: none;
+    color: #3a3a3a; cursor: pointer; flex-shrink: 0; padding: 2px 4px;
+    transition: color .15s;
+  }
+  .profile-del-btn:hover { color: #ff6b6b; }
+  .profile-empty { font-size: 0.78rem; color: #444; text-align: center; padding: 8px; }
 </style>
 </head>
 <body>
@@ -297,116 +514,221 @@ HTML = r"""<!DOCTYPE html>
 <div class="layout">
 
   <!-- PANNEAU GAUCHE -->
+  <div class="panel-wrapper">
   <div class="panel">
 
     <!-- Rider -->
-    <div>
-      <div class="section-title">Rider</div>
-      <select id="rider" onchange="onRiderChange()">
-        <option value="">— Sélectionne un rider —</option>
-      </select>
+    <div class="collapsible open" id="col-rider">
+      <div class="collapsible-header" onclick="toggleCol('col-rider')">
+        <span class="section-title">Rider</span>
+        <span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="rider-filters">
+          <input class="search-input" id="rider-search" placeholder="🔍 Rechercher..." oninput="renderRiderList()">
+          <div class="gender-toggle">
+            <button class="gender-btn" id="btn-f" onclick="setGender('F')" title="Women">♀</button>
+            <div class="gender-separator"></div>
+            <button class="gender-btn" id="btn-m" onclick="setGender('M')" title="Men">♂</button>
+          </div>
+        </div>
+        <select id="rider" onchange="onRiderChange()" size="8"
+          style="height:160px;border-radius:6px;padding:4px 0">
+        </select>
+        <div style="font-size:0.7rem;color:#555;margin-top:5px">· = photo manquante</div>
+      </div>
+    </div>
+
+    <!-- Profils -->
+    <div class="collapsible" id="col-profiles">
+      <div class="collapsible-header" onclick="toggleCol('col-profiles')">
+        <span class="section-title">💾 Profils</span>
+        <span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="profile-save-row">
+          <input type="text" class="profile-name-input" id="profile-name" placeholder="Nom du profil...">
+          <button class="btn-save-profile" onclick="saveProfile()">Sauvegarder</button>
+        </div>
+        <div class="profile-list" id="profile-list">
+          <div class="profile-empty">Aucun profil sauvegardé</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Édition inline -->
+    <div class="collapsible" id="col-edit" style="display:none">
+      <div class="collapsible-header" onclick="toggleCol('col-edit')">
+        <span class="section-title">✏️ Forcer les infos</span>
+        <span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="edit-grid">
+          <label>Prénom</label>
+          <input id="ed_prenom" class="edit-input" type="text" placeholder="—">
+          <label>Nom</label>
+          <input id="ed_nom" class="edit-input" type="text" placeholder="—">
+          <label>Nationalité</label>
+          <input id="ed_nationality" class="edit-input" type="text" placeholder="—">
+          <label>Hometown</label>
+          <input id="ed_hometown" class="edit-input" type="text" placeholder="—">
+          <label>Âge</label>
+          <input id="ed_age" class="edit-input" type="text" placeholder="—">
+          <label>Palmarès</label>
+          <textarea id="ed_achievements" class="edit-input" rows="2" placeholder="—"></textarea>
+          <label>Team</label>
+          <input id="ed_team" class="edit-input" type="text" placeholder="—">
+          <span class="edit-reset" onclick="resetEdits()">↺ Réinitialiser</span>
+        </div>
+      </div>
     </div>
 
     <!-- Sponsors -->
-    <div>
-      <div class="section-title">Sponsors <span id="sponsor-mode" class="auto-badge">AUTO depuis Excel</span></div>
-      <input type="text" id="sponsor-search" placeholder="🔍 Rechercher une marque..." oninput="filterSponsors(this.value)"
-        style="width:100%;background:#1a1a1a;border:1px solid #3a3a3a;border-radius:6px;padding:7px 10px;color:#eee;font-size:0.82rem;margin-bottom:8px;outline:none">
-      <div class="sponsors-grid" id="sponsors-grid"></div>
-      <div id="sponsor-empty" style="display:none;font-size:0.8rem;color:#555;text-align:center;padding:8px">Aucun logo trouvé</div>
+    <div class="collapsible" id="col-sponsors">
+      <div class="collapsible-header" onclick="toggleCol('col-sponsors')">
+        <span class="section-title">Marques &nbsp;<span id="sponsor-mode" class="auto-badge" style="font-size:0.65rem;padding:1px 5px">AUTO</span></span>
+        <span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <input type="text" id="sponsor-search" placeholder="🔍 Rechercher une marque..." oninput="filterSponsors(this.value)"
+          style="width:100%;background:#1a1a1a;border:1px solid #3a3a3a;border-radius:6px;padding:7px 10px;color:#eee;font-size:0.82rem;margin-bottom:8px;outline:none">
+        <div class="sponsors-grid" id="sponsors-grid"></div>
+        <div id="sponsor-empty" style="display:none;font-size:0.8rem;color:#555;text-align:center;padding:8px">Aucun logo trouvé</div>
+      </div>
     </div>
 
     <!-- Photo -->
-    <div>
-      <div class="section-title">Photo</div>
-      <div class="slider-row">
-        <span class="slider-label">Zoom</span>
-        <input type="range" id="photo_zoom" min="50" max="300" value="100" oninput="updateSliderPct(this,'val_zoom')">
-        <span class="slider-val" id="val_zoom">100%</span>
+    <div class="collapsible" id="col-photo">
+      <div class="collapsible-header" onclick="toggleCol('col-photo')">
+        <span class="section-title">Photo</span>
+        <div style="display:flex;align-items:center;gap:2px">
+          <button class="section-reset-btn" onclick="event.stopPropagation();resetSection('photo')" title="Réinitialiser Photo">↺</button>
+          <span class="collapsible-arrow">▼</span>
+        </div>
       </div>
-      <div class="slider-row">
-        <span class="slider-label">Offset X</span>
-        <input type="range" id="offset_x" min="-600" max="600" value="-200" oninput="updateSlider(this,'val_x')">
-        <span class="slider-val" id="val_x">-200</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Offset Y</span>
-        <input type="range" id="offset_y" min="-600" max="600" value="0" oninput="updateSlider(this,'val_y')">
-        <span class="slider-val" id="val_y">0</span>
+      <div class="collapsible-body">
+        <div class="slider-row">
+          <span class="slider-label">Zoom</span>
+          <input type="range" id="photo_zoom" min="50" max="300" value="100" onmousedown="captureHistory()" oninput="updateSliderPct(this,'val_zoom')">
+          <input type="text" class="slider-val" id="val_zoom" value="100%" onfocus="this.select()" onchange="syncVal('val_zoom','photo_zoom',true)">
+          <button class="lock-btn" id="lock_photo_zoom" onclick="toggleLock('lock_photo_zoom','photo_zoom')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Offset X</span>
+          <input type="range" id="offset_x" min="-600" max="600" value="-200" onmousedown="captureHistory()" oninput="updateSlider(this,'val_x')">
+          <input type="text" class="slider-val" id="val_x" value="-200" onfocus="this.select()" onchange="syncVal('val_x','offset_x')">
+          <button class="lock-btn" id="lock_offset_x" onclick="toggleLock('lock_offset_x','offset_x')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Offset Y</span>
+          <input type="range" id="offset_y" min="-600" max="600" value="0" onmousedown="captureHistory()" oninput="updateSlider(this,'val_y')">
+          <input type="text" class="slider-val" id="val_y" value="0" onfocus="this.select()" onchange="syncVal('val_y','offset_y')">
+          <button class="lock-btn" id="lock_offset_y" onclick="toggleLock('lock_offset_y','offset_y')" title="Verrouiller">🔓</button>
+        </div>
       </div>
     </div>
 
     <!-- Texte -->
-    <div>
-      <div class="section-title">Texte</div>
-      <div class="slider-row">
-        <span class="slider-label">Position X</span>
-        <input type="range" id="text_x" min="400" max="900" value="580" oninput="updateSlider(this,'val_tx')">
-        <span class="slider-val" id="val_tx">580</span>
+    <div class="collapsible" id="col-text">
+      <div class="collapsible-header" onclick="toggleCol('col-text')">
+        <span class="section-title">Texte</span>
+        <div style="display:flex;align-items:center;gap:2px">
+          <button class="section-reset-btn" onclick="event.stopPropagation();resetSection('text')" title="Réinitialiser Texte">↺</button>
+          <span class="collapsible-arrow">▼</span>
+        </div>
       </div>
-      <div class="slider-row">
-        <span class="slider-label">Position Y</span>
-        <input type="range" id="text_top" min="0" max="400" value="80" oninput="updateSlider(this,'val_tt')">
-        <span class="slider-val" id="val_tt">80</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Taille titre</span>
-        <input type="range" id="sz_label" min="14" max="72" value="36" oninput="updateSlider(this,'val_sl')">
-        <span class="slider-val" id="val_sl">36</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Taille valeur</span>
-        <input type="range" id="sz_value" min="14" max="90" value="54" oninput="updateSlider(this,'val_sv')">
-        <span class="slider-val" id="val_sv">54</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Taille valeur SM</span>
-        <input type="range" id="sz_value_sm" min="14" max="72" value="40" oninput="updateSlider(this,'val_ss')">
-        <span class="slider-val" id="val_ss">40</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Espacement</span>
-        <input type="range" id="gap" min="0" max="80" value="50" oninput="updateSlider(this,'val_gap')">
-        <span class="slider-val" id="val_gap">50</span>
+      <div class="collapsible-body">
+        <div class="slider-row">
+          <span class="slider-label">Position X</span>
+          <input type="range" id="text_x" min="400" max="900" value="580" onmousedown="captureHistory()" oninput="updateSlider(this,'val_tx')">
+          <input type="text" class="slider-val" id="val_tx" value="580" onfocus="this.select()" onchange="syncVal('val_tx','text_x')">
+          <button class="lock-btn" id="lock_text_x" onclick="toggleLock('lock_text_x','text_x')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Position Y</span>
+          <input type="range" id="text_top" min="0" max="400" value="80" onmousedown="captureHistory()" oninput="updateSlider(this,'val_tt')">
+          <input type="text" class="slider-val" id="val_tt" value="80" onfocus="this.select()" onchange="syncVal('val_tt','text_top')">
+          <button class="lock-btn" id="lock_text_top" onclick="toggleLock('lock_text_top','text_top')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Taille titre</span>
+          <input type="range" id="sz_label" min="14" max="72" value="36" onmousedown="captureHistory()" oninput="updateSlider(this,'val_sl')">
+          <input type="text" class="slider-val" id="val_sl" value="36" onfocus="this.select()" onchange="syncVal('val_sl','sz_label')">
+          <button class="lock-btn" id="lock_sz_label" onclick="toggleLock('lock_sz_label','sz_label')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Taille valeur</span>
+          <input type="range" id="sz_value" min="14" max="90" value="54" onmousedown="captureHistory()" oninput="updateSlider(this,'val_sv')">
+          <input type="text" class="slider-val" id="val_sv" value="54" onfocus="this.select()" onchange="syncVal('val_sv','sz_value')">
+          <button class="lock-btn" id="lock_sz_value" onclick="toggleLock('lock_sz_value','sz_value')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Taille valeur SM</span>
+          <input type="range" id="sz_value_sm" min="14" max="72" value="40" onmousedown="captureHistory()" oninput="updateSlider(this,'val_ss')">
+          <input type="text" class="slider-val" id="val_ss" value="40" onfocus="this.select()" onchange="syncVal('val_ss','sz_value_sm')">
+          <button class="lock-btn" id="lock_sz_value_sm" onclick="toggleLock('lock_sz_value_sm','sz_value_sm')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Espacement</span>
+          <input type="range" id="gap" min="0" max="80" value="50" onmousedown="captureHistory()" oninput="updateSlider(this,'val_gap')">
+          <input type="text" class="slider-val" id="val_gap" value="50" onfocus="this.select()" onchange="syncVal('val_gap','gap')">
+          <button class="lock-btn" id="lock_gap" onclick="toggleLock('lock_gap','gap')" title="Verrouiller">🔓</button>
+        </div>
       </div>
     </div>
 
     <!-- Logos -->
-    <div>
-      <div class="section-title">Logos</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:0.8rem;color:#aaa">Disposition</span>
-        <div class="toggle-switch" onclick="switchDir()" id="dir-toggle" title="Cliquer pour changer">
-          <div class="toggle-knob"></div>
+    <div class="collapsible" id="col-logos">
+      <div class="collapsible-header" onclick="toggleCol('col-logos')">
+        <span class="section-title">Logos</span>
+        <div style="display:flex;align-items:center;gap:2px">
+          <button class="section-reset-btn" onclick="event.stopPropagation();resetSection('logos')" title="Réinitialiser Logos">↺</button>
+          <span class="collapsible-arrow">▼</span>
         </div>
-        <span id="dir-label" style="font-size:0.82rem;font-weight:700;color:#C8D400;min-width:70px">▶▶ LIGNE</span>
-        <input type="hidden" id="logo_dir" value="row">
       </div>
-      <div class="slider-row">
-        <span class="slider-label">Hauteur</span>
-        <input type="range" id="logo_h" min="20" max="200" value="38" oninput="updateSlider(this,'val_lh')">
-        <span class="slider-val" id="val_lh">38</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Position Y</span>
-        <input type="range" id="logo_y" min="900" max="1340" value="1280" oninput="updateSlider(this,'val_ly')">
-        <span class="slider-val" id="val_ly">1280</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Position X</span>
-        <input type="range" id="logo_x" min="-1" max="1060" value="-1" oninput="updateSlider(this,'val_lx',true)">
-        <span class="slider-val" id="val_lx">Auto</span>
+      <div class="collapsible-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:0.8rem;color:#aaa">Disposition</span>
+          <div class="toggle-switch" onclick="switchDir()" id="dir-toggle" title="Cliquer pour changer">
+            <div class="toggle-knob"></div>
+          </div>
+          <span id="dir-label" style="font-size:0.82rem;font-weight:700;color:#C8D400;min-width:70px">▶▶ LIGNE</span>
+          <input type="hidden" id="logo_dir" value="row">
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Hauteur</span>
+          <input type="range" id="logo_h" min="20" max="200" value="38" onmousedown="captureHistory()" oninput="updateSlider(this,'val_lh')">
+          <input type="text" class="slider-val" id="val_lh" value="38" onfocus="this.select()" onchange="syncVal('val_lh','logo_h')">
+          <button class="lock-btn" id="lock_logo_h" onclick="toggleLock('lock_logo_h','logo_h')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Position Y</span>
+          <input type="range" id="logo_y" min="900" max="1340" value="1280" onmousedown="captureHistory()" oninput="updateSlider(this,'val_ly')">
+          <input type="text" class="slider-val" id="val_ly" value="1280" onfocus="this.select()" onchange="syncVal('val_ly','logo_y')">
+          <button class="lock-btn" id="lock_logo_y" onclick="toggleLock('lock_logo_y','logo_y')" title="Verrouiller">🔓</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Position X</span>
+          <input type="range" id="logo_x" min="-1" max="1060" value="-1" onmousedown="captureHistory()" oninput="updateSlider(this,'val_lx',true)">
+          <input type="text" class="slider-val" id="val_lx" value="Auto" onfocus="this.select()" onchange="syncVal('val_lx','logo_x',true)">
+          <button class="lock-btn" id="lock_logo_x" onclick="toggleLock('lock_logo_x','logo_x')" title="Verrouiller">🔓</button>
+        </div>
       </div>
     </div>
 
-    <!-- Actions -->
-    <div>
-      <button class="btn btn-generate" onclick="generate()">▶ Générer la carte</button>
-      <button class="btn btn-download" id="btn-dl" disabled onclick="download()">⬇ Télécharger</button>
-      <div class="error-msg" id="error-msg"></div>
-    </div>
+  </div><!-- fin .panel -->
 
+  <!-- Actions fixées en bas -->
+  <div class="panel-actions">
+    <button class="btn btn-generate" onclick="generate()">▶ Générer la carte</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-download" id="btn-dl" disabled onclick="download()" style="flex:1">⬇ Télécharger</button>
+      <button class="btn-undo" id="btn-undo" disabled onclick="undo()" title="Ctrl+Z">↩ Annuler</button>
+    </div>
+    <div class="error-msg" id="error-msg"></div>
   </div>
+
+  </div><!-- fin .panel-wrapper -->
 
   <!-- PREVIEW -->
   <div class="preview-area" id="preview-area">
@@ -421,22 +743,156 @@ HTML = r"""<!DOCTYPE html>
 </div>
 
 <script>
+// ── Collapsible ───────────────────────────────────────────────────────────
+function toggleCol(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── Verrous ───────────────────────────────────────────────────────────────
+const lockedSliders = new Set();
+
+function toggleLock(lockId, rangeId) {
+  const btn = document.getElementById(lockId);
+  const row = btn.closest('.slider-row');
+  if (lockedSliders.has(rangeId)) {
+    lockedSliders.delete(rangeId);
+    btn.textContent = '🔓';
+    btn.classList.remove('locked');
+    row.classList.remove('locked');
+  } else {
+    lockedSliders.add(rangeId);
+    btn.textContent = '🔒';
+    btn.classList.add('locked');
+    row.classList.add('locked');
+  }
+}
+
+// ── Profils ───────────────────────────────────────────────────────────────
+const SLIDER_DEFS = [
+  { rid: 'photo_zoom',  vid: 'val_zoom', pct: true  },
+  { rid: 'offset_x',   vid: 'val_x'                },
+  { rid: 'offset_y',   vid: 'val_y'                },
+  { rid: 'text_x',     vid: 'val_tx'               },
+  { rid: 'text_top',   vid: 'val_tt'               },
+  { rid: 'sz_label',   vid: 'val_sl'               },
+  { rid: 'sz_value',   vid: 'val_sv'               },
+  { rid: 'sz_value_sm',vid: 'val_ss'               },
+  { rid: 'gap',        vid: 'val_gap'              },
+  { rid: 'logo_h',     vid: 'val_lh'               },
+  { rid: 'logo_y',     vid: 'val_ly'               },
+  { rid: 'logo_x',     vid: 'val_lx', auto: true   },
+];
+
+function _loadProfiles() {
+  try { return JSON.parse(localStorage.getItem('ff_profiles') || '{}'); }
+  catch(e) { return {}; }
+}
+function _saveProfiles(p) { localStorage.setItem('ff_profiles', JSON.stringify(p)); }
+
+function getCurrentSnapshot() {
+  const snap = { logo_dir: document.getElementById('logo_dir').value };
+  SLIDER_DEFS.forEach(({ rid }) => { snap[rid] = parseInt(document.getElementById(rid).value); });
+  return snap;
+}
+
+function saveProfile() {
+  const name = document.getElementById('profile-name').value.trim();
+  if (!name) { alert('Donne un nom au profil.'); return; }
+  const profiles = _loadProfiles();
+  profiles[name] = getCurrentSnapshot();
+  _saveProfiles(profiles);
+  document.getElementById('profile-name').value = '';
+  renderProfiles();
+}
+
+function applyProfile(name) {
+  const vals = _loadProfiles()[name];
+  if (!vals) return;
+  captureHistory();
+  applySnapshot(vals);
+  debouncedGenerate(100);
+}
+
+function deleteProfile(name) {
+  if (!confirm(`Supprimer le profil "${name}" ?`)) return;
+  const profiles = _loadProfiles();
+  delete profiles[name];
+  _saveProfiles(profiles);
+  renderProfiles();
+}
+
+function renderProfiles() {
+  const list = document.getElementById('profile-list');
+  const profiles = _loadProfiles();
+  const names = Object.keys(profiles);
+  if (names.length === 0) {
+    list.innerHTML = '<div class="profile-empty">Aucun profil sauvegardé</div>';
+    return;
+  }
+  list.innerHTML = names.map(n => {
+    const safe = n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="profile-item">
+      <span class="profile-item-name" onclick="applyProfile('${safe}')" title="Cliquer pour charger">${n}</span>
+      <button class="profile-load-btn" onclick="applyProfile('${safe}')">Charger</button>
+      <button class="profile-del-btn" onclick="deleteProfile('${safe}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
 // ── État ──────────────────────────────────────────────────────────────────
 let riders = [];
 let selectedSponsors = new Set();  // vide = auto
 let lastSlug = null;
+let genderFilter = 'all';  // 'all' | 'F' | 'M'
+
+// ── Rider list ─────────────────────────────────────────────────────────────
+function setGender(g) {
+  genderFilter = (genderFilter === g) ? 'all' : g;  // re-clic = reset
+  document.getElementById('btn-f').className = 'gender-btn' + (genderFilter === 'F' ? ' active-f' : '');
+  document.getElementById('btn-m').className = 'gender-btn' + (genderFilter === 'M' ? ' active-m' : '');
+  renderRiderList();
+}
+
+function renderRiderList() {
+  const query  = document.getElementById('rider-search').value.trim().toLowerCase();
+  const sel    = document.getElementById('rider');
+  const prev   = sel.value;
+  sel.innerHTML = '';
+
+  const filtered = riders.filter(r => {
+    if (genderFilter !== 'all' && r.genre !== genderFilter) return false;
+    if (query) {
+      const full = `${r.prenom} ${r.nom}`.toLowerCase();
+      if (!full.includes(query)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    const opt = document.createElement('option');
+    opt.disabled = true;
+    opt.textContent = '— Aucun résultat —';
+    sel.appendChild(opt);
+  } else {
+    filtered.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.slug;
+      const icon = r.genre === 'F' ? '♀' : '♂';
+      const photo = r.has_photo ? '' : ' ·';
+      opt.textContent = `${icon}  ${r.prenom} ${r.nom}${photo}`;
+      if (!r.has_photo) opt.style.color = '#888';
+      sel.appendChild(opt);
+    });
+    // Restore selection if still visible
+    if (prev && filtered.find(r => r.slug === prev)) sel.value = prev;
+  }
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────
 async function init() {
   const res = await fetch('/api/riders');
   riders = await res.json();
-  const sel = document.getElementById('rider');
-  riders.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.slug;
-    opt.textContent = `${r.prenom} ${r.nom}  (${r.genre === 'F' ? 'Women' : 'Men'})`;
-    sel.appendChild(opt);
-  });
+  renderRiderList();
 
   // Sponsors disponibles — affichage avec vrais logos
   const sr = await fetch('/api/sponsors');
@@ -454,7 +910,38 @@ async function init() {
   });
 }
 
-function onRiderChange() { lastSlug = null; document.getElementById('btn-dl').disabled = true; }
+let _originalProfile = null;
+
+async function onRiderChange() {
+  const slug = document.getElementById('rider').value;
+  lastSlug = null;
+  document.getElementById('btn-dl').disabled = true;
+  if (!slug) return;
+
+  const res = await fetch(`/api/profile/${slug}`);
+  if (!res.ok) return;
+  const profile = await res.json();
+  _originalProfile = profile;
+  _fillEditFields(profile);
+  const editCol = document.getElementById('col-edit');
+  editCol.style.display = 'block';
+  editCol.classList.add('open');
+  debouncedGenerate(100);
+}
+
+function _fillEditFields(p) {
+  document.getElementById('ed_prenom').value      = p.prenom       || '';
+  document.getElementById('ed_nom').value         = p.nom          || '';
+  document.getElementById('ed_nationality').value = p.nationality  || '';
+  document.getElementById('ed_hometown').value    = p.hometown     || '';
+  document.getElementById('ed_age').value         = p.age          || '';
+  document.getElementById('ed_achievements').value= p.achievements || '';
+  document.getElementById('ed_team').value        = p.team         || '';
+}
+
+function resetEdits() {
+  if (_originalProfile) _fillEditFields(_originalProfile);
+}
 
 function filterSponsors(query) {
   const q = query.toLowerCase().trim();
@@ -476,14 +963,101 @@ function toggleSponsor(key, checked) {
   });
   const badge = document.getElementById('sponsor-mode');
   badge.textContent = selectedSponsors.size === 0 ? 'AUTO depuis Excel' : `${selectedSponsors.size} sélectionné(s)`;
+  debouncedGenerate(200);
+}
+
+// ── Debounce & live preview ───────────────────────────────────────────────
+let _debTimer = null;
+function debouncedGenerate(delay=450) {
+  clearTimeout(_debTimer);
+  if (!document.getElementById('rider').value) return;
+  _debTimer = setTimeout(generate, delay);
+}
+
+// ── Historique (undo) ─────────────────────────────────────────────────────
+const _history = [];
+const MAX_HIST  = 40;
+let   _capLock  = false;   // évite les doublons rapides
+
+function captureHistory() {
+  if (_capLock) return;
+  _capLock = true;
+  setTimeout(() => { _capLock = false; }, 800);
+  const snap = getCurrentSnapshot();
+  if (_history.length && JSON.stringify(_history[_history.length-1]) === JSON.stringify(snap)) return;
+  _history.push(snap);
+  if (_history.length > MAX_HIST) _history.shift();
+  document.getElementById('btn-undo').disabled = _history.length < 2;
+}
+
+function undo() {
+  if (_history.length < 2) return;
+  _history.pop();                          // retire l'état courant
+  const prev = _history[_history.length - 1];
+  applySnapshot(prev);
+  document.getElementById('btn-undo').disabled = _history.length < 2;
+  debouncedGenerate(100);
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    undo();
+  }
+});
+
+// ── Valeurs par défaut par section ────────────────────────────────────────
+const SECTION_DEFAULTS = {
+  photo: { photo_zoom: 100, offset_x: -200, offset_y: 0 },
+  text:  { text_x: 580, text_top: 80, sz_label: 36, sz_value: 54, sz_value_sm: 40, gap: 50 },
+  logos: { logo_h: 38, logo_y: 1280, logo_x: -1, logo_dir: 'row' },
+};
+
+function resetSection(section) {
+  captureHistory();
+  applySnapshot(SECTION_DEFAULTS[section]);
+  debouncedGenerate(100);
+}
+
+// ── Apply snapshot (utilisé par undo, profils, reset) ─────────────────────
+function applySnapshot(vals) {
+  SLIDER_DEFS.forEach(({ rid, vid, pct, auto }) => {
+    if (lockedSliders.has(rid)) return;
+    const v = vals[rid];
+    if (v === undefined) return;
+    document.getElementById(rid).value = v;
+    if (auto && v === -1)   document.getElementById(vid).value = 'Auto';
+    else if (pct)           document.getElementById(vid).value = v + '%';
+    else                    document.getElementById(vid).value = v;
+  });
+  if (vals.logo_dir !== undefined) {
+    const isCol = vals.logo_dir === 'col';
+    document.getElementById('logo_dir').value = vals.logo_dir;
+    document.getElementById('dir-toggle').classList.toggle('on', isCol);
+    document.getElementById('dir-label').textContent = isCol ? '▼▼ COLONNE' : '▶▶ LIGNE';
+  }
 }
 
 function updateSlider(el, valId, autoMode=false) {
   const v = parseInt(el.value);
-  document.getElementById(valId).textContent = (autoMode && v === -1) ? 'Auto' : v;
+  document.getElementById(valId).value = (autoMode && v === -1) ? 'Auto' : v;
+  debouncedGenerate();
 }
 function updateSliderPct(el, valId) {
-  document.getElementById(valId).textContent = el.value + '%';
+  document.getElementById(valId).value = el.value + '%';
+  debouncedGenerate();
+}
+function syncVal(valId, rangeId, autoMode=false) {
+  const inp   = document.getElementById(valId);
+  const range = document.getElementById(rangeId);
+  let raw = inp.value.replace('%','').trim();
+  if (autoMode && raw.toLowerCase() === 'auto') { range.value = -1; debouncedGenerate(); return; }
+  const v = parseInt(raw);
+  if (isNaN(v)) { inp.value = autoMode ? 'Auto' : range.value; return; }
+  const clamped = Math.max(parseInt(range.min), Math.min(parseInt(range.max), v));
+  range.value = clamped;
+  inp.value   = autoMode && clamped === -1 ? 'Auto' : (valId === 'val_zoom' ? clamped + '%' : clamped);
+  debouncedGenerate();
 }
 function switchDir() {
   const input  = document.getElementById('logo_dir');
@@ -492,12 +1066,13 @@ function switchDir() {
   input.value  = isCol ? 'row' : 'col';
   toggle.classList.toggle('on', !isCol);
   document.getElementById('dir-label').textContent = isCol ? '▶▶ LIGNE' : '▼▼ COLONNE';
+  debouncedGenerate();
 }
 
 // ── Génération ────────────────────────────────────────────────────────────
 async function generate() {
   const slug = document.getElementById('rider').value;
-  if (!slug) { alert('Sélectionne un rider.'); return; }
+  if (!slug) return;
 
   const area = document.getElementById('preview-area');
   area.classList.add('loading');
@@ -505,6 +1080,15 @@ async function generate() {
 
   const params = {
     slug,
+    overrides: {
+      prenom:       document.getElementById('ed_prenom').value,
+      nom:          document.getElementById('ed_nom').value,
+      nationality:  document.getElementById('ed_nationality').value,
+      hometown:     document.getElementById('ed_hometown').value,
+      age:          document.getElementById('ed_age').value,
+      achievements: document.getElementById('ed_achievements').value,
+      team:         document.getElementById('ed_team').value,
+    },
     photo_zoom:  parseInt(document.getElementById('photo_zoom').value) / 100,
     offset_x:    parseInt(document.getElementById('offset_x').value),
     offset_y:    parseInt(document.getElementById('offset_y').value),
@@ -566,6 +1150,7 @@ async function reloadExcel() {
 }
 
 init();
+renderProfiles();
 </script>
 </body>
 </html>
@@ -581,10 +1166,11 @@ def index():
 @app.route("/api/riders")
 def api_riders():
     _, _, profiles = get_engine()
-    data = [{"slug":   f"{p['nom'].lower().replace(' ','_')}_{p['prenom'].lower()}",
-             "prenom": p["prenom"],
-             "nom":    p["nom"],
-             "genre":  p["genre"]}
+    data = [{"slug":      f"{p['nom'].lower().replace(' ','_')}_{p['prenom'].lower()}",
+             "prenom":    p["prenom"],
+             "nom":       p["nom"],
+             "genre":     p["genre"],
+             "has_photo": gc.find_photo(p) is not None}
             for p in profiles]
     return jsonify(data)
 
@@ -621,6 +1207,25 @@ def serve_logo(filename):
     return send_from_directory(str(gc.LOGOS_DIR), filename)
 
 
+@app.route("/api/profile/<slug>")
+def api_profile(slug):
+    _, _, profiles = get_engine()
+    profile = next((p for p in profiles
+                    if f"{p['nom'].lower().replace(' ','_')}_{p['prenom'].lower()}" == slug), None)
+    if not profile:
+        return jsonify({"error": "Rider introuvable"}), 404
+    # Retourne uniquement les champs éditables
+    return jsonify({
+        "prenom":       profile.get("prenom", ""),
+        "nom":          profile.get("nom", ""),
+        "nationality":  profile.get("nationality", ""),
+        "hometown":     profile.get("hometown", ""),
+        "age":          profile.get("age", ""),
+        "achievements": profile.get("achievements", ""),
+        "team":         profile.get("team", ""),
+    })
+
+
 @app.route("/api/generate", methods=["POST"])
 def api_generate():
     try:
@@ -634,6 +1239,11 @@ def api_generate():
                         if f"{p['nom'].lower().replace(' ','_')}_{p['prenom'].lower()}" == slug), None)
         if not profile:
             return jsonify({"error": f"Rider introuvable : {slug}"}), 404
+
+        # ── Overrides édition inline ──
+        overrides = data.get("overrides", {})
+        if overrides:
+            profile = {**profile, **{k: v for k, v in overrides.items() if v != ""}}
 
         # ── Paramètres photo ──
         gc.PHOTO_ZOOM     = float(data.get("photo_zoom",  1.0))

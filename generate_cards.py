@@ -44,8 +44,8 @@ _excels    = sorted(BASE_DIR.glob("UCI_DH_2026_Tracker*.xlsx"),
 EXCEL_FILE = _excels[0] if _excels else BASE_DIR / "UCI_DH_2026_Tracker_v3.xlsx"
 
 # ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
-# Colle ici l'ID de ton Google Sheet (la partie entre /d/ et /edit dans l'URL)
-GSHEET_ID = ""
+# Importé depuis config.py — modifie ce fichier pour changer de sheet
+from config import GSHEET_ID
 
 BACKGROUND = next((p for p in [
     BASE_DIR / "background.png",
@@ -463,7 +463,7 @@ def _fetch_gsheet_csv(sheet_name):
     """Télécharge une feuille Google Sheets en CSV. Retourne une liste de lignes (listes)."""
     import urllib.parse
     encoded = urllib.parse.quote(sheet_name)
-    url = f""
+    url = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=10, context=_ssl_ctx) as r:
@@ -520,7 +520,10 @@ def load_profiles_from_gsheet():
     profiles = []
     for row in profils_rows:
         row = _gsheet_row_to_list(row, 15)
-        g = row[0].strip().upper()
+        g_raw = row[0].strip().upper()
+        # Normalise : W/WOMEN/FEMME → F  |  M/MEN/HOMME → M
+        g = "F" if g_raw in ("F", "W", "WOMEN", "FEMME") else \
+            "M" if g_raw in ("M", "H", "MEN", "HOMME") else g_raw
         if g not in ("F", "M"):
             continue
         nom = row[2].strip()

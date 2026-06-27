@@ -606,6 +606,115 @@ def load_profiles():
             })
     return profiles
 
+# ── ÉQUIPEMENTS ───────────────────────────────────────────────────────────────
+
+EQUIPMENT_COLUMNS = [
+    "Frame", "Fork", "Rear Shock", "Handlebar", "Dropper Post", "Saddle",
+    "Crankset", "Derailleur", "Brake Lever", "Brake Caliper",
+    "Wheels", "Tires", "Pedals", "Shoes", "Helmet", "Protection", "Goggles",
+]
+
+def _extract_instagram_handle(val):
+    """Extrait le handle depuis une URL Instagram ou un handle brut."""
+    import re
+    val = val.strip()
+    if not val:
+        return ""
+    if "instagram.com" in val:
+        m = re.search(r"instagram\.com/([^/?#\s]+)", val)
+        return m.group(1).lower().rstrip("/") if m else ""
+    return val.lstrip("@").lower()
+
+def _fetch_gsheet_csv_by_gid(gid: int):
+    """Télécharge un onglet Google Sheets via son GID en utilisant gviz/tq (même endpoint que les profils)."""
+    url = f"https://docs.google.com/spreadsheets/d/{GSHEET_ID}/gviz/tq?tqx=out:csv&gid={gid}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10, context=_ssl_ctx) as r:
+            content = r.read().decode("utf-8")
+        rows = list(csv.reader(io.StringIO(content)))
+        if rows and rows[0]:
+            return rows
+    except Exception as e:
+        print(f"  ⚠️  GSheet gid={gid} inaccessible : {e}")
+    return None
+
+
+# GIDs des onglets Equipment (stables, indépendants du nom)
+_EQUIPMENT_GIDS = {
+    "🔧 Equipment Women": 455020136,
+    "🔧 Equipment Men":   1424770374,
+}
+
+
+def load_equipment_from_gsheet():
+    """
+    Charge les équipements depuis les onglets Equipment Women / Equipment Men.
+
+    Structure :
+      col B=Instagram  col C=Bike  col D=Fork  ...  col S=Goggles
+
+    Chaque cellule = "Brand;Reference;Details" (séparateur ;)
+    Retourne un dict : { instagram_handle: { "Bike": {...}, "Fork": {...}, ... } }
+    """
+    equipment = {}
+
+    for sheet_name, gid in _EQUIPMENT_GIDS.items():
+        # Essai 1 : par GID via gviz/tq (même endpoint que les profils)
+        rows = _fetch_gsheet_csv_by_gid(gid)
+        # Essai 2 : par nom exact (avec emoji)
+        if not rows:
+            rows = _fetch_gsheet_csv(sheet_name)
+        # Essai 3 : sans emoji
+        if not rows:
+            rows = _fetch_gsheet_csv(sheet_name.replace("🔧 ", ""))
+        if not rows:
+            print(f"  ⚠️  Onglet '{sheet_name}' (gid={gid}) vide ou inaccessible")
+            continue
+
+        # Cherche la ligne header (celle qui contient "Instagram" ou "Bike")
+        header_row_idx = 0
+        for i, row in enumerate(rows[:5]):
+            if any(c.strip() in ("Instagram", "Bike", "Fork") for c in row):
+                header_row_idx = i
+                break
+        header = [c.strip() for c in rows[header_row_idx]]
+        print(f"  📋 {sheet_name} (gid={gid}) : header={header[:6]} … {len(rows)-header_row_idx-1} row(s)")
+
+        # Index de la colonne Instagram (colonne B = index 1 en général)
+        try:
+            insta_idx = header.index("Instagram")
+        except ValueError:
+            # Fallback : chercher une colonne qui ressemble à Instagram
+            insta_idx = next((i for i, h in enumerate(header) if "instagram" in h.lower()), 1)
+
+        for row in rows[header_row_idx + 1:]:
+            row = _gsheet_row_to_list(row, len(header))
+            if insta_idx >= len(row):
+                continue
+            handle = _extract_instagram_handle(row[insta_idx])
+            if not handle:
+                continue
+            if handle not in equipment:
+                equipment[handle] = {}
+            for col in EQUIPMENT_COLUMNS:
+                if col not in header:
+                    continue
+                idx = header.index(col)
+                if idx >= len(row) or not row[idx].strip():
+                    continue
+                raw = row[idx].strip()
+                parts = [p.strip() for p in raw.split(";")]
+                equipment[handle][col] = {
+                    "brand":     parts[0] if len(parts) > 0 else "",
+                    "reference": parts[1] if len(parts) > 1 else "",
+                    "details":   parts[2] if len(parts) > 2 else "",
+                    "raw":       raw,
+                }
+
+    print(f"✅ Équipements chargés pour {len(equipment)} rider(s)")
+    return equipment
+
 # ── RECHERCHE PHOTO ───────────────────────────────────────────────────────────
 
 def _ascii(s):
@@ -805,16 +914,18 @@ def draw_logos(card, logo_paths):
 
     if LOGO_DIRECTION == "col":
         # ── MODE COLONNE : logos empilés verticalement ──────────────────────
-        # Largeur max = largeur du panneau → on redimensionne chaque logo si besoin
-        x_start = LOGO_X if LOGO_X is not None else panel_left
+        # Chaque logo est centré sur le même axe vertical.
+        # LOGO_X = décalage horizontal par rapport au centre du panneau (0 = centré)
+        center_x = panel_left + max_width // 2
+        x_offset = LOGO_X if LOGO_X is not None else 0
         y = LOGO_Y
         for logo in logos:
             # Limite la largeur au panneau
             if logo.width > max_width:
                 scale = max_width / logo.width
                 logo = logo.resize((max_width, max(1, int(logo.height * scale))), Image.LANCZOS)
-            # Centre horizontalement dans le panneau si LOGO_X non forcé
-            x = x_start if LOGO_X is not None else panel_left + (max_width - logo.width) // 2
+            # Centre le logo sur l'axe + décalage
+            x = center_x - logo.width // 2 + x_offset
             card_rgba.paste(logo, (x, y), logo)
             y += logo.height + LOGO_GAP
 

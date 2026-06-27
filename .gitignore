@@ -33,3 +33,6 @@ env/
 # ── Fichier script temporaire ──
 download_logos.command
 rebuild_riders.py
+
+# ── Photos produits locales (binaires, trop lourdes pour git) ──
+Equipment/

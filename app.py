@@ -94,6 +94,32 @@ HTML = r"""<!DOCTYPE html>
   .tab-btn:hover { color: #aaa; }
   .tab-btn.active { background: #252800; color: #C8D400; }
 
+  /* ── Reel page ── */
+  #page-reel { display:none; height:calc(100vh - 65px); }
+  #page-reel .layout { height:100%; }
+  .reel-item {
+    display:flex; align-items:center; gap:10px;
+    background:#1a1a1a; border:1px solid #2a2a2a; border-radius:8px;
+    padding:8px; margin-bottom:8px; cursor:grab;
+    user-select:none;
+  }
+  .reel-item:hover { border-color:#444; }
+  .reel-item.is-selection { border-color:#C8D400; }
+  .reel-item.drag-over { border-color:#C8D400; border-style:dashed; background:#1e2200; }
+  .reel-item.dragging  { opacity:0.4; }
+  .reel-thumb {
+    width:60px; height:74px; border-radius:5px; object-fit:cover;
+    background:#111; flex-shrink:0;
+  }
+  .reel-info { flex:1; min-width:0; }
+  .reel-label { font-size:0.78rem; color:#eee; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .reel-sub   { font-size:0.68rem; color:#666; margin-top:2px; }
+  .reel-star  { font-size:1.1rem; cursor:pointer; color:#444; transition:color .15s; flex-shrink:0; }
+  .reel-star.active { color:#C8D400; }
+  .reel-remove { font-size:1rem; cursor:pointer; color:#555; transition:color .15s; flex-shrink:0; }
+  .reel-remove:hover { color:#e55; }
+  .reel-empty { text-align:center; color:#444; font-size:0.82rem; padding:30px 0; }
+
   /* ── Equipment page ── */
   #page-equipment {
     display: none;  /* montré via JS → display:block */
@@ -681,11 +707,30 @@ HTML = r"""<!DOCTYPE html>
 </head>
 <body>
 
+<!-- Loading overlay -->
+<div id="app-loading" style="
+  position:fixed;inset:0;z-index:9999;
+  background:#111;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px">
+  <div style="font-size:2rem">⛰️</div>
+  <div style="color:#C8D400;font-family:'BebasNeue-Regular',sans-serif;font-size:1.6rem;letter-spacing:2px">
+    FREERIDE FANATICS
+  </div>
+  <div id="app-loading-msg" style="color:#666;font-size:0.8rem">Chargement des données…</div>
+  <div style="width:200px;height:3px;background:#222;border-radius:2px;overflow:hidden">
+    <div id="app-loading-bar" style="height:100%;background:#C8D400;width:0%;transition:width .3s ease"></div>
+  </div>
+</div>
+
 <header>
   <h1>⛰️ Freeride Fanatics</h1>
   <nav class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('cards')" id="tab-cards">🎴 Cards</button>
     <button class="tab-btn" onclick="switchTab('equipment')" id="tab-equipment">🔧 Équipements</button>
+    <button class="tab-btn" onclick="switchTab('reel')" id="tab-reel">
+      🎬 Reel <span id="reel-badge" style="display:none;background:#C8D400;color:#000;
+        border-radius:10px;font-size:0.7rem;padding:1px 6px;margin-left:4px;font-weight:700"></span>
+    </button>
   </nav>
   <div style="flex:1"></div>
   <button class="btn btn-reload" onclick="reloadExcel()">↺ Recharger</button>
@@ -920,8 +965,12 @@ HTML = r"""<!DOCTYPE html>
   <div class="panel-actions">
     <button class="btn btn-generate" onclick="generate()">▶ Générer la carte</button>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-download" id="btn-dl" disabled onclick="download()" style="flex:1">⬇ Télécharger</button>
-      <button class="btn-undo" id="btn-undo" disabled onclick="undo()" title="Ctrl+Z">↩ Annuler</button>
+      <button class="btn btn-download" id="btn-dl" disabled onclick="download()" style="flex:1">⬇Télécharger</button>
+      <button class="btn" id="cards-add-reel-btn" disabled onclick="addRiderCardToReel()"
+              style="flex:1;background:#252800;color:#C8D400;border:1px solid #C8D400;border-radius:6px;cursor:pointer;font-size:0.82rem">
+        ＋ Reel
+      </button>
+      <button class="btn-undo" id="btn-undo" disabled onclick="undo()" title="Ctrl+Z">↩</button>
     </div>
     <div class="error-msg" id="error-msg"></div>
   </div>
@@ -1018,6 +1067,12 @@ HTML = r"""<!DOCTYPE html>
             <span class="eq-toggle-label">Logo marque</span>
           </label>
         </div>
+        <div class="eq-text-row" style="margin-top:10px;border-top:1px solid #333;padding-top:10px">
+          <label class="eq-toggle-wrap">
+            <input type="checkbox" id="eq_use_v2" onchange="eqDebouncedGenerate()">
+            <span class="eq-toggle-label" style="color:#C8D400;font-weight:bold">Background V2 <span style="font-size:10px;opacity:.7;font-weight:normal">beta</span></span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -1042,6 +1097,18 @@ HTML = r"""<!DOCTYPE html>
           <input type="range" id="eq_photo_y" min="-500" max="500" value="0" oninput="updateSlider(this,'eq_val_py');eqDebouncedGenerate()">
           <input type="text" class="slider-val" id="eq_val_py" value="0" onfocus="this.select()" onchange="syncVal('eq_val_py','eq_photo_y');eqDebouncedGenerate()">
         </div>
+        <div class="slider-row" style="align-items:center">
+          <span class="slider-label">Fond photo</span>
+          <div style="display:flex;gap:6px;align-items:center;flex:1">
+            <button class="eq-bg-preset" data-color="#ffffff" onclick="setEqBg('#ffffff')"
+              style="background:#fff;border:2px solid #C8D400;width:24px;height:24px;border-radius:4px;cursor:pointer;flex-shrink:0" title="Blanc"></button>
+            <button class="eq-bg-preset" data-color="#000000" onclick="setEqBg('#000000')"
+              style="background:#000;border:2px solid #444;width:24px;height:24px;border-radius:4px;cursor:pointer;flex-shrink:0" title="Noir"></button>
+            <input type="color" id="eq_photo_bg" value="#ffffff"
+              style="width:36px;height:24px;border:none;border-radius:4px;cursor:pointer;background:none;padding:0;flex-shrink:0"
+              oninput="eqDebouncedGenerate()" title="Couleur personnalisée">
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1049,8 +1116,12 @@ HTML = r"""<!DOCTYPE html>
 
   <div class="panel-actions">
     <button class="btn btn-generate" onclick="generateEqCard()">▶ Générer la carte</button>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;margin-top:0">
       <button class="btn btn-download" id="eq-page-dl-btn" disabled onclick="downloadEqCard()" style="flex:1;margin-top:0">⬇ Télécharger</button>
+      <button class="btn" id="eq-add-reel-btn" disabled onclick="addToReel()"
+              style="flex:1;margin-top:0;background:#252800;color:#C8D400;border:1px solid #C8D400;border-radius:6px;cursor:pointer;font-size:0.82rem">
+        ＋ Reel
+      </button>
       <button class="btn-undo" onclick="reloadEqData()" title="↺ Recharger Sheet">↺ Sheet</button>
     </div>
     <div class="error-msg" id="eq-error-msg"></div>
@@ -1068,6 +1139,101 @@ HTML = r"""<!DOCTYPE html>
 
 </div><!-- fin .layout -->
 </div><!-- fin #page-equipment -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE REEL                                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="page-reel">
+<div class="layout">
+
+  <div class="panel-wrapper">
+  <div class="panel">
+
+    <div class="collapsible open" id="reelcol-items">
+      <div class="collapsible-header" onclick="toggleCol('reelcol-items')">
+        <span class="section-title">🎬 Cartes du reel</span><span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div id="reel-item-list">
+          <div class="reel-empty">Aucune carte ajoutée.<br>Génère une carte dans l'onglet Équipements<br>et clique <b>＋ Reel</b>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="collapsible open" id="reelcol-settings">
+      <div class="collapsible-header" onclick="toggleCol('reelcol-settings')">
+        <span class="section-title">⚙ Paramètres</span><span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="slider-row">
+          <span class="slider-label">Durée/carte</span>
+          <input type="range" id="reel_dur_per_card" min="1" max="8" value="3" step="0.5"
+                 oninput="updateSlider(this,'reel_val_dur')">
+          <input type="text" class="slider-val" id="reel_val_dur" value="3"
+                 onfocus="this.select()" onchange="syncVal('reel_val_dur','reel_dur_per_card')">
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Fondu</span>
+          <input type="range" id="reel_crossfade" min="0" max="1.5" value="0.5" step="0.1"
+                 oninput="updateSlider(this,'reel_val_cf')">
+          <input type="text" class="slider-val" id="reel_val_cf" value="0.5"
+                 onfocus="this.select()" onchange="syncVal('reel_val_cf','reel_crossfade')">
+        </div>
+        <div class="eq-text-row" style="margin-top:6px">
+          <label class="eq-toggle-wrap">
+            <input type="checkbox" id="reel_show_badge" checked>
+            <span class="eq-toggle-label">Rider's Selection</span>
+          </label>
+        </div>
+        <div class="slider-row" style="margin-top:4px">
+          <span class="slider-label">Taille PP</span>
+          <input type="range" id="reel_badge_radius" min="30" max="120" value="58"
+                 oninput="updateSlider(this,'reel_val_badge_r')">
+          <input type="text" class="slider-val" id="reel_val_badge_r" value="58"
+                 onfocus="this.select()" onchange="syncVal('reel_val_badge_r','reel_badge_radius')">
+        </div>
+        <!-- Sélecteur rider pour le badge PP -->
+        <div id="reel-badge-rider-box" style="margin-top:6px">
+          <div style="font-size:0.7rem;color:#666;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">
+            PP du rider (badge ★)
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="search-input" id="reel-rider-search" placeholder="🔍 Chercher…"
+                   oninput="filterReelRiders()" style="flex:1;font-size:0.78rem;padding:5px 8px">
+          </div>
+          <select id="reel-rider-select" size="5"
+                  style="width:100%;margin-top:4px;border-radius:6px;padding:3px 0;font-size:0.78rem">
+            <option value="">— Sans badge —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- fin .panel -->
+
+  <div class="panel-actions">
+    <button class="btn btn-generate" id="reel-gen-btn" onclick="generateEqReel()">▶ Générer le reel</button>
+    <div id="reel-progress" style="display:none;text-align:center;font-size:0.78rem;color:#888;padding:6px 0">
+      ⚙ Génération en cours…
+    </div>
+    <button class="btn btn-download" id="reel-dl-btn" disabled onclick="downloadEqReel()">⬇ Télécharger MP4</button>
+    <div id="reel-error-msg" style="display:none;font-size:0.78rem;padding:4px 0;text-align:center"></div>
+  </div>
+  </div><!-- fin .panel-wrapper -->
+
+  <!-- Zone preview reel -->
+  <div class="preview-area" id="reel-preview-area" style="flex-direction:column;gap:16px;overflow-y:auto;padding:20px">
+    <!-- Grille des cartes ajoutées -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center" id="reel-preview-grid"></div>
+    <!-- Lecteur vidéo (masqué jusqu'à génération) -->
+    <video id="reel-video-player" controls loop
+           style="display:none;max-height:60vh;max-width:100%;border-radius:10px;
+                  border:2px solid #C8D400;box-shadow:0 0 20px rgba(200,212,0,.25)">
+    </video>
+  </div>
+
+</div><!-- fin .layout -->
+</div><!-- fin #page-reel -->
 
 <script>
 // ── Collapsible ───────────────────────────────────────────────────────────
@@ -1166,11 +1332,22 @@ function renderProfiles() {
   }).join('');
 }
 
+// ── Cache global (préchargé au démarrage) ─────────────────────────────────
+const _app = {
+  profiles:        [],   // tous les profils complets
+  equipment:       {},   // { handle: [items] }
+  sponsors:        [],   // liste sponsors
+  eqVariants:      [],   // liste plate [{name,url,path,folder,stem_slug}]
+  categoryFolders: {},   // { "Brake Caliper": ["Brake Caliper","Brakes"], ... }
+  varCache:        {},   // cache par-item (clé: "brand|ref|cat")
+};
+
 // ── État ──────────────────────────────────────────────────────────────────
 let riders = [];
 let selectedSponsors = new Set();  // vide = auto
 let lastSlug = null;
 let genderFilter = 'all';  // 'all' | 'F' | 'M'
+let _lastRiderCardUrl = null;
 
 // ── Rider list ─────────────────────────────────────────────────────────────
 function setGender(g) {
@@ -1215,26 +1392,73 @@ function renderRiderList() {
   }
 }
 
+// ── Helpers loading bar ────────────────────────────────────────────────────
+function _setLoadingProgress(pct, msg) {
+  const bar = document.getElementById('app-loading-bar');
+  const txt = document.getElementById('app-loading-msg');
+  if (bar) bar.style.width = pct + '%';
+  if (txt && msg) txt.textContent = msg;
+}
+function _hideLoading() {
+  const el = document.getElementById('app-loading');
+  if (!el) return;
+  el.style.transition = 'opacity .4s';
+  el.style.opacity = '0';
+  setTimeout(() => el.remove(), 420);
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────
 async function init() {
-  const res = await fetch('/api/riders');
-  riders = await res.json();
-  renderRiderList();
+  try {
+    _setLoadingProgress(10, 'Connexion au serveur…');
+    const res = await fetch('/api/preload');
+    _setLoadingProgress(50, 'Indexation des données…');
+    const data = await res.json();
 
-  // Sponsors disponibles — affichage avec vrais logos
-  const sr = await fetch('/api/sponsors');
-  const sponsors = await sr.json();
-  const grid = document.getElementById('sponsors-grid');
-  sponsors.forEach(s => {
-    const chip = document.createElement('label');
-    chip.className = 'sponsor-chip';
-    chip.dataset.key = s.key;
-    chip.innerHTML = `
-      <input type="checkbox" value="${s.key}" onchange="toggleSponsor('${s.key}', this.checked)">
-      <img src="${s.url}" alt="${s.label}" onerror="this.style.display='none'">
-      <span>${s.label}</span>`;
-    grid.appendChild(chip);
-  });
+    // Stocker dans le cache global
+    _app.profiles        = data.profiles         || [];
+    _app.equipment       = data.equipment        || {};
+    _app.sponsors        = data.sponsors         || [];
+    _app.eqVariants      = data.eq_variants      || [];
+    _app.categoryFolders = data.category_folders || {};
+
+    _setLoadingProgress(70, 'Construction de la liste…');
+
+    // Riders list (compatibilité avec renderRiderList)
+    riders = _app.profiles.map(p => ({
+      slug:      p.slug,
+      prenom:    p.prenom,
+      nom:       p.nom,
+      genre:     p.genre,
+      has_photo: p.has_photo,
+    }));
+    renderRiderList();
+
+    _setLoadingProgress(88, 'Chargement des logos…');
+
+    // Sponsors
+    const grid = document.getElementById('sponsors-grid');
+    if (grid) {
+      _app.sponsors.forEach(s => {
+        const chip = document.createElement('label');
+        chip.className = 'sponsor-chip';
+        chip.dataset.key = s.key;
+        chip.innerHTML = `
+          <input type="checkbox" value="${s.key}" onchange="toggleSponsor('${s.key}', this.checked)">
+          <img src="${s.url}" alt="${s.label}" onerror="this.style.display='none'">
+          <span>${s.label}</span>`;
+        grid.appendChild(chip);
+      });
+    }
+
+    _setLoadingProgress(100, 'Prêt !');
+    setTimeout(_hideLoading, 300);
+
+  } catch(e) {
+    console.error('Preload failed:', e);
+    document.getElementById('app-loading-msg').textContent = '❌ Erreur de chargement — recharger la page';
+    document.getElementById('app-loading-bar').style.background = '#e55';
+  }
 }
 
 let _originalProfile = null;
@@ -1245,9 +1469,9 @@ async function onRiderChange() {
   document.getElementById('btn-dl').disabled = true;
   if (!slug) return;
 
-  const res = await fetch(`/api/profile/${slug}`);
-  if (!res.ok) return;
-  const profile = await res.json();
+  // Lookup local — pas de fetch
+  const profile = _app.profiles.find(p => p.slug === slug);
+  if (!profile) return;
   _originalProfile = profile;
   _fillEditFields(profile);
   const editCol = document.getElementById('col-edit');
@@ -1255,16 +1479,13 @@ async function onRiderChange() {
   editCol.classList.add('open');
   debouncedGenerate(100);
 
-  // Charger les équipements
   const instagram = profile.instagram || '';
   if (instagram) loadEquipment(instagram);
 }
 
-async function loadEquipment(instagram) {
-  const handle = instagram.replace(/^@/, '');
-  const res = await fetch(`/api/equipment/${handle}`);
-  if (!res.ok) return;
-  const items = await res.json();
+function loadEquipment(instagram) {
+  const handle = (instagram.replace(/^@/, '')).toLowerCase();
+  const items = _app.equipment[handle] || [];
 
   const col = document.getElementById('col-equipment');
   const list = document.getElementById('eq-list');
@@ -1497,6 +1718,8 @@ async function generate() {
     document.getElementById('placeholder').style.display = 'none';
     lastSlug = slug;
     document.getElementById('btn-dl').disabled = false;
+    document.getElementById('cards-add-reel-btn').disabled = false;
+    _lastRiderCardUrl = url;
 
   } catch(e) {
     area.classList.remove('loading');
@@ -1522,11 +1745,14 @@ async function reloadExcel() {
 
 // ── Tab navigation ────────────────────────────────────────────────────────
 function switchTab(tab) {
-  document.getElementById('tab-cards').classList.toggle('active', tab === 'cards');
-  document.getElementById('tab-equipment').classList.toggle('active', tab === 'equipment');
-  document.getElementById('page-cards').style.display      = (tab === 'cards')     ? 'grid' : 'none';
-  document.getElementById('page-equipment').style.display  = (tab === 'equipment') ? 'block': 'none';
+  ['cards','equipment','reel'].forEach(t => {
+    document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
+  });
+  document.getElementById('page-cards').style.display      = tab === 'cards'     ? 'grid'  : 'none';
+  document.getElementById('page-equipment').style.display  = tab === 'equipment' ? 'block' : 'none';
+  document.getElementById('page-reel').style.display       = tab === 'reel'      ? 'block' : 'none';
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
+  if (tab === 'reel') { renderReelPage(); _initReelRiderList(); }
 }
 
 // ── Equipment page ────────────────────────────────────────────────────────
@@ -1580,18 +1806,20 @@ function renderEqRiderList() {
   if (prev && filtered.find(r => r.slug === prev)) sel.value = prev;
 }
 
-async function onEqRiderChange() {
+let _eqSelectedRider = null;  // profil complet du rider sélectionné (pour badge reel)
+
+function onEqRiderChange() {
   const slug = document.getElementById('eq-rider-select').value;
   if (!slug) return;
-  const res = await fetch(`/api/profile/${slug}`);
-  if (!res.ok) return;
-  const profile = await res.json();
-  const instagram = (profile.instagram || '').replace(/^@/, '');
+
+  // Lookup local
+  const profile = _app.profiles.find(p => p.slug === slug);
+  if (!profile) return;
+  _eqSelectedRider = profile;
+  const instagram = (profile.instagram || '').replace(/^@/, '').toLowerCase();
   if (!instagram) return;
 
-  const eqRes = await fetch(`/api/equipment/${instagram}`);
-  if (!eqRes.ok) return;
-  const items = await eqRes.json();
+  const items = _app.equipment[instagram] || [];
 
   _eqSelectedItem = null;
   _eqSelectedPhotoPath = '';
@@ -1631,17 +1859,46 @@ function selectEqItem(idx) {
   loadColorVariants(it);
 }
 
-async function loadColorVariants(it) {
+function loadColorVariants(it) {
   const varBox   = document.getElementById('eq-color-variants');
   const swatches = document.getElementById('eq-color-swatches');
   varBox.style.display = 'none';
   swatches.innerHTML = '';
 
-  const params = new URLSearchParams({ brand: it.brand||'', reference: it.reference||'', category: it.category||'' });
-  const res  = await fetch(`/api/equipment-photos?${params}`);
-  if (!res.ok) return;
-  const data = await res.json();
-  const variants = data.variants || [];
+  // Lookup local — dossier catégorie d'abord, puis score de pertinence
+  const cacheKey = `${it.brand||''}|${it.reference||''}|${it.category||''}`;
+  let variants = _app.varCache[cacheKey];
+  if (!variants) {
+    const norm = s => (s||'').toLowerCase().replace(/[\s\-\_\/\.]/g, '');
+    const bNorm = norm(it.brand);
+    const rNorm = norm(it.reference);
+    // Dossiers valides pour cette catégorie
+    const catFolders = (_app.categoryFolders[it.category] || [it.category])
+      .map(f => norm(f));
+
+    // 1. Filtrer par dossier catégorie
+    const inFolder = _app.eqVariants.filter(f => {
+      if (!f.folder) return false;
+      return catFolders.includes(norm(f.folder));
+    });
+
+    if (inFolder.length === 0) {
+      // Fallback : racine Equipment/ si aucun dossier matche
+      variants = _app.eqVariants.filter(f => !f.folder);
+    } else {
+      // 2. Dans ce dossier, trier : brand+ref en premier, brand seul ensuite, reste après
+      const score = f => {
+        const s = norm(f.name);
+        if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return 0;
+        if (bNorm && s.includes(bNorm)) return 1;
+        const words = (it.reference||'').toLowerCase().split(/\s+/).filter(Boolean);
+        if (words.some(w => w.length > 2 && s.includes(norm(w)))) return 2;
+        return 3;
+      };
+      variants = [...inFolder].sort((a, b) => score(a) - score(b));
+    }
+    _app.varCache[cacheKey] = variants;
+  }
 
   if (variants.length > 0) {
     varBox.style.display = 'block';
@@ -1675,6 +1932,23 @@ function eqDebouncedGenerate(delay = 500) {
   _eqDebTimer = setTimeout(() => generateEqCard(true), delay);
 }
 
+function setEqBg(hex) {
+  const picker = document.getElementById('eq_photo_bg');
+  if (picker) picker.value = hex;
+  // Mettre à jour le highlight des presets
+  document.querySelectorAll('.eq-bg-preset').forEach(btn => {
+    btn.style.borderColor = btn.dataset.color === hex ? '#C8D400' : '#444';
+  });
+  eqDebouncedGenerate(100);
+}
+
+function _hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return [r, g, b];
+}
+
 async function generateEqCard(silent = false) {
   if (!_eqSelectedItem) {
     if (!silent) { document.getElementById('eq-error-msg').textContent = '❌ Sélectionne un équipement'; document.getElementById('eq-error-msg').style.display = 'block'; }
@@ -1694,9 +1968,11 @@ async function generateEqCard(silent = false) {
   const show_reference = g('eq_show_reference')?.checked ?? true;
   const show_details   = g('eq_show_details')?.checked   ?? true;
   const show_logo      = g('eq_show_logo')?.checked      ?? false;
+  const use_v2         = g('eq_use_v2')?.checked         ?? false;
   const brand_text     = g('eq_brand_text')?.value     || it.brand     || '';
   const reference_text = g('eq_reference_text')?.value || it.reference || '';
   const details_text   = g('eq_details_text')?.value   || it.details   || '';
+  const photo_bg       = _hexToRgb(g('eq_photo_bg')?.value || '#ffffff');
 
   try {
     const res = await fetch('/api/generate-eq-card', {
@@ -1707,8 +1983,9 @@ async function generateEqCard(silent = false) {
         brand: brand_text, reference: reference_text, details: details_text,
         photo_path: _eqSelectedPhotoPath || '',
         zoom, photo_x, photo_y,
-        panel_y: 900, text_x: 0, text_y: 0,
+        text_x: 0, text_y: 0,
         show_brand, show_reference, show_details, show_logo,
+        photo_bg, use_v2,
       }),
     });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
@@ -1721,6 +1998,7 @@ async function generateEqCard(silent = false) {
     img.src = url; img.style.display = 'block';
     document.getElementById('eq-placeholder').style.display = 'none';
     document.getElementById('eq-page-dl-btn').disabled = false;
+    document.getElementById('eq-add-reel-btn').disabled = false;
   } catch(e) {
     area.classList.remove('loading');
     if (!silent) { document.getElementById('eq-error-msg').textContent = '❌ ' + e.message; document.getElementById('eq-error-msg').style.display = 'block'; }
@@ -1731,6 +2009,304 @@ function downloadEqCard() {
   if (!_lastEqCard) return;
   const a = document.createElement('a');
   a.href = _lastEqCard.url; a.download = _lastEqCard.name; a.click();
+}
+
+// ── Rider card → Reel ─────────────────────────────────────────────────────────
+function addRiderCardToReel() {
+  if (!_lastRiderCardUrl || !lastSlug) return;
+  const sel = document.getElementById('rider');
+  const label = sel.options[sel.selectedIndex]?.text?.trim() || lastSlug;
+  const id = ++_reelIdSeq;
+  _reelItems.push({
+    id,
+    label:           label,
+    sub:             'Rider card',
+    preview_url:     _lastRiderCardUrl,
+    photo_path:      '',           // pas de photo produit — carte déjà générée
+    rider_instagram: '',
+    is_selection:    false,
+    card_params:     null,         // null = carte rider pré-rendue (pas régénérée)
+    prerendered_url: _lastRiderCardUrl,
+    type:            'rider',
+  });
+  _updateReelBadge();
+  const btn = document.getElementById('cards-add-reel-btn');
+  btn.textContent = '✓ Ajouté';
+  btn.style.background = '#C8D400'; btn.style.color = '#000';
+  setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+}
+
+// ── Reel ──────────────────────────────────────────────────────────────────────
+let _reelItems  = [];    // [{id, label, preview_url, photo_path, card_params, is_selection, rider_instagram}]
+let _reelIdSeq  = 0;
+let _lastEqReel = null;
+
+function _updateReelBadge() {
+  const badge = document.getElementById('reel-badge');
+  if (!badge) return;
+  const n = _reelItems.length;
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'inline' : 'none';
+}
+
+function addToReel() {
+  if (!_lastEqCard || !_eqSelectedItem) return;
+  const g   = (id) => document.getElementById(id);
+  const it  = _eqSelectedItem;
+  const id  = ++_reelIdSeq;
+
+  const item = {
+    id,
+    label:           `${it.category} · ${it.brand || ''} ${it.reference || ''}`.trim(),
+    sub:             g('eq_brand_text')?.value || it.brand || '',
+    preview_url:     _lastEqCard.url,
+    photo_path:      _eqSelectedPhotoPath || '',
+    rider_instagram: _eqSelectedRider?.instagram || '',
+    is_selection:    false,
+    card_params: {
+      category:      it.category,
+      brand:         g('eq_brand_text')?.value     || it.brand     || '',
+      reference:     g('eq_reference_text')?.value || it.reference || '',
+      details:       g('eq_details_text')?.value   || it.details   || '',
+      zoom:          parseInt(g('eq_zoom')?.value    || 100),
+      photo_x:       parseInt(g('eq_photo_x')?.value || 0),
+      photo_y:       parseInt(g('eq_photo_y')?.value || 0),
+      text_x: 0, text_y: 0,
+      show_brand:     g('eq_show_brand')?.checked     ?? true,
+      show_reference: g('eq_show_reference')?.checked ?? true,
+      show_details:   g('eq_show_details')?.checked   ?? true,
+      show_logo:      g('eq_show_logo')?.checked      ?? false,
+      photo_bg:       _hexToRgb(g('eq_photo_bg')?.value || '#ffffff'),
+      use_v2:         g('eq_use_v2')?.checked           ?? false,
+    },
+  };
+
+  _reelItems.push(item);
+  _updateReelBadge();
+
+  // Flash du bouton
+  const btn = document.getElementById('eq-add-reel-btn');
+  btn.textContent = '✓ Ajouté';
+  btn.style.background = '#C8D400'; btn.style.color = '#000';
+  setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+}
+
+function removeReelItem(id) {
+  _reelItems = _reelItems.filter(it => it.id !== id);
+  _updateReelBadge();
+  renderReelPage();
+}
+
+function toggleReelSelection(id) {
+  const already = _reelItems.find(it => it.id === id)?.is_selection;
+  _reelItems.forEach(it => it.is_selection = false);
+  if (!already) { const it = _reelItems.find(it => it.id === id); if (it) it.is_selection = true; }
+  renderReelPage();
+}
+
+let _reelRiderListReady = false;
+async function _initReelRiderList() {
+  if (_reelRiderListReady) { filterReelRiders(); return; }
+  // Lookup local — tout est déjà préchargé
+  window._allRiders = _app.profiles.length ? _app.profiles : riders;
+  _reelRiderListReady = true;
+  filterReelRiders();
+}
+
+function filterReelRiders() {
+  const q   = (document.getElementById('reel-rider-search').value || '').toLowerCase();
+  const sel = document.getElementById('reel-rider-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Sans badge —</option>';
+  (window._allRiders || []).filter(r =>
+    !q || `${r.prenom} ${r.nom}`.toLowerCase().includes(q)
+  ).forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = (r.instagram || '').replace(/^@/, '');
+    opt.textContent = `${r.genre === 'F' ? '♀' : '♂'} ${r.prenom} ${r.nom}`;
+    sel.appendChild(opt);
+  });
+  if (cur) sel.value = cur;
+}
+
+function renderReelPage() {
+  const list = document.getElementById('reel-item-list');
+  const grid = document.getElementById('reel-preview-grid');
+  if (!list) return;
+
+  if (_reelItems.length === 0) {
+    list.innerHTML = '<div class="reel-empty">Aucune carte ajoutée.<br>Génère une carte dans l\'onglet Équipements<br>et clique <b>＋ Reel</b>.</div>';
+    if (grid) grid.innerHTML = '';
+    return;
+  }
+
+  list.innerHTML = _reelItems.map(it => `
+    <div class="reel-item ${it.is_selection ? 'is-selection' : ''}"
+         draggable="true" data-id="${it.id}">
+      <img class="reel-thumb" src="${it.preview_url}" alt="">
+      <div class="reel-info">
+        <div class="reel-label">${it.label}</div>
+        <div class="reel-sub">${it.rider_instagram ? '@' + it.rider_instagram.replace(/^@/,'') : '—'}</div>
+      </div>
+      <span class="reel-star ${it.is_selection ? 'active' : ''}"
+            onclick="toggleReelSelection(${it.id})" title="Rider's Selection">★</span>
+      <span class="reel-remove" onclick="removeReelItem(${it.id})" title="Retirer">✕</span>
+    </div>
+  `).join('');
+
+  // Drag-and-drop reorder
+  let _dragId = null;
+  list.querySelectorAll('.reel-item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      _dragId = parseInt(el.dataset.id);
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      list.querySelectorAll('.reel-item').forEach(x => x.classList.remove('drag-over'));
+      el.classList.add('drag-over');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      const targetId = parseInt(el.dataset.id);
+      if (_dragId === targetId) return;
+      const fromIdx = _reelItems.findIndex(x => x.id === _dragId);
+      const toIdx   = _reelItems.findIndex(x => x.id === targetId);
+      if (fromIdx < 0 || toIdx < 0) return;
+      const [moved] = _reelItems.splice(fromIdx, 1);
+      _reelItems.splice(toIdx, 0, moved);
+      renderReelPage();
+    });
+  });
+
+  if (grid) {
+    grid.innerHTML = _reelItems.map(it => `
+      <div style="text-align:center">
+        <img src="${it.preview_url}" style="height:220px;border-radius:8px;
+          border:2px solid ${it.is_selection ? '#C8D400' : '#2a2a2a'}" alt="">
+        <div style="font-size:0.68rem;color:#888;margin-top:4px">${it.label}</div>
+        ${it.is_selection ? '<div style="font-size:0.6rem;color:#C8D400">★ Rider\'s Selection</div>' : ''}
+      </div>
+    `).join('');
+  }
+}
+
+// Convertit un blob URL en base64 via canvas (fiable pour les grandes images)
+async function _imgToBase64(blobUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png').split(',')[1]);
+    };
+    img.onerror = reject;
+    img.src = blobUrl;
+  });
+}
+
+function _reelLog(msg, isError = false) {
+  const el = document.getElementById('reel-error-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+  el.style.color = isError ? '#e55' : '#C8D400';
+  console.log('[Reel]', msg);
+}
+
+async function generateEqReel() {
+  const g = (id) => document.getElementById(id);
+  _reelLog('');
+
+  if (_reelItems.length === 0) {
+    _reelLog('❌ Ajoute au moins une carte via ＋ Reel', true); return;
+  }
+
+  _reelLog(`⚙ Préparation de ${_reelItems.length} carte(s)…`);
+  g('reel-gen-btn').disabled = true;
+  g('reel-progress').style.display = 'block';
+  g('reel-dl-btn').disabled = true;
+
+  try {
+    // Construire les items — rider cards envoyées en base64 via canvas
+    _reelLog('⚙ Encodage des images…');
+    const items_payload = [];
+    for (const it of _reelItems) {
+      let b64 = null;
+      if (it.type === 'rider' && it.preview_url) {
+        try {
+          b64 = await _imgToBase64(it.preview_url);
+        } catch(e) {
+          console.error('base64 failed for', it.label, e);
+        }
+      }
+      items_payload.push({
+        photo_path:      it.photo_path      || '',
+        rider_instagram: it.rider_instagram || '',
+        is_selection:    it.is_selection    || false,
+        card_params:     it.card_params     || null,
+        prerendered_b64: b64,
+      });
+    }
+
+    const dur = parseFloat(g('reel_dur_per_card')?.value || 3);
+    const cf  = parseFloat(g('reel_crossfade')?.value    || 0.5);
+    const showBadge = g('reel_show_badge')?.checked ?? true;
+
+    _reelLog(`⚙ Génération du MP4 (${items_payload.length} frames)…`);
+    const badgeRiderIg  = document.getElementById('reel-rider-select')?.value || '';
+    const badgeRadius   = parseInt(g('reel_badge_radius')?.value || 58);
+    const res = await fetch('/api/generate-eq-reel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: items_payload, dur_per_card: dur,
+                             crossfade: cf, show_rider_badge: showBadge,
+                             badge_rider_ig: badgeRiderIg,
+                             badge_radius: badgeRadius }),
+    });
+
+    if (!res.ok) {
+      let errMsg = `HTTP ${res.status}`;
+      try { errMsg = (await res.json()).error || errMsg; } catch {}
+      throw new Error(errMsg);
+    }
+
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    _lastEqReel = { url, name: 'reel_equipment.mp4' };
+    g('reel-dl-btn').disabled = false;
+
+    // Lecteur vidéo
+    const vid = g('reel-video-player');
+    if (vid) {
+      vid.src = url;
+      vid.style.display = 'block';
+      vid.load();
+      vid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    _reelLog('✅ Reel prêt — clique Télécharger MP4');
+
+  } catch(e) {
+    _reelLog('❌ ' + e.message, true);
+    console.error('[Reel error]', e);
+  } finally {
+    g('reel-gen-btn').disabled = false;
+    g('reel-progress').style.display = 'none';
+  }
+}
+
+function downloadEqReel() {
+  if (!_lastEqReel) return;
+  const a = document.createElement('a');
+  a.href = _lastEqReel.url; a.download = _lastEqReel.name; a.click();
 }
 
 init();
@@ -1966,13 +2542,17 @@ def api_generate_eq_card():
         zoom       = float(data.get("zoom",    100)) / 100.0
         photo_x    = int(data.get("photo_x",   0))
         photo_y    = int(data.get("photo_y",   0))
-        panel_y    = int(data.get("panel_y",   900))
+        panel_y_raw = data.get("panel_y")
+        panel_y    = int(panel_y_raw) if panel_y_raw else None
         text_x     = int(data.get("text_x",    0))
         text_y     = int(data.get("text_y",    0))
+        use_v2     = bool(data.get("use_v2",   False))
         show_brand     = bool(data.get("show_brand",     True))
         show_reference = bool(data.get("show_reference", True))
         show_details   = bool(data.get("show_details",   True))
         show_logo      = bool(data.get("show_logo",      False))
+        raw_bg         = data.get("photo_bg", [255, 255, 255])
+        photo_bg       = tuple(int(v) for v in raw_bg[:3]) if raw_bg else (255, 255, 255)
         fonts      = gec.load_eq_fonts()
         photo_path = Path(photo_path_str) if photo_path_str else None
         card       = gec.generate_equipment_card(
@@ -1982,12 +2562,138 @@ def api_generate_eq_card():
             panel_y=panel_y, text_x=text_x, text_y=text_y,
             show_brand=show_brand, show_reference=show_reference,
             show_details=show_details, show_logo=show_logo,
+            photo_bg=photo_bg, use_v2=use_v2,
         )
         buf = io.BytesIO()
         card.save(buf, "PNG")   # PNG pour conserver la transparence
         buf.seek(0)
         fname = f"{brand}_{reference or category}".replace(" ", "_") + ".png"
         return send_file(buf, mimetype="image/png", download_name=fname)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/generate-eq-reel", methods=["POST"])
+def api_generate_eq_reel():
+    """Génère un MP4 animé depuis une liste d'items (chacun avec ses params de carte)."""
+    try:
+        import generate_equipment_card as gec
+        data             = request.get_json()
+        items            = data.get("items", [])
+        dur_per_card     = float(data.get("dur_per_card",  3.0))
+        crossfade        = float(data.get("crossfade",     0.5))
+        show_rider_badge = bool(data.get("show_rider_badge", True))
+        badge_rider_ig   = data.get("badge_rider_ig", "")
+        badge_radius     = int(data.get("badge_radius", 58))
+
+        if not items:
+            return jsonify({"error": "Aucun item"}), 400
+
+        fonts = gec.load_eq_fonts()
+
+        # Composite + badge + encode
+        import tempfile, subprocess, shutil
+        tmpdir = Path(tempfile.mkdtemp())
+        ffmpeg_bin = shutil.which("ffmpeg") or next(
+            (p for p in ["/opt/homebrew/bin/ffmpeg","/usr/local/bin/ffmpeg","/usr/bin/ffmpeg"]
+             if Path(p).exists()), None)
+        if not ffmpeg_bin:
+            return jsonify({"error": "ffmpeg introuvable. brew install ffmpeg"}), 500
+
+        BG = (20, 20, 20)
+        png_paths = []
+        import base64
+
+        def _composite_to_rgb(card_rgba, cp=None, is_sel=False,
+                              rider_ig="", show_badge=False):
+            """Compose la carte RGBA sur fond sombre → RGB propre, sans double stroke."""
+            # alpha_composite respecte l'alpha de la carte (coins arrondis sans artefact)
+            bg = gec.Image.new("RGBA", (gec.W, gec.H), (*BG, 255))
+            bg = gec.Image.alpha_composite(bg, card_rgba)
+            result = bg.convert("RGB")
+            if is_sel and show_badge and rider_ig:
+                rp = gec.find_rider_photo(rider_ig)
+                if rp:
+                    result_rgba = result.convert("RGBA")
+                    panel_y = (cp or {}).get("panel_y")
+                    panel_y = int(panel_y) if panel_y else None
+                    result_rgba = gec.draw_rider_badge(result_rgba, rp, panel_y,
+                                                       badge_radius=badge_radius,
+                                                       instagram=rider_ig)
+                    result = result_rgba.convert("RGB")
+            return result
+
+        for i, item in enumerate(items):
+            b64 = item.get("prerendered_b64")
+            if b64:
+                img_bytes = base64.b64decode(b64)
+                frame_img = gec.Image.open(io.BytesIO(img_bytes)).convert("RGB")
+            else:
+                cp        = item.get("card_params", {}) or {}
+                photo_str = item.get("photo_path", "")
+                is_sel    = bool(item.get("is_selection", False))
+                rider_ig  = item.get("rider_instagram", "") or badge_rider_ig
+                card = gec.generate_equipment_card(
+                    category   = cp.get("category",  ""),
+                    brand      = cp.get("brand",     ""),
+                    reference  = cp.get("reference", ""),
+                    details    = cp.get("details",   ""),
+                    fonts      = fonts,
+                    photo_path = Path(photo_str) if photo_str else None,
+                    zoom       = float(cp.get("zoom",    100)) / 100.0,
+                    photo_x    = int(cp.get("photo_x",   0)),
+                    photo_y    = int(cp.get("photo_y",   0)),
+                    panel_y    = int(cp["panel_y"]) if cp.get("panel_y") else None,
+                    text_x     = int(cp.get("text_x",    0)),
+                    text_y     = int(cp.get("text_y",    0)),
+                    show_brand     = bool(cp.get("show_brand",     True)),
+                    show_reference = bool(cp.get("show_reference", True)),
+                    show_details   = bool(cp.get("show_details",   True)),
+                    show_logo      = bool(cp.get("show_logo",      False)),
+                    photo_bg       = tuple(int(v) for v in (cp.get("photo_bg") or [255,255,255])[:3]),
+                    use_v2         = bool(cp.get("use_v2", False)),
+                )
+                frame_img = _composite_to_rgb(card, cp, is_sel, rider_ig, show_rider_badge)
+            # Normalise toutes les frames à la même taille (rider=1080×1350, equip=970×1250)
+            if frame_img.size != (gec.W, gec.H):
+                frame_img = frame_img.resize((gec.W, gec.H), gec.Image.LANCZOS)
+            p = tmpdir / f"frame_{i:04d}.png"
+            frame_img.save(p, "PNG")
+            png_paths.append(p)
+
+        n   = len(png_paths)
+        dur = dur_per_card
+        output = tmpdir / "reel.mp4"
+
+        if n == 1:
+            cmd = ["ffmpeg","-y","-r","30","-loop","1","-t",str(dur),"-i",str(png_paths[0]),
+                   "-vf","format=yuv420p",
+                   "-c:v","libx264","-r","30",str(output)]
+        else:
+            inputs = []
+            for p in png_paths:
+                inputs += ["-r","30","-loop","1","-t",str(dur + crossfade),"-i",str(p)]
+            # format=yuv420p sur chaque input (les PNG sont RGBA, xfade ne supporte pas RGBA)
+            fmt_parts = [f"[{i}:v]format=yuv420p[f{i}]" for i in range(n)]
+            xfade_parts, prev = [], "[f0]"
+            for i in range(1, n):
+                out_lbl = f"[x{i}]" if i < n-1 else "[vout]"
+                offset  = round(i * (dur - crossfade), 3)
+                xfade_parts.append(f"{prev}[f{i}]xfade=transition=fade:duration={crossfade}:offset={offset}{out_lbl}")
+                prev = out_lbl
+            fc = ";".join(fmt_parts + xfade_parts)
+            cmd = ["ffmpeg","-y"] + inputs + [
+                "-filter_complex", fc,
+                "-map","[vout]","-c:v","libx264","-r","30",str(output)]
+
+        cmd[0] = ffmpeg_bin
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr.decode()[-600:])
+
+        buf = io.BytesIO(output.read_bytes())
+        return send_file(buf, mimetype="video/mp4", download_name="reel_equipment.mp4")
     except Exception as e:
         import traceback; traceback.print_exc()
         return jsonify({"error": str(e)}), 500
@@ -2018,6 +2724,88 @@ def api_equipment_all():
             "equipment": items,
         })
     return jsonify(result)
+
+
+@app.route("/api/preload")
+def api_preload():
+    """Retourne TOUT en un seul appel : profils, équipements, sponsors."""
+    _, _, profiles = get_engine()
+    eq = get_equipment()
+
+    # ── Profils complets ──
+    full_profiles = []
+    for p in profiles:
+        slug = f"{p['nom'].lower().replace(' ','_')}_{p['prenom'].lower()}"
+        full_profiles.append({
+            "slug":         slug,
+            "prenom":       p.get("prenom", ""),
+            "nom":          p.get("nom", ""),
+            "genre":        p.get("genre", ""),
+            "has_photo":    gc.find_photo(p) is not None,
+            "nationality":  p.get("nationality", ""),
+            "hometown":     p.get("hometown", ""),
+            "age":          p.get("age", ""),
+            "achievements": p.get("achievements", ""),
+            "team":         p.get("team", ""),
+            "instagram":    p.get("instagram", ""),
+        })
+
+    # ── Équipements indexés par handle ──
+    eq_by_handle = {}
+    for p in profiles:
+        handle = (p.get("instagram") or "").lstrip("@").lower()
+        rider_eq = eq.get(handle, {})
+        items = []
+        for cat in gc.EQUIPMENT_COLUMNS:
+            item = rider_eq.get(cat)
+            if item:
+                items.append({
+                    "category":  cat,
+                    "brand":     item["brand"],
+                    "reference": item["reference"],
+                    "details":   item["details"],
+                    "raw":       item["raw"],
+                })
+        eq_by_handle[handle] = items
+
+    # ── Sponsors ──
+    import generate_equipment_card as gec
+    seen_stems = {}
+    if gc.LOGOS_DIR.exists():
+        for f in sorted(gc.LOGOS_DIR.iterdir()):
+            if f.suffix.lower() == ".png":
+                seen_stems[f.stem.lower()] = f
+        for f in sorted(gc.LOGOS_DIR.iterdir()):
+            if f.suffix.lower() == ".svg":
+                seen_stems[f.stem.lower()] = f
+    sponsors = []
+    for stem, f in sorted(seen_stems.items()):
+        key = next((k for k, v in gc.BRAND_MAP.items() if v == f.name), f.stem)
+        sponsors.append({"key": key, "file": f.name, "label": f.stem.upper(), "url": f"/logos/{f.name}"})
+
+    # ── Variantes photos équipement (liste plate avec dossier + slug) ──
+    eq_variants = []
+    if gec.EQ_PHOTOS.exists():
+        exts = {".jpg", ".jpeg", ".png", ".webp"}
+        for f in sorted(gec.EQ_PHOTOS.rglob("*")):
+            if f.is_file() and f.suffix.lower() in exts:
+                rel    = f.relative_to(gec.EQ_PHOTOS)
+                folder = rel.parts[0] if len(rel.parts) > 1 else ""
+                eq_variants.append({
+                    "name":      f.stem,
+                    "url":       f"/api/eq-photo/{rel.as_posix()}",
+                    "path":      str(f),
+                    "folder":    folder,
+                    "stem_slug": gec._eq_slug(f.stem),
+                })
+
+    return jsonify({
+        "profiles":         full_profiles,
+        "equipment":        eq_by_handle,
+        "sponsors":         sponsors,
+        "eq_variants":      eq_variants,
+        "category_folders": gec.CATEGORY_FOLDERS,
+    })
 
 
 @app.route("/api/reload", methods=["POST"])

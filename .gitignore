@@ -7,6 +7,12 @@ config.py
 
 # ── Photos riders (données personnelles) ──
 PPRIDERS/
+PPRiders/
+PictureRiders/
+
+# ── Fichiers de test temporaires ──
+test_*.png
+eq_card_preview.*
 
 # ── Données / fichiers générés ──
 output/

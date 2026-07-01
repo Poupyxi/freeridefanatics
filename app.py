@@ -120,6 +120,28 @@ HTML = r"""<!DOCTYPE html>
   .reel-remove:hover { color:#e55; }
   .reel-empty { text-align:center; color:#444; font-size:0.82rem; padding:30px 0; }
 
+  /* ── Logos page ── */
+  #page-logos { display:none; padding:24px; max-width:1000px; margin:0 auto; }
+  .logos-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+  .logos-url-input { flex:1; min-width:260px; background:#111; border:1px solid #333; color:#eee;
+    padding:8px 12px; border-radius:6px; font-size:13px; }
+  .logos-url-input:focus { outline:none; border-color:#C8D400; }
+  .logos-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .logos-table th { text-align:left; padding:8px 10px; color:#888; border-bottom:1px solid #2a2a2a;
+    font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  .logos-table td { padding:7px 10px; border-bottom:1px solid #1e1e1e; vertical-align:middle; }
+  .logos-table tr:hover td { background:#1e1e1e; }
+  .logo-thumb { width:56px; height:28px; object-fit:contain; background:#111; border-radius:4px; }
+  .logo-status-ok   { color:#C8D400; font-size:12px; }
+  .logo-status-miss { color:#f55;    font-size:12px; }
+  .logos-progress { height:6px; background:#222; border-radius:3px; overflow:hidden; margin:12px 0 6px; display:none; }
+  .logos-progress-bar { height:100%; width:0; background:#C8D400; transition:width .15s; }
+  .logos-stats { font-size:12px; color:#888; margin-bottom:14px; }
+  .logos-actions { display:flex; gap:8px; align-items:center; margin-bottom:16px; }
+  .btn-select-all { background:none; border:1px solid #444; color:#aaa; padding:5px 12px;
+    border-radius:5px; cursor:pointer; font-size:12px; }
+  .btn-select-all:hover { border-color:#C8D400; color:#C8D400; }
+
   /* ── Equipment page ── */
   #page-equipment {
     display: none;  /* montré via JS → display:block */
@@ -703,6 +725,101 @@ HTML = r"""<!DOCTYPE html>
   }
   .profile-del-btn:hover { color: #ff6b6b; }
   .profile-empty { font-size: 0.78rem; color: #444; text-align: center; padding: 8px; }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE MOBILE
+  ══════════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* ── Header ── */
+    header {
+      flex-wrap: wrap;
+      padding: 10px 14px 8px;
+      gap: 8px;
+      row-gap: 6px;
+    }
+    header h1 { font-size: 0.95rem; letter-spacing: 1px; }
+
+    .tab-nav {
+      order: 10;
+      width: 100%;
+      margin-left: 0;
+      justify-content: stretch;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 7px 4px;
+      font-size: 0.72rem;
+      text-align: center;
+    }
+
+    /* Reload button: compact */
+    .btn-reload { font-size: 0.72rem; padding: 5px 9px; }
+
+    /* ── Layout : empilement vertical ── */
+    .layout {
+      grid-template-columns: 1fr;
+      height: auto;
+      min-height: 0;
+    }
+
+    /* Supprime les hauteurs fixes sur les pages */
+    #page-reel { height: auto; }
+    #page-reel .layout { height: auto; }
+    #page-equipment .layout { height: auto; }
+
+    /* ── Panneau gauche : hauteur max + scroll ── */
+    .panel-wrapper {
+      border-right: none;
+      border-bottom: 1px solid #333;
+      max-height: 58vh;
+      overflow: hidden;
+    }
+    .panel {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 14px 14px 6px;
+    }
+    .panel-actions { padding: 10px 14px 12px; }
+
+    /* ── Prévisualisation sous le panel ── */
+    .preview-area {
+      min-height: 55vw;
+      height: auto;
+    }
+    .preview-area img {
+      max-height: 80vw;
+      max-width: 96%;
+    }
+
+    /* ── Sliders : label plus court ── */
+    .slider-label { width: 74px; font-size: 0.72rem; }
+    input.slider-val { width: 36px; font-size: 0.73rem; }
+
+    /* ── Sponsors : 2 colonnes ── */
+    .sponsors-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* ── Grille édition ── */
+    .edit-grid { grid-template-columns: 68px 1fr; }
+
+    /* ── Boutons : zones de touch plus grandes ── */
+    .btn { padding: 14px; }
+    .btn-generate { font-size: 0.92rem; }
+
+    /* ── Barre équipements ── */
+    .eq-page-bar { flex-wrap: wrap; }
+  }
+
+  @media (max-width: 420px) {
+    header h1 { font-size: 0.82rem; }
+    .tab-btn { font-size: 0.65rem; padding: 7px 2px; }
+    .slider-label { width: 62px; font-size: 0.68rem; }
+    input.slider-val { width: 30px; }
+    .panel { padding: 12px 10px 4px; }
+    .panel-actions { padding: 8px 10px 10px; }
+    .sponsors-grid { grid-template-columns: repeat(2, 1fr); }
+    .collapsible-body { padding: 10px; }
+  }
 </style>
 </head>
 <body>
@@ -727,6 +844,7 @@ HTML = r"""<!DOCTYPE html>
   <nav class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('cards')" id="tab-cards">🎴 Cards</button>
     <button class="tab-btn" onclick="switchTab('equipment')" id="tab-equipment">🔧 Équipements</button>
+    <button class="tab-btn" onclick="switchTab('logos')" id="tab-logos">🖼 Logos</button>
     <button class="tab-btn" onclick="switchTab('reel')" id="tab-reel">
       🎬 Reel <span id="reel-badge" style="display:none;background:#C8D400;color:#000;
         border-radius:10px;font-size:0.7rem;padding:1px 6px;margin-left:4px;font-weight:700"></span>
@@ -1235,10 +1353,98 @@ HTML = r"""<!DOCTYPE html>
 </div><!-- fin .layout -->
 </div><!-- fin #page-reel -->
 
+<!-- ══════════════════ PAGE LOGOS ══════════════════ -->
+<div id="page-logos">
+  <h2 style="color:#C8D400;margin-bottom:6px;font-size:1.1rem;letter-spacing:1px">🖼 GESTIONNAIRE DE LOGOS</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:20px">Choisis le dossier logos, scanne un site source, télécharge les manquants.</p>
+
+  <!-- Étape 1 : Dossier -->
+  <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:16px">
+    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">① Dossier logos</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn" onclick="logosBrowseFolder()" id="logos-folder-btn">📁 Choisir le dossier…</button>
+      <div id="logos-folder-display" style="flex:1;font-size:12px;color:#666;font-family:monospace;
+           background:#1a1a1a;border:1px solid #2a2a2a;border-radius:5px;padding:7px 12px;min-width:200px">
+        Aucun dossier sélectionné
+      </div>
+    </div>
+    <div id="logos-folder-stats" style="font-size:12px;color:#888;margin-top:8px"></div>
+  </div>
+
+  <!-- Étape 2 : Source web -->
+  <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:16px" id="logos-step2" style="opacity:.4">
+    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">② Site source</div>
+    <div class="logos-toolbar" style="margin-bottom:0">
+      <input class="logos-url-input" id="logos-url" value="https://probikeshop.fr/pages/marques"
+        placeholder="URL de la page à scanner...">
+      <button class="btn" onclick="logosScrap()" id="logos-scan-btn">🔍 Scanner</button>
+      <button class="btn" id="logos-zip-btn" onclick="logosDownloadZip()" disabled
+        style="background:#1a2200;color:#C8D400;border:1px solid #C8D400">
+        ⬇ Télécharger ZIP
+      </button>
+    </div>
+  </div>
+
+  <!-- Résultats -->
+  <div class="logos-progress" id="logos-progress">
+    <div class="logos-progress-bar" id="logos-progress-bar"></div>
+  </div>
+  <div class="logos-stats" id="logos-stats"></div>
+
+  <div class="logos-actions" id="logos-actions" style="display:none">
+    <label style="font-size:12px;color:#aaa;cursor:pointer">
+      <input type="checkbox" id="logos-chk-all" onchange="logosToggleAll(this.checked)"> Tout sélectionner
+    </label>
+    <button class="btn-select-all" onclick="logosSelectMissing()">☑ Sélectionner manquants</button>
+    <span id="logos-sel-count" style="font-size:12px;color:#888;margin-left:6px"></span>
+  </div>
+
+  <table class="logos-table" id="logos-table" style="display:none">
+    <thead>
+      <tr>
+        <th style="width:32px"></th>
+        <th style="width:64px">Aperçu</th>
+        <th>Nom</th>
+        <th style="width:100px">Statut</th>
+        <th>Fichier source</th>
+      </tr>
+    </thead>
+    <tbody id="logos-tbody"></tbody>
+  </table>
+</div><!-- fin #page-logos -->
+
 <script>
 // ── Collapsible ───────────────────────────────────────────────────────────
 function toggleCol(id) {
   document.getElementById(id).classList.toggle('open');
+}
+
+// ── UX helper : rabat + scroll fluide ─────────────────────────────────────
+function smoothCollapseAndScroll(collapseId, targetId, delay = 220) {
+  // Rabattre la section source
+  const col = document.getElementById(collapseId);
+  if (col && col.classList.contains('open')) col.classList.remove('open');
+
+  if (!targetId) return;
+
+  // Après l'animation de fermeture, scroller vers la cible
+  setTimeout(() => {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    // Ouvrir la cible si elle est collapsible
+    if (target.classList.contains('collapsible') && !target.classList.contains('open')) {
+      target.classList.add('open');
+    }
+    // Trouver le conteneur scrollable (.panel)
+    const panel = target.closest('.panel');
+    if (panel) {
+      const panelTop  = panel.getBoundingClientRect().top;
+      const targetTop = target.getBoundingClientRect().top;
+      panel.scrollTo({ top: panel.scrollTop + (targetTop - panelTop) - 10, behavior: 'smooth' });
+    } else {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, delay);
 }
 
 // ── Verrous ───────────────────────────────────────────────────────────────
@@ -1478,6 +1684,9 @@ async function onRiderChange() {
   editCol.style.display = 'block';
   editCol.classList.add('open');
   debouncedGenerate(100);
+
+  // UX : rabat la section Rider et scroll vers les infos/sponsors
+  smoothCollapseAndScroll('col-rider', 'col-sponsors');
 
   const instagram = profile.instagram || '';
   if (instagram) loadEquipment(instagram);
@@ -1745,14 +1954,174 @@ async function reloadExcel() {
 
 // ── Tab navigation ────────────────────────────────────────────────────────
 function switchTab(tab) {
-  ['cards','equipment','reel'].forEach(t => {
+  ['cards','equipment','logos','reel'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
   });
   document.getElementById('page-cards').style.display      = tab === 'cards'     ? 'grid'  : 'none';
   document.getElementById('page-equipment').style.display  = tab === 'equipment' ? 'block' : 'none';
+  document.getElementById('page-logos').style.display      = tab === 'logos'     ? 'block' : 'none';
   document.getElementById('page-reel').style.display       = tab === 'reel'      ? 'block' : 'none';
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
   if (tab === 'reel') { renderReelPage(); _initReelRiderList(); }
+}
+
+// ── Logos page ────────────────────────────────────────────────────────────
+let _logosData   = [];
+let _logosFolder = '';
+
+async function logosBrowseFolder() {
+  const btn = document.getElementById('logos-folder-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳…';
+  try {
+    const r = await fetch('/api/logos/browse-folder');
+    const d = await r.json();
+    if (!d.ok || !d.path) {
+      document.getElementById('logos-folder-stats').textContent = d.error || 'Annulé.';
+      return;
+    }
+    _logosFolder = d.path;
+    document.getElementById('logos-folder-display').textContent = d.path;
+    document.getElementById('logos-folder-display').style.color = '#C8D400';
+    document.getElementById('logos-folder-stats').innerHTML =
+      `<span style="color:#C8D400">✅ ${d.count} logos détectés dans ce dossier</span>`;
+    // Auto-scan si une URL est déjà présente
+    if (document.getElementById('logos-url').value.trim()) logosScrap();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📁 Choisir le dossier…';
+  }
+}
+
+async function logosScrap() {
+  const url = document.getElementById('logos-url').value.trim();
+  if (!url) return;
+  if (!_logosFolder) {
+    document.getElementById('logos-stats').innerHTML =
+      '<span style="color:#f55">⚠️ Choisis d\'abord le dossier logos (étape ①)</span>';
+    return;
+  }
+
+  const stats   = document.getElementById('logos-stats');
+  const tbody   = document.getElementById('logos-tbody');
+  const table   = document.getElementById('logos-table');
+  const actions = document.getElementById('logos-actions');
+  const zipBtn  = document.getElementById('logos-zip-btn');
+
+  stats.textContent = '⏳ Scan en cours…';
+  tbody.innerHTML   = '';
+  table.style.display   = 'none';
+  actions.style.display = 'none';
+  zipBtn.disabled = true;
+  _logosData = [];
+
+  try {
+    const r = await fetch('/api/logos/scrape', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url, folder: _logosFolder})
+    });
+    const data = await r.json();
+    if (!data.ok) { stats.innerHTML = '❌ ' + (data.error||'Erreur'); return; }
+
+    _logosData = data.logos;
+    const existing = data.logos.filter(l => l.exists).length;
+    const missing  = data.logos.filter(l => !l.exists).length;
+
+    stats.innerHTML =
+      `<b style="color:#eee">${data.logos.length}</b> logos trouvés sur le site — ` +
+      `<span style="color:#C8D400">✅ ${existing} déjà présents</span> · ` +
+      `<span style="color:#f55">⬜ ${missing} manquants</span>`;
+
+    tbody.innerHTML = data.logos.map((l,i) => `
+      <tr>
+        <td><input type="checkbox" class="logo-chk" data-i="${i}" ${!l.exists ? 'checked' : ''}
+          onchange="logosUpdateCount()"></td>
+        <td><img class="logo-thumb" src="${l.preview_url}" onerror="this.style.opacity=.15"></td>
+        <td style="font-weight:600;color:#ddd">${l.label||l.name}</td>
+        <td>${l.exists
+          ? '<span class="logo-status-ok">✅ présent</span>'
+          : '<span class="logo-status-miss">⬜ manquant</span>'}</td>
+        <td style="color:#555;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.file}</td>
+      </tr>`).join('');
+
+    table.style.display   = 'table';
+    actions.style.display = 'flex';
+    logosUpdateCount();
+  } catch(e) {
+    stats.textContent = '❌ ' + e.message;
+  }
+}
+
+function logosUpdateCount() {
+  const checked = document.querySelectorAll('.logo-chk:checked').length;
+  document.getElementById('logos-sel-count').textContent = checked ? `${checked} sélectionnés` : '';
+  document.getElementById('logos-zip-btn').disabled = checked === 0;
+  document.getElementById('logos-chk-all').checked =
+    checked === document.querySelectorAll('.logo-chk').length;
+}
+
+function logosToggleAll(checked) {
+  document.querySelectorAll('.logo-chk').forEach(c => c.checked = checked);
+  logosUpdateCount();
+}
+
+function logosSelectMissing() {
+  document.querySelectorAll('.logo-chk').forEach((c, i) => {
+    c.checked = !_logosData[i]?.exists;
+  });
+  logosUpdateCount();
+}
+
+async function logosDownloadZip() {
+  const selected = [...document.querySelectorAll('.logo-chk:checked')]
+    .map(c => _logosData[parseInt(c.dataset.i)])
+    .filter(Boolean);
+
+  if (!selected.length) return;
+
+  const prog    = document.getElementById('logos-progress');
+  const bar     = document.getElementById('logos-progress-bar');
+  const stats   = document.getElementById('logos-stats');
+  const zipBtn  = document.getElementById('logos-zip-btn');
+
+  prog.style.display = 'block';
+  bar.style.width    = '5%';
+  zipBtn.disabled    = true;
+  stats.innerHTML    = `⏳ Téléchargement de ${selected.length} logos…`;
+
+  try {
+    const r = await fetch('/api/logos/download-zip', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({logos: selected.map(l => ({name:l.name, file:l.file, url:l.url})), folder: _logosFolder})
+    });
+
+    bar.style.width = '80%';
+
+    if (!r.ok) {
+      const e = await r.json();
+      throw new Error(e.error || 'Erreur serveur');
+    }
+
+    const blob = await r.blob();
+    bar.style.width = '100%';
+
+    // Déclencher téléchargement ZIP
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'logos_freeride.zip';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+
+    stats.innerHTML = `✅ ZIP téléchargé — ${selected.length} logos`;
+    // Rafraîchir le scan
+    setTimeout(logosScrap, 800);
+  } catch(e) {
+    stats.innerHTML = '❌ ' + e.message;
+  } finally {
+    setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0'; }, 2000);
+    zipBtn.disabled = false;
+  }
 }
 
 // ── Equipment page ────────────────────────────────────────────────────────
@@ -1841,6 +2210,9 @@ function onEqRiderChange() {
       <span class="eq-ref">${it.reference || ''}</span>
     </div>
   `).join('');
+
+  // UX : rabat la section Rider et scroll vers la liste d'équipements
+  smoothCollapseAndScroll('eqcol-rider', 'eqcol-items');
 }
 
 function selectEqItem(idx) {
@@ -1857,6 +2229,30 @@ function selectEqItem(idx) {
   if (el('eq_details_text'))   el('eq_details_text').value   = it.details   || '';
   // Charger les variantes couleur
   loadColorVariants(it);
+
+  // UX : scroll vers les variantes (sans rabattre la section qui les contient)
+  setTimeout(() => {
+    const target = document.getElementById('eq-color-variants');
+    if (!target || target.style.display === 'none') {
+      // Pas de variantes → scroll vers les contrôles texte
+      const fallback = document.getElementById('eqcol-textctrl');
+      if (fallback) {
+        const panel = fallback.closest('.panel');
+        if (panel) {
+          const panelTop  = panel.getBoundingClientRect().top;
+          const targetTop = fallback.getBoundingClientRect().top;
+          panel.scrollTo({ top: panel.scrollTop + (targetTop - panelTop) - 10, behavior: 'smooth' });
+        }
+      }
+      return;
+    }
+    const panel = target.closest('.panel');
+    if (panel) {
+      const panelTop  = panel.getBoundingClientRect().top;
+      const targetTop = target.getBoundingClientRect().top;
+      panel.scrollTo({ top: panel.scrollTop + (targetTop - panelTop) - 10, behavior: 'smooth' });
+    }
+  }, 80);
 }
 
 function loadColorVariants(it) {
@@ -2820,6 +3216,252 @@ def api_reload_equipment():
     _cache.pop("equipment", None)
     eq = get_equipment()
     return jsonify({"ok": True, "riders": len(eq)})
+
+
+# ── Logos Manager ─────────────────────────────────────────────────────────────
+
+import urllib.request, urllib.error, ssl, re, zipfile, tempfile, subprocess, shutil
+
+_logos_ssl = ssl.create_default_context()
+_logos_ssl.check_hostname = False
+_logos_ssl.verify_mode    = ssl.CERT_NONE
+
+def _logos_fetch(url, timeout=15):
+    req = urllib.request.Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Referer':    'https://probikeshop.fr/',
+        'Accept':     '*/*',
+    })
+    with urllib.request.urlopen(req, timeout=timeout, context=_logos_ssl) as r:
+        return r.read()
+
+def _probikeshop_logos(page_html):
+    """Extrait les logos SVG depuis la page marques de probikeshop."""
+    CDN = "https://probikeshop.fr/cdn/shop/files/"
+    results = []
+    seen = set()
+    # Cherche les <img src="...cdn/shop/files/xxx-logo.yyy" alt="BRAND">
+    for m in re.finditer(
+        r'<img[^>]+src=["\']([^"\']*cdn/shop/files/[^"\']*-logo[^"\']*)["\'][^>]*alt=["\']([^"\']+)["\']',
+        page_html, re.IGNORECASE
+    ):
+        src, alt = m.group(1), m.group(2).strip()
+        # aussi l'ordre inversé (alt avant src)
+        if not src or not alt:
+            continue
+        file_with_qs = src.split('/')[-1]
+        file_name    = file_with_qs.split('?')[0]
+        if not file_name or file_name in seen:
+            continue
+        # Filtrer les icônes non-marques
+        if any(x in alt for x in ['Probikeshop','Livraison','Paiement','experts','PBS']):
+            continue
+        seen.add(file_name)
+        # Nom normalisé
+        key = alt.lower()
+        key = key.replace("100%","100percent").replace("e.thirteen","ethirteen")
+        key = re.sub(r"[^a-z0-9]", "", key)
+        results.append({"name": key, "label": alt, "file": file_name,
+                        "url": CDN + file_name})
+
+    # Aussi alt après src
+    for m in re.finditer(
+        r'<img[^>]+alt=["\']([^"\']+)["\'][^>]+src=["\']([^"\']*cdn/shop/files/[^"\']*-logo[^"\']*)["\']',
+        page_html, re.IGNORECASE
+    ):
+        alt, src = m.group(1).strip(), m.group(2)
+        file_name = src.split('/')[-1].split('?')[0]
+        if not file_name or file_name in seen:
+            continue
+        if any(x in alt for x in ['Probikeshop','Livraison','Paiement','experts','PBS']):
+            continue
+        seen.add(file_name)
+        key = alt.lower()
+        key = key.replace("100%","100percent").replace("e.thirteen","ethirteen")
+        key = re.sub(r"[^a-z0-9]", "", key)
+        results.append({"name": key, "label": alt, "file": file_name,
+                        "url": CDN + file_name})
+    return results
+
+def _generic_logos(page_html, base_url):
+    """Extrait les logos depuis une page générique (cherche les <img> dans header/nav)."""
+    results = []
+    seen = set()
+    for m in re.finditer(
+        r'<img[^>]+src=["\']([^"\']+\.(svg|png|webp))["\'][^>]*(?:alt=["\']([^"\']*)["\'])?',
+        page_html, re.IGNORECASE
+    ):
+        src, ext, alt = m.group(1), m.group(2), (m.group(3) or "").strip()
+        if not src or src in seen:
+            continue
+        seen.add(src)
+        # Reconstituer l'URL absolue si relative
+        if src.startswith('//'):
+            src = 'https:' + src
+        elif src.startswith('/'):
+            from urllib.parse import urlparse
+            p = urlparse(base_url)
+            src = f"{p.scheme}://{p.netloc}{src}"
+        file_name = src.split('/')[-1].split('?')[0]
+        key = alt or file_name.rsplit('.',1)[0]
+        key = re.sub(r"[^a-z0-9]", "", key.lower()) or "logo"
+        results.append({"name": key, "label": alt or file_name, "file": file_name, "url": src})
+    return results[:200]
+
+def _svg_to_png(svg_bytes, out_path, size=400):
+    """Convertit SVG → PNG via qlmanage (macOS built-in)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        svg_file = Path(tmp) / "logo.svg"
+        svg_file.write_bytes(svg_bytes)
+        result = subprocess.run(
+            ["qlmanage", "-t", "-s", str(size), "-o", tmp, str(svg_file)],
+            capture_output=True, timeout=15
+        )
+        pngs = list(Path(tmp).glob("*.png"))
+        if pngs:
+            shutil.copy(str(pngs[0]), str(out_path))
+            return True
+    return False
+
+@app.route("/api/logos/browse-folder")
+def api_logos_browse_folder():
+    """Ouvre un dialogue natif macOS via osascript (thread-safe)."""
+    try:
+        default = str(BASE_DIR / "logos")
+        script = (
+            f'set defaultFolder to POSIX file "{default}" as alias\n'
+            f'POSIX path of (choose folder with prompt "Choisir le dossier logos" '
+            f'default location defaultFolder)'
+        )
+        result = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True, timeout=60
+        )
+        if result.returncode != 0:
+            # Annulé par l'utilisateur ou erreur
+            err = result.stderr.strip()
+            if "User canceled" in err or "cancelled" in err.lower():
+                return jsonify({"ok": False, "error": "Annulé"})
+            return jsonify({"ok": False, "error": err or "Erreur osascript"})
+
+        folder = result.stdout.strip()
+        if not folder:
+            return jsonify({"ok": False, "error": "Aucun dossier sélectionné"})
+
+        logos_dir = Path(folder)
+        existing = [f.name for f in logos_dir.iterdir()
+                    if f.suffix.lower() in ('.png', '.svg', '.jpg', '.webp')]
+        return jsonify({"ok": True, "path": folder, "count": len(existing)})
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "error": "Timeout — dialogue fermé ?"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
+@app.route("/api/logos/scan")
+def api_logos_scan():
+    logos_dir = BASE_DIR / "logos"
+    logos_dir.mkdir(exist_ok=True)
+    existing = {f.stem.lower() for f in logos_dir.iterdir()
+                if f.suffix.lower() in ('.png','.svg','.jpg','.webp')}
+    return jsonify({"ok": True, "existing": list(existing)})
+
+@app.route("/api/logos/scrape", methods=["POST"])
+def api_logos_scrape():
+    data   = request.get_json() or {}
+    url    = (data.get("url") or "").strip()
+    folder = (data.get("folder") or "").strip()
+    if not url:
+        return jsonify({"ok": False, "error": "URL manquante"})
+
+    # Récupère la page
+    try:
+        html = _logos_fetch(url).decode("utf-8", errors="replace")
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"Impossible de charger la page : {e}"})
+
+    # Parse selon la source
+    if "probikeshop.fr" in url:
+        logos = _probikeshop_logos(html)
+    else:
+        logos = _generic_logos(html, url)
+
+    if not logos:
+        return jsonify({"ok": False, "error": "Aucun logo trouvé sur cette page"})
+
+    # Compare avec logos existants dans le dossier choisi
+    logos_dir = Path(folder) if folder else BASE_DIR / "logos"
+    logos_dir.mkdir(parents=True, exist_ok=True)
+    existing = {f.stem.lower() for f in logos_dir.iterdir()
+                if f.suffix.lower() in ('.png','.svg','.jpg','.webp')}
+
+    for l in logos:
+        l["exists"]      = l["name"] in existing
+        l["preview_url"] = l["url"]  # aperçu direct depuis CDN
+
+    return jsonify({"ok": True, "logos": logos, "total": len(logos),
+                    "existing": sum(1 for l in logos if l["exists"])})
+
+@app.route("/api/logos/download-zip", methods=["POST"])
+def api_logos_download_zip():
+    data   = request.get_json() or {}
+    logos  = data.get("logos", [])
+    folder = (data.get("folder") or "").strip()
+    if not logos:
+        return jsonify({"ok": False, "error": "Aucun logo sélectionné"})
+
+    logos_dir = Path(folder) if folder else BASE_DIR / "logos"
+    logos_dir.mkdir(parents=True, exist_ok=True)
+
+    zip_buf = io.BytesIO()
+    ok = fail = 0
+
+    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for item in logos:
+            name = re.sub(r"[^a-z0-9]", "", (item.get("name") or "logo").lower())
+            url  = item.get("url", "")
+            file = item.get("file", "")
+            if not url or not name:
+                continue
+
+            try:
+                raw = _logos_fetch(url)
+            except Exception:
+                fail += 1
+                continue
+
+            is_svg = file.lower().endswith(".svg") or raw[:200].lstrip().startswith(b"<")
+            out_png = logos_dir / f"{name}.png"
+
+            if is_svg:
+                # Essaie de convertir en PNG via qlmanage
+                converted = False
+                try:
+                    converted = _svg_to_png(raw, out_png)
+                except Exception:
+                    pass
+
+                if converted and out_png.exists():
+                    zf.write(str(out_png), f"{name}.png")
+                    ok += 1
+                else:
+                    # Fallback : garder le SVG dans le ZIP
+                    svg_path = logos_dir / f"{name}.svg"
+                    svg_path.write_bytes(raw)
+                    zf.write(str(svg_path), f"{name}.svg")
+                    ok += 1
+            else:
+                out_png.write_bytes(raw)
+                zf.write(str(out_png), f"{name}.png")
+                ok += 1
+
+    zip_buf.seek(0)
+    return send_file(
+        zip_buf,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="logos_freeride.zip"
+    )
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────

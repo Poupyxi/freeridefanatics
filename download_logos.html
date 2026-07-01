@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Freeride Fanatics — Logos Probikeshop</title>
+<style>
+  body { font-family: monospace; background: #1a1a1a; color: #e0e0e0; padding: 24px; max-width: 860px; margin: 0 auto; }
+  h1 { color: #C8D400; margin-bottom: 4px; }
+  p  { color: #888; margin: 4px 0 16px; }
+  button { background: #C8D400; color: #111; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-right: 10px; }
+  button:hover { background: #d9e700; }
+  button:disabled { background: #444; color: #888; cursor: not-allowed; }
+  #progress { margin: 14px 0 4px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
+  #bar { height: 100%; width: 0; background: #C8D400; transition: width .15s; }
+  #log { margin-top: 10px; background: #111; border-radius: 6px; padding: 14px; height: 300px; overflow-y: auto; font-size: 12px; line-height: 1.8; }
+  .ok { color: #C8D400; } .err { color: #f55; } .skip { color: #555; } .info { color: #69f; }
+  #cmd { margin-top: 16px; background: #0d1a0d; border: 1px solid #C8D400; border-radius: 6px; padding: 14px; display: none; }
+  #cmd p { color: #C8D400; margin: 0 0 8px; font-weight: bold; }
+  #cmd code { color: #fff; font-size: 13px; word-break: break-all; }
+  #cmd button { background: #333; color: #C8D400; font-size: 13px; padding: 6px 14px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>🏔 Freeride Fanatics — 209 logos Probikeshop</h1>
+<p>Convertit chaque SVG en PNG et le télécharge dans <b>~/Downloads</b>, puis donne la commande Terminal pour tout déplacer dans <code>logos/</code></p>
+
+<button id="btn" onclick="run()">▶ Lancer le téléchargement</button>
+<span id="counter" style="color:#888;font-size:13px"></span>
+
+<div id="progress"><div id="bar"></div></div>
+<div id="log"></div>
+
+<div id="cmd">
+  <p>✅ Terminé ! Lance cette commande dans Terminal pour déplacer les logos :</p>
+  <code id="cmdtext"></code><br>
+  <button onclick="copyCmd()">📋 Copier</button>
+</div>
+
+<script>
+const BASE = "https://probikeshop.fr/cdn/shop/files/";
+
+const LOGOS = {
+  "100percent":        "centpourcent-logo.svg",
+  "226ers":            "22ers-logo.svg",
+  "3t":                "3t-logo.svg",
+  "abus":              "abus-logo.svg",
+  "aeroe":             "aeroe-logo.svg",
+  "allmountainstyle":  "AllMountainStyle-logo.svg",
+  "alpinestars":       "Alpinestars-logo.svg",
+  "ambit":             "ambit-logo.svg",
+  "apidura":           "apidura-logo.svg",
+  "aqua2go":           "aqua2go-logo.svg",
+  "assos":             "Assos-logo.svg",
+  "avsracing":         "avsracing-logo.svg",
+  "baouw":             "baouw-logo.svg",
+  "bbb":               "BBB-logo.svg",
+  "bell":              "Bell-logo.svg",
+  "bikeoriginal":      "BikeOriginal-logo.svg",
+  "bikeyoke":          "BikeYoke-logo.svg",
+  "blackbearing":      "BlackBearing-logo_logo.svg",
+  "blackburn":         "BlackBurn-logo.svg",
+  "bliz":              "Bliz-logo.svg",
+  "bosch":             "Bosch-logo.svg",
+  "brooks":            "brooks-logo.svg",
+  "bryton":            "Bryton-logo.svg",
+  "buds":              "Buds-logo.svg",
+  "buff":              "Buff-logo.svg",
+  "burgtec":           "Burgtec-logo.svg",
+  "camelbak":          "Camelbak-logo.svg",
+  "campagnolo":        "campagnolo-logo.svg",
+  "canecreek":         "CaneCreek-logo.svg",
+  "cast":              "cast-logo.svg",
+  "castelli":          "castelli-logo_845aeb2b-5b17-4500-8621-cc86b692628e.svg",
+  "cateye":            "Cateye-logo.svg",
+  "ceramicspeed":      "ceramicspeed-logo.svg",
+  "challenge":         "challenge-logo.svg",
+  "chrisking":         "chrisking-logo.svg",
+  "chromag":           "Chromag-logo.svg",
+  "clarks":            "ClarksStandard-logo.svg",
+  "clearprotect":      "clearprotect-logo.svg",
+  "clifbar":           "clif-logo.svg",
+  "continental":       "continental-logo.svg",
+  "crankbrothers":     "crankbrothers-logo.svg",
+  "cushcore":          "Cushcore-logo.svg",
+  "cyclingceramic":    "cyclingceramic-logo.svg",
+  "deda":              "deda-logo.svg",
+  "dharco":            "dharco-logo.svg",
+  "dmr":               "DMR-logo.svg",
+  "dtswiss":           "dtswiss-logo.svg",
+  "dynamic":           "dynamic-logo.svg",
+  "ethirteen":         "ethirteen-logo.svg",
+  "elite":             "Elite-logo.svg",
+  "elvedes":           "elvedes-logo.svg",
+  "endura":            "endura-logo.svg",
+  "enve":              "Enve-logo.svg",
+  "ergon":             "Ergon-logo.svg",
+  "esi":               "Esi-logo.svg",
+  "evoc":              "Evoc-logo.svg",
+  "exposurelights":    "exposurelights-logo.svg",
+  "feedbacksports":    "FeedBackSport-logo.svg",
+  "fidlock":           "Fidlock-logo.svg",
+  "finishline":        "finishline-logo.svg",
+  "five":              "five-logo.svg",
+  "fiveten":           "fiveten-logo.svg",
+  "fizik":             "Fizik-logo.svg",
+  "formula":           "Formula-logo.svg",
+  "fox":               "fox-logo.svg",
+  "foxracingshox":     "foxracingshox-logo.svg",
+  "fsa":               "FSA-logo.svg",
+  "fulcrum":           "Fulcrum-logo.svg",
+  "gform":             "gform-logo.svg",
+  "galfer":            "Galfer-logo.svg",
+  "garmin":            "garmin-logo.svg",
+  "giro":              "giro-logo_562aee13-e078-48fe-becf-63a82ac03b5c.svg",
+  "granitedesign":     "GraniteDesign-logo.svg",
+  "gripgrab":          "gripgrab-logo.svg",
+  "hammerhead":        "hammerhead-logo.svg",
+  "high5":             "high5-logo.svg",
+  "hope":              "hope-logo.svg",
+  "htcomponents":      "ht-logo.svg",
+  "hutchinson":        "Hutchinson-logo.svg",
+  "hydrapak":          "Hydrapak-logo.svg",
+  "industrynine":      "industrynine-logo_761cbefc-dd05-496e-a642-b7a8998af436.svg",
+  "ion":               "ion-logo.svg",
+  "ism":               "ISM-logo.svg",
+  "jagwire":           "Jagwire-logo.svg",
+  "juicelubes":        "juicelubes-logo.svg",
+  "julbo":             "Julbo-logo.svg",
+  "kedge":             "Kedge-logo.svg",
+  "kask":              "Kask-logo.svg",
+  "kmc":               "KMC-logo.svg",
+  "knog":              "Knog-logo.svg",
+  "komcycling":        "komcycling-logo.svg",
+  "kryptonite":        "Kryptonite-logo.svg",
+  "ks":                "KS-logo.svg",
+  "lazer":             "lazer-logo.svg",
+  "leatt":             "Leatt-logo.svg",
+  "lezyne":            "lezyne-logo.svg",
+  "liquimoly":         "liquimoly-logo.svg",
+  "lizardskins":       "LizardSkins-logo.svg",
+  "look":              "look-logo.svg",
+  "macride":           "macride-logo.svg",
+  "magura":            "Magura-logo.svg",
+  "marzocchi":         "Marzocchi-logo.svg",
+  "mavic":             "mavic-logo.svg",
+  "maxxis":            "maxxis-logo.svg",
+  "merge4":            "merge4-logo.svg",
+  "met":               "Met-logo.svg",
+  "michelin":          "michelin-logo.svg",
+  "microshift":        "microshift-logo.svg",
+  "monkeyproducts":    "monkeyssauce-logo.svg",
+  "mucoff":            "mucoff-logo.svg",
+  "noflats":           "noflats-logo.svg",
+  "northwave":         "Northwave-logo.svg",
+  "oakley":            "Oakley-logo.svg",
+  "odi":               "Odi-logo.svg",
+  "oneal":             "oneal-logo.svg",
+  "ortlieb":           "Ortlieb-logo.svg",
+  "oury":              "oury-logo.svg",
+  "panaracer":         "panaracer-logo.svg",
+  "panzer":            "panzer-logo.svg",
+  "parktool":          "parktool-logo.svg",
+  "peatys":            "peatys-logo.svg",
+  "peruzzo":           "peruzzo-logo.svg",
+  "pirelli":           "Pirelli-logo.svg",
+  "pitviper":          "pitviper-logo.svg",
+  "poc":               "Poc-logo.svg",
+  "powerbar":          "powerbar-logo.svg",
+  "pro":               "Pro-logo.svg",
+  "profiledesign":     "ProfileDesign-logo.svg",
+  "prologo":           "prologo-logo.svg",
+  "quadlock":          "Quadlock-logo.svg",
+  "quarq":             "quarq-logo.svg",
+  "quoc":              "quoc-logo.svg",
+  "raceface":          "Raceface-logo.svg",
+  "racer":             "racer-logo.svg",
+  "ravemen":           "ravemen-logo.svg",
+  "renthal":           "Renthal-logo.svg",
+  "repente":           "repente-logo.svg",
+  "restrap":           "Restrap-logo.svg",
+  "reversecomponents": "reversecomponents-logo.svg",
+  "ritchey":           "Ritchey-logo.svg",
+  "rockshox":          "rockshox-logo.svg",
+  "rotor":             "Rotor-logo.svg",
+  "rudyproject":       "rudyproject-logo.svg",
+  "schwalbe":          "schwalbe-logo.svg",
+  "scicon":            "Scicon-logo.svg",
+  "sdg":               "SDG-logo.svg",
+  "selleitalia":       "selleitalia-logo.svg",
+  "shimano":           "shimano-logo.svg",
+  "sidi":              "sidi-logo.svg",
+  "sigma":             "Sigma-logo.svg",
+  "silca":             "Silca-logo.svg",
+  "skf":               "SKF-logo.svg",
+  "sksgermany":        "sksgermany-logo.svg",
+  "smp":               "smp-logo.svg",
+  "spank":             "Spank-logo.svg",
+  "squirtlube":        "squirtlube-logo.svg",
+  "sram":              "sram-logo.svg",
+  "stagescycling":     "StagesCycling-logo.svg",
+  "stans":             "Notubes-logo.svg",
+  "stronglight":       "Stronglight-logo.svg",
+  "sunrace":           "Sunrace-logo.svg",
+  "supacaz":           "Supacaz-logo.svg",
+  "swissstop":         "SwissStop-logo.svg",
+  "tacx":              "tacx-logo.svg",
+  "tannus":            "Tannus-logo.svg",
+  "thomson":           "Thomson-logo.svg",
+  "thule":             "thule-logo.svg",
+  "time":              "Time-logo.svg",
+  "topeak":            "Topeak-logo.svg",
+  "troyleedesigns":    "troyleedesigns-logo.svg",
+  "trp":               "TRP-logo.svg",
+  "truvativ":          "Truvativ-logo.svg",
+  "tubolito":          "Tubolito-logo.svg",
+  "tune":              "Tune-logo.svg",
+  "unior":             "Unior-logo.svg",
+  "urge":              "Urge-logo.svg",
+  "uswe":              "Uswe-logo.svg",
+  "vittoria":          "vittoria-logo.svg",
+  "wahoo":             "wahoo-logo.svg",
+  "wolftooth":         "Wolftooth-logo.svg",
+  "wtb":               "WTB-logo.svg",
+  "yeti":              "yeti-logo.svg",
+  "zefal":             "Zefal-logo.svg",
+  "zipp":              "Zipp-logo.svg",
+};
+
+async function svgToPngBlob(svgText) {
+  const blob = new Blob([svgText], {type:'image/svg+xml'});
+  const url  = URL.createObjectURL(blob);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const W = 400, H = img.naturalHeight ? Math.round(img.naturalHeight * 400 / (img.naturalWidth||400)) : 150;
+      const c = document.createElement('canvas');
+      c.width = W; c.height = Math.max(H,1);
+      c.getContext('2d').drawImage(img, 0, 0, W, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject('empty'), 'image/png');
+    };
+    img.onerror = e => { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+function triggerDownload(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function log(msg, cls='') {
+  const d = document.createElement('div');
+  d.className = cls; d.innerHTML = msg;
+  document.getElementById('log').appendChild(d);
+  document.getElementById('log').scrollTop = 99999;
+  return d;
+}
+
+async function run() {
+  document.getElementById('btn').disabled = true;
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('cmd').style.display = 'none';
+
+  const entries = Object.entries(LOGOS);
+  let ok=0, fail=0, i=0;
+  const downloaded = [];
+
+  for (const [key, file] of entries) {
+    i++;
+    document.getElementById('bar').style.width = (i/entries.length*100)+'%';
+    document.getElementById('counter').textContent = `${i}/${entries.length}`;
+
+    const row = log(`⬇️ ${key}…`);
+    try {
+      const r = await fetch(BASE + file);
+      if (!r.ok) throw new Error('HTTP '+r.status);
+      const text = await r.text();
+      const isSvg = file.endsWith('.svg');
+      let blob;
+      if (isSvg) {
+        blob = await svgToPngBlob(text);
+      } else {
+        blob = await r.blob();
+      }
+      triggerDownload(blob, key + '.png');
+      downloaded.push(key + '.png');
+      row.className = 'ok';
+      row.innerHTML = `✅ ${key}.png`;
+      ok++;
+    } catch(e) {
+      row.className = 'err';
+      row.innerHTML = `❌ ${key} — ${e.message||e}`;
+      fail++;
+    }
+    // Petite pause pour éviter le throttling navigateur
+    await new Promise(r => setTimeout(r, 80));
+  }
+
+  document.getElementById('bar').style.width = '100%';
+  document.getElementById('counter').textContent = `✅ ${ok} téléchargés, ❌ ${fail} échoués`;
+
+  // Afficher la commande Terminal
+  const cmd = `mv ~/Downloads/{${downloaded.join(',')}} ~/Desktop/freeride/logos/`;
+  document.getElementById('cmdtext').textContent = cmd;
+  document.getElementById('cmd').style.display = 'block';
+  document.getElementById('btn').disabled = false;
+  document.getElementById('btn').textContent = '🔄 Relancer';
+}
+
+function copyCmd() {
+  navigator.clipboard.writeText(document.getElementById('cmdtext').textContent);
+  event.target.textContent = '✅ Copié !';
+  setTimeout(() => event.target.textContent = '📋 Copier', 2000);
+}
+</script>
+</body>
+</html>

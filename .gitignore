@@ -36,8 +36,8 @@ venv/
 .env
 env/
 
-# ── Fichier script temporaire ──
-download_logos.command
+# ── Scripts helper temporaires ──
+*.command
 rebuild_riders.py
 
 # ── Photos produits locales (binaires, trop lourdes pour git) ──

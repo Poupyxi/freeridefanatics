@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Télécharge les logos depuis probikeshop.fr et les convertit en PNG.
-Aucune dépendance externe requise — utilise uniquement Python + qlmanage (macOS intégré).
+Télécharge les logos depuis probikeshop.fr, Brandfetch CDN et sites officiels,
+puis les convertit en PNG.
+Aucune dépendance externe requise — utilise Python + qlmanage (macOS intégré).
 
 Lance : python3 download_logos.py
 """
@@ -23,7 +24,7 @@ BASE_DIR  = Path(__file__).parent
 LOGOS_DIR = BASE_DIR / "logos"
 LOGOS_DIR.mkdir(exist_ok=True)
 
-# Logos trouvés sur probikeshop.fr/pages/marques
+# ── Logos existants (probikeshop.fr) ─────────────────────────────────────────
 LOGO_URLS = {
     "100percent":    "https://probikeshop.fr/cdn/shop/files/centpourcent-logo.svg",
     "burgtec":       "https://probikeshop.fr/cdn/shop/files/Burgtec-logo.svg",
@@ -43,6 +44,72 @@ LOGO_URLS = {
     "troyleedesigns":"https://probikeshop.fr/cdn/shop/files/troyleedesigns-logo.svg",
     "trp":           "https://probikeshop.fr/cdn/shop/files/TRP-logo.svg",
     "yeti":          "https://probikeshop.fr/cdn/shop/files/yeti-logo.svg",
+    # ── Marques manquantes — multiples sources (essayées dans l'ordre) ────────
+    "hope":          [
+        "https://cdn.brandfetch.io/hopetechnology.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/hopetechnology.com",
+        "https://www.hopetechnology.com/wp-content/themes/hope/img/hope-logo.svg",
+    ],
+    "renthal":       [
+        "https://cdn.brandfetch.io/renthal.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/renthal.com",
+        "https://www.renthal.com/wp-content/themes/renthal/images/logo.svg",
+    ],
+    "crankbrothers": [
+        "https://cdn.brandfetch.io/crankbrothers.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/crankbrothers.com",
+        "https://www.crankbrothers.com/cdn/shop/files/cb-logo-light.svg",
+    ],
+    "ethirteen":     [
+        "https://cdn.brandfetch.io/ethirteen.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/ethirteen.com",
+        "https://www.ethirteen.com/wp-content/uploads/2021/01/e13-logo.png",
+    ],
+    "deity":         [
+        "https://cdn.brandfetch.io/deitybikes.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/deitybikes.com",
+        "https://deitybikes.com/wp-content/themes/deity/img/logo.svg",
+    ],
+    "raceface":      [
+        "https://cdn.brandfetch.io/raceface.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/raceface.com",
+        "https://www.raceface.com/cdn/shop/files/RF_Logo_White.svg",
+    ],
+    "magura":        [
+        "https://cdn.brandfetch.io/magura.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/magura.com",
+        "https://www.magura.com/fileadmin/templates/magura/images/logo.svg",
+    ],
+    "pinion":        [
+        "https://cdn.brandfetch.io/pinion.eu/w/512/h/512/logo",
+        "https://logo.clearbit.com/pinion.eu",
+        "https://pinion.eu/wp-content/uploads/2020/03/pinion-logo.svg",
+    ],
+    "enve":          [
+        "https://cdn.brandfetch.io/enve.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/enve.com",
+        "https://www.enve.com/cdn/shop/files/ENVE-wordmark-white.svg",
+    ],
+    "nukeproof":     [
+        "https://cdn.brandfetch.io/nukeproof.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/nukeproof.com",
+        "https://www.nukeproof.com/cdn/shop/files/nukeproof-logo-white.svg",
+    ],
+    "canecreek":     [
+        "https://cdn.brandfetch.io/canecreek.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/canecreek.com",
+        "https://www.canecreek.com/wp-content/themes/canecreek/img/logo.svg",
+    ],
+    "wolftooth":     [
+        "https://cdn.brandfetch.io/wolftoothcomponents.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/wolftoothcomponents.com",
+        "https://www.wolftoothcomponents.com/cdn/shop/files/wolf-tooth-logo.svg",
+    ],
+    "spank":         [
+        "https://cdn.brandfetch.io/spankind.com/w/512/h/512/logo",
+        "https://logo.clearbit.com/spankind.com",
+        "https://spankind.com/wp-content/themes/spank/img/logo.svg",
+    ],
 }
 
 # Logos à NE PAS écraser (déjà des vrais logos)
@@ -53,10 +120,13 @@ HEADERS = {
     'Referer': 'https://probikeshop.fr/pages/marques',
 }
 
-def download_svg(url):
+def download_url(url):
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as r:
         return r.read()
+
+def download_svg(url):
+    return download_url(url)
 
 def svg_to_png_qlmanage(svg_path, out_png, size=300):
     """Convertit SVG → PNG via qlmanage (outil macOS intégré, aucun pip requis)."""
@@ -83,7 +153,60 @@ print(f"📂 Dossier logos : {LOGOS_DIR}\n")
 
 ok = skip = fail = 0
 
-for name, url in LOGO_URLS.items():
+MANUAL_FALLBACK = {
+    "hope":         "https://brandfetch.com/hopetechnology.com",
+    "renthal":      "https://brandfetch.com/renthal.com",
+    "crankbrothers":"https://brandfetch.com/crankbrothers.com",
+    "ethirteen":    "https://brandfetch.com/ethirteen.com",
+    "deity":        "https://brandfetch.com/deitybikes.com",
+    "raceface":     "https://brandfetch.com/raceface.com",
+    "magura":       "https://brandfetch.com/magura.com",
+    "pinion":       "https://brandfetch.com/pinion.eu",
+    "enve":         "https://brandfetch.com/enve.com",
+    "nukeproof":    "https://brandfetch.com/nukeproof.com",
+    "canecreek":    "https://brandfetch.com/canecreek.com",
+    "wolftooth":    "https://brandfetch.com/wolftoothcomponents.com",
+    "spank":        "https://brandfetch.com/spankind.com",
+}
+
+def try_download_and_convert(name, urls, png_path):
+    """Essaie chaque URL dans l'ordre, retourne True si succès."""
+    if isinstance(urls, str):
+        urls = [urls]
+    for url in urls:
+        try:
+            data = download_url(url)
+            is_svg = b"<svg" in data[:500] or url.lower().endswith(".svg")
+            if is_svg:
+                with tempfile.NamedTemporaryFile(suffix='.svg', delete=False) as f:
+                    f.write(data)
+                    tmp_svg = Path(f.name)
+                converted = False
+                try:
+                    svg_to_png_qlmanage(tmp_svg, png_path)
+                    converted = True
+                except Exception:
+                    try:
+                        svg_to_png_pillow(data, png_path)
+                        converted = True
+                    except Exception:
+                        svg_dest = LOGOS_DIR / f"{name}.svg"
+                        shutil.copy(tmp_svg, svg_dest)
+                tmp_svg.unlink(missing_ok=True)
+                if converted:
+                    return True, url
+            else:
+                # PNG direct
+                import io
+                from PIL import Image
+                img = Image.open(io.BytesIO(data)).convert("RGBA")
+                img.save(png_path, "PNG")
+                return True, url
+        except Exception:
+            continue
+    return False, None
+
+for name, urls in LOGO_URLS.items():
     png_path = LOGOS_DIR / f"{name}.png"
 
     if png_path.name in SKIP_IF_EXISTS and png_path.exists():
@@ -91,41 +214,27 @@ for name, url in LOGO_URLS.items():
         skip += 1
         continue
 
+    if png_path.exists() and isinstance(urls, str):
+        # Logos déjà présents (ancienne version) — on ne ré-écrase pas
+        print(f"  ⏭️  {name}.png — déjà présent")
+        skip += 1
+        continue
+
     print(f"  ⬇️  {name}...", end=" ", flush=True)
-    try:
-        svg_bytes = download_svg(url)
-
-        # Sauvegarde le SVG temporairement
-        with tempfile.NamedTemporaryFile(suffix='.svg', delete=False) as f:
-            f.write(svg_bytes)
-            tmp_svg = Path(f.name)
-
-        converted = False
-        try:
-            svg_to_png_qlmanage(tmp_svg, png_path)
-            converted = True
-        except Exception as e1:
-            # Fallback Pillow
-            try:
-                svg_to_png_pillow(svg_bytes, png_path)
-                converted = True
-            except Exception as e2:
-                # Dernier recours : sauvegarde le SVG directement
-                svg_dest = LOGOS_DIR / f"{name}.svg"
-                shutil.copy(tmp_svg, svg_dest)
-                print(f"⚠️  SVG sauvegardé (conversion échouée : {e1})")
-                fail += 1
-
-        tmp_svg.unlink(missing_ok=True)
-
-        if converted:
-            size = png_path.stat().st_size
-            print(f"✅ ({size//1024}KB)")
-            ok += 1
-
-    except Exception as e:
-        print(f"❌ {e}")
+    success, used_url = try_download_and_convert(name, urls, png_path)
+    if success:
+        size = png_path.stat().st_size if png_path.exists() else 0
+        source = used_url.split("/")[2] if used_url else "?"
+        print(f"✅  ({source}, {size//1024}KB)")
+        ok += 1
+    else:
+        print(f"❌  toutes sources échouées")
         fail += 1
 
-print(f"\n✅ {ok} convertis en PNG, {skip} conservés, {fail} en SVG (remplacement manuel possible)")
-print(f"📁 {LOGOS_DIR}")
+print(f"\n✅ {ok} téléchargés, ⏭️  {skip} conservés, ❌ {fail} échoués")
+if fail:
+    print("\n  Logos manquants — télécharge manuellement depuis Brandfetch :")
+    for name in MANUAL_FALLBACK:
+        if not (LOGOS_DIR / f"{name}.png").exists():
+            print(f"    {name:15s} → {MANUAL_FALLBACK[name]}")
+print(f"\n📁 {LOGOS_DIR}")

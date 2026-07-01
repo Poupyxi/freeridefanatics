@@ -94,6 +94,141 @@ HTML = r"""<!DOCTYPE html>
   .tab-btn:hover { color: #aaa; }
   .tab-btn.active { background: #252800; color: #C8D400; }
 
+  /* ── Header right zone ── */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* ── Dashboard dropdown ── */
+  .dashboard-dropdown { position: relative; }
+  .dashboard-btn {
+    padding: 6px 14px;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #888;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .dashboard-btn:hover,
+  .dashboard-dropdown.open .dashboard-btn { color: #C8D400; border-color: #C8D400; }
+  .dashboard-btn.has-active { color: #C8D400; border-color: #444; background: #252800; }
+
+  .dashboard-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    min-width: 200px;
+    padding: 8px 0 10px;
+    z-index: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  }
+  .dashboard-dropdown.open .dashboard-menu { display: block; }
+  .dashboard-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: #444;
+    padding: 6px 16px 4px;
+    text-transform: uppercase;
+  }
+  .dashboard-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 16px;
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s, color .12s;
+  }
+  .dashboard-menu-btn:hover { background: #1a1a1a; color: #eee; }
+  .dashboard-menu-btn.active { color: #C8D400; }
+
+  /* ── Burger ── */
+  .burger-btn {
+    display: none;
+    background: none;
+    border: 1px solid #2a2a2a;
+    color: #888;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .burger-btn:hover { color: #C8D400; border-color: #C8D400; }
+
+  .burger-drawer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+  }
+  .burger-drawer.open { display: block; }
+  .burger-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+  }
+  .burger-panel {
+    position: absolute;
+    top: 0; right: 0;
+    width: 240px;
+    height: 100%;
+    background: #111;
+    border-left: 1px solid #2a2a2a;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+  }
+  .burger-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 20px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s, color .12s;
+  }
+  .burger-item:hover { background: #1a1a1a; color: #eee; }
+  .burger-item.active { color: #C8D400; }
+  .burger-divider {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: #333;
+    padding: 14px 20px 4px;
+    text-transform: uppercase;
+    border-top: 1px solid #1e1e1e;
+    margin-top: 6px;
+  }
+
   /* ── Reel page ── */
   #page-reel { display:none; height:calc(100vh - 65px); }
   #page-reel .layout { height:100%; }
@@ -141,6 +276,40 @@ HTML = r"""<!DOCTYPE html>
   .btn-select-all { background:none; border:1px solid #444; color:#aaa; padding:5px 12px;
     border-radius:5px; cursor:pointer; font-size:12px; }
   .btn-select-all:hover { border-color:#C8D400; color:#C8D400; }
+
+  /* ── Riders page ── */
+  #page-riders { display:none; padding:24px; max-width:1100px; margin:0 auto; }
+  .riders-folders { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .riders-folder-card { background:#111; border:1px solid #2a2a2a; border-radius:8px; padding:14px; }
+  .riders-folder-card label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:8px; }
+  .riders-folder-row { display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap; }
+  .riders-folder-path { flex:1; min-width:0; font-size:11px; color:#555; font-family:monospace;
+    background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px; padding:6px 10px;
+    word-break:break-all; line-height:1.5; }
+  .riders-folder-path.set { color:#C8D400; }
+  .riders-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
+  .riders-table th { text-align:left; padding:8px 10px; color:#888; border-bottom:1px solid #2a2a2a;
+    font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  .riders-table td { padding:6px 10px; border-bottom:1px solid #181818; vertical-align:middle; }
+  .riders-table tr:hover td { background:#1a1a1a; }
+  .rider-thumb { width:40px; height:40px; object-fit:cover; border-radius:50%; background:#1a1a1a; border:1px solid #2a2a2a; }
+  .rider-thumb-action { width:56px; height:40px; object-fit:cover; border-radius:4px; background:#1a1a1a; border:1px solid #2a2a2a; }
+  .rider-status-ok   { color:#C8D400; font-size:12px; font-weight:600; }
+  .rider-status-miss { color:#f55;    font-size:12px; }
+  .riders-progress { height:6px; background:#222; border-radius:3px; overflow:hidden; margin:10px 0 6px; display:none; }
+  .riders-progress-bar { height:100%; width:0; background:#C8D400; transition:width .2s; }
+  .riders-stats { font-size:12px; color:#888; margin-bottom:14px; }
+  .ig-link { color:#888; font-size:11px; text-decoration:none; }
+  .ig-link:hover { color:#C8D400; }
+  .btn-dl-pp { background:#1a2200; border:1px solid #C8D400; color:#C8D400; font-size:11px;
+    padding:3px 8px; border-radius:4px; cursor:pointer; margin-left:6px; }
+  .btn-dl-pp:hover { background:#2a3300; }
+  .btn-dl-pp:disabled { opacity:.4; cursor:not-allowed; }
+  .carousel-picker { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .carousel-thumb { width:90px; height:90px; object-fit:cover; border-radius:6px;
+    border:2px solid #2a2a2a; cursor:pointer; transition:border-color .15s, transform .15s; }
+  .carousel-thumb:hover  { border-color:#666; transform:scale(1.03); }
+  .carousel-thumb.active { border-color:#C8D400; box-shadow:0 0 0 2px #C8D400; }
 
   /* ── Equipment page ── */
   #page-equipment {
@@ -740,18 +909,10 @@ HTML = r"""<!DOCTYPE html>
     }
     header h1 { font-size: 0.95rem; letter-spacing: 1px; }
 
-    .tab-nav {
-      order: 10;
-      width: 100%;
-      margin-left: 0;
-      justify-content: stretch;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 7px 4px;
-      font-size: 0.72rem;
-      text-align: center;
-    }
+    /* Mobile : masquer la nav desktop + dropdown, afficher burger */
+    .tab-nav { display: none; }
+    .dashboard-dropdown { display: none; }
+    .burger-btn { display: flex !important; }
 
     /* Reload button: compact */
     .btn-reload { font-size: 0.72rem; padding: 5px 9px; }
@@ -841,18 +1002,54 @@ HTML = r"""<!DOCTYPE html>
 
 <header>
   <h1>⛰️ Freeride Fanatics</h1>
-  <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('cards')" id="tab-cards">🎴 Cards</button>
+
+  <!-- Nav principale (gauche) -->
+  <nav class="tab-nav" id="main-tab-nav">
+    <button class="tab-btn active" onclick="switchTab('cards')" id="tab-cards">🏔️ Riders</button>
     <button class="tab-btn" onclick="switchTab('equipment')" id="tab-equipment">🔧 Équipements</button>
-    <button class="tab-btn" onclick="switchTab('logos')" id="tab-logos">🖼 Logos</button>
     <button class="tab-btn" onclick="switchTab('reel')" id="tab-reel">
       🎬 Reel <span id="reel-badge" style="display:none;background:#C8D400;color:#000;
         border-radius:10px;font-size:0.7rem;padding:1px 6px;margin-left:4px;font-weight:700"></span>
     </button>
   </nav>
-  <div style="flex:1"></div>
-  <button class="btn btn-reload" onclick="reloadExcel()">↺ Recharger</button>
+
+  <!-- Zone droite -->
+  <div class="header-right">
+    <button class="btn btn-reload" onclick="reloadExcel()">↺ Recharger</button>
+
+    <!-- Dashboard dropdown (desktop) -->
+    <div class="dashboard-dropdown" id="dashboard-dropdown">
+      <button class="dashboard-btn" id="dashboard-btn" onclick="toggleDashboard(event)">
+        ⚙ Dashboard ▾
+      </button>
+      <div class="dashboard-menu" id="dashboard-menu">
+        <div class="dashboard-section-label">Assets Management</div>
+        <button class="dashboard-menu-btn" id="tab-riders" onclick="switchTab('riders'); closeDashboard()">
+          👤 Riders
+        </button>
+        <button class="dashboard-menu-btn" id="tab-logos" onclick="switchTab('logos'); closeDashboard()">
+          🖼 Logos
+        </button>
+      </div>
+    </div>
+
+    <!-- Burger (mobile uniquement) -->
+    <button class="burger-btn" id="burger-btn" onclick="toggleBurger()">☰</button>
+  </div>
 </header>
+
+<!-- Drawer mobile -->
+<div class="burger-drawer" id="burger-drawer">
+  <div class="burger-overlay" onclick="closeBurger()"></div>
+  <div class="burger-panel">
+    <button class="burger-item" id="burger-cards" onclick="switchTab('cards'); closeBurger()">🏔️ Riders</button>
+    <button class="burger-item" id="burger-equipment" onclick="switchTab('equipment'); closeBurger()">🔧 Équipements</button>
+    <button class="burger-item" id="burger-reel" onclick="switchTab('reel'); closeBurger()">🎬 Reel</button>
+    <div class="burger-divider">Assets Management</div>
+    <button class="burger-item" id="burger-riders" onclick="switchTab('riders'); closeBurger()">👤 Riders</button>
+    <button class="burger-item" id="burger-logos" onclick="switchTab('logos'); closeBurger()">🖼 Logos</button>
+  </div>
+</div>
 
 <div class="layout" id="page-cards">
 
@@ -1413,6 +1610,129 @@ HTML = r"""<!DOCTYPE html>
   </table>
 </div><!-- fin #page-logos -->
 
+<!-- ══════════════════ PAGE RIDERS ══════════════════ -->
+<div id="page-riders">
+  <h2 style="color:#C8D400;margin-bottom:6px;font-size:1.1rem;letter-spacing:1px">👤 GESTIONNAIRE DE PHOTOS RIDERS</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:20px">Scanne les photos PP et action pour chaque rider du CSV.</p>
+
+  <!-- Dossiers -->
+  <div class="riders-folders">
+    <div class="riders-folder-card">
+      <label>📸 Dossier PP (portraits)</label>
+      <div class="riders-folder-row">
+        <button class="btn" onclick="ridersBrowseFolder('pp')" id="riders-pp-btn">📁 Choisir…</button>
+        <div class="riders-folder-path" id="riders-pp-path">Dossier par défaut (PPRiders/)</div>
+      </div>
+      <div id="riders-pp-stats" style="font-size:11px;color:#555;margin-top:6px"></div>
+    </div>
+    <div class="riders-folder-card">
+      <label>🏔 Dossier Action photos</label>
+      <div class="riders-folder-row">
+        <button class="btn" onclick="ridersBrowseFolder('pic')" id="riders-pic-btn">📁 Choisir…</button>
+        <div class="riders-folder-path" id="riders-pic-path">Dossier par défaut (PictureRiders/)</div>
+      </div>
+      <div id="riders-pic-stats" style="font-size:11px;color:#555;margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- Scan -->
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn" onclick="ridersScan()" id="riders-scan-btn">🔍 Scanner les riders</button>
+    <button class="btn" id="riders-batch-btn" onclick="ridersDownloadAllPP()" style="display:none;background:#1a2200;color:#C8D400;border:1px solid #C8D400">
+      ⬇ Télécharger PP manquantes
+    </button>
+    <div class="riders-stats" id="riders-stats" style="margin:0"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="riders-progress" id="riders-progress">
+    <div class="riders-progress-bar" id="riders-progress-bar"></div>
+  </div>
+
+  <!-- ③ Downloader photo action -->
+  <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em">③ Télécharger une photo action depuis Instagram</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="pic-dl-missing-count" style="font-size:11px;color:#555"></span>
+        <button id="pic-dl-next-btn" onclick="picDlNext()" style="display:none;
+          background:#1a1a1a;border:1px solid #444;color:#C8D400;font-size:12px;
+          padding:4px 12px;border-radius:5px;cursor:pointer">
+          → Suivant
+        </button>
+      </div>
+    </div>
+
+    <!-- Rider actuel (mode guidé) -->
+    <div id="pic-dl-current-rider" style="display:none;
+      background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;
+      padding:10px 14px;margin-bottom:12px;display:none">
+      <div style="display:flex;gap:12px;align-items:center">
+        <img id="pic-dl-rider-pp" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:#222;border:1px solid #333">
+        <div>
+          <div id="pic-dl-rider-name" style="font-size:14px;font-weight:600;color:#eee"></div>
+          <a id="pic-dl-rider-iglink" href="#" target="_blank"
+            style="font-size:12px;color:#C8D400;text-decoration:none">
+            Ouvrir Instagram ↗
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:2;min-width:260px">
+        <div style="font-size:11px;color:#555;margin-bottom:4px">URL du post Instagram</div>
+        <input id="pic-dl-url" type="text" placeholder="https://www.instagram.com/p/..."
+          style="width:100%;background:#1a1a1a;border:1px solid #333;color:#eee;padding:8px 12px;
+                 border-radius:6px;font-size:13px;box-sizing:border-box"
+          oninput="picDlPreviewUrl(this.value)">
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;color:#555;margin-bottom:4px">Rider</div>
+        <select id="pic-dl-rider" style="width:100%;background:#1a1a1a;border:1px solid #333;color:#eee;
+          padding:8px 12px;border-radius:6px;font-size:13px;box-sizing:border-box"
+          onchange="picDlRiderChanged(this.value)">
+          <option value="">— Scanner d'abord —</option>
+        </select>
+      </div>
+      <button class="btn" onclick="picDlDownload()" id="pic-dl-btn"
+        style="background:#1a2200;color:#C8D400;border:1px solid #C8D400;white-space:nowrap">
+        ⬇ Télécharger
+      </button>
+    </div>
+    <!-- Sélecteur carrousel -->
+    <div id="pic-dl-carousel" style="display:none;margin-top:12px">
+      <div style="font-size:11px;color:#555;margin-bottom:6px">Sélectionne la photo à télécharger :</div>
+      <div class="carousel-picker" id="pic-dl-carousel-grid"></div>
+    </div>
+
+    <div style="margin-top:10px;display:flex;gap:14px;align-items:flex-start">
+      <div id="pic-dl-preview-box" style="display:none">
+        <img id="pic-dl-preview-img" style="width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #2a2a2a">
+      </div>
+      <div id="pic-dl-status" style="font-size:12px;color:#888;padding-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <table class="riders-table" id="riders-table" style="display:none">
+    <thead>
+      <tr>
+        <th style="width:130px">Rider</th>
+        <th style="width:64px">PP</th>
+        <th style="width:80px">Statut PP</th>
+        <th style="width:72px">Action</th>
+        <th style="width:100px">Statut Action</th>
+        <th>Instagram</th>
+        <th>Fichier PP</th>
+        <th>Fichier Action</th>
+      </tr>
+    </thead>
+    <tbody id="riders-tbody"></tbody>
+  </table>
+</div><!-- fin #page-riders -->
+
+
 <script>
 // ── Collapsible ───────────────────────────────────────────────────────────
 function toggleCol(id) {
@@ -1953,16 +2273,53 @@ async function reloadExcel() {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────
+const _DASHBOARD_TABS = ['logos', 'riders'];
+
 function switchTab(tab) {
-  ['cards','equipment','logos','reel'].forEach(t => {
+  // Tabs principaux
+  ['cards','equipment','reel'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
+    document.getElementById('burger-'+t)?.classList.toggle('active', t === tab);
   });
-  document.getElementById('page-cards').style.display      = tab === 'cards'     ? 'grid'  : 'none';
-  document.getElementById('page-equipment').style.display  = tab === 'equipment' ? 'block' : 'none';
-  document.getElementById('page-logos').style.display      = tab === 'logos'     ? 'block' : 'none';
-  document.getElementById('page-reel').style.display       = tab === 'reel'      ? 'block' : 'none';
+  // Tabs dashboard
+  _DASHBOARD_TABS.forEach(t => {
+    document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
+    document.getElementById('burger-'+t)?.classList.toggle('active', t === tab);
+  });
+
+  // Dashboard btn highlight si un de ses onglets est actif
+  const inDash = _DASHBOARD_TABS.includes(tab);
+  document.getElementById('dashboard-btn')?.classList.toggle('has-active', inDash);
+
+  // Affichage pages
+  document.getElementById('page-cards').style.display       = tab === 'cards'       ? 'grid'  : 'none';
+  document.getElementById('page-equipment').style.display   = tab === 'equipment'   ? 'block' : 'none';
+  document.getElementById('page-logos').style.display       = tab === 'logos'       ? 'block' : 'none';
+  document.getElementById('page-riders').style.display      = tab === 'riders'      ? 'block' : 'none';
+  document.getElementById('page-reel').style.display        = tab === 'reel'        ? 'block' : 'none';
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
   if (tab === 'reel') { renderReelPage(); _initReelRiderList(); }
+}
+
+// ── Dashboard dropdown ────────────────────────────────────────────────────
+function toggleDashboard(e) {
+  e?.stopPropagation();
+  document.getElementById('dashboard-dropdown').classList.toggle('open');
+}
+function closeDashboard() {
+  document.getElementById('dashboard-dropdown').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('dashboard-dropdown');
+  if (dd && !dd.contains(e.target)) closeDashboard();
+});
+
+// ── Burger menu ───────────────────────────────────────────────────────────
+function toggleBurger() {
+  document.getElementById('burger-drawer').classList.toggle('open');
+}
+function closeBurger() {
+  document.getElementById('burger-drawer').classList.remove('open');
 }
 
 // ── Logos page ────────────────────────────────────────────────────────────
@@ -2122,6 +2479,441 @@ async function logosDownloadZip() {
     setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0'; }, 2000);
     zipBtn.disabled = false;
   }
+}
+
+// ── Riders page ──────────────────────────────────────────────────────────
+let _ridersMgr = { ppFolder: '', picFolder: '' };
+
+async function ridersBrowseFolder(type) {
+  const btnId   = type === 'pp' ? 'riders-pp-btn'   : 'riders-pic-btn';
+  const pathId  = type === 'pp' ? 'riders-pp-path'  : 'riders-pic-path';
+  const statsId = type === 'pp' ? 'riders-pp-stats' : 'riders-pic-stats';
+  const btn = document.getElementById(btnId);
+  btn.disabled = true; btn.textContent = '⏳…';
+  try {
+    const r = await fetch(`/api/riders/browse-folder?type=${type}`);
+    const d = await r.json();
+    if (!d.ok) { document.getElementById(statsId).textContent = d.error || 'Annulé'; return; }
+    if (type === 'pp') _ridersMgr.ppFolder  = d.path;
+    else               _ridersMgr.picFolder = d.path;
+    const el = document.getElementById(pathId);
+    el.textContent = d.path; el.classList.add('set');
+    document.getElementById(statsId).textContent = `${d.count} fichier(s) trouvé(s)`;
+  } catch(e) {
+    document.getElementById(statsId).textContent = '❌ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '📁 Choisir…';
+  }
+}
+
+async function ridersScan() {
+  const btn = document.getElementById('riders-scan-btn');
+  const prog = document.getElementById('riders-progress');
+  const bar  = document.getElementById('riders-progress-bar');
+  const stats = document.getElementById('riders-stats');
+  const table = document.getElementById('riders-table');
+  const tbody = document.getElementById('riders-tbody');
+
+  btn.disabled = true; btn.textContent = '⏳ Scan…';
+  prog.style.display = 'block'; bar.style.width = '20%';
+  stats.textContent = ''; tbody.innerHTML = ''; table.style.display = 'none';
+
+  try {
+    const r = await fetch('/api/riders/scan-photos', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ pp_folder: _ridersMgr.ppFolder, pic_folder: _ridersMgr.picFolder })
+    });
+    const d = await r.json();
+    if (!d.ok) { stats.textContent = '❌ ' + d.error; return; }
+
+    bar.style.width = '100%';
+    const ppOk  = d.riders.filter(x => x.pp_found).length;
+    const picOk = d.riders.filter(x => x.pic_found).length;
+    stats.innerHTML = `<b style="color:#eee">${d.riders.length}</b> riders ·
+      PP: <b style="color:#C8D400">${ppOk}/${d.riders.length}</b> ·
+      Action: <b style="color:#C8D400">${picOk}/${d.riders.length}</b>`;
+
+    // Stocke les handles manquants pour le batch
+    _ridersMgr.missing = d.riders.filter(x => !x.pp_found).map(x => x.instagram);
+    document.getElementById('riders-batch-btn').style.display =
+      _ridersMgr.missing.length > 0 ? 'inline-flex' : 'none';
+
+    tbody.innerHTML = d.riders.map(r => {
+      const ig = r.instagram.replace('@','');
+      const ppThumb = r.pp_found
+        ? `<img class="rider-thumb" src="/api/riders/thumb?path=${encodeURIComponent(r.pp_path)}" onerror="this.style.display='none'">`
+        : `<div id="pp-thumb-${ig}" style="width:40px;height:40px;border-radius:50%;background:#1a1a1a;border:1px solid #2a2a2a"></div>`;
+      const ppStatus = r.pp_found
+        ? '<span class="rider-status-ok">✅ OK</span>'
+        : `<span class="rider-status-miss" id="pp-status-${ig}">❌ Manquant</span>
+           <button class="btn-dl-pp" id="pp-btn-${ig}" onclick="ridersDownloadPP('${r.instagram}')">⬇</button>`;
+      return `
+      <tr id="pp-row-${ig}">
+        <td style="font-weight:600;color:#eee">${r.display_name}</td>
+        <td id="pp-cell-thumb-${ig}">${ppThumb}</td>
+        <td>${ppStatus}</td>
+        <td>${r.pic_found
+          ? `<img class="rider-thumb-action" src="/api/riders/thumb?path=${encodeURIComponent(r.pic_path)}" onerror="this.style.display='none'">`
+          : '<div style="width:56px;height:40px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a"></div>'
+        }</td>
+        <td>${r.pic_found
+          ? '<span class="rider-status-ok">✅ OK</span>'
+          : '<span class="rider-status-miss">❌ Manquant</span>'
+        }</td>
+        <td><a class="ig-link" href="https://instagram.com/${ig}" target="_blank">@${ig} ↗</a></td>
+        <td style="font-size:11px;color:#444;font-family:monospace">${r.pp_file || '—'}</td>
+        <td style="font-size:11px;color:#444;font-family:monospace">${r.pic_file || '—'}</td>
+      </tr>`;
+    }).join('');
+
+    table.style.display = 'table';
+
+    // Peuple le dropdown rider du downloader
+    const sel = document.getElementById('pic-dl-rider');
+    sel.innerHTML = '<option value="">— Choisir un rider —</option>' +
+      d.riders.map(r => {
+        const ig = r.instagram.replace('@','');
+        const miss = r.pic_found ? '' : ' ❌';
+        return `<option value="${ig}" data-name="${r.display_name}" data-pp="${r.pp_path}">${r.display_name}${miss}</option>`;
+      }).join('');
+
+    // Init liste manquants pour le bouton Suivant
+    _ridersMgr.missingPic    = d.riders.filter(x => !x.pic_found);
+    _ridersMgr.missingPicIdx = -1;
+    const nextBtn   = document.getElementById('pic-dl-next-btn');
+    const missCount = document.getElementById('pic-dl-missing-count');
+    if (_ridersMgr.missingPic.length > 0) {
+      nextBtn.style.display = 'inline-block';
+      missCount.textContent = `${_ridersMgr.missingPic.length} photos manquantes`;
+      picDlNext(); // avance directement au premier manquant
+    } else {
+      nextBtn.style.display = 'none';
+      missCount.textContent = '✅ Toutes les photos sont là !';
+    }
+
+  } catch(e) {
+    stats.textContent = '❌ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 Scanner les riders';
+    setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0'; }, 1500);
+  }
+}
+
+async function ridersDownloadPP(instagram) {
+  const ig  = instagram.replace('@','');
+  const btn = document.getElementById(`pp-btn-${ig}`);
+  const st  = document.getElementById(`pp-status-${ig}`);
+  const th  = document.getElementById(`pp-cell-thumb-${ig}`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  if (st)  { st.textContent = '⏳ Téléchargement…'; st.className = ''; st.style.color='#888'; }
+  try {
+    const r = await fetch('/api/riders/download-pp', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ handle: ig, pp_folder: _ridersMgr.ppFolder })
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    if (st) { st.textContent = '✅ OK'; st.style.color = '#C8D400'; }
+    if (btn) btn.style.display = 'none';
+    if (th) {
+      // Rafraîchit la miniature
+      const img = document.createElement('img');
+      img.className = 'rider-thumb';
+      img.src = d.thumb + '&t=' + Date.now();
+      img.onerror = () => {};
+      th.innerHTML = '';
+      th.appendChild(img);
+    }
+    // Retire de la liste manquants + re-scan silencieux
+    _ridersMgr.missing = (_ridersMgr.missing || []).filter(h => h.replace('@','') !== ig);
+    if (_ridersMgr.missing.length === 0)
+      document.getElementById('riders-batch-btn').style.display = 'none';
+    ridersSilentRescan();
+  } catch(e) {
+    if (st) { st.textContent = '❌ ' + e.message; st.style.color = '#f55'; }
+    if (btn) { btn.disabled = false; btn.textContent = '⬇'; }
+  }
+}
+
+async function ridersSilentRescan() {
+  try {
+    const r = await fetch('/api/riders/scan-photos', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ pp_folder: _ridersMgr.ppFolder, pic_folder: _ridersMgr.picFolder })
+    });
+    const d = await r.json();
+    if (!d.ok) return;
+
+    // Met à jour uniquement les cellules fichier + statut action dans chaque ligne
+    d.riders.forEach(r => {
+      const ig = r.instagram.replace('@','');
+
+      // Colonne "Fichier PP" (7e col, index 6)
+      const ppFileCell = document.querySelector(`#pp-row-${ig} td:nth-child(7)`);
+      if (ppFileCell) ppFileCell.textContent = r.pp_file || '—';
+
+      // Colonne "Fichier Action" (8e col, index 7)
+      const picFileCell = document.querySelector(`#pp-row-${ig} td:nth-child(8)`);
+      if (picFileCell) picFileCell.textContent = r.pic_file || '—';
+
+      // Colonne "Statut Action" (5e col) — met à jour si maintenant trouvé
+      if (r.pic_found) {
+        const stCell = document.querySelector(`#pp-row-${ig} td:nth-child(5)`);
+        if (stCell && stCell.querySelector('.rider-status-miss'))
+          stCell.innerHTML = '<span class="rider-status-ok">✅ OK</span>';
+        const thCell = document.querySelector(`#pp-row-${ig} td:nth-child(4)`);
+        if (thCell && !thCell.querySelector('img')) {
+          const img = document.createElement('img');
+          img.className = 'rider-thumb-action';
+          img.src = `/api/riders/thumb?path=${encodeURIComponent(r.pic_path)}&t=${Date.now()}`;
+          thCell.innerHTML = '';
+          thCell.appendChild(img);
+        }
+      }
+    });
+  } catch(_) {}
+}
+
+function picDlNext() {
+  const missing = _ridersMgr.missingPic || [];
+  if (!missing.length) return;
+  _ridersMgr.missingPicIdx = (_ridersMgr.missingPicIdx + 1) % missing.length;
+  const rider = missing[_ridersMgr.missingPicIdx];
+  const ig    = rider.instagram.replace('@','');
+
+  // Update dropdown
+  document.getElementById('pic-dl-rider').value = ig;
+
+  // Update compteur
+  document.getElementById('pic-dl-missing-count').textContent =
+    `${_ridersMgr.missingPicIdx + 1}/${missing.length} manquants`;
+
+  // Affiche la carte rider
+  picDlRiderChanged(ig, rider);
+
+  // Reset champs
+  document.getElementById('pic-dl-url').value = '';
+  document.getElementById('pic-dl-status').textContent = '';
+  document.getElementById('pic-dl-preview-box').style.display = 'none';
+  document.getElementById('pic-dl-carousel').style.display = 'none';
+  document.getElementById('pic-dl-carousel-grid').innerHTML = '';
+  _picDlSelectedUrl = '';
+}
+
+/* ── Instagram login/logout ── */
+async function igCheckStatus() {
+  try {
+    const r = await fetch('/api/riders/ig-status');
+    const d = await r.json();
+    const dot   = document.getElementById('ig-status-dot');
+    const label = document.getElementById('ig-status-label');
+    const btnIn  = document.getElementById('ig-login-btn');
+    const btnOut = document.getElementById('ig-logout-btn');
+    if (d.logged_in) {
+      dot.style.background   = '#C8D400';
+      label.style.color      = '#C8D400';
+      label.textContent      = `Instagram : @${d.username}`;
+      btnIn.style.display    = 'none';
+      btnOut.style.display   = 'inline-block';
+    } else {
+      dot.style.background   = '#555';
+      label.style.color      = '#666';
+      label.textContent      = 'Instagram : non connecté';
+      btnIn.style.display    = 'inline-block';
+      btnOut.style.display   = 'none';
+    }
+  } catch(_) {}
+}
+
+async function igLogin() {
+  const username = prompt('Nom d\'utilisateur Instagram (sans @) :');
+  if (!username) return;
+  const label = document.getElementById('ig-status-label');
+  label.style.color   = '#888';
+  label.textContent   = 'Connexion en cours…';
+  try {
+    const r = await fetch('/api/riders/ig-login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      igCheckStatus();
+    } else {
+      label.style.color = '#cc4400';
+      label.textContent = '❌ ' + d.error;
+      setTimeout(igCheckStatus, 4000);
+    }
+  } catch(e) {
+    label.style.color = '#cc4400';
+    label.textContent = '❌ Erreur réseau';
+    setTimeout(igCheckStatus, 4000);
+  }
+}
+
+async function igLogout() {
+  await fetch('/api/riders/ig-logout', { method:'POST' });
+  igCheckStatus();
+}
+
+function picDlRiderChanged(ig, riderData) {
+  if (!ig) return;
+  const card    = document.getElementById('pic-dl-current-rider');
+  const nameEl  = document.getElementById('pic-dl-rider-name');
+  const igLink  = document.getElementById('pic-dl-rider-iglink');
+  const ppImg   = document.getElementById('pic-dl-rider-pp');
+
+  // Trouve les données du rider (depuis le scan ou le dropdown)
+  let displayName = ig;
+  let ppPath = '';
+  if (riderData) {
+    displayName = riderData.display_name;
+    ppPath      = riderData.pp_path;
+  } else {
+    const opt = document.querySelector(`#pic-dl-rider option[value="${ig}"]`);
+    if (opt) {
+      displayName = opt.dataset.name || opt.textContent.replace(' ❌','');
+      ppPath      = opt.dataset.pp   || '';
+    }
+  }
+
+  nameEl.textContent    = displayName;
+  igLink.href           = `https://www.instagram.com/${ig}/`;
+  igLink.textContent    = `@${ig} — Ouvrir Instagram ↗`;
+  ppImg.src             = ppPath
+    ? `/api/riders/thumb?path=${encodeURIComponent(ppPath)}`
+    : '';
+  ppImg.style.display   = ppPath ? 'block' : 'none';
+  card.style.display    = 'block';
+}
+
+let _picDlSelectedUrl = '';  // URL pleine résolution de l'image sélectionnée
+
+async function picDlPreviewUrl(val) {
+  const m = val.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  if (!m) return;
+  const status   = document.getElementById('pic-dl-status');
+  const carousel = document.getElementById('pic-dl-carousel');
+  const grid     = document.getElementById('pic-dl-carousel-grid');
+  _picDlSelectedUrl = '';
+  carousel.style.display = 'none';
+  status.style.color = '#888'; status.textContent = '🔍 Inspection du post…';
+  document.getElementById('pic-dl-btn').disabled = true;
+
+  try {
+    const r = await fetch('/api/riders/inspect-pic', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ url: val.trim() })
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+
+    status.textContent = d.count === 1 ? '1 photo trouvée' : `Carrousel — ${d.count} photos`;
+
+    // Affiche les thumbnails
+    grid.innerHTML = d.images.map((img, i) =>
+      `<img class="carousel-thumb${i===0?' active':''}"
+        src="/api/riders/proxy-img?url=${encodeURIComponent(img.thumb_url)}"
+        data-full="${img.full_url}" data-idx="${i}"
+        onclick="picDlSelectThumb(this)"
+        title="Photo ${i+1}">`
+    ).join('');
+    carousel.style.display = 'block';
+
+    // Pré-sélectionne la première
+    _picDlSelectedUrl = d.images[0].full_url;
+    document.getElementById('pic-dl-btn').disabled = false;
+  } catch(e) {
+    status.style.color = '#f55';
+    status.textContent = '❌ ' + e.message;
+    document.getElementById('pic-dl-btn').disabled = false;
+  }
+}
+
+function picDlSelectThumb(el) {
+  document.querySelectorAll('.carousel-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  _picDlSelectedUrl = el.dataset.full;
+}
+
+async function picDlDownload() {
+  const handle = document.getElementById('pic-dl-rider').value.trim();
+  const status = document.getElementById('pic-dl-status');
+  const btn    = document.getElementById('pic-dl-btn');
+  const prev   = document.getElementById('pic-dl-preview-box');
+  const prevImg= document.getElementById('pic-dl-preview-img');
+
+  if (!_picDlSelectedUrl) { status.textContent = '⚠️ Colle une URL Instagram d\'abord'; return; }
+  if (!handle)             { status.textContent = '⚠️ Sélectionne un rider'; return; }
+
+  btn.disabled = true; btn.textContent = '⏳…';
+  status.style.color = '#888'; status.textContent = 'Téléchargement…';
+  prev.style.display = 'none';
+
+  try {
+    const r = await fetch('/api/riders/download-pic', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ img_url: _picDlSelectedUrl, handle, pic_folder: _ridersMgr.picFolder })
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+
+    status.style.color = '#C8D400';
+    status.textContent = `✅ Sauvegardé : ${d.file}`;
+    prevImg.src = d.thumb + '&t=' + Date.now();
+    prev.style.display = 'block';
+
+    // Met à jour le statut dans la table si visible
+    const stEl = document.querySelector(`#pp-row-${handle} td:nth-child(5) span`);
+    if (stEl) { stEl.textContent = '✅ OK'; stEl.className = 'rider-status-ok'; }
+
+    // Retire le rider de la liste manquants + met à jour le dropdown
+    const opt = document.querySelector(`#pic-dl-rider option[value="${handle}"]`);
+    if (opt) opt.textContent = opt.textContent.replace(' ❌','');
+    _ridersMgr.missingPic = (_ridersMgr.missingPic || []).filter(r => r.instagram.replace('@','') !== handle);
+    document.getElementById('pic-dl-missing-count').textContent =
+      _ridersMgr.missingPic.length > 0
+        ? `${_ridersMgr.missingPic.length} photos manquantes`
+        : '✅ Toutes les photos sont là !';
+    if (_ridersMgr.missingPic.length === 0)
+      document.getElementById('pic-dl-next-btn').style.display = 'none';
+
+    document.getElementById('pic-dl-url').value = '';
+    // Re-scan silencieux pour récupérer le vrai nom de fichier, puis avance
+    ridersSilentRescan().finally(() => {
+      if (_ridersMgr.missingPic.length > 0)
+        setTimeout(() => { _ridersMgr.missingPicIdx--; picDlNext(); }, 400);
+    });
+  } catch(e) {
+    status.style.color = '#f55';
+    status.textContent = '❌ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '⬇ Télécharger';
+  }
+}
+
+async function ridersDownloadAllPP() {
+  const missing = [...(_ridersMgr.missing || [])];
+  if (!missing.length) return;
+  const batchBtn = document.getElementById('riders-batch-btn');
+  batchBtn.disabled = true;
+  batchBtn.textContent = `⏳ 0/${missing.length}…`;
+  for (let i = 0; i < missing.length; i++) {
+    batchBtn.textContent = `⏳ ${i+1}/${missing.length}…`;
+    await ridersDownloadPP(missing[i]);
+    if (i < missing.length - 1) await new Promise(r => setTimeout(r, 4000)); // 4s entre requêtes
+  }
+  batchBtn.textContent = '✅ Terminé';
+  setTimeout(() => {
+    batchBtn.disabled = false;
+    batchBtn.textContent = '⬇ Télécharger PP manquantes';
+  }, 3000);
 }
 
 // ── Equipment page ────────────────────────────────────────────────────────
@@ -3462,6 +4254,576 @@ def api_logos_download_zip():
         as_attachment=True,
         download_name="logos_freeride.zip"
     )
+
+
+# ── Riders Manager ────────────────────────────────────────────────────────────
+
+def _riders_find_photo(handle: str, search_dir: Path):
+    """Fuzzy-match un handle Instagram dans un dossier. Retourne (Path|None, str|None)."""
+    if not search_dir.exists():
+        return None, None
+    h = handle.lstrip("@").lower()
+    h_strip = h.replace(".", "").replace("-", "").replace("_", "")
+    # Match exact avec ou sans @
+    for ext in (".jpg", ".jpeg", ".png"):
+        for stem in (f"@{h}", h):
+            p = search_dir / (stem + ext)
+            if p.exists():
+                return p, p.name
+    # Fuzzy match sur tous les fichiers
+    for f in sorted(search_dir.iterdir()):
+        if f.suffix.lower() not in {".jpg", ".jpeg", ".png"}:
+            continue
+        stem = f.stem.lower().lstrip("@")
+        stem_s = stem.replace(".", "").replace("-", "").replace("_", "").replace(" ", "")
+        if h in stem or stem in h:
+            return f, f.name
+        if h_strip and (h_strip in stem_s or stem_s in h_strip):
+            return f, f.name
+    return None, None
+
+
+def _riders_load_csv():
+    """Charge les riders depuis equipment_men.csv + equipment_women.csv."""
+    riders = []
+    for fname in ("equipment_men.csv", "equipment_women.csv"):
+        p = BASE_DIR / fname
+        if not p.exists():
+            continue
+        import csv as _csv
+        with open(p, newline="", encoding="utf-8") as f:
+            for row in _csv.DictReader(f):
+                ig = (row.get("Instagram") or "").strip()
+                if ig:
+                    riders.append(ig)
+    return riders
+
+
+@app.route("/api/riders/browse-folder")
+def api_riders_browse_folder():
+    rtype = request.args.get("type", "pp")  # 'pp' ou 'pic'
+    label = "portraits (PPRiders)" if rtype == "pp" else "photos action (PictureRiders)"
+    default_sub = "PPRiders" if rtype == "pp" else "PictureRiders"
+    default = str(BASE_DIR / default_sub)
+    try:
+        script = (
+            f'set defaultFolder to POSIX file "{default}" as alias\n'
+            f'POSIX path of (choose folder with prompt "Choisir le dossier {label}" '
+            f'default location defaultFolder)'
+        )
+        result = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True, timeout=60
+        )
+        if result.returncode != 0:
+            err = result.stderr.strip()
+            if "User canceled" in err or "cancelled" in err.lower():
+                return jsonify({"ok": False, "error": "Annulé"})
+            return jsonify({"ok": False, "error": err or "Erreur osascript"})
+        folder = result.stdout.strip()
+        if not folder:
+            return jsonify({"ok": False, "error": "Aucun dossier"})
+        d = Path(folder)
+        count = sum(1 for f in d.iterdir() if f.suffix.lower() in {".jpg", ".jpeg", ".png"})
+        return jsonify({"ok": True, "path": folder, "count": count})
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "error": "Timeout"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
+@app.route("/api/riders/scan-photos", methods=["POST"])
+def api_riders_scan_photos():
+    data       = request.get_json() or {}
+    pp_folder  = (data.get("pp_folder")  or "").strip()
+    pic_folder = (data.get("pic_folder") or "").strip()
+
+    pp_dir  = Path(pp_folder)  if pp_folder  else BASE_DIR / "PPRiders"
+    pic_dir = Path(pic_folder) if pic_folder else BASE_DIR / "PictureRiders"
+
+    handles = _riders_load_csv()
+    if not handles:
+        return jsonify({"ok": False, "error": "Aucun rider trouvé dans les CSV"})
+
+    result = []
+    for ig in handles:
+        pp_path,  pp_file  = _riders_find_photo(ig, pp_dir)
+        pic_path, pic_file = _riders_find_photo(ig, pic_dir)
+        display = ig.lstrip("@").replace("_", " ").title()
+        result.append({
+            "instagram":   ig,
+            "display_name": display,
+            "pp_found":    pp_path is not None,
+            "pp_path":     str(pp_path)  if pp_path  else "",
+            "pp_file":     pp_file       or "",
+            "pic_found":   pic_path is not None,
+            "pic_path":    str(pic_path) if pic_path else "",
+            "pic_file":    pic_file      or "",
+        })
+
+    return jsonify({"ok": True, "riders": result})
+
+
+@app.route("/api/riders/thumb")
+def api_riders_thumb():
+    """Sert une miniature depuis un chemin absolu (sécurisé : doit être dans le projet)."""
+    path_str = (request.args.get("path") or "").strip()
+    if not path_str:
+        return ("", 404)
+    p = Path(path_str)
+    # Sécurité : limité aux dossiers autorisés
+    allowed_parents = [
+        BASE_DIR / "PPRiders",
+        BASE_DIR / "PictureRiders",
+        BASE_DIR / "PPRIDERS",
+    ]
+    try:
+        resolved = p.resolve()
+        ok = any(str(resolved).startswith(str(par.resolve())) for par in allowed_parents)
+        # Accepte aussi les dossiers custom s'ils sont sur le même Mac (sous /Users)
+        if not ok and str(resolved).startswith("/Users/"):
+            ok = True
+    except Exception:
+        return ("", 403)
+    if not ok or not resolved.exists():
+        return ("", 404)
+    mime = "image/png" if resolved.suffix.lower() == ".png" else "image/jpeg"
+    return send_file(str(resolved), mimetype=mime)
+
+
+# ── Instaloader session ───────────────────────────────────────────────────────
+_ig_L        = None   # instance instaloader partagée
+_ig_username = None   # username connecté (None = anonyme)
+
+def _ig_loader():
+    """Retourne l'instance instaloader (charge la session si dispo)."""
+    global _ig_L, _ig_username
+    import instaloader as _il
+    if _ig_L is None:
+        _ig_L = _il.Instaloader(
+            download_pictures=False, download_videos=False,
+            download_video_thumbnails=False, download_geotags=False,
+            download_comments=False, save_metadata=False, quiet=True,
+        )
+        # Charge la 1ère session trouvée dans ~/.config/instaloader/
+        session_dir = Path.home() / ".config" / "instaloader"
+        if session_dir.exists():
+            for f in sorted(session_dir.glob("session-*")):
+                uname = f.name[len("session-"):]
+                try:
+                    _ig_L.load_session_from_file(uname, str(f))
+                    _ig_username = uname
+                    break
+                except Exception:
+                    pass
+    return _ig_L
+
+
+def _ig_is_logged_in() -> bool:
+    try:
+        return bool(_ig_username and _ig_loader().context.is_logged_in)
+    except Exception:
+        return False
+
+
+def _ig_fetch_profile_pic_url(handle: str) -> str:
+    """Récupère l'URL HD de la PP d'un profil Instagram."""
+    import instaloader as _il
+    L = _ig_loader()
+    profile = _il.Profile.from_username(L.context, handle.lstrip("@"))
+    url = profile.profile_pic_url
+    if not url:
+        raise ValueError("Pas d'URL de photo dans la réponse")
+    return url
+
+
+@app.route("/api/riders/download-pp", methods=["POST"])
+def api_riders_download_pp():
+    """Télécharge la PP Instagram d'un rider via l'API mobile (sans login)."""
+    data   = request.get_json() or {}
+    handle = data.get("handle", "").strip().lstrip("@")
+    folder = (data.get("pp_folder") or "").strip()
+    if not handle:
+        return jsonify({"ok": False, "error": "Handle manquant"})
+
+    pp_dir = Path(folder) if folder else BASE_DIR / "PPRiders"
+    pp_dir.mkdir(exist_ok=True)
+
+    try:
+        pic_url = _ig_fetch_profile_pic_url(handle)
+
+        # Télécharge l'image depuis le CDN
+        req = urllib.request.Request(pic_url, headers={
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+                          "AppleWebKit/605.1.15",
+            "Referer": "https://www.instagram.com/",
+        })
+        with urllib.request.urlopen(req, context=_logos_ssl, timeout=20) as resp:
+            raw = resp.read()
+
+        out_path = pp_dir / f"@{handle}.jpg"
+        out_path.write_bytes(raw)
+        return jsonify({"ok": True, "handle": handle, "file": out_path.name,
+                        "thumb": f"/api/riders/thumb?path={out_path}"})
+
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            return jsonify({"ok": False, "error": "Instagram exige un login — voir README"})
+        if e.code == 404:
+            return jsonify({"ok": False, "error": f"@{handle} introuvable ou compte privé"})
+        if e.code == 429:
+            return jsonify({"ok": False, "error": "Rate limit — attends quelques minutes"})
+        return jsonify({"ok": False, "error": f"HTTP {e.code}"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)[:150]})
+
+
+def _ig_shortcode_to_id(shortcode: str) -> int:
+    ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    media_id = 0
+    for char in shortcode:
+        if char in ALPHABET:
+            media_id = media_id * 64 + ALPHABET.index(char)
+    return media_id
+
+
+def _ig_extract_images_from_info(info: dict) -> list:
+    """Parse la réponse JSON de l'API mobile Instagram."""
+    images = []
+    item = (info.get("items") or [{}])[0]
+
+    def best_and_thumb(versions):
+        cands = (versions or {}).get("candidates") or []
+        cands_sorted = sorted(cands, key=lambda c: c.get("width", 0) * c.get("height", 0), reverse=True)
+        if not cands_sorted:
+            return None, None
+        return cands_sorted[0]["url"], cands_sorted[-1]["url"]
+
+    if "carousel_media" in item:
+        for i, slide in enumerate(item["carousel_media"]):
+            if "image_versions2" in slide:
+                full_url, thumb_url = best_and_thumb(slide["image_versions2"])
+                if full_url:
+                    images.append({"index": i, "full_url": full_url, "thumb_url": thumb_url or full_url})
+    elif "image_versions2" in item:
+        full_url, thumb_url = best_and_thumb(item["image_versions2"])
+        if full_url:
+            images.append({"index": 0, "full_url": full_url, "thumb_url": thumb_url or full_url})
+
+    return images
+
+
+def _ig_get_post_images_direct(shortcode: str) -> list:
+    """Récupère les images d'un post via l'API mobile Instagram (HTTP direct)."""
+    import json as _json
+    media_id = _ig_shortcode_to_id(shortcode)
+    api_url  = f"https://i.instagram.com/api/v1/media/{media_id}/info/"
+    req = urllib.request.Request(api_url, headers={
+        "User-Agent": "Instagram 275.0.0.27.98 Android (33/13; 420dpi; 1080x2400; "
+                      "samsung; SM-G991B; o1s; exynos2100; en_US; 458229237)",
+        "x-ig-app-id": "936619743392459",
+        "Accept-Language": "en-US",
+        "Accept": "*/*",
+    })
+    with urllib.request.urlopen(req, context=_logos_ssl, timeout=15) as resp:
+        info = _json.loads(resp.read())
+    return _ig_extract_images_from_info(info)
+
+
+def _ytdlp_extract_images(post_url: str) -> list:
+    """Utilise yt-dlp avec les cookies du navigateur pour extraire les images d'un post."""
+    import subprocess, json as _json, shutil
+
+    ytdlp = shutil.which("yt-dlp")
+    if not ytdlp:
+        raise RuntimeError("yt-dlp non installé (pip3 install yt-dlp)")
+
+    images = []
+    for browser in ("chrome", "safari", "firefox"):
+        try:
+            res = subprocess.run(
+                [ytdlp, "--dump-json", "--cookies-from-browser", browser,
+                 "--no-warnings", "--quiet", post_url],
+                capture_output=True, text=True, timeout=30
+            )
+            raw = res.stdout.strip()
+            if not raw:
+                continue
+
+            # yt-dlp peut sortir plusieurs lignes JSON (une par slide de carrousel)
+            entries = []
+            for line in raw.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = _json.loads(line)
+                except Exception:
+                    continue
+                # Si c'est une playlist (carrousel), on déplie les entries
+                if obj.get("_type") == "playlist":
+                    entries.extend(obj.get("entries") or [])
+                else:
+                    entries.append(obj)
+
+            for i, entry in enumerate(entries):
+                if not entry:
+                    continue
+                ext = (entry.get("ext") or "").lower()
+                if ext in ("mp4", "webm"):
+                    continue  # on ignore les vidéos
+
+                # Meilleure URL : d'abord les formats triés par résolution, sinon url directe
+                best_url  = None
+                thumb_url = None
+
+                formats = [f for f in (entry.get("formats") or [])
+                           if f.get("ext", "") not in ("mp4", "webm", "m3u8")]
+                if formats:
+                    formats_sorted = sorted(
+                        formats,
+                        key=lambda f: (f.get("width") or 0) * (f.get("height") or 0),
+                        reverse=True
+                    )
+                    best_url  = formats_sorted[0].get("url")
+                    thumb_url = formats_sorted[-1].get("url") or best_url
+
+                if not best_url:
+                    best_url = entry.get("url")
+
+                if not thumb_url:
+                    thumbs = sorted(
+                        entry.get("thumbnails") or [],
+                        key=lambda t: (t.get("width") or 0) * (t.get("height") or 0),
+                        reverse=True
+                    )
+                    thumb_url = thumbs[-1]["url"] if thumbs else best_url
+
+                if best_url:
+                    images.append({"index": i, "full_url": best_url,
+                                   "thumb_url": thumb_url or best_url})
+
+            if images:
+                return images   # succès avec ce navigateur, on arrête
+
+        except subprocess.TimeoutExpired:
+            continue
+        except Exception:
+            continue
+
+    raise RuntimeError("yt-dlp n'a pas pu extraire les images (vérifie que tu es connecté à Instagram dans Chrome/Safari)")
+
+
+def _ig_get_post_images(post_url: str) -> list:
+    """Retourne toutes les images d'un post.
+    Priorité : yt-dlp (cookies navigateur) → instaloader (session) → API mobile directe.
+    """
+    import re as _re
+    m = _re.search(r"instagram\.com/(?:p|reel|tv)/([A-Za-z0-9_-]+)", post_url)
+    if not m:
+        raise ValueError("URL invalide — doit contenir /p/, /reel/ ou /tv/")
+    shortcode = m.group(1)
+
+    # ── 1. yt-dlp + cookies navigateur ──
+    try:
+        images = _ytdlp_extract_images(post_url)
+        if images:
+            return images
+    except Exception:
+        pass
+
+    # ── 2. instaloader (session sauvegardée) ──
+    try:
+        import instaloader as _il
+        L    = _ig_loader()
+        post = _il.Post.from_shortcode(L.context, shortcode)
+        images = []
+        media_count = getattr(post, 'mediacount', 1) or 1
+        if post.typename in ("GraphSidecar", "XDTGraphSidecar") or media_count > 1:
+            for i, node in enumerate(post.get_sidecar_nodes()):
+                if not node.is_video:
+                    url = node.display_url
+                    if url:
+                        images.append({"index": i, "full_url": url, "thumb_url": url})
+        else:
+            if not post.is_video:
+                url = post.url
+                if url:
+                    images.append({"index": 0, "full_url": url, "thumb_url": url})
+        if images:
+            return images
+    except Exception:
+        pass
+
+    # ── 3. API mobile directe (fallback sans auth) ──
+    return _ig_get_post_images_direct(shortcode)
+
+
+@app.route("/api/riders/inspect-pic", methods=["POST"])
+def api_riders_inspect_pic():
+    """Inspecte un post Instagram et retourne toutes les images (carrousel inclus)."""
+    data = request.get_json() or {}
+    url  = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"ok": False, "error": "URL manquante"})
+    try:
+        images = _ig_get_post_images(url)
+        if not images:
+            return jsonify({"ok": False, "error": "Aucune image trouvée (post vidéo ou URL invalide ?)"})
+        return jsonify({"ok": True, "images": images, "count": len(images)})
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            return jsonify({"ok": False, "error": "Instagram bloque la requête — connecte-toi via le bouton 🔐"})
+        return jsonify({"ok": False, "error": f"Erreur HTTP {e.code}"})
+    except Exception as e:
+        err = str(e)
+        if any(k in err.lower() for k in ("login", "checkpoint", "unauthorized", "forbidden")):
+            return jsonify({"ok": False, "error": "Instagram bloque la requête — connecte-toi via le bouton 🔐"})
+        return jsonify({"ok": False, "error": err[:200]})
+
+
+@app.route("/api/riders/ig-status")
+def api_riders_ig_status():
+    """Retourne le statut de connexion Instagram."""
+    try:
+        logged = _ig_is_logged_in()
+        return jsonify({"ok": True, "logged_in": logged, "username": _ig_username if logged else None})
+    except Exception as e:
+        return jsonify({"ok": False, "logged_in": False, "username": None, "error": str(e)})
+
+
+@app.route("/api/riders/ig-login", methods=["POST"])
+def api_riders_ig_login():
+    """Connexion Instagram via instaloader (mot de passe via dialog natif macOS)."""
+    import subprocess, instaloader as _il
+    global _ig_L, _ig_username
+    data     = request.get_json() or {}
+    username = (data.get("username") or "").strip().lstrip("@")
+    if not username:
+        return jsonify({"ok": False, "error": "Nom d'utilisateur manquant"})
+
+    # Demande le mot de passe via dialog natif macOS (invisible pour Flask)
+    script_pwd = f'''
+    set pwd to text returned of (display dialog "Mot de passe Instagram pour @{username}" ¬
+        default answer "" with hidden answer ¬
+        with title "Freeride Fanatics — Instagram" ¬
+        buttons {{"Annuler","Connexion"}} default button "Connexion")
+    return pwd
+    '''
+    try:
+        res = subprocess.run(["osascript", "-e", script_pwd],
+                             capture_output=True, text=True, timeout=60)
+        if res.returncode != 0:
+            return jsonify({"ok": False, "error": "Annulé"})
+        password = res.stdout.strip()
+        if not password:
+            return jsonify({"ok": False, "error": "Mot de passe vide"})
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "error": "Timeout dialog"})
+
+    # Connexion
+    try:
+        _ig_L = None  # force recréation
+        L = _ig_loader()
+        L.login(username, password)
+        # Sauvegarde session
+        session_dir = Path.home() / ".config" / "instaloader"
+        session_dir.mkdir(parents=True, exist_ok=True)
+        L.save_session_to_file(str(session_dir / f"session-{username}"))
+        _ig_username = username
+        return jsonify({"ok": True, "username": username})
+    except _il.TwoFactorAuthRequiredException:
+        # Demande le code 2FA
+        script_2fa = f'''
+        set code to text returned of (display dialog "Code d'authentification 2FA pour @{username}" ¬
+            default answer "" ¬
+            with title "Freeride Fanatics — Instagram 2FA" ¬
+            buttons {{"Annuler","Valider"}} default button "Valider")
+        return code
+        '''
+        res2 = subprocess.run(["osascript", "-e", script_2fa],
+                              capture_output=True, text=True, timeout=60)
+        if res2.returncode != 0:
+            return jsonify({"ok": False, "error": "2FA annulé"})
+        code = res2.stdout.strip().replace(" ", "")
+        try:
+            L.two_factor_login(code)
+            session_dir = Path.home() / ".config" / "instaloader"
+            session_dir.mkdir(parents=True, exist_ok=True)
+            L.save_session_to_file(str(session_dir / f"session-{username}"))
+            _ig_username = username
+            return jsonify({"ok": True, "username": username})
+        except Exception as e2:
+            return jsonify({"ok": False, "error": f"2FA échoué : {e2}"})
+    except Exception as e:
+        err = str(e)
+        if "checkpoint" in err.lower():
+            return jsonify({"ok": False, "error": "Vérification Instagram requise — connecte-toi sur instagram.com depuis ton navigateur"})
+        if "bad password" in err.lower() or "incorrect" in err.lower():
+            return jsonify({"ok": False, "error": "Mot de passe incorrect"})
+        return jsonify({"ok": False, "error": err[:200]})
+
+
+@app.route("/api/riders/ig-logout", methods=["POST"])
+def api_riders_ig_logout():
+    """Déconnexion Instagram."""
+    global _ig_L, _ig_username
+    _ig_L = None
+    _ig_username = None
+    return jsonify({"ok": True})
+
+
+@app.route("/api/riders/proxy-img")
+def api_riders_proxy_img():
+    """Proxy une image Instagram CDN pour contourner CORS."""
+    img_url = (request.args.get("url") or "").strip()
+    if not img_url:
+        return ("", 400)
+    # Sécurité : seulement les CDN Instagram/Facebook
+    allowed = ("scontent", "cdninstagram.com", "fbcdn.net", "instagram.f")
+    if not any(d in img_url for d in allowed):
+        return ("", 403)
+    try:
+        req = urllib.request.Request(img_url, headers={
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+            "Referer": "https://www.instagram.com/",
+        })
+        with urllib.request.urlopen(req, context=_logos_ssl, timeout=15) as resp:
+            raw  = resp.read()
+            mime = resp.headers.get("Content-Type", "image/jpeg")
+        return send_file(io.BytesIO(raw), mimetype=mime)
+    except Exception as e:
+        return (str(e), 502)
+
+
+@app.route("/api/riders/download-pic", methods=["POST"])
+def api_riders_download_pic():
+    """Télécharge une image Instagram via son URL directe CDN."""
+    data      = request.get_json() or {}
+    img_url   = (data.get("img_url")    or "").strip()
+    handle    = (data.get("handle")     or "").strip().lstrip("@")
+    folder    = (data.get("pic_folder") or "").strip()
+
+    if not img_url or not handle:
+        return jsonify({"ok": False, "error": "img_url et rider requis"})
+
+    pic_dir = Path(folder) if folder else BASE_DIR / "PictureRiders"
+    pic_dir.mkdir(exist_ok=True)
+
+    try:
+        req = urllib.request.Request(img_url, headers={
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+            "Referer": "https://www.instagram.com/",
+        })
+        with urllib.request.urlopen(req, context=_logos_ssl, timeout=20) as resp:
+            raw = resp.read()
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"Téléchargement échoué : {e}"})
+
+    out_path = pic_dir / f"@{handle}.jpg"
+    out_path.write_bytes(raw)
+    return jsonify({"ok": True, "handle": handle, "file": out_path.name,
+                    "thumb": f"/api/riders/thumb?path={out_path}"})
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────

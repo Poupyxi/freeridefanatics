@@ -12,7 +12,7 @@ import io
 import sys
 import importlib
 from pathlib import Path
-from flask import Flask, jsonify, request, send_file, Response
+from flask import Flask, jsonify, request, send_file, Response, session, redirect as flask_redirect
 
 # ── Import du moteur de génération ───────────────────────────────────────────
 BASE_DIR = Path(__file__).parent
@@ -20,6 +20,27 @@ sys.path.insert(0, str(BASE_DIR))
 import generate_cards as gc
 
 app = Flask(__name__)
+
+# ── OAuth / Session ───────────────────────────────────────────────────────────
+import secrets as _secrets, json as _json
+_OAUTH_DIR = Path.home() / '.config' / 'freeridefanatics'
+_OAUTH_DIR.mkdir(parents=True, exist_ok=True)
+
+_SK_FILE = _OAUTH_DIR / 'flask_secret.key'
+if _SK_FILE.exists():
+    app.secret_key = _SK_FILE.read_bytes()
+else:
+    _sk = _secrets.token_bytes(32)
+    _SK_FILE.write_bytes(_sk)
+    app.secret_key = _sk
+
+_GOOGLE_SECRET_FILE = _OAUTH_DIR / 'google_client_secret.json'
+_GOOGLE_TOKEN_FILE  = _OAUTH_DIR / 'google_token.json'
+_GOOGLE_SCOPES = [
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
 
 # Cache global (rechargé au premier appel)
 _cache = {}
@@ -276,6 +297,60 @@ HTML = r"""<!DOCTYPE html>
   .btn-select-all { background:none; border:1px solid #444; color:#aaa; padding:5px 12px;
     border-radius:5px; cursor:pointer; font-size:12px; }
   .btn-select-all:hover { border-color:#C8D400; color:#C8D400; }
+
+  /* ── Connections page ── */
+  #page-connections { display:none; padding:32px 24px; max-width:960px; margin:0 auto; }
+  #page-connections h2 { color:#C8D400; font-size:1.1rem; letter-spacing:1px; margin-bottom:4px; }
+  #page-connections .conn-subtitle { color:#555; font-size:12px; margin-bottom:28px; }
+  .conn-section-title {
+    font-size:10px; font-weight:700; letter-spacing:.12em; color:#444;
+    text-transform:uppercase; margin-bottom:12px; padding-bottom:6px;
+    border-bottom:1px solid #1e1e1e;
+  }
+  .conn-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap:14px;
+    margin-bottom:32px;
+  }
+  .conn-card {
+    background:#111;
+    border:1px solid #1e1e1e;
+    border-radius:12px;
+    padding:20px 16px 16px;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    transition:border-color .15s, box-shadow .15s;
+    position:relative;
+  }
+  .conn-card:hover { border-color:#2a2a2a; box-shadow:0 4px 20px rgba(0,0,0,.4); }
+  .conn-card.connected { border-color:#1a3300; }
+  .conn-logo {
+    width:52px; height:52px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .conn-logo svg { width:28px; height:28px; }
+  .conn-name { font-size:13px; font-weight:700; color:#ccc; letter-spacing:.3px; }
+  .conn-status {
+    display:flex; align-items:center; gap:5px;
+    font-size:11px; color:#444; font-weight:500;
+  }
+  .conn-status .dot {
+    width:6px; height:6px; border-radius:50%; background:#333; flex-shrink:0;
+  }
+  .conn-card.connected .conn-status { color:#5a8a00; }
+  .conn-card.connected .conn-status .dot { background:#C8D400; }
+  .conn-btn {
+    margin-top:auto; width:100%;
+    padding:7px 0; border-radius:7px;
+    font-size:12px; font-weight:700;
+    cursor:pointer; border:1px solid #2a2a2a;
+    background:#1a1a1a; color:#666;
+    transition:all .15s;
+  }
+  .conn-btn:hover { border-color:#555; color:#eee; }
+  .conn-card.connected .conn-btn { color:#cc4400; border-color:#3a1000; background:#1a0a00; }
+  .conn-card.connected .conn-btn:hover { border-color:#cc4400; }
 
   /* ── Riders page ── */
   #page-riders { display:none; padding:24px; max-width:1100px; margin:0 auto; }
@@ -758,6 +833,38 @@ HTML = r"""<!DOCTYPE html>
   .eq-detail-label { font-size: 0.68rem; color: #555; text-transform: uppercase; letter-spacing: 1px; width: 70px; flex-shrink: 0; }
   .eq-detail-val { font-size: 0.82rem; color: #eee; }
   .eq-empty { font-size: 0.78rem; color: #444; text-align: center; padding: 12px; }
+  .eq-rider-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 10px; cursor: pointer; font-size: 12px; color: #ccc;
+    border-bottom: 1px solid #111; user-select: none;
+  }
+  .eq-rider-item:hover { background: #161616; }
+  .eq-rider-item.active { background: #1c1e00; color: #C8D400; }
+  .eq-rider-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .eq-dot-ok      { background: #4CAF50; }
+  .eq-dot-partial { background: #f90; }
+  .eq-dot-empty   { background: #333; border: 1px solid #444; }
+  .eq-dot-loading { background: #555; }
+  /* ── Audit table ── */
+  #eq-audit-table th {
+    background: #111; color: #C8D400; font-size: 10px; letter-spacing: .5px;
+    padding: 5px 6px; white-space: nowrap; position: sticky; top: 0; z-index: 1;
+    border-bottom: 1px solid #333;
+  }
+  #eq-audit-table th:first-child { position: sticky; left: 0; z-index: 2; min-width: 110px; }
+  #eq-audit-table td {
+    padding: 4px 6px; border-bottom: 1px solid #111; text-align: center;
+    white-space: nowrap;
+  }
+  #eq-audit-table td:first-child {
+    text-align: left; position: sticky; left: 0;
+    background: #0d0d0d; color: #ddd; font-size: 11px; padding-right: 10px;
+  }
+  #eq-audit-table tr:hover td { background: #141414; }
+  #eq-audit-table tr:hover td:first-child { background: #141414; }
+  .audit-ok      { font-size: 14px; }
+  .audit-nophoto { font-size: 14px; filter: grayscale(1) opacity(.6); }
+  .audit-empty   { color: #2a2a2a; font-size: 12px; }
   /* ── Grille photos équipement ── */
   .eq-photo-thumb {
     width: 72px; height: 72px; border-radius: 6px; overflow: hidden;
@@ -1030,6 +1137,13 @@ HTML = r"""<!DOCTYPE html>
         <button class="dashboard-menu-btn" id="tab-logos" onclick="switchTab('logos'); closeDashboard()">
           🖼 Logos
         </button>
+        <button class="dashboard-menu-btn" id="tab-audit" onclick="switchTab('audit'); closeDashboard()">
+          📋 Audit Équipements
+        </button>
+        <div class="dashboard-section-label" style="margin-top:6px">Settings</div>
+        <button class="dashboard-menu-btn" id="tab-connections" onclick="switchTab('connections'); closeDashboard()">
+          🔗 Connexions
+        </button>
       </div>
     </div>
 
@@ -1048,6 +1162,9 @@ HTML = r"""<!DOCTYPE html>
     <div class="burger-divider">Assets Management</div>
     <button class="burger-item" id="burger-riders" onclick="switchTab('riders'); closeBurger()">👤 Riders</button>
     <button class="burger-item" id="burger-logos" onclick="switchTab('logos'); closeBurger()">🖼 Logos</button>
+    <button class="burger-item" id="burger-audit" onclick="switchTab('audit'); closeBurger()">📋 Audit Équipements</button>
+    <div class="burger-divider">Settings</div>
+    <button class="burger-item" id="burger-connections" onclick="switchTab('connections'); closeBurger()">🔗 Connexions</button>
   </div>
 </div>
 
@@ -1308,6 +1425,18 @@ HTML = r"""<!DOCTYPE html>
 <!-- PAGE ÉQUIPEMENTS                                                        -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <div id="page-equipment" style="display:none">
+
+<!-- Barre de contrôle équipements -->
+<div style="background:#161616;border-bottom:1px solid #222;padding:8px 16px;display:flex;align-items:center;gap:10px">
+  <span style="color:#C8D400;font-size:0.8rem;font-weight:700;letter-spacing:.08em">🔧 ÉQUIPEMENTS</span>
+  <button onclick="reloadEqData()" style="padding:4px 14px;background:#1a1a1a;border:1px solid #444;border-radius:6px;color:#ccc;font-size:11px;cursor:pointer">
+    ↺ Actualiser le Sheet
+  </button>
+  <button onclick="rescanEqPhotos()" style="padding:4px 14px;background:#1a1a1a;border:1px solid #444;border-radius:6px;color:#ccc;font-size:11px;cursor:pointer">
+    📸 Rescan photos
+  </button>
+</div>
+
 <div class="layout">
 
   <div class="panel-wrapper">
@@ -1327,8 +1456,8 @@ HTML = r"""<!DOCTYPE html>
             <button class="gender-btn" id="eq-btn-m" onclick="setEqGender('M')">♂</button>
           </div>
         </div>
-        <select id="eq-rider-select" onchange="onEqRiderChange()" size="8"
-          style="height:160px;border-radius:6px;padding:4px 0"></select>
+        <div id="eq-rider-select"
+          style="height:200px;overflow-y:auto;border:1px solid #2a2a2a;border-radius:6px;background:#0d0d0d"></div>
       </div>
     </div>
 
@@ -1378,9 +1507,32 @@ HTML = r"""<!DOCTYPE html>
         </div>
         <div class="eq-text-row" style="margin-top:6px">
           <label class="eq-toggle-wrap">
-            <input type="checkbox" id="eq_show_logo" onchange="eqDebouncedGenerate()">
+            <input type="checkbox" id="eq_show_logo" onchange="eqDebouncedGenerate();toggleEqLogoControls()">
             <span class="eq-toggle-label">Logo marque</span>
           </label>
+        </div>
+        <div id="eq-logo-controls" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid #1e1e1e">
+          <div class="slider-row">
+            <span class="slider-label">Hauteur</span>
+            <input type="range" id="eq_logo_h" min="20" max="150" value="60"
+              oninput="updateSlider(this,'eq_val_lh');eqDebouncedGenerate()">
+            <input type="text" class="slider-val" id="eq_val_lh" value="60"
+              onfocus="this.select()" onchange="syncVal('eq_val_lh','eq_logo_h');eqDebouncedGenerate()">
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Position Y</span>
+            <input type="range" id="eq_logo_y" min="900" max="1320" value="1200"
+              oninput="updateSlider(this,'eq_val_ly');eqDebouncedGenerate()">
+            <input type="text" class="slider-val" id="eq_val_ly" value="1200"
+              onfocus="this.select()" onchange="syncVal('eq_val_ly','eq_logo_y');eqDebouncedGenerate()">
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Position X</span>
+            <input type="range" id="eq_logo_x" min="-1" max="1060" value="-1"
+              oninput="updateSlider(this,'eq_val_lx',true);eqDebouncedGenerate()">
+            <input type="text" class="slider-val" id="eq_val_lx" value="Auto"
+              onfocus="this.select()" onchange="syncVal('eq_val_lx','eq_logo_x',true);eqDebouncedGenerate()">
+          </div>
         </div>
         <div class="eq-text-row" style="margin-top:10px;border-top:1px solid #333;padding-top:10px">
           <label class="eq-toggle-wrap">
@@ -1453,6 +1605,8 @@ HTML = r"""<!DOCTYPE html>
   </div>
 
 </div><!-- fin .layout -->
+
+
 </div><!-- fin #page-equipment -->
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -1681,8 +1835,13 @@ HTML = r"""<!DOCTYPE html>
 
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
       <div style="flex:2;min-width:260px">
-        <div style="font-size:11px;color:#555;margin-bottom:4px">URL du post Instagram</div>
-        <input id="pic-dl-url" type="text" placeholder="https://www.instagram.com/p/..."
+        <div style="font-size:11px;color:#555;margin-bottom:4px">
+          URL du post <em>ou</em> image directe Instagram
+          <span id="pic-dl-mode-badge" style="margin-left:6px;font-size:10px;padding:1px 6px;
+            border-radius:4px;background:#1a2200;color:#C8D400;display:none">URL directe</span>
+        </div>
+        <input id="pic-dl-url" type="text"
+          placeholder="https://www.instagram.com/p/... ou coller URL image (clic droit → Copier adresse)"
           style="width:100%;background:#1a1a1a;border:1px solid #333;color:#eee;padding:8px 12px;
                  border-radius:6px;font-size:13px;box-sizing:border-box"
           oninput="picDlPreviewUrl(this.value)">
@@ -1695,15 +1854,28 @@ HTML = r"""<!DOCTYPE html>
           <option value="">— Scanner d'abord —</option>
         </select>
       </div>
-      <button class="btn" onclick="picDlDownload()" id="pic-dl-btn"
+      <button class="btn" onclick="picDlDownload()" id="pic-dl-btn" disabled
         style="background:#1a2200;color:#C8D400;border:1px solid #C8D400;white-space:nowrap">
         ⬇ Télécharger
       </button>
     </div>
+
     <!-- Sélecteur carrousel -->
     <div id="pic-dl-carousel" style="display:none;margin-top:12px">
       <div style="font-size:11px;color:#555;margin-bottom:6px">Sélectionne la photo à télécharger :</div>
       <div class="carousel-picker" id="pic-dl-carousel-grid"></div>
+    </div>
+
+    <!-- Panneau fallback URL directe -->
+    <div id="pic-dl-fallback" style="display:none;margin-top:10px;padding:12px 14px;
+      background:#1a0a00;border:1px solid #3a1800;border-radius:8px;font-size:12px">
+      <div style="color:#f90;font-weight:600;margin-bottom:6px">⚠️ Instagram bloque l'accès automatique</div>
+      <div style="color:#888;line-height:1.6">
+        Solution : ouvre le post dans ton navigateur
+        → <a id="pic-dl-fallback-link" href="#" target="_blank" style="color:#C8D400">voir le post ↗</a><br>
+        Clic droit sur la photo voulue → <strong style="color:#eee">Copier l'adresse de l'image</strong><br>
+        Colle l'URL directement dans le champ ci-dessus.
+      </div>
     </div>
 
     <div style="margin-top:10px;display:flex;gap:14px;align-items:flex-start">
@@ -1732,6 +1904,140 @@ HTML = r"""<!DOCTYPE html>
   </table>
 </div><!-- fin #page-riders -->
 
+<!-- ══════════════════ PAGE CONNECTIONS ══════════════════ -->
+<div id="page-connections">
+  <h2>🔗 CONNEXIONS</h2>
+  <p class="conn-subtitle">Connecte tes comptes pour activer les fonctionnalités avancées de la plateforme.</p>
+
+  <div class="conn-section-title">Social Media &amp; Platforms</div>
+  <div class="conn-grid">
+
+    <!-- Google -->
+    <div class="conn-card" id="conn-google">
+      <div class="conn-logo" style="background:#fff;border-radius:12px">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+      </div>
+      <div class="conn-name">Google</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('google')">Se connecter</button>
+    </div>
+
+    <!-- Instagram -->
+    <div class="conn-card" id="conn-instagram">
+      <div class="conn-logo" style="background:linear-gradient(135deg,#405DE6,#833AB4,#C13584,#E1306C,#FD1D1D,#F56040,#FCAF45)">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#fff" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+      </div>
+      <div class="conn-name">Instagram</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('instagram')">Se connecter</button>
+    </div>
+
+    <!-- LinkedIn -->
+    <div class="conn-card" id="conn-linkedin">
+      <div class="conn-logo" style="background:#0077B5;border-radius:12px">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#fff" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+      </div>
+      <div class="conn-name">LinkedIn</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('linkedin')">Se connecter</button>
+    </div>
+
+    <!-- Facebook -->
+    <div class="conn-card" id="conn-facebook">
+      <div class="conn-logo" style="background:#1877F2;border-radius:12px">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#fff" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      </div>
+      <div class="conn-name">Facebook</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('facebook')">Se connecter</button>
+    </div>
+
+    <!-- X / Twitter -->
+    <div class="conn-card" id="conn-x">
+      <div class="conn-logo" style="background:#000;border-radius:12px">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#fff" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.745l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      </div>
+      <div class="conn-name">X</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('x')">Se connecter</button>
+    </div>
+
+    <!-- TikTok -->
+    <div class="conn-card" id="conn-tiktok">
+      <div class="conn-logo" style="background:#010101;border-radius:12px">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#25F4EE" d="M19.321 5.562a5.122 5.122 0 0 1-.443-.258 6.228 6.228 0 0 1-1.138-1.009 6.273 6.273 0 0 1-1.478-3.43H16.26l.002 13.762a2.98 2.98 0 0 1-2.975 2.553 2.98 2.98 0 0 1-2.974-2.981 2.98 2.98 0 0 1 2.974-2.98c.292 0 .574.042.842.12V8.31a6.46 6.46 0 0 0-.842-.055 6.472 6.472 0 0 0-6.462 6.473 6.473 6.473 0 0 0 6.462 6.472 6.472 6.472 0 0 0 6.461-6.472V8.396a9.766 9.766 0 0 0 3.717.73V5.657a6.24 6.24 0 0 1-3.144-.095z"/>
+          <path fill="#FE2C55" d="M19.321 5.562a5.122 5.122 0 0 1-.443-.258 6.228 6.228 0 0 1-1.138-1.009 6.273 6.273 0 0 1-1.478-3.43h-3.002l.002 13.762a2.98 2.98 0 0 1-2.975 2.553 2.98 2.98 0 0 1-2.974-2.981 2.98 2.98 0 0 1 2.974-2.98c.292 0 .574.042.842.12V8.31a6.46 6.46 0 0 0-.842-.055 6.472 6.472 0 0 0-6.462 6.473 6.473 6.473 0 0 0 6.462 6.472 6.472 6.472 0 0 0 6.461-6.472V8.396a9.766 9.766 0 0 0 3.717.73V5.657a6.24 6.24 0 0 1-3.144-.095z" opacity=".5"/>
+          <path fill="#fff" d="M16.262.865h-3.002v13.762a2.98 2.98 0 0 1-2.975 2.553 2.98 2.98 0 0 1-2.974-2.981 2.98 2.98 0 0 1 2.974-2.98c.292 0 .574.042.842.12V8.31a6.46 6.46 0 0 0-.842-.055 6.472 6.472 0 0 0-6.462 6.473 6.473 6.473 0 0 0 6.462 6.472 6.472 6.472 0 0 0 6.461-6.472V5.562a9.766 9.766 0 0 0 3.717.73V3.295a6.273 6.273 0 0 1-4.201-2.43z"/>
+        </svg>
+      </div>
+      <div class="conn-name">TikTok</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('tiktok')">Se connecter</button>
+    </div>
+
+    <!-- Reddit -->
+    <div class="conn-card" id="conn-reddit">
+      <div class="conn-logo" style="background:#FF4500;border-radius:50%">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#fff" d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+        </svg>
+      </div>
+      <div class="conn-name">Reddit</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('reddit')">Se connecter</button>
+    </div>
+
+    <!-- Rednote -->
+    <div class="conn-card" id="conn-rednote">
+      <div class="conn-logo" style="background:#FF2442;border-radius:12px">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="18" height="18" rx="3" fill="none"/>
+          <path fill="#fff" d="M7 7h4v2H7zm0 4h10v1.5H7zm0 3h10v1.5H7zm6-7h4v2h-4z"/>
+          <circle fill="#fff" cx="17" cy="17" r="3"/>
+          <path fill="#FF2442" d="M16 16.5h.5V16H16zm.5 0H17v1h-.5zm.5-1h.5v.5H17zm.5.5H18V16h-.5z"/>
+          <text x="14.8" y="18.2" font-size="3.5" fill="#fff" font-weight="bold" font-family="sans-serif">+</text>
+        </svg>
+      </div>
+      <div class="conn-name">Rednote</div>
+      <div class="conn-status"><span class="dot"></span>Non connecté</div>
+      <button class="conn-btn" onclick="connClick('rednote')">Se connecter</button>
+    </div>
+
+  </div><!-- /conn-grid -->
+</div><!-- fin #page-connections -->
+
+<!-- ══════════════════ PAGE AUDIT ══════════════════ -->
+<div id="page-audit" style="display:none;padding:28px 24px 48px;max-width:1400px;margin:0 auto">
+  <h2 style="color:#C8D400;margin-bottom:4px;font-size:1.1rem;letter-spacing:1px">📋 AUDIT ÉQUIPEMENTS</h2>
+  <p style="color:#555;font-size:12px;margin-bottom:20px">Vue d'ensemble — présence des photos par rider × catégorie</p>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+    <button onclick="loadEqAudit()" style="padding:5px 14px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer">↺ Actualiser</button>
+    <button onclick="rescanEqPhotos().then(loadEqAudit)" style="padding:5px 14px;background:#1a1a1a;border:1px solid #C8D400;border-radius:6px;color:#C8D400;font-size:12px;cursor:pointer">📸 Rescan photos</button>
+    <span style="font-size:11px;color:#444;margin-left:auto">🟢 données + photo &nbsp;·&nbsp; 🟡 données, photo manquante &nbsp;·&nbsp; ⬜ aucune donnée</span>
+  </div>
+
+  <div id="eq-audit-wrap" style="overflow-x:auto">
+    <div id="eq-audit-placeholder" style="color:#444;font-size:13px;padding:20px 0">
+      Chargement…
+    </div>
+    <table id="eq-audit-table" style="display:none;border-collapse:collapse;min-width:100%;font-size:11px"></table>
+  </div>
+</div><!-- fin #page-audit -->
 
 <script>
 // ── Collapsible ───────────────────────────────────────────────────────────
@@ -2273,7 +2579,7 @@ async function reloadExcel() {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────
-const _DASHBOARD_TABS = ['logos', 'riders'];
+const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'audit'];
 
 function switchTab(tab) {
   // Tabs principaux
@@ -2297,8 +2603,73 @@ function switchTab(tab) {
   document.getElementById('page-logos').style.display       = tab === 'logos'       ? 'block' : 'none';
   document.getElementById('page-riders').style.display      = tab === 'riders'      ? 'block' : 'none';
   document.getElementById('page-reel').style.display        = tab === 'reel'        ? 'block' : 'none';
+  document.getElementById('page-connections').style.display = tab === 'connections' ? 'block' : 'none';
+  document.getElementById('page-audit').style.display       = tab === 'audit'       ? 'block' : 'none';
+
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
   if (tab === 'reel') { renderReelPage(); _initReelRiderList(); }
+  if (tab === 'connections') connRefreshGoogle();
+  if (tab === 'audit') loadEqAudit();
+}
+
+// ── Connexions ────────────────────────────────────────────────────────────────
+function connClick(platform) {
+  // Dispatch vers le handler spécifique, sinon fallback "bientôt dispo"
+  if (platform === 'google') { connOAuthPopup('google'); return; }
+  const card = document.getElementById('conn-' + platform);
+  if (!card) return;
+  const btn  = card.querySelector('.conn-btn');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Bientôt disponible';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+}
+
+// Ouvre un popup OAuth et attend le message de succès
+function connOAuthPopup(platform) {
+  const w = window.open(
+    `/api/auth/${platform}`,
+    `${platform}_oauth`,
+    'width=620,height=720,scrollbars=yes,resizable=yes'
+  );
+  const handler = (e) => {
+    if (e.data?.type === `${platform}_oauth_success`) {
+      window.removeEventListener('message', handler);
+      if (platform === 'google') connRefreshGoogle();
+    }
+  };
+  window.addEventListener('message', handler);
+}
+
+// Met à jour la carte Google en fonction du statut serveur
+async function connRefreshGoogle() {
+  const card = document.getElementById('conn-google');
+  if (!card) return;
+  const statusEl = card.querySelector('.conn-status');
+  const btn = card.querySelector('.conn-btn');
+  try {
+    const d = await fetch('/api/auth/google/status').then(r => r.json());
+    if (!d.configured) {
+      statusEl.innerHTML = '<span class="dot" style="background:#f90"></span>client_secret.json requis';
+      btn.textContent = 'Configurer ↗';
+      btn.style.background = '';
+      btn.onclick = () => window.open('https://console.cloud.google.com/apis/credentials', '_blank');
+    } else if (d.connected) {
+      statusEl.innerHTML = `<span class="dot" style="background:#4CAF50"></span>${d.email || 'Connecté'}`;
+      btn.textContent = 'Déconnecter';
+      btn.style.background = '#2a2a2a';
+      btn.onclick = async () => {
+        await fetch('/api/auth/google/logout', {method:'POST'});
+        btn.onclick = () => connClick('google');
+        connRefreshGoogle();
+      };
+    } else {
+      statusEl.innerHTML = '<span class="dot"></span>Non connecté';
+      btn.textContent = 'Se connecter';
+      btn.style.background = '';
+      btn.onclick = () => connClick('google');
+    }
+  } catch(e) { console.error('Google status error', e); }
 }
 
 // ── Dashboard dropdown ────────────────────────────────────────────────────
@@ -2793,45 +3164,84 @@ function picDlRiderChanged(ig, riderData) {
 
 let _picDlSelectedUrl = '';  // URL pleine résolution de l'image sélectionnée
 
-async function picDlPreviewUrl(val) {
-  const m = val.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
-  if (!m) return;
-  const status   = document.getElementById('pic-dl-status');
-  const carousel = document.getElementById('pic-dl-carousel');
-  const grid     = document.getElementById('pic-dl-carousel-grid');
+function _picDlReset() {
   _picDlSelectedUrl = '';
-  carousel.style.display = 'none';
-  status.style.color = '#888'; status.textContent = '🔍 Inspection du post…';
-  document.getElementById('pic-dl-btn').disabled = true;
+  document.getElementById('pic-dl-carousel').style.display   = 'none';
+  document.getElementById('pic-dl-carousel-grid').innerHTML  = '';
+  document.getElementById('pic-dl-fallback').style.display   = 'none';
+  document.getElementById('pic-dl-mode-badge').style.display = 'none';
+  document.getElementById('pic-dl-btn').disabled             = true;
+  document.getElementById('pic-dl-status').textContent       = '';
+  document.getElementById('pic-dl-status').style.color       = '#888';
+}
+
+function _isCdnUrl(url) {
+  return /scontent[^/]*\.cdninstagram\.com|cdninstagram\.com|fbcdn\.net|instagram\.f[a-z]{3,4}\d*-\d+\.fna/i.test(url);
+}
+
+async function picDlPreviewUrl(val) {
+  val = val.trim();
+  if (!val) { _picDlReset(); return; }
+
+  const status  = document.getElementById('pic-dl-status');
+  const badge   = document.getElementById('pic-dl-mode-badge');
+  const btn     = document.getElementById('pic-dl-btn');
+
+  _picDlReset();
+
+  // ── Mode URL directe (CDN Instagram) ──────────────────────────────────
+  if (_isCdnUrl(val)) {
+    badge.style.display    = 'inline';
+    status.style.color     = '#C8D400';
+    status.textContent     = '✅ URL image directe détectée';
+    _picDlSelectedUrl      = val;
+    btn.disabled           = false;
+
+    // Affiche preview via proxy
+    const prev = document.getElementById('pic-dl-preview-box');
+    const img  = document.getElementById('pic-dl-preview-img');
+    img.src    = `/api/riders/proxy-img?url=${encodeURIComponent(val)}`;
+    prev.style.display = 'block';
+    return;
+  }
+
+  // ── Mode URL de post Instagram ────────────────────────────────────────
+  const mPost = val.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  if (!mPost) return;
+
+  status.textContent = '🔍 Inspection du post…';
 
   try {
     const r = await fetch('/api/riders/inspect-pic', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ url: val.trim() })
+      body: JSON.stringify({ url: val })
     });
     const d = await r.json();
     if (!d.ok) throw new Error(d.error);
 
+    status.style.color = '#888';
     status.textContent = d.count === 1 ? '1 photo trouvée' : `Carrousel — ${d.count} photos`;
 
-    // Affiche les thumbnails
+    const grid     = document.getElementById('pic-dl-carousel-grid');
+    const carousel = document.getElementById('pic-dl-carousel');
     grid.innerHTML = d.images.map((img, i) =>
       `<img class="carousel-thumb${i===0?' active':''}"
         src="/api/riders/proxy-img?url=${encodeURIComponent(img.thumb_url)}"
         data-full="${img.full_url}" data-idx="${i}"
-        onclick="picDlSelectThumb(this)"
-        title="Photo ${i+1}">`
+        onclick="picDlSelectThumb(this)" title="Photo ${i+1}">`
     ).join('');
     carousel.style.display = 'block';
-
-    // Pré-sélectionne la première
     _picDlSelectedUrl = d.images[0].full_url;
-    document.getElementById('pic-dl-btn').disabled = false;
+    btn.disabled = false;
+
   } catch(e) {
-    status.style.color = '#f55';
-    status.textContent = '❌ ' + e.message;
-    document.getElementById('pic-dl-btn').disabled = false;
+    // Échec → affiche le panneau fallback avec lien vers le post
+    const fallback = document.getElementById('pic-dl-fallback');
+    document.getElementById('pic-dl-fallback-link').href = val;
+    fallback.style.display = 'block';
+    status.style.color  = '#888';
+    status.textContent  = '';
   }
 }
 
@@ -2866,12 +3276,31 @@ async function picDlDownload() {
 
     status.style.color = '#C8D400';
     status.textContent = `✅ Sauvegardé : ${d.file}`;
-    prevImg.src = d.thumb + '&t=' + Date.now();
+    const thumbUrl = d.thumb + '&t=' + Date.now();
+    prevImg.src = thumbUrl;
     prev.style.display = 'block';
 
-    // Met à jour le statut dans la table si visible
-    const stEl = document.querySelector(`#pp-row-${handle} td:nth-child(5) span`);
-    if (stEl) { stEl.textContent = '✅ OK'; stEl.className = 'rider-status-ok'; }
+    // ── Mise à jour directe de la ligne dans la table ──────────────────
+    const row = document.querySelector(`#pp-row-${handle}`);
+    if (row) {
+      // Statut action (col 5)
+      const stCell = row.querySelector('td:nth-child(5)');
+      if (stCell) stCell.innerHTML = '<span class="rider-status-ok">✅ OK</span>';
+
+      // Miniature action (col 4)
+      const thCell = row.querySelector('td:nth-child(4)');
+      if (thCell) {
+        const img = document.createElement('img');
+        img.className = 'rider-thumb-action';
+        img.src = thumbUrl;
+        thCell.innerHTML = '';
+        thCell.appendChild(img);
+      }
+
+      // Nom de fichier action (col 8)
+      const fileCell = row.querySelector('td:nth-child(8)');
+      if (fileCell) fileCell.textContent = d.file;
+    }
 
     // Retire le rider de la liste manquants + met à jour le dropdown
     const opt = document.querySelector(`#pic-dl-rider option[value="${handle}"]`);
@@ -2885,7 +3314,9 @@ async function picDlDownload() {
       document.getElementById('pic-dl-next-btn').style.display = 'none';
 
     document.getElementById('pic-dl-url').value = '';
-    // Re-scan silencieux pour récupérer le vrai nom de fichier, puis avance
+    _picDlReset();
+
+    // Rescan en arrière-plan + avance au rider suivant
     ridersSilentRescan().finally(() => {
       if (_ridersMgr.missingPic.length > 0)
         setTimeout(() => { _ridersMgr.missingPicIdx--; picDlNext(); }, 400);
@@ -2925,20 +3356,100 @@ let _eqSelectedPhotoPath = '';
 let _eqItemsData    = [];
 let _lastEqCard     = null;
 
+async function rescanEqPhotos(silent = false) {
+  try {
+    const d = await fetch('/api/rescan-eq-photos', { method: 'POST' }).then(r => r.json());
+    _app.eqVariants      = d.eq_variants      || [];
+    _app.categoryFolders = d.category_folders || {};
+    _app.varCache        = {};  // vide le cache de variants par item
+    if (!silent) console.log(`📸 Rescan photos : ${d.count} fichiers trouvés`);
+  } catch(e) { console.warn('rescanEqPhotos error', e); }
+}
+
 async function initEqPage() {
   _eqRiders = riders;
   _eqRidersLoaded = true;
   renderEqRiderList();
   fetch('/api/reload-equipment', { method: 'POST' });
+  rescanEqPhotos(true);   // rescan photos au premier chargement
+}
+
+async function loadEqAudit() {
+  const ph  = document.getElementById('eq-audit-placeholder');
+  const tbl = document.getElementById('eq-audit-table');
+  ph.textContent = '⏳ Analyse en cours…';
+  ph.style.display = 'block';
+  tbl.style.display = 'none';
+  try {
+    const d = await fetch('/api/equipment-audit').then(r => r.json());
+    const cols = d.columns;
+    const rows = d.rows;
+
+    // Abréviations colonnes
+    const abbr = { 'Rear Shock':'RShock','Handlebar':'Hbar','Dropper Post':'Dropper',
+                   'Brake Lever':'BLever','Brake Caliper':'BCalip' };
+
+    // En-tête
+    let html = '<thead><tr><th>Rider</th>';
+    cols.forEach(c => { html += `<th title="${c}">${abbr[c] || c}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    let totOk = 0, totNp = 0, totEmpty = 0;
+
+    // Calcul du statut global par rider → dot dans la liste
+    _eqAuditBySlug = {};
+    rows.forEach(r => {
+      const slug = _app.profiles.find(p =>
+        p.prenom === r.prenom && p.nom === r.nom)?.slug || '';
+      const vals = Object.values(r.cats);
+      const hasData  = vals.some(v => v !== 'empty');
+      const allOk    = vals.filter(v => v !== 'empty').every(v => v === 'ok');
+      if (!hasData)       _eqAuditBySlug[slug] = 'empty';
+      else if (allOk)     _eqAuditBySlug[slug] = 'ok';
+      else                _eqAuditBySlug[slug] = 'partial';
+    });
+    renderEqRiderList();  // re-render avec les dots
+
+    rows.forEach(r => {
+      const name = `${r.genre === 'F' ? '♀' : '♂'} ${r.prenom} ${r.nom}`;
+      html += `<tr><td>${name}</td>`;
+      cols.forEach(c => {
+        const st = r.cats[c];
+        if (st === 'ok')            { html += '<td class="audit-ok">🟢</td>';      totOk++;    }
+        else if (st === 'no_photo') { html += '<td class="audit-nophoto">🟡</td>'; totNp++;    }
+        else                        { html += '<td class="audit-empty">·</td>';     totEmpty++; }
+      });
+      html += '</tr>';
+    });
+
+    const total = totOk + totNp + totEmpty;
+    html += `<tr style="border-top:2px solid #333">
+      <td style="color:#888;font-size:10px">TOTAL</td>`;
+    cols.forEach(c => {
+      const colOk = rows.filter(r => r.cats[c] === 'ok').length;
+      const colNp = rows.filter(r => r.cats[c] === 'no_photo').length;
+      const pct   = Math.round(colOk / rows.length * 100);
+      html += `<td style="font-size:9px;color:${pct===100?'#4CAF50':pct>50?'#C8D400':'#f90'}">${pct}%</td>`;
+    });
+    html += '</tr></tbody>';
+
+    tbl.innerHTML = html;
+    tbl.style.display = 'table';
+    ph.textContent = `✅ ${rows.length} riders · 🟢 ${totOk} · 🟡 ${totNp} · ⬜ ${totEmpty}`;
+    ph.style.color = '#888';
+  } catch(e) {
+    ph.textContent = '❌ Erreur : ' + e.message;
+    ph.style.color = '#e55';
+  }
 }
 
 async function reloadEqData() {
-  const btn = event.currentTarget;
-  btn.textContent = '⏳'; btn.disabled = true;
+  const btn = event?.currentTarget || null;
+  const orig = btn?.textContent;
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
   await fetch('/api/reload-equipment', { method: 'POST' });
-  btn.textContent = '↺ Sheet'; btn.disabled = false;
-  const slug = document.getElementById('eq-rider-select').value;
-  if (slug) onEqRiderChange();
+  if (btn) { btn.textContent = orig || '↺ Actualiser le Sheet'; btn.disabled = false; }
+  if (_eqSelectedSlug) onEqRiderChange(_eqSelectedSlug);
 }
 
 function setEqGender(g) {
@@ -2948,29 +3459,73 @@ function setEqGender(g) {
   renderEqRiderList();
 }
 
+let _eqSelectedSlug = '';
+let _eqAuditBySlug  = {};  // { slug: 'ok'|'partial'|'empty'|'loading' }
+
+function _eqRiderDotClass(slug) {
+  const st = _eqAuditBySlug[slug];
+  if (!st || st === 'loading') return 'eq-dot-loading';
+  if (st === 'ok')      return 'eq-dot-ok';
+  if (st === 'partial') return 'eq-dot-partial';
+  return 'eq-dot-empty';
+}
+
 function renderEqRiderList() {
   const query = (document.getElementById('eq-rider-search').value || '').trim().toLowerCase();
-  const sel = document.getElementById('eq-rider-select');
-  const prev = sel.value;
-  sel.innerHTML = '';
+  const container = document.getElementById('eq-rider-select');
   const filtered = _eqRiders.filter(r => {
     if (_eqGender !== 'all' && r.genre !== _eqGender) return false;
     if (query && !`${r.prenom} ${r.nom}`.toLowerCase().includes(query)) return false;
     return true;
   });
-  filtered.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.slug;
-    opt.textContent = `${r.genre === 'F' ? '♀' : '♂'}  ${r.prenom} ${r.nom}`;
-    sel.appendChild(opt);
-  });
-  if (prev && filtered.find(r => r.slug === prev)) sel.value = prev;
+  container.innerHTML = filtered.map(r => `
+    <div class="eq-rider-item${r.slug === _eqSelectedSlug ? ' active' : ''}"
+         data-slug="${r.slug}" onclick="onEqRiderClick('${r.slug}')">
+      <span>${r.genre === 'F' ? '♀' : '♂'} ${r.prenom} ${r.nom}</span>
+    </div>`).join('');
 }
 
 let _eqSelectedRider = null;  // profil complet du rider sélectionné (pour badge reel)
 
-function onEqRiderChange() {
-  const slug = document.getElementById('eq-rider-select').value;
+// ── Checks statut par item d'équipement ──────────────────────────────────────
+function _eqCheckPhoto(it) {
+  const norm = s => (s || '').toLowerCase().replace(/[\s\-_\/\.]/g, '');
+  const bNorm = norm(it.brand);
+  const rNorm = norm(it.reference);
+  const words = (it.reference || '').toLowerCase().split(/\s+/)
+    .filter(w => w.length > 2).map(norm);
+  const catFolders = (_app.categoryFolders[it.category] || [it.category]).map(norm);
+  return _app.eqVariants.some(f => {
+    if (!catFolders.includes(norm(f.folder || ''))) return false;
+    const s = norm(f.name);
+    if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return true;
+    if (bNorm && s.includes(bNorm)) return true;
+    if (words.length && words.some(w => s.includes(w))) return true;
+    return false;
+  });
+}
+
+function _eqCheckLogo(brand) {
+  if (!brand) return false;
+  const norm = s => s.toLowerCase().replace(/[\s\-_\/]/g, '');
+  const b = norm(brand);
+  return _app.sponsors.some(s => {
+    const k = norm(s.key || s.label || '');
+    return k && (k.includes(b) || b.includes(k));
+  });
+}
+
+function onEqRiderClick(slug) {
+  _eqSelectedSlug = slug;
+  // Met à jour l'item actif visuellement
+  document.querySelectorAll('#eq-rider-select .eq-rider-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.slug === slug);
+  });
+  onEqRiderChange(slug);
+}
+
+function onEqRiderChange(slug) {
+  if (!slug) slug = _eqSelectedSlug;
   if (!slug) return;
 
   // Lookup local
@@ -2995,13 +3550,23 @@ function onEqRiderChange() {
     return;
   }
   _eqItemsData = items;
-  list.innerHTML = items.map((it, i) => `
-    <div class="eq-item" id="eq-page-item-${i}" onclick="selectEqItem(${i})">
-      <span class="eq-cat">${it.category}</span>
-      <span class="eq-brand">${it.brand || '—'}</span>
-      <span class="eq-ref">${it.reference || ''}</span>
-    </div>
-  `).join('');
+  list.innerHTML = items.map((it, i) => {
+    const hasDesc  = !!(it.brand && it.reference);
+    const hasPhoto = _eqCheckPhoto(it);
+    const hasLogo  = _eqCheckLogo(it.brand);
+    const score    = (hasDesc ? 1 : 0) + (hasPhoto ? 1 : 0) + (hasLogo ? 1 : 0);
+    const dotCls   = score === 3 ? 'eq-dot-ok' : score > 0 ? 'eq-dot-partial' : 'eq-dot-empty';
+    const missing  = [!hasDesc&&'desc', !hasPhoto&&'photo', !hasLogo&&'logo'].filter(Boolean);
+    const badge    = missing.length ? `<span style="margin-left:auto;font-size:9px;color:#f90;opacity:.8">${missing.join(' · ')}</span>` : '';
+    return `
+    <div class="eq-item" id="eq-page-item-${i}" onclick="selectEqItem(${i})" style="display:flex;align-items:center;gap:5px">
+      <span class="eq-rider-dot ${dotCls}" style="flex-shrink:0"></span>
+      <span class="eq-cat" style="flex-shrink:0">${it.category}</span>
+      <span class="eq-brand" style="flex-shrink:0">${it.brand || '—'}</span>
+      <span class="eq-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${it.reference || ''}</span>
+      ${badge}
+    </div>`;
+  }).join('');
 
   // UX : rabat la section Rider et scroll vers la liste d'équipements
   smoothCollapseAndScroll('eqcol-rider', 'eqcol-items');
@@ -3070,26 +3635,40 @@ function loadColorVariants(it) {
       return catFolders.includes(norm(f.folder));
     });
 
+    const score = f => {
+      const s = norm(f.name);
+      if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return 0;  // marque + modèle
+      if (bNorm && s.includes(bNorm)) return 1;                                  // marque seule
+      const words = (it.reference||'').toLowerCase().split(/\s+/).filter(Boolean);
+      if (words.some(w => w.length > 2 && s.includes(norm(w)))) return 2;       // mot-clé ref
+      return 3;                                                                   // hors sujet
+    };
+
     if (inFolder.length === 0) {
       // Fallback : racine Equipment/ si aucun dossier matche
-      variants = _app.eqVariants.filter(f => !f.folder);
+      variants = _app.eqVariants.filter(f => !f.folder && score(f) < 3);
     } else {
-      // 2. Dans ce dossier, trier : brand+ref en premier, brand seul ensuite, reste après
-      const score = f => {
-        const s = norm(f.name);
-        if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return 0;
-        if (bNorm && s.includes(bNorm)) return 1;
-        const words = (it.reference||'').toLowerCase().split(/\s+/).filter(Boolean);
-        if (words.some(w => w.length > 2 && s.includes(norm(w)))) return 2;
-        return 3;
-      };
-      variants = [...inFolder].sort((a, b) => score(a) - score(b));
+      // Garder marque OU modèle (scores 0, 1, 2) — exclure les hors-sujet (score 3)
+      const matched = inFolder.filter(f => score(f) < 3).sort((a, b) => score(a) - score(b));
+      if (matched.length > 0) {
+        variants = matched;
+      } else {
+        // Aucun match — afficher tout le dossier avec un avertissement
+        variants = [...inFolder];
+        variants._noMatch = true;
+      }
     }
     _app.varCache[cacheKey] = variants;
   }
 
   if (variants.length > 0) {
     varBox.style.display = 'block';
+    if (variants._noMatch) {
+      swatches.insertAdjacentHTML('beforebegin',
+        `<div style="color:#f90;font-size:11px;margin-bottom:6px">
+          ⚠️ Aucune photo trouvée pour « ${it.brand||''} ${it.reference||''} » — toutes les variantes affichées
+        </div>`);
+    }
     variants.forEach((v, i) => {
       const wrap = document.createElement('div');
       wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px';
@@ -3115,6 +3694,12 @@ function loadColorVariants(it) {
 
 // Debounce live preview
 let _eqDebTimer = null;
+function toggleEqLogoControls() {
+  const show = document.getElementById('eq_show_logo')?.checked;
+  const ctrl = document.getElementById('eq-logo-controls');
+  if (ctrl) ctrl.style.display = show ? 'block' : 'none';
+}
+
 function eqDebouncedGenerate(delay = 500) {
   clearTimeout(_eqDebTimer);
   _eqDebTimer = setTimeout(() => generateEqCard(true), delay);
@@ -3173,6 +3758,9 @@ async function generateEqCard(silent = false) {
         zoom, photo_x, photo_y,
         text_x: 0, text_y: 0,
         show_brand, show_reference, show_details, show_logo,
+        logo_h: parseInt(g('eq_logo_h')?.value || 60),
+        logo_y: parseInt(g('eq_logo_y')?.value || 1200),
+        logo_x: parseInt(g('eq_logo_x')?.value || -1),
         photo_bg, use_v2,
       }),
     });
@@ -3523,19 +4111,32 @@ def api_riders():
     return jsonify(data)
 
 
+LOGO_EXTS = {".jpg", ".jpeg", ".webp", ".png", ".svg"}
+# Priorité d'affichage : SVG > PNG > JPG/WEBP
+_LOGO_PRIORITY = {".svg": 3, ".png": 2, ".webp": 1, ".jpg": 1, ".jpeg": 1}
+
+def _scan_logos():
+    """Scanne LOGOS_DIR — toutes extensions (jpg, png, webp, svg).
+    Si plusieurs fichiers ont le même stem, garde celui avec la meilleure priorité."""
+    seen = {}  # stem_lower → (priority, Path)
+    if gc.LOGOS_DIR.exists():
+        for f in sorted(gc.LOGOS_DIR.iterdir()):
+            ext = f.suffix.lower()
+            if ext not in LOGO_EXTS:
+                continue
+            stem = f.stem.lower()
+            prio = _LOGO_PRIORITY.get(ext, 0)
+            if stem not in seen or prio > seen[stem][0]:
+                seen[stem] = (prio, f)
+    return {stem: v[1] for stem, v in seen.items()}
+
+
 @app.route("/api/sponsors")
 def api_sponsors():
-    """Liste tous les logos présents dans logos/ — dédupliqués par nom de stem (PNG > SVG)."""
-    seen_stems = {}   # stem → fichier retenu
-    if gc.LOGOS_DIR.exists():
-        # Premier passage : PNG (fallback)
-        for f in sorted(gc.LOGOS_DIR.iterdir()):
-            if f.suffix.lower() == ".png":
-                seen_stems[f.stem.lower()] = f
-        # Deuxième passage : SVG écrase PNG si disponible (priorité SVG)
-        for f in sorted(gc.LOGOS_DIR.iterdir()):
-            if f.suffix.lower() == ".svg":
-                seen_stems[f.stem.lower()] = f
+    """Liste tous les logos présents dans logos/ (jpg, png, webp, svg)."""
+    seen_stems = _scan_logos()
+    if not seen_stems:
+        seen_stems = {}
 
     available = []
     for stem, f in sorted(seen_stems.items()):
@@ -3586,10 +4187,10 @@ def api_profile(slug):
     return jsonify({
         "prenom":       profile.get("prenom", ""),
         "nom":          profile.get("nom", ""),
-        "nationality":  profile.get("nationality", ""),
-        "hometown":     profile.get("hometown", ""),
+        "nationality":  profile.get("nationalite", ""),   # clé interne = "nationalite"
+        "hometown":     profile.get("ville", ""),          # clé interne = "ville"
         "age":          profile.get("age", ""),
-        "achievements": profile.get("achievements", ""),
+        "achievements": profile.get("palmares", ""),       # clé interne = "palmares"
         "team":         profile.get("team", ""),
         "instagram":    profile.get("instagram", ""),
     })
@@ -3739,6 +4340,10 @@ def api_generate_eq_card():
         show_reference = bool(data.get("show_reference", True))
         show_details   = bool(data.get("show_details",   True))
         show_logo      = bool(data.get("show_logo",      False))
+        logo_h_raw     = int(data.get("logo_h", 60))
+        logo_y_raw     = int(data.get("logo_y", 1200))
+        logo_x_raw     = int(data.get("logo_x", -1))
+        logo_x         = None if logo_x_raw < 0 else logo_x_raw
         raw_bg         = data.get("photo_bg", [255, 255, 255])
         photo_bg       = tuple(int(v) for v in raw_bg[:3]) if raw_bg else (255, 255, 255)
         fonts      = gec.load_eq_fonts()
@@ -3750,6 +4355,7 @@ def api_generate_eq_card():
             panel_y=panel_y, text_x=text_x, text_y=text_y,
             show_brand=show_brand, show_reference=show_reference,
             show_details=show_details, show_logo=show_logo,
+            logo_h=logo_h_raw, logo_y=logo_y_raw, logo_x=logo_x,
             photo_bg=photo_bg, use_v2=use_v2,
         )
         buf = io.BytesIO()
@@ -3887,6 +4493,79 @@ def api_generate_eq_reel():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/equipment-audit")
+def api_equipment_audit():
+    """Audit croisé : pour chaque rider, vérifie données Sheet + photo dossier."""
+    import re as _re
+    eq  = get_equipment()
+    _, _, profiles = get_engine()
+
+    # Index des fichiers par catégorie : category → list of filenames (lower)
+    eq_photos_dir = BASE_DIR / "Equipment"
+    cat_files = {}
+    if eq_photos_dir.exists():
+        for sub in eq_photos_dir.iterdir():
+            if sub.is_dir():
+                cat_files[sub.name] = [
+                    f.name for f in sub.iterdir()
+                    if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+                ]
+
+    def _norm(s):
+        return _re.sub(r'[\s\-_/\.]', '', (s or '').lower())
+
+    import generate_equipment_card as _gec
+    def _has_photo(cat, brand, reference):
+        # Chercher dans tous les alias de dossiers pour cette catégorie
+        folder_names = _gec.CATEGORY_FOLDERS.get(cat, [cat])
+        files = []
+        for fn in folder_names:
+            files.extend(cat_files.get(fn, []))
+        if not files:
+            return False
+        b = _norm(brand)
+        r = _norm(reference)
+        words = [_norm(w) for w in (reference or '').split() if len(w) > 2]
+        for fname in files:
+            s = _norm(fname)
+            if b and r and b in s and r in s:
+                return True   # match exact
+            if b and b in s:
+                return True   # match marque
+            if words and any(w in s for w in words):
+                return True   # match mot-clé modèle
+        return False
+
+    rows = []
+    for p in profiles:
+        handle = (p.get("instagram") or "").lstrip("@").lower()
+        rider_eq = eq.get(handle, {})
+        cats = {}
+        for cat in gc.EQUIPMENT_COLUMNS:
+            item = rider_eq.get(cat)
+            if not item:
+                cats[cat] = "empty"           # pas de données
+            else:
+                brand = item.get("brand", "")
+                ref   = item.get("reference", "")
+                if _has_photo(cat, brand, ref):
+                    cats[cat] = "ok"          # données + photo
+                else:
+                    cats[cat] = "no_photo"    # données mais pas de photo
+        rows.append({
+            "prenom":    p.get("prenom", ""),
+            "nom":       p.get("nom", ""),
+            "genre":     p.get("genre", ""),
+            "instagram": p.get("instagram", ""),
+            "cats":      cats,
+        })
+
+    return jsonify({
+        "columns": gc.EQUIPMENT_COLUMNS,
+        "rows":    rows,
+    })
+
+
 @app.route("/api/equipment-all")
 def api_equipment_all():
     """Retourne l'équipement complet de tous les riders (pour la page Equipment)."""
@@ -3914,6 +4593,38 @@ def api_equipment_all():
     return jsonify(result)
 
 
+def _scan_eq_variants():
+    """Scanne le dossier Equipment/ et retourne la liste des variantes photos."""
+    import generate_equipment_card as gec
+    variants = []
+    if gec.EQ_PHOTOS.exists():
+        exts = {".jpg", ".jpeg", ".png", ".webp"}
+        for f in sorted(gec.EQ_PHOTOS.rglob("*")):
+            if f.is_file() and f.suffix.lower() in exts:
+                rel    = f.relative_to(gec.EQ_PHOTOS)
+                folder = rel.parts[0] if len(rel.parts) > 1 else ""
+                variants.append({
+                    "name":      f.stem,
+                    "url":       f"/api/eq-photo/{rel.as_posix()}",
+                    "path":      str(f),
+                    "folder":    folder,
+                    "stem_slug": gec._eq_slug(f.stem),
+                })
+    return variants
+
+
+@app.route("/api/rescan-eq-photos", methods=["POST"])
+def api_rescan_eq_photos():
+    """Rescanne le dossier Equipment/ sans redémarrer l'app."""
+    import generate_equipment_card as gec
+    variants = _scan_eq_variants()
+    return jsonify({
+        "eq_variants":      variants,
+        "category_folders": gec.CATEGORY_FOLDERS,
+        "count":            len(variants),
+    })
+
+
 @app.route("/api/preload")
 def api_preload():
     """Retourne TOUT en un seul appel : profils, équipements, sponsors."""
@@ -3930,10 +4641,10 @@ def api_preload():
             "nom":          p.get("nom", ""),
             "genre":        p.get("genre", ""),
             "has_photo":    gc.find_photo(p) is not None,
-            "nationality":  p.get("nationality", ""),
-            "hometown":     p.get("hometown", ""),
+            "nationality":  p.get("nationalite", ""),   # clé interne = "nationalite"
+            "hometown":     p.get("ville", ""),           # clé interne = "ville"
             "age":          p.get("age", ""),
-            "achievements": p.get("achievements", ""),
+            "achievements": p.get("palmares", ""),        # clé interne = "palmares"
             "team":         p.get("team", ""),
             "instagram":    p.get("instagram", ""),
         })
@@ -3958,34 +4669,14 @@ def api_preload():
 
     # ── Sponsors ──
     import generate_equipment_card as gec
-    seen_stems = {}
-    if gc.LOGOS_DIR.exists():
-        for f in sorted(gc.LOGOS_DIR.iterdir()):
-            if f.suffix.lower() == ".png":
-                seen_stems[f.stem.lower()] = f
-        for f in sorted(gc.LOGOS_DIR.iterdir()):
-            if f.suffix.lower() == ".svg":
-                seen_stems[f.stem.lower()] = f
+    seen_stems = _scan_logos()
     sponsors = []
     for stem, f in sorted(seen_stems.items()):
         key = next((k for k, v in gc.BRAND_MAP.items() if v == f.name), f.stem)
         sponsors.append({"key": key, "file": f.name, "label": f.stem.upper(), "url": f"/logos/{f.name}"})
 
     # ── Variantes photos équipement (liste plate avec dossier + slug) ──
-    eq_variants = []
-    if gec.EQ_PHOTOS.exists():
-        exts = {".jpg", ".jpeg", ".png", ".webp"}
-        for f in sorted(gec.EQ_PHOTOS.rglob("*")):
-            if f.is_file() and f.suffix.lower() in exts:
-                rel    = f.relative_to(gec.EQ_PHOTOS)
-                folder = rel.parts[0] if len(rel.parts) > 1 else ""
-                eq_variants.append({
-                    "name":      f.stem,
-                    "url":       f"/api/eq-photo/{rel.as_posix()}",
-                    "path":      str(f),
-                    "folder":    folder,
-                    "stem_slug": gec._eq_slug(f.stem),
-                })
+    eq_variants = _scan_eq_variants()
 
     return jsonify({
         "profiles":         full_profiles,
@@ -4824,6 +5515,111 @@ def api_riders_download_pic():
     out_path.write_bytes(raw)
     return jsonify({"ok": True, "handle": handle, "file": out_path.name,
                     "thumb": f"/api/riders/thumb?path={out_path}"})
+
+
+# ── Google OAuth ──────────────────────────────────────────────────────────────
+
+@app.route('/api/auth/google/status')
+def api_auth_google_status():
+    if not _GOOGLE_SECRET_FILE.exists():
+        return jsonify({'configured': False, 'connected': False})
+    if not _GOOGLE_TOKEN_FILE.exists():
+        return jsonify({'configured': True, 'connected': False})
+    try:
+        data = _json.loads(_GOOGLE_TOKEN_FILE.read_text())
+        return jsonify({'configured': True, 'connected': True,
+                        'email': data.get('email', ''),
+                        'name':  data.get('name', '')})
+    except Exception as e:
+        return jsonify({'configured': True, 'connected': False, 'error': str(e)})
+
+
+@app.route('/api/auth/google')
+def api_auth_google():
+    import os
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # localhost HTTP OK
+    if not _GOOGLE_SECRET_FILE.exists():
+        return (
+            '<h3 style="font-family:sans-serif;padding:20px">⚠️ Fichier introuvable.<br>'
+            f'Place ton <b>client_secret.json</b> Google ici :<br>'
+            f'<code>{_GOOGLE_SECRET_FILE}</code></h3>'
+        ), 400
+    try:
+        from google_auth_oauthlib.flow import Flow
+    except ImportError:
+        return '<h3>pip install google-auth-oauthlib</h3>', 500
+    flow = Flow.from_client_secrets_file(
+        str(_GOOGLE_SECRET_FILE),
+        scopes=_GOOGLE_SCOPES,
+        redirect_uri='http://localhost:5000/api/auth/google/callback'
+    )
+    auth_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        prompt='select_account'
+    )
+    session['google_oauth_state'] = state
+    return flask_redirect(auth_url)
+
+
+@app.route('/api/auth/google/callback')
+def api_auth_google_callback():
+    import os
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    try:
+        from google_auth_oauthlib.flow import Flow
+    except ImportError:
+        return '<h3>pip install google-auth-oauthlib</h3>', 500
+    flow = Flow.from_client_secrets_file(
+        str(_GOOGLE_SECRET_FILE),
+        scopes=_GOOGLE_SCOPES,
+        state=session.get('google_oauth_state'),
+        redirect_uri='http://localhost:5000/api/auth/google/callback'
+    )
+    flow.fetch_token(authorization_response=request.url)
+    creds = flow.credentials
+
+    # Récupère l'email/nom via userinfo
+    try:
+        req = urllib.request.Request(
+            'https://www.googleapis.com/oauth2/v2/userinfo',
+            headers={'Authorization': f'Bearer {creds.token}'}
+        )
+        with urllib.request.urlopen(req) as resp:
+            user_info = _json.loads(resp.read())
+    except Exception:
+        user_info = {}
+
+    token_data = {
+        'token':         creds.token,
+        'refresh_token': creds.refresh_token,
+        'token_uri':     creds.token_uri,
+        'client_id':     creds.client_id,
+        'client_secret': creds.client_secret,
+        'scopes':        list(creds.scopes or []),
+        'email':         user_info.get('email', ''),
+        'name':          user_info.get('name', ''),
+        'picture':       user_info.get('picture', ''),
+    }
+    _GOOGLE_TOKEN_FILE.write_text(_json.dumps(token_data, indent=2))
+
+    return '''<!DOCTYPE html><html><body style="font-family:sans-serif;text-align:center;padding:40px;background:#0a0a0a;color:#eee">
+<h2>✅ Connexion Google réussie !</h2>
+<p>Tu peux fermer cet onglet.</p>
+<script>
+  if (window.opener) {
+    window.opener.postMessage({type:"google_oauth_success"}, "*");
+    setTimeout(() => window.close(), 800);
+  }
+</script>
+</body></html>'''
+
+
+@app.route('/api/auth/google/logout', methods=['POST'])
+def api_auth_google_logout():
+    if _GOOGLE_TOKEN_FILE.exists():
+        _GOOGLE_TOKEN_FILE.unlink()
+    return jsonify({'ok': True})
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────

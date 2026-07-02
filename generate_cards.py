@@ -610,8 +610,9 @@ def load_profiles():
 
 EQUIPMENT_COLUMNS = [
     "Frame", "Fork", "Rear Shock", "Handlebar", "Dropper Post", "Saddle",
-    "Crankset", "Derailleur", "Brake Lever", "Brake Caliper",
-    "Wheels", "Tires", "Pedals", "Shoes", "Helmet", "Protection", "Goggles",
+    "Crankset", "Chain", "Derailleur", "Brake Lever", "Brake Caliper",
+    "Wheels", "Tires", "Pedals", "Grip", "Shoes", "Helmet", "Protection", "Goggles",
+    "Disk",
 ]
 
 def _extract_instagram_handle(val):
@@ -679,7 +680,7 @@ def load_equipment_from_gsheet():
                 header_row_idx = i
                 break
         header = [c.strip() for c in rows[header_row_idx]]
-        print(f"  📋 {sheet_name} (gid={gid}) : header={header[:6]} … {len(rows)-header_row_idx-1} row(s)")
+        print(f"  📋 {sheet_name} (gid={gid}) : header={header} … {len(rows)-header_row_idx-1} row(s)")
 
         # Index de la colonne Instagram (colonne B = index 1 en général)
         try:
@@ -697,10 +698,13 @@ def load_equipment_from_gsheet():
                 continue
             if handle not in equipment:
                 equipment[handle] = {}
+            # Index case-insensitive pour matcher GRIP/Grip, CHAIN/Chain, etc.
+            header_lower = [h.lower() for h in header]
             for col in EQUIPMENT_COLUMNS:
-                if col not in header:
+                col_lower = col.lower()
+                if col_lower not in header_lower:
                     continue
-                idx = header.index(col)
+                idx = header_lower.index(col_lower)
                 if idx >= len(row) or not row[idx].strip():
                     continue
                 raw = row[idx].strip()
@@ -950,18 +954,28 @@ def draw_logos(card, logo_paths):
 
 
 def draw_wrapped(draw, text, font, color, x, y, max_w):
-    words = text.split()
-    lines, cur = [], ""
-    for w in words:
-        test = (cur + " " + w).strip()
-        if draw.textbbox((0,0), test, font=font)[2] <= max_w:
-            cur = test
-        else:
-            if cur: lines.append(cur)
-            cur = w
-    if cur: lines.append(cur)
-    for line in lines:
-        draw.text((x, y), line, font=font, fill=color)
+    """Word-wrap avec support des sauts de ligne explicites (\n)."""
+    rendered_lines = []
+    for paragraph in text.split('\n'):
+        paragraph = paragraph.strip()
+        if not paragraph:
+            rendered_lines.append('')   # ligne vide = espace entre paragraphes
+            continue
+        words = paragraph.split()
+        cur = ""
+        for w in words:
+            test = (cur + " " + w).strip()
+            if draw.textbbox((0, 0), test, font=font)[2] <= max_w:
+                cur = test
+            else:
+                if cur:
+                    rendered_lines.append(cur)
+                cur = w
+        if cur:
+            rendered_lines.append(cur)
+    for line in rendered_lines:
+        if line:
+            draw.text((x, y), line, font=font, fill=color)
         y += font.size + 4
     return y
 

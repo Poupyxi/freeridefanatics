@@ -1,0 +1,14 @@
+# Freeride Fanatics — dépendances
+# Installer avec : pip install -r requirements.txt
+
+flask>=3.0
+pillow>=10.0
+openpyxl>=3.1
+instaloader>=4.14
+yt-dlp>=2024.1
+requests>=2.31
+
+# Google OAuth (pour la page Connexions)
+google-auth>=2.29
+google-auth-oauthlib>=1.2
+google-auth-httplib2>=0.2

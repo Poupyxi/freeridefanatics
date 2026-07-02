@@ -30,20 +30,23 @@ CATEGORY_FOLDERS = {
     "Frame":        ["Frame"],
     "Fork":         ["Fork"],
     "Rear Shock":   ["Rear Shock", "Shock"],
-    "Handlebar":    ["Handlebar", "Bars"],
+    "Handlebar":    ["Handlebar", "Handle bar", "Bars"],
     "Dropper Post": ["Dropper Post", "Dropper"],
     "Saddle":       ["Saddle"],
     "Crankset":     ["Crankset", "Cranks"],
+    "Chain":        ["Chain"],
     "Derailleur":   ["Derailleur"],
     "Brake Lever":  ["Brake Lever", "Brakes"],
     "Brake Caliper":["Brake Caliper", "Brakes"],
     "Wheels":       ["Wheels", "Wheelset"],
     "Tires":        ["Tires", "Tyres"],
     "Pedals":       ["Pedals"],
+    "Grip":         ["Grip", "Grips"],
     "Shoes":        ["Shoes"],
     "Helmet":       ["Helmet"],
     "Protection":   ["Protection", "Pads"],
     "Goggles":      ["Goggles"],
+    "Disk":         ["Disk", "Disc", "Rotor"],
 }
 
 # ── Dimensions ────────────────────────────────────────────────────────────────
@@ -347,6 +350,9 @@ def generate_equipment_card(
     show_reference: bool = True,
     show_details: bool   = True,
     show_logo: bool      = False,
+    logo_h: int          = 60,
+    logo_y: int          = 1200,
+    logo_x: "int | None" = None,
     photo_bg: tuple      = (255, 255, 255),
     use_v2: bool         = False,
 ) -> Image.Image:
@@ -399,12 +405,11 @@ def generate_equipment_card(
         logo_path = find_logo(brand)
         if logo_path and logo_path.exists() and logo_path.suffix.lower() == ".png":
             try:
-                logo = Image.open(logo_path).convert("RGBA")
-                logo_h = 60
+                logo   = Image.open(logo_path).convert("RGBA")
                 ratio  = logo_h / logo.height
                 logo   = logo.resize((max(1, int(logo.width * ratio)), logo_h), Image.LANCZOS)
-                lx = (W - logo.width) // 2
-                ly = H - BORDER - logo_h - 20
+                lx     = logo_x if logo_x is not None else ((W - logo.width) // 2)
+                ly     = logo_y
                 card.paste(logo, (lx, ly), mask=logo.split()[3])
             except Exception:
                 pass

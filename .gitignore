@@ -39,6 +39,3 @@ env/
 # ── Scripts helper temporaires ──
 *.command
 rebuild_riders.py
-
-# ── Photos produits locales (binaires, trop lourdes pour git) ──
-Equipment/

@@ -2483,6 +2483,34 @@ HTML = r"""<!DOCTYPE html>
         <span class="section-title">⚙ Paramètres</span><span class="collapsible-arrow">▼</span>
       </div>
       <div class="collapsible-body">
+        <div class="publish-field" style="margin-bottom:8px">
+          <label for="reel_template">Template</label>
+          <select id="reel_template" class="publish-input" onchange="applyReelTemplate(this.value)">
+            <option value="equipment_showcase">Equipment showcase</option>
+            <option value="rider_setup">Rider setup</option>
+            <option value="top3_performance">Top 3 Performance</option>
+            <option value="race_recap">Race recap</option>
+            <option value="brand_focus">Brand focus</option>
+          </select>
+        </div>
+        <div class="publish-field" style="margin-bottom:8px">
+          <label for="reel_format">Format export</label>
+          <select id="reel_format" class="publish-input">
+            <option value="reel">Instagram Reel · 1080x1920</option>
+            <option value="story">Story · 1080x1920</option>
+            <option value="square">Square · 1080x1080</option>
+            <option value="source">Source card</option>
+          </select>
+        </div>
+        <div class="publish-field" style="margin-bottom:8px">
+          <label for="reel_title">Titre reel</label>
+          <input id="reel_title" class="publish-input" type="text" placeholder="Ex: Top 3 Forks Women 2026">
+        </div>
+        <div class="publish-helper-row" style="margin-bottom:10px">
+          <button class="publish-mini-btn" onclick="addReelTitleCard('intro')">＋ Intro</button>
+          <button class="publish-mini-btn" onclick="addReelTitleCard('outro')">＋ Outro</button>
+          <button class="publish-mini-btn" onclick="buildPerformanceTop3Reel()">＋ Top 3 Performance</button>
+        </div>
         <div class="slider-row">
           <span class="slider-label">Durée/carte</span>
           <input type="range" id="reel_dur_per_card" min="1" max="8" value="3" step="0.5"
@@ -5260,6 +5288,100 @@ let _reelItems  = [];    // [{id, label, preview_url, photo_path, card_params, i
 let _reelIdSeq  = 0;
 let _lastEqReel = null;
 
+function applyReelTemplate(template) {
+  const g = (id) => document.getElementById(id);
+  const settings = {
+    equipment_showcase: { dur: 2.6, cf: 0.35, format: 'reel', badge: true, title: 'Equipment showcase' },
+    rider_setup:       { dur: 2.8, cf: 0.45, format: 'reel', badge: true, title: 'Rider setup' },
+    top3_performance:  { dur: 2.2, cf: 0.3,  format: 'reel', badge: false, title: 'Top 3 Performance' },
+    race_recap:        { dur: 2.4, cf: 0.4,  format: 'reel', badge: true, title: 'Race recap' },
+    brand_focus:       { dur: 2.5, cf: 0.35, format: 'square', badge: false, title: 'Brand focus' },
+  }[template] || {};
+  if (g('reel_dur_per_card')) { g('reel_dur_per_card').value = settings.dur || 3; updateSlider(g('reel_dur_per_card'), 'reel_val_dur'); }
+  if (g('reel_crossfade')) { g('reel_crossfade').value = settings.cf || 0.5; updateSlider(g('reel_crossfade'), 'reel_val_cf'); }
+  if (g('reel_format')) g('reel_format').value = settings.format || 'reel';
+  if (g('reel_show_badge')) g('reel_show_badge').checked = settings.badge ?? true;
+  if (g('reel_title') && !g('reel_title').value.trim()) g('reel_title').value = settings.title || '';
+}
+
+function _reelTitleCanvas(title, subtitle = '', mode = 'intro') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1350;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#101010';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#C8D400';
+  ctx.fillRect(0, 0, canvas.width, 16);
+  ctx.fillRect(0, canvas.height - 16, canvas.width, 16);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#C8D400';
+  ctx.font = '700 52px system-ui, sans-serif';
+  ctx.fillText('FREERIDE FANATICS', canvas.width / 2, 210);
+  ctx.fillStyle = '#f4f4f4';
+  ctx.font = '900 92px system-ui, sans-serif';
+  const words = String(title || (mode === 'outro' ? 'Full setup ready' : 'Reel')).split(/\s+/);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > 860 && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  const startY = 560 - (lines.length - 1) * 58;
+  lines.slice(0, 4).forEach((l, i) => ctx.fillText(l.toUpperCase(), canvas.width / 2, startY + i * 108));
+  ctx.fillStyle = '#8d8d8d';
+  ctx.font = '600 38px system-ui, sans-serif';
+  ctx.fillText(subtitle || (mode === 'outro' ? 'Generated for Instagram' : 'Equipment edit'), canvas.width / 2, 980);
+  ctx.fillStyle = '#C8D400';
+  ctx.font = '800 32px system-ui, sans-serif';
+  ctx.fillText(mode === 'outro' ? '@freeridefanatics' : '2026 SEASON', canvas.width / 2, 1105);
+  return canvas.toDataURL('image/png');
+}
+
+function addReelTitleCard(mode = 'intro', title = '', subtitle = '') {
+  const typedTitle = document.getElementById('reel_title')?.value.trim();
+  const url = _reelTitleCanvas(title || typedTitle || (mode === 'outro' ? 'Follow for more' : 'Freeride Fanatics'), subtitle, mode);
+  _reelItems.push({
+    id: ++_reelIdSeq,
+    label: mode === 'outro' ? 'Outro' : 'Intro',
+    sub: title || typedTitle || 'Title card',
+    preview_url: url,
+    photo_path: '',
+    rider_instagram: '',
+    is_selection: false,
+    card_params: null,
+    prerendered_url: url,
+    type: 'title',
+  });
+  _updateReelBadge();
+  renderReelPage();
+}
+
+function buildPerformanceTop3Reel() {
+  if (!_perfInitialized) initPerformancePage();
+  const category = document.getElementById('perf-category')?.value || 'Fork';
+  const gender = document.getElementById('perf-gender')?.value || 'F';
+  const { rows } = _perfStats();
+  const top = _perfSortRows(rows.filter(r => category === 'all' || r.category === category)).slice(0, 3);
+  if (!top.length) {
+    _reelLog('❌ Aucun Top 3 Performance disponible. Ouvre Performance et choisis une catégorie.', true);
+    return;
+  }
+  const label = `${gender === 'F' ? 'Women' : 'Men'} Top 3 ${category}`;
+  document.getElementById('reel_title').value = label;
+  addReelTitleCard('intro', label, 'Equipment performance ranking');
+  top.forEach((item, idx) => {
+    addReelTitleCard('intro', `#${idx + 1} ${item.label}`, `${Math.round(item.points)} pts · ${item.count} rider${item.count > 1 ? 's' : ''}`);
+  });
+  addReelTitleCard('outro', 'Full breakdown', 'Built from 2026 results');
+}
+
 function _updateReelBadge() {
   const badge = document.getElementById('reel-badge');
   if (!badge) return;
@@ -5374,7 +5496,7 @@ function renderReelPage() {
       <img class="reel-thumb" src="${it.preview_url}" alt="">
       <div class="reel-info">
         <div class="reel-label">${it.label}</div>
-        <div class="reel-sub">${it.rider_instagram ? '@' + it.rider_instagram.replace(/^@/,'') : '—'}</div>
+        <div class="reel-sub">${it.type === 'title' ? 'Title card' : it.rider_instagram ? '@' + it.rider_instagram.replace(/^@/,'') : '—'}</div>
       </div>
       <span class="reel-star ${it.is_selection ? 'active' : ''}"
             onclick="toggleReelSelection(${it.id})" title="Rider's Selection">★</span>
@@ -5468,7 +5590,7 @@ async function generateEqReel() {
     const items_payload = [];
     for (const it of _reelItems) {
       let b64 = null;
-      if (it.type === 'rider' && it.preview_url) {
+      if ((it.type === 'rider' || it.type === 'title') && it.preview_url) {
         try {
           b64 = await _imgToBase64(it.preview_url);
         } catch(e) {
@@ -5487,6 +5609,7 @@ async function generateEqReel() {
     const dur = parseFloat(g('reel_dur_per_card')?.value || 3);
     const cf  = parseFloat(g('reel_crossfade')?.value    || 0.5);
     const showBadge = g('reel_show_badge')?.checked ?? true;
+    const exportFormat = g('reel_format')?.value || 'reel';
 
     _reelLog(`⚙ Génération du MP4 (${items_payload.length} frames)…`);
     const badgeRiderIg  = document.getElementById('reel-rider-select')?.value || '';
@@ -5496,6 +5619,7 @@ async function generateEqReel() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: items_payload, dur_per_card: dur,
                              crossfade: cf, show_rider_badge: showBadge,
+                             export_format: exportFormat,
                              badge_rider_ig: badgeRiderIg,
                              badge_radius: badgeRadius }),
     });
@@ -5508,11 +5632,12 @@ async function generateEqReel() {
 
     const blob = await res.blob();
     const url  = URL.createObjectURL(blob);
-    _lastEqReel = { url, name: 'reel_equipment.mp4' };
+    const name = `reel_${exportFormat}.mp4`;
+    _lastEqReel = { url, name };
     _lastPublishSource = {
       kind: 'reel',
       url,
-      name: 'reel_equipment.mp4',
+      name,
       mime: 'video/mp4',
     };
     g('reel-dl-btn').disabled = false;
@@ -6856,6 +6981,7 @@ def api_generate_eq_reel():
         show_rider_badge = bool(data.get("show_rider_badge", True))
         badge_rider_ig   = data.get("badge_rider_ig", "")
         badge_radius     = int(data.get("badge_radius", 58))
+        export_format    = data.get("export_format", "reel")
 
         if not items:
             return jsonify({"error": "Aucun item"}), 400
@@ -6935,17 +7061,33 @@ def api_generate_eq_reel():
         n   = len(png_paths)
         dur = dur_per_card
         output = tmpdir / "reel.mp4"
+        size_map = {
+            "reel":   (1080, 1920),
+            "story":  (1080, 1920),
+            "square": (1080, 1080),
+            "source": (gec.W, gec.H),
+        }
+        out_w, out_h = size_map.get(export_format, (1080, 1920))
+        vf_single = (
+            f"scale={out_w}:{out_h}:force_original_aspect_ratio=decrease,"
+            f"pad={out_w}:{out_h}:(ow-iw)/2:(oh-ih)/2:color=0x141414,"
+            "format=yuv420p"
+        )
 
         if n == 1:
             cmd = ["ffmpeg","-y","-r","30","-loop","1","-t",str(dur),"-i",str(png_paths[0]),
-                   "-vf","format=yuv420p",
+                   "-vf", vf_single,
                    "-c:v","libx264","-r","30",str(output)]
         else:
             inputs = []
             for p in png_paths:
                 inputs += ["-r","30","-loop","1","-t",str(dur + crossfade),"-i",str(p)]
             # format=yuv420p sur chaque input (les PNG sont RGBA, xfade ne supporte pas RGBA)
-            fmt_parts = [f"[{i}:v]format=yuv420p[f{i}]" for i in range(n)]
+            fmt_parts = [
+                f"[{i}:v]scale={out_w}:{out_h}:force_original_aspect_ratio=decrease,"
+                f"pad={out_w}:{out_h}:(ow-iw)/2:(oh-ih)/2:color=0x141414,format=yuv420p[f{i}]"
+                for i in range(n)
+            ]
             xfade_parts, prev = [], "[f0]"
             for i in range(1, n):
                 out_lbl = f"[x{i}]" if i < n-1 else "[vout]"

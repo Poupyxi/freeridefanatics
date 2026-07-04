@@ -36,8 +36,14 @@ BASE_DIR   = Path(__file__).parent
 OUTPUT_DIR = BASE_DIR / "output"
 LOGOS_DIR  = BASE_DIR / "logos"
 
-PHOTOS_DIR = next((d for d in [BASE_DIR / "PictureRiders", BASE_DIR / "PPRIDERS", BASE_DIR / "photos"] if d.exists()),
-                  BASE_DIR / "PictureRiders")
+PHOTOS_DIR = next((
+    d for d in [
+        BASE_DIR / "PictureRiders",
+        BASE_DIR / "PPRiders",
+        BASE_DIR / "PPRIDERS",
+        BASE_DIR / "photos",
+    ] if d.exists()
+), BASE_DIR / "PictureRiders")
 
 _excels    = sorted(BASE_DIR.glob("UCI_DH_2026_Tracker*.xlsx"),
                     key=lambda p: p.stat().st_mtime, reverse=True)

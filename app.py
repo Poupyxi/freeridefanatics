@@ -276,6 +276,167 @@ HTML = r"""<!DOCTYPE html>
   .reel-remove:hover { color:#e55; }
   .reel-empty { text-align:center; color:#444; font-size:0.82rem; padding:30px 0; }
 
+  /* ── Publish page ── */
+  #page-publish { display:none; height:calc(100vh - 65px); }
+  #page-publish .layout { height:100%; }
+  .publish-panel { display:flex; flex-direction:column; gap:10px; }
+  .publish-source-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .publish-source-btn {
+    flex:1;
+    min-width:105px;
+    background:#1a1a1a;
+    border:1px solid #333;
+    color:#888;
+    padding:8px 12px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:0.78rem;
+    font-weight:600;
+    transition:all .15s;
+  }
+  .publish-source-btn:hover { color:#eee; border-color:#555; }
+  .publish-source-btn.active { color:#C8D400; border-color:#C8D400; background:#252800; }
+  .publish-meta { font-size:11px; color:#666; line-height:1.5; }
+  .publish-field { display:flex; flex-direction:column; gap:6px; }
+  .publish-field label {
+    font-size:10px; font-weight:700; letter-spacing:.12em; color:#555; text-transform:uppercase;
+  }
+  .publish-input, .publish-textarea {
+    width:100%;
+    background:#111;
+    border:1px solid #2a2a2a;
+    color:#eee;
+    border-radius:7px;
+    padding:9px 10px;
+    font-size:0.86rem;
+    outline:none;
+  }
+  .publish-input:focus, .publish-textarea:focus { border-color:#C8D400; }
+  .publish-textarea { min-height:82px; resize:vertical; line-height:1.45; }
+  .publish-rows { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .publish-check { display:flex; gap:8px; align-items:center; font-size:0.82rem; color:#bbb; }
+  .publish-status { font-size:12px; color:#888; padding-top:6px; min-height:18px; }
+  .publish-action-stack {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .publish-action-row {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+  }
+  .publish-action-row.compact {
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
+  .publish-action-stack .btn {
+    width:100%;
+    min-width:0;
+    min-height:44px;
+    margin-top:0;
+    padding:9px 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    line-height:1.12;
+    letter-spacing:.2px;
+  }
+  .publish-action-stack > .btn {
+    min-height:48px;
+  }
+  .publish-action-row.compact .btn {
+    min-height:38px;
+    padding:8px 6px;
+    font-size:.78rem;
+  }
+  .publish-preview-box {
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  }
+  .publish-preview-media {
+    width:100%;
+    max-height:58vh;
+    object-fit:contain;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    background:#111;
+    box-shadow:0 8px 40px rgba(0,0,0,.45);
+  }
+  .publish-preview-caption {
+    width:100%;
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:12px;
+    color:#888;
+    font-size:0.82rem;
+    line-height:1.6;
+    white-space:pre-wrap;
+    max-height:58vh;
+    overflow:auto;
+  }
+  .publish-select-grid {
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-top:10px;
+  }
+  .publish-preview-shell {
+    display:grid;
+    grid-template-columns:minmax(0, 1.35fr) 320px;
+    gap:14px;
+    width:100%;
+    min-height:0;
+    align-items:start;
+  }
+  .publish-preview-media-col {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-width:0;
+  }
+  .publish-preview-side {
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:12px;
+  }
+  .publish-preview-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .publish-preview-title {
+    color:#555;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .publish-copy-mini {
+    min-height:28px;
+    margin-top:0;
+    padding:5px 9px;
+    border-radius:6px;
+    font-size:0.72rem;
+    line-height:1;
+  }
+  .publish-music-hint {
+    font-size:11px;
+    color:#666;
+    line-height:1.5;
+  }
   /* ── Logos page ── */
   #page-logos { display:none; padding:24px; max-width:1000px; margin:0 auto; }
   .logos-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
@@ -389,10 +550,26 @@ HTML = r"""<!DOCTYPE html>
   /* ── Equipment page ── */
   #page-equipment {
     display: none;  /* montré via JS → display:block */
+    height: calc(100vh - 65px);
+    overflow: hidden;
   }
   #page-equipment .layout {
-    height: calc(100vh - 65px);
+    height: calc(100% - 41px);
+    align-items: stretch;
   }
+  #page-equipment .panel-wrapper {
+    min-height: 0;
+  }
+  #page-equipment .panel {
+    padding-bottom: 6px;
+  }
+  #page-equipment .collapsible-body {
+    padding: 10px;
+  }
+  #page-equipment .slider-row {
+    margin-bottom: 4px;
+  }
+  #page-equipment .panel-actions { gap: 8px; }
   .eq-page-bar {
     background: #161616;
     border-bottom: 1px solid #2a2a2a;
@@ -401,6 +578,35 @@ HTML = r"""<!DOCTYPE html>
     gap: 10px;
     align-items: center;
     flex-shrink: 0;
+  }
+  .eq-topbar {
+    background:#161616;
+    border-bottom:1px solid #222;
+    padding:8px 16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    min-height:41px;
+  }
+  .eq-topbar-title {
+    color:#C8D400;
+    font-size:0.8rem;
+    font-weight:700;
+    letter-spacing:.08em;
+  }
+  .eq-topbar-btn {
+    padding:4px 14px;
+    background:#1a1a1a;
+    border:1px solid #444;
+    border-radius:6px;
+    color:#ccc;
+    font-size:11px;
+    cursor:pointer;
+  }
+  .eq-topbar-btn:hover {
+    border-color:#C8D400;
+    color:#C8D400;
   }
   .eq-table-wrap {
     flex: 1;
@@ -493,6 +699,48 @@ HTML = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+  .panel-actions.sticky {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+  }
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+  }
+  .action-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .action-grid.four { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 46px; }
+  .action-grid .btn,
+  .action-grid .btn-undo {
+    width: 100%;
+    min-width: 0;
+    margin-top: 0;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.15;
+    letter-spacing: .4px;
+  }
+  .btn-secondary {
+    background: #252800;
+    color: #C8D400;
+    border: 1px solid #C8D400;
+    border-radius: 8px;
+    font-size: 0.86rem;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: #303400;
+    border-color: #dae800;
+    color: #dae800;
+  }
+  .btn-secondary:disabled {
+    opacity: .45;
+    cursor: not-allowed;
   }
 
   /* ── Reset par section ── */
@@ -778,6 +1026,10 @@ HTML = r"""<!DOCTYPE html>
     box-shadow: 0 8px 40px rgba(0,0,0,.6);
     transition: opacity .2s;
   }
+  #eq-preview-img {
+    max-height: 48vh;
+    max-width: 100%;
+  }
   .spinner {
     display: none;
     position: absolute;
@@ -1034,6 +1286,8 @@ HTML = r"""<!DOCTYPE html>
     /* Supprime les hauteurs fixes sur les pages */
     #page-reel { height: auto; }
     #page-reel .layout { height: auto; }
+    #page-publish { height: auto; }
+    #page-publish .layout { height: auto; }
     #page-equipment .layout { height: auto; }
 
     /* ── Panneau gauche : hauteur max + scroll ── */
@@ -1069,6 +1323,12 @@ HTML = r"""<!DOCTYPE html>
 
     /* ── Grille édition ── */
     .edit-grid { grid-template-columns: 68px 1fr; }
+    .publish-rows { grid-template-columns: 1fr; }
+    .publish-select-grid { grid-template-columns: 1fr; }
+    .publish-preview-shell { grid-template-columns: 1fr; }
+    .action-grid,
+    .action-grid.two,
+    .action-grid.four { grid-template-columns: 1fr; }
 
     /* ── Boutons : zones de touch plus grandes ── */
     .btn { padding: 14px; }
@@ -1118,6 +1378,10 @@ HTML = r"""<!DOCTYPE html>
       🎬 Reel <span id="reel-badge" style="display:none;background:#C8D400;color:#000;
         border-radius:10px;font-size:0.7rem;padding:1px 6px;margin-left:4px;font-weight:700"></span>
     </button>
+    <button class="tab-btn" onclick="switchTab('publish')" id="tab-publish">
+      📣 Publish <span id="publish-badge" style="display:none;background:#C8D400;color:#000;
+        border-radius:10px;font-size:0.7rem;padding:1px 6px;margin-left:4px;font-weight:700"></span>
+    </button>
   </nav>
 
   <!-- Zone droite -->
@@ -1159,6 +1423,10 @@ HTML = r"""<!DOCTYPE html>
     <button class="burger-item" id="burger-cards" onclick="switchTab('cards'); closeBurger()">🏔️ Riders</button>
     <button class="burger-item" id="burger-equipment" onclick="switchTab('equipment'); closeBurger()">🔧 Équipements</button>
     <button class="burger-item" id="burger-reel" onclick="switchTab('reel'); closeBurger()">🎬 Reel</button>
+    <button class="burger-item" id="burger-publish" onclick="switchTab('publish'); closeBurger()">
+      📣 Publish <span id="burger-publish-badge" style="display:none;background:#C8D400;color:#000;
+        border-radius:10px;font-size:0.65rem;padding:1px 5px;margin-left:4px;font-weight:700"></span>
+    </button>
     <div class="burger-divider">Assets Management</div>
     <button class="burger-item" id="burger-riders" onclick="switchTab('riders'); closeBurger()">👤 Riders</button>
     <button class="burger-item" id="burger-logos" onclick="switchTab('logos'); closeBurger()">🖼 Logos</button>
@@ -1394,12 +1662,14 @@ HTML = r"""<!DOCTYPE html>
   </div><!-- fin .panel -->
 
   <!-- Actions fixées en bas -->
-  <div class="panel-actions">
+  <div class="panel-actions sticky">
     <button class="btn btn-generate" onclick="generate()">▶ Générer la carte</button>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-download" id="btn-dl" disabled onclick="download()" style="flex:1">⬇Télécharger</button>
-      <button class="btn" id="cards-add-reel-btn" disabled onclick="addRiderCardToReel()"
-              style="flex:1;background:#252800;color:#C8D400;border:1px solid #C8D400;border-radius:6px;cursor:pointer;font-size:0.82rem">
+    <div class="action-grid four">
+      <button class="btn btn-download" id="btn-dl" disabled onclick="download()">⬇ Télécharger</button>
+      <button class="btn btn-secondary" id="cards-add-publish-btn" disabled onclick="addRiderCardToPublish()">
+        ＋ Publish
+      </button>
+      <button class="btn btn-secondary" id="cards-add-reel-btn" disabled onclick="addRiderCardToReel()">
         ＋ Reel
       </button>
       <button class="btn-undo" id="btn-undo" disabled onclick="undo()" title="Ctrl+Z">↩</button>
@@ -1427,13 +1697,13 @@ HTML = r"""<!DOCTYPE html>
 <div id="page-equipment" style="display:none">
 
 <!-- Barre de contrôle équipements -->
-<div style="background:#161616;border-bottom:1px solid #222;padding:8px 16px;display:flex;align-items:center;gap:10px">
-  <span style="color:#C8D400;font-size:0.8rem;font-weight:700;letter-spacing:.08em">🔧 ÉQUIPEMENTS</span>
-  <button onclick="reloadEqData()" style="padding:4px 14px;background:#1a1a1a;border:1px solid #444;border-radius:6px;color:#ccc;font-size:11px;cursor:pointer">
-    ↺ Actualiser le Sheet
-  </button>
-  <button onclick="rescanEqPhotos()" style="padding:4px 14px;background:#1a1a1a;border:1px solid #444;border-radius:6px;color:#ccc;font-size:11px;cursor:pointer">
+<div class="eq-topbar">
+  <span class="eq-topbar-title">🔧 ÉQUIPEMENTS</span>
+  <button class="eq-topbar-btn" onclick="rescanEqPhotos()">
     📸 Rescan photos
+  </button>
+  <button class="eq-topbar-btn" onclick="reloadEqData()">
+    ↺ Actualiser le Sheet
   </button>
 </div>
 
@@ -1581,15 +1851,16 @@ HTML = r"""<!DOCTYPE html>
 
   </div><!-- fin .panel -->
 
-  <div class="panel-actions">
+  <div class="panel-actions sticky">
     <button class="btn btn-generate" onclick="generateEqCard()">▶ Générer la carte</button>
-    <div style="display:flex;gap:8px;margin-top:0">
-      <button class="btn btn-download" id="eq-page-dl-btn" disabled onclick="downloadEqCard()" style="flex:1;margin-top:0">⬇ Télécharger</button>
-      <button class="btn" id="eq-add-reel-btn" disabled onclick="addToReel()"
-              style="flex:1;margin-top:0;background:#252800;color:#C8D400;border:1px solid #C8D400;border-radius:6px;cursor:pointer;font-size:0.82rem">
+    <div class="action-grid">
+      <button class="btn btn-download" id="eq-page-dl-btn" disabled onclick="downloadEqCard()">⬇ Télécharger</button>
+      <button class="btn btn-secondary" id="eq-add-publish-btn" disabled onclick="addEqCardToPublish()">
+        ＋ Publish
+      </button>
+      <button class="btn btn-secondary" id="eq-add-reel-btn" disabled onclick="addToReel()">
         ＋ Reel
       </button>
-      <button class="btn-undo" onclick="reloadEqData()" title="↺ Recharger Sheet">↺ Sheet</button>
     </div>
     <div class="error-msg" id="eq-error-msg"></div>
   </div>
@@ -1680,12 +1951,17 @@ HTML = r"""<!DOCTYPE html>
 
   </div><!-- fin .panel -->
 
-  <div class="panel-actions">
+  <div class="panel-actions sticky">
     <button class="btn btn-generate" id="reel-gen-btn" onclick="generateEqReel()">▶ Générer le reel</button>
     <div id="reel-progress" style="display:none;text-align:center;font-size:0.78rem;color:#888;padding:6px 0">
       ⚙ Génération en cours…
     </div>
-    <button class="btn btn-download" id="reel-dl-btn" disabled onclick="downloadEqReel()">⬇ Télécharger MP4</button>
+    <div class="action-grid two">
+      <button class="btn btn-download" id="reel-dl-btn" disabled onclick="downloadEqReel()">⬇ Télécharger MP4</button>
+      <button class="btn btn-secondary" id="reel-add-publish-btn" disabled onclick="addEqReelToPublish()">
+        ＋ Publish
+      </button>
+    </div>
     <div id="reel-error-msg" style="display:none;font-size:0.78rem;padding:4px 0;text-align:center"></div>
   </div>
   </div><!-- fin .panel-wrapper -->
@@ -1703,6 +1979,155 @@ HTML = r"""<!DOCTYPE html>
 
 </div><!-- fin .layout -->
 </div><!-- fin #page-reel -->
+
+<!-- ══════════════════ PAGE PUBLISH ══════════════════ -->
+<div id="page-publish">
+<div class="layout">
+
+  <div class="panel-wrapper">
+    <div class="panel publish-panel">
+
+      <div class="collapsible open" id="pubcol-source">
+        <div class="collapsible-header" onclick="toggleCol('pubcol-source')">
+          <span class="section-title">Source</span><span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-body">
+          <div class="publish-source-row">
+            <button class="publish-source-btn" id="publish-src-rider" onclick="publishSetDraftKind('rider')">Rider cards</button>
+            <button class="publish-source-btn" id="publish-src-equipment" onclick="publishSetDraftKind('equipment')">Equipment cards</button>
+            <button class="publish-source-btn" id="publish-src-reel" onclick="publishSetDraftKind('reel')">Reel MP4</button>
+          </div>
+          <div class="publish-select-grid">
+            <div class="publish-field">
+              <label for="publish-rider-select">Rider cards</label>
+              <select id="publish-rider-select" class="publish-input" multiple size="3" onchange="publishSelectSource('rider', this)"></select>
+            </div>
+            <div class="publish-field">
+              <label for="publish-equipment-select">Equipment cards</label>
+              <select id="publish-equipment-select" class="publish-input" multiple size="3" onchange="publishSelectSource('equipment', this)"></select>
+            </div>
+            <div class="publish-field">
+              <label for="publish-reel-select">Reel MP4</label>
+              <select id="publish-reel-select" class="publish-input" size="3" onchange="publishSelectSource('reel', this)"></select>
+            </div>
+          </div>
+          <div class="publish-meta" id="publish-source-state" style="margin-top:10px">
+            Aucune source sélectionnée. Génère une carte ou un reel, puis reviens ici.
+          </div>
+          <div class="publish-meta" id="publish-source-meta" style="margin-top:6px"></div>
+          <div class="publish-meta" id="publish-source-count" style="margin-top:6px"></div>
+          <div class="publish-field" style="margin-top:12px">
+            <label for="publish-music-select">Musique Instagram</label>
+            <select id="publish-music-select" class="publish-input" onchange="publishSetMusic(this.value)"></select>
+          </div>
+          <div class="publish-field" style="margin-top:10px">
+            <label for="publish-music-note">Music note</label>
+            <input id="publish-music-note" class="publish-input" type="text" placeholder="Titre, artiste, vibe..." list="publish-music-suggestions" oninput="publishPersist(); publishRender();">
+            <datalist id="publish-music-suggestions"></datalist>
+          </div>
+          <div class="publish-music-hint" style="margin-top:8px">
+            Instagram ne permet pas un sélecteur musical natif depuis une app web. Ici on prépare la musique à choisir dans Instagram, avec une note et des suggestions.
+          </div>
+        </div>
+      </div>
+
+      <div class="collapsible open" id="pubcol-copy">
+        <div class="collapsible-header" onclick="toggleCol('pubcol-copy')">
+          <span class="section-title">Instagram copy</span><span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-body">
+          <div class="publish-field">
+            <label for="publish-title">Titre interne</label>
+            <input id="publish-title" class="publish-input" type="text" placeholder="Nom du post" list="publish-title-suggestions">
+            <datalist id="publish-title-suggestions"></datalist>
+          </div>
+          <div class="publish-field" style="margin-top:10px">
+            <label for="publish-caption">Caption</label>
+            <textarea id="publish-caption" class="publish-textarea" placeholder="Texte Instagram..."></textarea>
+          </div>
+          <div class="publish-rows" style="margin-top:10px">
+            <div class="publish-field">
+              <label for="publish-location">Location</label>
+              <input id="publish-location" class="publish-input" type="text" placeholder="Ex: Whistler Bike Park" list="publish-location-suggestions">
+              <datalist id="publish-location-suggestions"></datalist>
+            </div>
+            <div class="publish-field">
+              <label for="publish-hashtags">Hashtags</label>
+              <input id="publish-hashtags" class="publish-input" type="text" placeholder="#mtb #downhill #freeride" list="publish-hashtag-suggestions">
+              <datalist id="publish-hashtag-suggestions"></datalist>
+            </div>
+          </div>
+          <div class="publish-field" style="margin-top:10px">
+            <label for="publish-first-comment">First comment</label>
+            <textarea id="publish-first-comment" class="publish-textarea" placeholder="Premier commentaire..."></textarea>
+          </div>
+          <div class="publish-field" style="margin-top:10px">
+            <label for="publish-alt">Alt text</label>
+            <textarea id="publish-alt" class="publish-textarea" placeholder="Texte d'accessibilité / descriptif image..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="collapsible" id="pubcol-delivery" style="display:none">
+        <div class="collapsible-header" onclick="toggleCol('pubcol-delivery')">
+          <span class="section-title">Delivery smartphone</span><span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-body">
+          <label class="publish-check">
+            <input type="checkbox" id="publish-use-share" checked>
+            Utiliser la feuille de partage du téléphone
+          </label>
+          <label class="publish-check" style="margin-top:8px">
+            <input type="checkbox" id="publish-open-instagram" checked>
+            Ouvrir Instagram après partage si possible
+          </label>
+          <div class="publish-meta" style="margin-top:10px">
+            Sur mobile, l’app envoie le média vers la feuille de partage. Instagram apparaîtra si ton téléphone l’accepte.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- fin .panel -->
+
+    <div class="panel-actions sticky">
+      <div class="publish-action-stack">
+        <button class="btn btn-generate" onclick="publishGenerateSelection()">▶ Générer la sélection</button>
+        <div class="publish-action-row">
+          <button class="btn btn-download" id="publish-download-btn" disabled onclick="publishDownload()">⬇ Télécharger</button>
+          <button class="btn btn-secondary" id="publish-share-btn" disabled onclick="publishShare()">📣 Partager</button>
+        </div>
+        <div class="publish-action-row compact">
+          <button class="btn btn-secondary" onclick="publishAutoFill(true)">↺ Auto</button>
+          <button class="btn btn-secondary" id="publish-open-btn" onclick="publishOpenInstagram()">📱 Instagram</button>
+          <button class="btn btn-secondary" onclick="publishCopyCaption()">📋 Caption</button>
+        </div>
+      </div>
+      <div class="publish-status" id="publish-status"></div>
+    </div>
+  </div><!-- fin .panel-wrapper -->
+
+  <div class="preview-area" id="publish-preview-area" style="overflow:hidden;padding:20px">
+    <div class="publish-preview-shell">
+      <div class="publish-preview-media-col">
+        <div class="placeholder" id="publish-placeholder">
+          <span>📣</span>
+          Génère une carte ou un reel,<br>choisis la source,<br>puis prépare la publication
+        </div>
+        <img id="publish-preview-img" class="publish-preview-media" src="" style="display:none" alt="Publish preview">
+        <video id="publish-preview-video" class="publish-preview-media" style="display:none;max-height:58vh" controls loop></video>
+      </div>
+      <div class="publish-preview-side">
+        <div class="publish-preview-head">
+          <span class="publish-preview-title">Preview copy</span>
+          <button class="btn btn-secondary publish-copy-mini" id="publish-preview-copy-btn" onclick="publishCopyCaption()" disabled>📋 Copier</button>
+        </div>
+        <div class="publish-preview-caption" id="publish-preview-caption" style="display:none;max-height:58vh;overflow:auto"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- fin .layout -->
+</div><!-- fin #page-publish -->
 
 <!-- ══════════════════ PAGE LOGOS ══════════════════ -->
 <div id="page-logos">
@@ -2180,6 +2605,7 @@ let selectedSponsors = new Set();  // vide = auto
 let lastSlug = null;
 let genderFilter = 'all';  // 'all' | 'F' | 'M'
 let _lastRiderCardUrl = null;
+let _lastPublishSource = null; // { kind, url, name, mime }
 
 // ── Rider list ─────────────────────────────────────────────────────────────
 function setGender(g) {
@@ -2553,9 +2979,17 @@ async function generate() {
     document.getElementById('placeholder').style.display = 'none';
     lastSlug = slug;
     document.getElementById('btn-dl').disabled = false;
+    document.getElementById('cards-add-publish-btn').disabled = false;
     document.getElementById('cards-add-reel-btn').disabled = false;
     _lastRiderCardUrl = url;
-
+    _lastPublishSource = {
+      kind: 'rider',
+      url,
+      name: (slug || 'card') + '.jpg',
+      mime: 'image/jpeg',
+    };
+    const riderProfile = _app.profiles.find(p => p.slug === slug) || null;
+    const riderLabel = riderProfile ? `${riderProfile.prenom} ${riderProfile.nom}` : (slug || 'card');
   } catch(e) {
     area.classList.remove('loading');
     const msg = document.getElementById('error-msg');
@@ -2583,7 +3017,7 @@ const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'audit'];
 
 function switchTab(tab) {
   // Tabs principaux
-  ['cards','equipment','reel'].forEach(t => {
+  ['cards','equipment','reel','publish'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
     document.getElementById('burger-'+t)?.classList.toggle('active', t === tab);
   });
@@ -2603,11 +3037,13 @@ function switchTab(tab) {
   document.getElementById('page-logos').style.display       = tab === 'logos'       ? 'block' : 'none';
   document.getElementById('page-riders').style.display      = tab === 'riders'      ? 'block' : 'none';
   document.getElementById('page-reel').style.display        = tab === 'reel'        ? 'block' : 'none';
+  document.getElementById('page-publish').style.display     = tab === 'publish'     ? 'block' : 'none';
   document.getElementById('page-connections').style.display = tab === 'connections' ? 'block' : 'none';
   document.getElementById('page-audit').style.display       = tab === 'audit'       ? 'block' : 'none';
 
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
   if (tab === 'reel') { renderReelPage(); _initReelRiderList(); }
+  if (tab === 'publish') publishInit();
   if (tab === 'connections') connRefreshGoogle();
   if (tab === 'audit') loadEqAudit();
 }
@@ -3775,11 +4211,18 @@ async function generateEqCard(silent = false) {
     const url  = URL.createObjectURL(blob);
     const name = `${it.brand}_${it.reference || it.category}`.replace(/\s+/g,'_') + '.png';
     _lastEqCard = { url, name };
+    _lastPublishSource = {
+      kind: 'equipment',
+      url,
+      name,
+      mime: 'image/png',
+    };
     const img = document.getElementById('eq-preview-img');
     img.onload = () => area.classList.remove('loading');
     img.src = url; img.style.display = 'block';
     document.getElementById('eq-placeholder').style.display = 'none';
     document.getElementById('eq-page-dl-btn').disabled = false;
+    document.getElementById('eq-add-publish-btn').disabled = false;
     document.getElementById('eq-add-reel-btn').disabled = false;
   } catch(e) {
     area.classList.remove('loading');
@@ -3816,6 +4259,15 @@ function addRiderCardToReel() {
   btn.textContent = '✓ Ajouté';
   btn.style.background = '#C8D400'; btn.style.color = '#000';
   setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+}
+
+function addRiderCardToPublish() {
+  publishAddCurrent('rider');
+  const btn = document.getElementById('cards-add-publish-btn');
+  if (!btn) return;
+  btn.textContent = '✓ Ajouté';
+  btn.style.background = '#C8D400'; btn.style.color = '#000';
+  setTimeout(() => { btn.textContent = '＋ Publish'; btn.style.background=''; btn.style.color=''; }, 1200);
 }
 
 // ── Reel ──────────────────────────────────────────────────────────────────────
@@ -3871,6 +4323,15 @@ function addToReel() {
   btn.textContent = '✓ Ajouté';
   btn.style.background = '#C8D400'; btn.style.color = '#000';
   setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+}
+
+function addEqCardToPublish() {
+  publishAddCurrent('equipment');
+  const btn = document.getElementById('eq-add-publish-btn');
+  if (!btn) return;
+  btn.textContent = '✓ Ajouté';
+  btn.style.background = '#C8D400'; btn.style.color = '#000';
+  setTimeout(() => { btn.textContent = '＋ Publish'; btn.style.background=''; btn.style.color=''; }, 1200);
 }
 
 function removeReelItem(id) {
@@ -4063,7 +4524,14 @@ async function generateEqReel() {
     const blob = await res.blob();
     const url  = URL.createObjectURL(blob);
     _lastEqReel = { url, name: 'reel_equipment.mp4' };
+    _lastPublishSource = {
+      kind: 'reel',
+      url,
+      name: 'reel_equipment.mp4',
+      mime: 'video/mp4',
+    };
     g('reel-dl-btn').disabled = false;
+    g('reel-add-publish-btn').disabled = false;
 
     // Lecteur vidéo
     const vid = g('reel-video-player');
@@ -4089,6 +4557,773 @@ function downloadEqReel() {
   if (!_lastEqReel) return;
   const a = document.createElement('a');
   a.href = _lastEqReel.url; a.download = _lastEqReel.name; a.click();
+}
+
+function addEqReelToPublish() {
+  publishAddCurrent('reel');
+  const btn = document.getElementById('reel-add-publish-btn');
+  if (!btn) return;
+  btn.textContent = '✓ Ajouté';
+  btn.style.background = '#C8D400'; btn.style.color = '#000';
+  setTimeout(() => { btn.textContent = '＋ Publish'; btn.style.background=''; btn.style.color=''; }, 1200);
+}
+
+let _publishInitialized = false;
+let _publishState = {
+  kind: '',
+  id: '',
+  url: '',
+  name: '',
+  mime: '',
+};
+let _publishDraftKind = 'rider';
+let _publishSelection = {
+  rider: [],
+  equipment: [],
+  reel: [],
+};
+let _publishSeq = 0;
+let _publishLibrary = {
+  rider: [],
+  equipment: [],
+  reel: [],
+};
+const _publishMusicPresets = [
+  { value: '', label: 'Aucune' },
+  { value: 'custom', label: 'Choix manuel' },
+  { value: 'high_energy', label: 'High energy' },
+  { value: 'cinematic', label: 'Cinematic build' },
+  { value: 'punk', label: 'Punk / aggressive' },
+  { value: 'clean_electro', label: 'Clean electro' },
+  { value: 'drum_bass', label: 'Drum & bass' },
+];
+
+function _publishAvailable(kind) {
+  const selected = kind === _publishState.kind ? _publishSelectedItem(kind, _publishState.id) : null;
+  const item = selected || _publishLibrary[kind]?.[0];
+  if (item) return item.url;
+  if (kind === 'rider') return _lastRiderCardUrl;
+  if (kind === 'equipment') return _lastEqCard?.url || '';
+  if (kind === 'reel') return _lastEqReel?.url || '';
+  return '';
+}
+
+function _publishGetItem(kind, id) {
+  return (_publishLibrary[kind] || []).find(it => String(it.id) === String(id)) || null;
+}
+
+function _publishSelectedItem(kind = _publishState.kind, id = _publishState.id) {
+  return _publishGetItem(kind, id) || (_publishLibrary[kind] || [])[0] || null;
+}
+
+function _publishAdd(kind, item) {
+  if (!kind || !item?.url) return;
+  const list = _publishLibrary[kind] || (_publishLibrary[kind] = []);
+  const seen = list.findIndex(x => x.url === item.url && x.name === item.name);
+  const entry = {
+    id: ++_publishSeq,
+    kind,
+    label: item.label || item.name || kind,
+    url: item.url,
+    name: item.name || 'publish',
+    mime: item.mime || 'application/octet-stream',
+  };
+  if (seen >= 0) list.splice(seen, 1);
+  list.unshift(entry);
+  _publishUpdateBadge();
+  publishRefreshOptions(kind);
+  return entry;
+}
+
+function _publishMarkSelected(kind, id) {
+  const list = _publishSelection[kind] || (_publishSelection[kind] = []);
+  const sid = String(id);
+  if (!list.includes(sid)) list.unshift(sid);
+}
+
+function _publishCurrentItemMeta(kind) {
+  if (kind === 'rider') {
+    const riderProfile = _app.profiles.find(p => p.slug === lastSlug) || null;
+    return {
+      label: `Rider card${riderProfile ? ` · ${riderProfile.prenom} ${riderProfile.nom}` : lastSlug ? ` · ${lastSlug}` : ''}`,
+      url: _lastRiderCardUrl,
+      name: (lastSlug || 'card') + '.jpg',
+      mime: 'image/jpeg',
+    };
+  }
+  if (kind === 'equipment' && _lastEqCard) {
+    const label = `Equipment card · ${[_eqSelectedItem?.brand, _eqSelectedItem?.reference].filter(Boolean).join(' ').trim() || _eqSelectedItem?.category || 'card'}`;
+    return { label, url: _lastEqCard.url, name: _lastEqCard.name || 'publish.png', mime: 'image/png' };
+  }
+  if (kind === 'reel' && _lastEqReel) {
+    return { label: 'Reel MP4', url: _lastEqReel.url, name: _lastEqReel.name || 'reel_equipment.mp4', mime: 'video/mp4' };
+  }
+  return null;
+}
+
+function publishAddCurrent(kind) {
+  const item = _publishCurrentItemMeta(kind);
+  if (!item?.url) return;
+  const entry = _publishAdd(kind, item);
+  if (entry) {
+    _publishMarkSelected(kind, entry.id);
+    if (!_publishState.kind || _publishDraftKind === kind) {
+      _publishDraftKind = kind;
+    }
+    publishPersist();
+    publishRefreshOptions(entry.id);
+    publishRender();
+  }
+}
+
+function _publishUpdateBadge() {
+  const total = Object.values(_publishLibrary).reduce((sum, arr) => sum + arr.length, 0);
+  const badge = document.getElementById('publish-badge');
+  const burgerBadge = document.getElementById('burger-publish-badge');
+  const count = document.getElementById('publish-source-count');
+  if (count) {
+    const rider = _publishLibrary.rider.length;
+    const equipment = _publishLibrary.equipment.length;
+    const reel = _publishLibrary.reel.length;
+    count.textContent = total
+      ? `${total} élément${total > 1 ? 's' : ''} · Rider ${rider} · Equipment ${equipment} · Reel ${reel}`
+      : '0 élément';
+  }
+  [badge, burgerBadge].forEach(el => {
+    if (!el) return;
+    el.textContent = total;
+    el.style.display = total > 0 ? 'inline' : 'none';
+  });
+}
+
+function _publishMeta(kind) {
+  const item = _publishSelectedItem(kind) || (_publishLibrary[kind] || [])[0] || null;
+  if (kind === 'rider' && item) return `Carte rider prête : ${item.label || lastSlug || 'card'}`;
+  if (kind === 'equipment' && item) return `Carte équipement prête : ${item.label || _lastEqCard?.name || 'card'}`;
+  if (kind === 'reel' && item) return `Reel prêt : ${item.label || _lastEqReel?.name || 'reel'}`;
+  return '';
+}
+
+function _publishDefaultTitle(kind) {
+  const rider = _eqSelectedRider || _app.profiles.find(p => p.slug === lastSlug) || null;
+  const riderName = rider ? `${rider.prenom} ${rider.nom}` : '';
+  if (kind === 'rider') return riderName ? `Rider card · ${riderName}` : 'Rider card';
+  if (kind === 'equipment') {
+    const it = _eqSelectedItem;
+    const item = it ? [it.brand, it.reference].filter(Boolean).join(' ') : '';
+    return item ? `Equipment · ${item}` : 'Equipment card';
+  }
+  if (kind === 'reel') return riderName ? `Reel · ${riderName}` : 'Equipment reel';
+  return 'Publish';
+}
+
+function _publishDefaultCaption(kind) {
+  const rider = _eqSelectedRider || _app.profiles.find(p => p.slug === lastSlug) || null;
+  const riderName = rider ? `${rider.prenom} ${rider.nom}` : '';
+  const ig = rider?.instagram ? '@' + rider.instagram.replace(/^@/, '') : '';
+  const it = _eqSelectedItem;
+  const brandHandle = _publishBrandHandle(it);
+  const parts = [];
+  if (riderName) parts.push(riderName);
+  if (ig) parts.push(ig);
+  if (kind === 'equipment' && it) {
+    if (it.category) parts.push(it.category);
+    const item = [it.brand, it.reference].filter(Boolean).join(' ');
+    if (item) parts.push(item);
+    if (brandHandle) parts.push(brandHandle);
+    if (it.details) parts.push(it.details);
+  } else if (kind === 'reel') {
+    parts.push('Selection reel');
+  } else {
+    parts.push('Freeride Fanatics');
+  }
+  const lead = parts.filter(Boolean).join(' · ');
+  const tags = '#freeridefanatics #mtb #downhill';
+  return lead ? `${lead}\n\n${tags}` : tags;
+}
+
+function _publishBrandHandle(item) {
+  const raw = [
+    item?.brand_instagram,
+    item?.brandInstagram,
+    item?.brand_ig,
+    item?.instagram_brand,
+    item?.brand_handle,
+    item?.marque_instagram,
+    item?.tag_marque,
+  ].find(v => String(v || '').trim());
+  if (!raw) return '';
+  const clean = String(raw).trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '');
+  return clean ? '@' + clean : '';
+}
+
+function _publishContext(kind) {
+  const rider = _eqSelectedRider || _app.profiles.find(p => p.slug === lastSlug) || null;
+  const riderName = rider ? `${rider.prenom} ${rider.nom}`.trim() : '';
+  const instagram = rider?.instagram ? '@' + rider.instagram.replace(/^@/, '') : '';
+  const item = _eqSelectedItem || null;
+  const equipmentName = item ? [item.brand, item.reference].filter(Boolean).join(' ').trim() : '';
+  const category = item?.category || '';
+  const details = item?.details || '';
+  const source = _publishSelectedItem(kind) || null;
+  const brandHandle = _publishBrandHandle(item);
+  return { rider, riderName, instagram, item, equipmentName, category, details, source, brandHandle };
+}
+
+function _publishDefaultLocation(kind) {
+  const ctx = _publishContext(kind);
+  const raw = [
+    ctx.rider?.location,
+    ctx.rider?.spot,
+    ctx.rider?.home_spot,
+    ctx.rider?.station,
+    ctx.rider?.resort,
+    ctx.rider?.city,
+    ctx.item?.location,
+  ].find(v => String(v || '').trim());
+  return raw ? String(raw).trim() : 'Freeride spot';
+}
+
+function _publishDefaultHashtags(kind) {
+  const ctx = _publishContext(kind);
+  const tags = ['#freeridefanatics'];
+  if (kind === 'rider') tags.push('#ridercard', '#mtb', '#downhill');
+  if (kind === 'equipment') tags.push('#equipmentcheck', '#mtb', '#bikecheck');
+  if (kind === 'reel') tags.push('#reels', '#mtb', '#downhill');
+  if (ctx.category) tags.push('#' + ctx.category.toLowerCase().replace(/[^a-z0-9]+/g, ''));
+  if (ctx.equipmentName) {
+    const brand = (ctx.item?.brand || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    if (brand) tags.push('#' + brand);
+  }
+  return Array.from(new Set(tags.filter(t => t.length > 1))).join(' ');
+}
+
+function _publishDefaultFirstComment(kind) {
+  const ctx = _publishContext(kind);
+  const bits = [];
+  if (ctx.instagram) bits.push(ctx.instagram);
+  if (ctx.brandHandle) bits.push(ctx.brandHandle);
+  if (ctx.equipmentName) bits.push(ctx.equipmentName);
+  if (ctx.category && !ctx.equipmentName) bits.push(ctx.category);
+  return bits.length ? bits.join(' · ') : 'Full setup on Freeride Fanatics.';
+}
+
+function _publishDefaultAlt(kind) {
+  const ctx = _publishContext(kind);
+  if (kind === 'equipment') {
+    const item = ctx.equipmentName || ctx.category || 'equipment';
+    return `Freeride Fanatics equipment card showing ${item}${ctx.riderName ? ` for ${ctx.riderName}` : ''}.`;
+  }
+  if (kind === 'reel') {
+    return `Freeride Fanatics reel preview${ctx.riderName ? ` featuring ${ctx.riderName}` : ''}.`;
+  }
+  return `Freeride Fanatics rider card${ctx.riderName ? ` featuring ${ctx.riderName}` : ''}.`;
+}
+
+function _publishDefaultMusic(kind) {
+  if (kind === 'reel') return { value: 'high_energy', note: 'High energy / quick cuts' };
+  if (kind === 'equipment') return { value: 'clean_electro', note: 'Clean electro / product reveal' };
+  return { value: 'cinematic', note: 'Cinematic build / athlete intro' };
+}
+
+function _publishFillDatalists(kind) {
+  const ctx = _publishContext(kind);
+  const setOptions = (id, values) => {
+    const list = document.getElementById(id);
+    if (!list) return;
+    list.innerHTML = Array.from(new Set(values.filter(Boolean).map(v => String(v).trim()).filter(Boolean)))
+      .map(v => `<option value="${v.replace(/"/g, '&quot;')}"></option>`)
+      .join('');
+  };
+  setOptions('publish-title-suggestions', [
+    _publishDefaultTitle(kind),
+    ctx.riderName ? `Rider card · ${ctx.riderName}` : '',
+    ctx.equipmentName ? `Equipment · ${ctx.equipmentName}` : '',
+    ctx.riderName ? `Reel · ${ctx.riderName}` : '',
+  ]);
+  setOptions('publish-location-suggestions', [
+    _publishDefaultLocation(kind),
+    ctx.rider?.location,
+    ctx.rider?.spot,
+    ctx.rider?.home_spot,
+    ctx.rider?.station,
+    ctx.rider?.resort,
+    ctx.rider?.city,
+  ]);
+  setOptions('publish-hashtag-suggestions', [
+    _publishDefaultHashtags(kind),
+    '#freeridefanatics #mtb #downhill',
+    '#freeridefanatics #equipmentcheck #bikecheck',
+    '#freeridefanatics #reels #mtb',
+  ]);
+  setOptions('publish-music-suggestions', [
+    _publishDefaultMusic(kind).note,
+    'High energy / quick cuts',
+    'Cinematic build / clean transitions',
+    'Clean electro / product reveal',
+    'Drum & bass / fast pacing',
+  ]);
+}
+
+function _publishCombinedText() {
+  const title = (document.getElementById('publish-title')?.value || '').trim();
+  const caption = (document.getElementById('publish-caption')?.value || '').trim();
+  const location = (document.getElementById('publish-location')?.value || '').trim();
+  const hashtags = (document.getElementById('publish-hashtags')?.value || '').trim();
+  const firstComment = (document.getElementById('publish-first-comment')?.value || '').trim();
+  const alt = (document.getElementById('publish-alt')?.value || '').trim();
+  const musicSel = document.getElementById('publish-music-select');
+  const musicNote = (document.getElementById('publish-music-note')?.value || '').trim();
+  const musicLabel = musicSel && musicSel.value
+    ? (musicSel.options[musicSel.selectedIndex]?.textContent || '').trim()
+    : '';
+
+  const blocks = [];
+  if (title) blocks.push(title);
+  if (caption) blocks.push(caption);
+  if (location) blocks.push(`📍 ${location}`);
+  if (hashtags) blocks.push(hashtags);
+  if (musicLabel && musicLabel !== 'Aucune') {
+    blocks.push(`🎵 ${musicLabel}${musicNote ? ` — ${musicNote}` : ''}`);
+  } else if (musicNote) {
+    blocks.push(`🎵 ${musicNote}`);
+  }
+  if (firstComment) blocks.push(`First comment:\n${firstComment}`);
+  if (alt) blocks.push(`Alt text:\n${alt}`);
+  return blocks.join('\n\n');
+}
+
+function publishPersist() {
+  try {
+    localStorage.setItem('freeride_publish_settings', JSON.stringify({
+      source_kind: _publishState.kind || '',
+      source_id: _publishState.id || '',
+      draft_kind: _publishDraftKind || '',
+      selection_rider: _publishSelection.rider || [],
+      selection_equipment: _publishSelection.equipment || [],
+      selection_reel: _publishSelection.reel || [],
+      title: document.getElementById('publish-title')?.value || '',
+      caption: document.getElementById('publish-caption')?.value || '',
+      location: document.getElementById('publish-location')?.value || '',
+      hashtags: document.getElementById('publish-hashtags')?.value || '',
+      first_comment: document.getElementById('publish-first-comment')?.value || '',
+      alt: document.getElementById('publish-alt')?.value || '',
+      music_select: document.getElementById('publish-music-select')?.value || '',
+      music_note: document.getElementById('publish-music-note')?.value || '',
+      use_share: document.getElementById('publish-use-share')?.checked ?? true,
+      open_instagram: document.getElementById('publish-open-instagram')?.checked ?? true,
+    }));
+  } catch(_) {}
+}
+
+function publishLoadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('freeride_publish_settings') || '{}');
+    const set = (id, value) => {
+      const el = document.getElementById(id);
+      if (el && value != null) el.value = value;
+    };
+    set('publish-title', saved.title);
+    set('publish-caption', saved.caption);
+    set('publish-location', saved.location);
+    set('publish-hashtags', saved.hashtags);
+    set('publish-first-comment', saved.first_comment);
+    set('publish-alt', saved.alt);
+    set('publish-music-note', saved.music_note);
+    const useShare = document.getElementById('publish-use-share');
+    if (useShare && typeof saved.use_share === 'boolean') useShare.checked = saved.use_share;
+    const openIg = document.getElementById('publish-open-instagram');
+    if (openIg && typeof saved.open_instagram === 'boolean') openIg.checked = saved.open_instagram;
+    if (saved.source_kind) _publishState.kind = saved.source_kind;
+    if (saved.source_id) _publishState.id = saved.source_id;
+    if (saved.draft_kind) _publishDraftKind = saved.draft_kind;
+    _publishSelection.rider = Array.isArray(saved.selection_rider) ? saved.selection_rider.map(String) : [];
+    _publishSelection.equipment = Array.isArray(saved.selection_equipment) ? saved.selection_equipment.map(String) : [];
+    _publishSelection.reel = Array.isArray(saved.selection_reel) ? saved.selection_reel.map(String) : [];
+    const musicSel = document.getElementById('publish-music-select');
+    if (musicSel && saved.music_select != null) musicSel.value = saved.music_select;
+  } catch(_) {}
+}
+
+function _publishOptions() {
+  const opts = [];
+  if (_lastRiderCardUrl) {
+    opts.push({
+      kind: 'rider',
+      label: `Rider card${lastSlug ? ` · ${lastSlug}` : ''}`,
+      name: (lastSlug || 'card') + '.jpg',
+      url: _lastRiderCardUrl,
+      mime: 'image/jpeg',
+    });
+  }
+  if (_lastEqCard?.url) {
+    opts.push({
+      kind: 'equipment',
+      label: `Equipment card${_lastEqCard.name ? ` · ${_lastEqCard.name}` : ''}`,
+      name: _lastEqCard.name || 'publish.png',
+      url: _lastEqCard.url,
+      mime: 'image/png',
+    });
+  }
+  if (_lastEqReel?.url) {
+    opts.push({
+      kind: 'reel',
+      label: `Reel MP4${_lastEqReel.name ? ` · ${_lastEqReel.name}` : ''}`,
+      name: _lastEqReel.name || 'publish.mp4',
+      url: _lastEqReel.url,
+      mime: 'video/mp4',
+    });
+  }
+  return opts;
+}
+
+function publishRefreshOptions(selectValue = null) {
+  const kinds = ['rider', 'equipment', 'reel'];
+  kinds.forEach(kind => {
+    const sel = document.getElementById(`publish-${kind}-select`);
+    if (!sel) return;
+    const items = _publishLibrary[kind] || [];
+    const currentIds = kind === 'reel'
+      ? [kind === _publishState.kind ? _publishState.id : '', ...(_publishSelection[kind] || [])]
+      : (_publishSelection[kind] || []);
+    sel.innerHTML = `
+      <option value="">${items.length ? 'Choisir une source' : 'Aucune source disponible'}</option>
+      ${items.map(opt => `<option value="${opt.id}">${opt.label}</option>`).join('')}`;
+    const allowed = new Set(items.map(o => String(o.id)));
+    const selectedIds = (currentIds || []).map(String).filter(id => allowed.has(id));
+    Array.from(sel.options).forEach(opt => {
+      opt.selected = selectedIds.includes(String(opt.value));
+    });
+    if (kind === 'reel' && selectedIds.length === 0) {
+      const fallback = selectValue && allowed.has(String(selectValue)) ? String(selectValue) : (items[0] ? String(items[0].id) : '');
+      sel.value = fallback || '';
+    }
+  });
+
+  const musicSel = document.getElementById('publish-music-select');
+  if (musicSel && !musicSel.options.length) {
+    musicSel.innerHTML = _publishMusicPresets.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
+  }
+
+  _publishUpdateBadge();
+}
+
+function publishSelectSource(kind, el) {
+  const values = kind === 'reel'
+    ? [el?.value].filter(Boolean)
+    : Array.from(el?.selectedOptions || []).map(opt => opt.value).filter(Boolean);
+  _publishSelection[kind] = values;
+  if (kind === 'reel') {
+    _publishDraftKind = 'reel';
+  } else if (values.length) {
+    _publishDraftKind = kind;
+  }
+  publishPersist();
+  publishRefreshOptions(values[0] || '');
+  publishRender();
+}
+
+function publishSetDraftKind(kind) {
+  _publishDraftKind = kind;
+  publishPersist();
+  publishRender();
+}
+
+function _publishSelectionItems(kind) {
+  const ids = _publishSelection[kind] || [];
+  return ids.map(id => _publishGetItem(kind, id)).filter(Boolean);
+}
+
+function _publishSelectionSummary() {
+  const parts = [];
+  const rider = _publishSelectionItems('rider');
+  const equipment = _publishSelectionItems('equipment');
+  const reel = _publishSelectionItems('reel');
+  if (rider.length) parts.push(`Riders ${rider.length}`);
+  if (equipment.length) parts.push(`Equipment ${equipment.length}`);
+  if (reel.length) parts.push(`Reel ${reel.length}`);
+  return parts.join(' · ');
+}
+
+function publishGenerateSelection() {
+  const order = [_publishDraftKind, 'rider', 'equipment', 'reel'];
+  const pickedKind = order.find(kind => _publishSelectionItems(kind).length) || '';
+  const pickedItem = pickedKind ? _publishSelectionItems(pickedKind)[0] : null;
+  if (!pickedItem) {
+    _publishState = { kind: '', id: '', url: '', name: '', mime: '' };
+    publishRender();
+    return;
+  }
+  _publishState = {
+    kind: pickedKind,
+    id: String(pickedItem.id),
+    url: pickedItem.url,
+    name: pickedItem.name,
+    mime: pickedItem.mime,
+  };
+  publishAutoFill(true);
+  publishPersist();
+  publishRefreshOptions(pickedItem.id);
+  publishRender();
+}
+
+function publishSetMusic(value) {
+  const note = document.getElementById('publish-music-note');
+  if (!note) return;
+  if (value === 'high_energy' && !note.value.trim()) note.value = 'High energy / quick cuts';
+  else if (value === 'cinematic' && !note.value.trim()) note.value = 'Cinematic build / clean transitions';
+  else if (value === 'punk' && !note.value.trim()) note.value = 'Punk / raw energy';
+  else if (value === 'clean_electro' && !note.value.trim()) note.value = 'Clean electro / minimal';
+  else if (value === 'drum_bass' && !note.value.trim()) note.value = 'Drum & bass / fast pacing';
+  publishPersist();
+  publishRender();
+}
+
+function publishRender() {
+  const src = _publishState.url;
+  const kind = _publishState.kind;
+  const status = document.getElementById('publish-status');
+  const state = document.getElementById('publish-source-state');
+  const meta = document.getElementById('publish-source-meta');
+  const placeholder = document.getElementById('publish-placeholder');
+  const img = document.getElementById('publish-preview-img');
+  const video = document.getElementById('publish-preview-video');
+  const captionBox = document.getElementById('publish-preview-caption');
+  const dlBtn = document.getElementById('publish-download-btn');
+  const shareBtn = document.getElementById('publish-share-btn');
+  const copyBtn = document.getElementById('publish-preview-copy-btn');
+  const count = document.getElementById('publish-source-count');
+
+  ['rider','equipment','reel'].forEach(k => {
+    const active = kind ? (k === kind) : (k === _publishDraftKind);
+    document.getElementById('publish-src-' + k)?.classList.toggle('active', active);
+  });
+  publishRefreshOptions(kind);
+  _publishFillDatalists(kind || _publishDraftKind || 'rider');
+
+  if (!src) {
+    placeholder.style.display = 'block';
+    img.style.display = 'none';
+    video.style.display = 'none';
+    captionBox.style.display = 'none';
+    if (copyBtn) copyBtn.disabled = true;
+    dlBtn.disabled = true;
+    shareBtn.disabled = true;
+    const summary = _publishSelectionSummary();
+    state.textContent = summary
+      ? `Sélection prête: ${summary}. Clique "Générer la sélection".`
+      : 'Aucune source sélectionnée.';
+    meta.textContent = '';
+    if (count) count.textContent = '0 élément';
+    if (status) status.textContent = 'Génère d’abord une carte ou un reel.';
+    return;
+  }
+
+  placeholder.style.display = 'none';
+  dlBtn.disabled = false;
+  shareBtn.disabled = false;
+  const selected = _publishSelectedItem();
+  state.textContent = _publishMeta(kind) || 'Source prête.';
+  const summary = _publishSelectionSummary();
+  meta.textContent = `${kind.toUpperCase()} · ${selected?.label || _publishState.name || 'source prête'}${summary ? ` · ${summary}` : ''}`;
+  if (count) {
+    const total = Object.values(_publishLibrary).reduce((sum, arr) => sum + arr.length, 0);
+    const rider = _publishLibrary.rider.length;
+    const equipment = _publishLibrary.equipment.length;
+    const reel = _publishLibrary.reel.length;
+    count.textContent = total
+      ? `${total} élément${total > 1 ? 's' : ''} · Rider ${rider} · Equipment ${equipment} · Reel ${reel}`
+      : '0 élément';
+  }
+
+  if (_publishState.mime.startsWith('video')) {
+    img.style.display = 'none';
+    video.style.display = 'block';
+    video.src = src;
+    video.load();
+  } else {
+    video.style.display = 'none';
+    img.style.display = 'block';
+    img.src = src;
+  }
+
+  const combined = _publishCombinedText();
+  captionBox.style.display = 'block';
+  captionBox.textContent = combined || 'Aucun texte saisi.';
+  if (copyBtn) copyBtn.disabled = !combined;
+  if (status) status.textContent = '';
+}
+
+function publishAutoFill(force = false) {
+  const kind = _publishState.kind || _publishDraftKind || (_publishAvailable('reel') ? 'reel' : _publishAvailable('equipment') ? 'equipment' : 'rider');
+  if (!kind || !_publishAvailable(kind)) {
+    publishRender();
+    return;
+  }
+
+  const title = document.getElementById('publish-title');
+  const caption = document.getElementById('publish-caption');
+  const location = document.getElementById('publish-location');
+  const hashtags = document.getElementById('publish-hashtags');
+  const firstComment = document.getElementById('publish-first-comment');
+  const alt = document.getElementById('publish-alt');
+  const musicSel = document.getElementById('publish-music-select');
+  const musicNote = document.getElementById('publish-music-note');
+  const music = _publishDefaultMusic(kind);
+
+  if (title && (force || !title.value.trim())) title.value = _publishDefaultTitle(kind);
+  if (caption && (force || !caption.value.trim())) caption.value = _publishDefaultCaption(kind);
+  if (location && (force || !location.value.trim())) location.value = _publishDefaultLocation(kind);
+  if (hashtags && (force || !hashtags.value.trim())) hashtags.value = _publishDefaultHashtags(kind);
+  if (firstComment && (force || !firstComment.value.trim())) firstComment.value = _publishDefaultFirstComment(kind);
+  if (alt && (force || !alt.value.trim())) alt.value = _publishDefaultAlt(kind);
+  if (musicSel && (force || !musicSel.value)) musicSel.value = music.value;
+  if (musicNote && (force || !musicNote.value.trim())) musicNote.value = music.note;
+  _publishFillDatalists(kind);
+
+  publishPersist();
+  publishRender();
+}
+
+function publishUseSource(kind, force = false) {
+  publishSetDraftKind(kind);
+}
+
+async function _publishCurrentFile() {
+  if (!_publishState.url) throw new Error('Aucune source sélectionnée');
+  const res = await fetch(_publishState.url);
+  if (!res.ok) throw new Error('Source introuvable');
+  const blob = await res.blob();
+  return new File([blob], _publishState.name || 'publish', { type: _publishState.mime || blob.type || 'application/octet-stream' });
+}
+
+async function _publishCurrentFiles() {
+  const selectedItems = _publishState.kind ? _publishSelectionItems(_publishState.kind) : [];
+  if (selectedItems.length <= 1) return [await _publishCurrentFile()];
+  const files = [];
+  for (const item of selectedItems) {
+    const res = await fetch(item.url);
+    if (!res.ok) continue;
+    const blob = await res.blob();
+    files.push(new File([blob], item.name || 'publish', { type: item.mime || blob.type || 'application/octet-stream' }));
+  }
+  return files.length ? files : [await _publishCurrentFile()];
+}
+
+async function publishCopyCaption() {
+  const txt = _publishCombinedText();
+  if (!txt) return;
+  try {
+    await navigator.clipboard.writeText(txt);
+    document.getElementById('publish-status').textContent = '✅ Caption copiée';
+  } catch(e) {
+    document.getElementById('publish-status').textContent = '❌ Impossible de copier';
+  }
+}
+
+async function publishDownload() {
+  if (!_publishState.url) return;
+  const a = document.createElement('a');
+  a.href = _publishState.url;
+  a.download = _publishState.name || 'publish';
+  a.click();
+  document.getElementById('publish-status').textContent = '⬇ Média téléchargé';
+}
+
+async function publishShare() {
+  const status = document.getElementById('publish-status');
+  const useShare = document.getElementById('publish-use-share')?.checked ?? true;
+  const openInstagram = document.getElementById('publish-open-instagram')?.checked ?? true;
+  if (!_publishState.url) {
+    status.textContent = '⚠️ Choisis une source d’abord';
+    return;
+  }
+
+  const text = _publishCombinedText();
+  try {
+    const files = await _publishCurrentFiles();
+    const canShareFiles = useShare && navigator.canShare && navigator.canShare({ files });
+    if (navigator.share && canShareFiles) {
+      await navigator.share({
+        title: document.getElementById('publish-title')?.value || 'Freeride Fanatics',
+        text,
+        files,
+      });
+      status.textContent = '✅ Partagé vers le téléphone';
+      if (openInstagram) {
+        setTimeout(() => { _publishLaunchInstagramApp(); }, 400);
+      }
+      return;
+    }
+    await publishDownload();
+    if (text) await navigator.clipboard.writeText(text);
+    status.textContent = '⚠️ Partage natif indisponible, média téléchargé + caption copiée';
+    if (openInstagram) {
+      setTimeout(() => { _publishLaunchInstagramApp(); }, 400);
+    }
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+  }
+}
+
+function _publishLaunchInstagramApp() {
+  const webUrl = 'https://www.instagram.com/';
+  const ua = navigator.userAgent || '';
+  const isAndroid = /Android/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+  if (!isAndroid && !isIOS) {
+    window.open(webUrl, '_blank', 'noopener,noreferrer');
+    return 'web';
+  }
+
+  const startedAt = Date.now();
+  const fallback = () => {
+    if (document.hidden || Date.now() - startedAt < 700) return;
+    window.open(webUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  if (isAndroid) {
+    window.location.href = 'intent://instagram.com/#Intent;scheme=https;package=com.instagram.android;S.browser_fallback_url=https%3A%2F%2Fwww.instagram.com%2F;end';
+  } else {
+    window.location.href = 'instagram://app';
+    setTimeout(fallback, 900);
+  }
+  return 'app';
+}
+
+function publishOpenInstagram() {
+  const status = document.getElementById('publish-status');
+  try {
+    const mode = _publishLaunchInstagramApp();
+    if (status) {
+      status.textContent = mode === 'app'
+        ? '📱 Ouverture de l’app Instagram si elle est installée'
+        : '📱 Instagram ouvert dans un nouvel onglet';
+    }
+  } catch(e) {
+    if (status) status.textContent = '❌ Impossible d’ouvrir Instagram';
+  }
+}
+
+function publishInit() {
+  if (!_publishInitialized) {
+    _publishInitialized = true;
+    ['publish-title','publish-caption','publish-location','publish-hashtags','publish-first-comment','publish-alt']
+      .forEach(id => document.getElementById(id)?.addEventListener('input', () => {
+        publishPersist();
+        publishRender();
+      }));
+    ['publish-use-share','publish-open-instagram']
+      .forEach(id => document.getElementById(id)?.addEventListener('change', () => {
+        publishPersist();
+        publishRender();
+      }));
+    publishLoadSettings();
+  }
+
+  publishRefreshOptions(_publishState.id || null);
+  publishRender();
 }
 
 init();

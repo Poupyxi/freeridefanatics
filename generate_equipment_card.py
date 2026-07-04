@@ -23,7 +23,12 @@ BG_V2_PATH   = BASE_DIR / "background equipementv2.png"  # fond avec encoche cat
 FONTS_DIR    = BASE_DIR / "fonts"
 LOGOS_DIR    = BASE_DIR / "logos"
 EQ_PHOTOS    = BASE_DIR / "Equipment"   # sous-dossiers par catégorie
-PPRIDERS_DIR = BASE_DIR / "PPRiders"    # PP dédiées au badge reel/équipement
+PPRIDERS_DIR = next((
+    d for d in [
+        BASE_DIR / "PPRiders",
+        BASE_DIR / "PPRIDERS",
+    ] if d.exists()
+), BASE_DIR / "PPRiders")    # PP dédiées au badge reel/équipement
 
 # Mapping noms de colonnes Sheet → noms de dossiers (essayés dans l'ordre)
 CATEGORY_FOLDERS = {

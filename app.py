@@ -66,6 +66,90 @@ def get_equipment():
         _cache["equipment"] = gc.load_equipment_from_gsheet() or {}
     return _cache["equipment"]
 
+def _norm_match_name(value):
+    import re
+    import unicodedata
+    value = unicodedata.normalize("NFKD", value or "")
+    value = "".join(ch for ch in value if not unicodedata.combining(ch))
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+def get_results_2026():
+    if "results_2026" in _cache:
+        return _cache["results_2026"]
+
+    rows = gc._fetch_gsheet_csv_by_gid(581226329) or gc._fetch_gsheet_csv("📊 Résultats 2026") or []
+    if not rows:
+        _cache["results_2026"] = {"events": [], "riders": []}
+        return _cache["results_2026"]
+
+    _, _, profiles = get_engine()
+    by_name = {}
+    for p in profiles:
+        key = _norm_match_name(f"{p.get('prenom', '')}{p.get('nom', '')}")
+        if key:
+            by_name[key] = p
+
+    header = rows[0] if rows else []
+    events = []
+    for idx, name in enumerate(header[5:], start=5):
+        clean = " ".join(str(name or "").split())
+        if clean:
+            events.append({"index": idx, "name": clean})
+
+    parsed = []
+    for row in rows[1:]:
+        row = list(row) + [""] * max(0, len(header) - len(row))
+        genre = (row[0] or "").strip().upper()
+        if genre in ("W", "F", "WOMEN", "FEMME"):
+            genre = "F"
+        elif genre in ("M", "MEN", "HOMME"):
+            genre = "M"
+        else:
+            continue
+
+        first = (row[1] or "").strip()
+        last = (row[2] or "").strip()
+        if not first or not last:
+            continue
+
+        event_points = []
+        total = 0.0
+        for ev in events:
+            raw = str(row[ev["index"]] if ev["index"] < len(row) else "").strip().replace(",", ".")
+            if not raw:
+                continue
+            try:
+                pts = float(raw)
+            except ValueError:
+                continue
+            if pts <= 0:
+                continue
+            total += pts
+            event_points.append({"event": ev["name"], "points": pts})
+
+        profile = by_name.get(_norm_match_name(first + last))
+        parsed.append({
+            "genre": genre,
+            "first_name": first,
+            "last_name": last,
+            "name": f"{first} {last}".strip(),
+            "nationality": (row[3] or "").strip(),
+            "flag": (row[4] or "").strip(),
+            "instagram": (profile.get("instagram", "") if profile else "").lstrip("@").lower(),
+            "total_points": int(total) if total.is_integer() else total,
+            "event_count": len(event_points),
+            "events": event_points,
+        })
+
+    for genre in ("F", "M"):
+        ranked = sorted([r for r in parsed if r["genre"] == genre], key=lambda r: (-float(r["total_points"]), r["name"].lower()))
+        for i, rider in enumerate(ranked, start=1):
+            rider["rank"] = i
+
+    parsed.sort(key=lambda r: (r["genre"], int(r.get("rank") or 999), r["name"].lower()))
+    _cache["results_2026"] = {"events": [e["name"] for e in events], "riders": parsed}
+    return _cache["results_2026"]
+
 # ── HTML ──────────────────────────────────────────────────────────────────────
 
 HTML = r"""<!DOCTYPE html>
@@ -275,6 +359,196 @@ HTML = r"""<!DOCTYPE html>
   .reel-remove { font-size:1rem; cursor:pointer; color:#555; transition:color .15s; flex-shrink:0; }
   .reel-remove:hover { color:#e55; }
   .reel-empty { text-align:center; color:#444; font-size:0.82rem; padding:30px 0; }
+
+  /* ── Performance page ── */
+  #page-performance { display:none; min-height:calc(100vh - 65px); padding:22px; }
+  .perf-wrap { max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+  .perf-header {
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:14px;
+    border-bottom:1px solid #2a2a2a;
+    padding-bottom:14px;
+  }
+  .perf-title { color:#C8D400; font-size:1.45rem; letter-spacing:.08em; text-transform:uppercase; }
+  .perf-sub { color:#888; margin-top:6px; line-height:1.45; max-width:760px; }
+  .perf-status { color:#666; font-size:.78rem; margin-top:8px; }
+  .perf-controls {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(180px, 1fr));
+    gap:10px;
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:12px;
+  }
+  .perf-advanced-toggle {
+    justify-self:start;
+    background:#181818;
+    border:1px solid #333;
+    color:#888;
+    border-radius:7px;
+    padding:8px 12px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:.78rem;
+  }
+  .perf-advanced-toggle:hover { color:#eee; border-color:#555; }
+  .perf-advanced-toggle.active { color:#C8D400; border-color:#C8D400; background:#252800; }
+  .perf-advanced {
+    display:none;
+    grid-template-columns:repeat(3, minmax(140px, 1fr));
+    gap:10px;
+    background:#101010;
+    border:1px solid #242424;
+    border-radius:8px;
+    padding:12px;
+  }
+  .perf-advanced.open { display:grid; }
+  .perf-control { display:flex; flex-direction:column; gap:6px; }
+  .perf-control label {
+    font-size:10px;
+    color:#666;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .perf-select {
+    width:100%;
+    background:#181818;
+    border:1px solid #333;
+    color:#eee;
+    border-radius:7px;
+    padding:9px 10px;
+    font-size:.84rem;
+    outline:none;
+  }
+  .perf-select:focus { border-color:#C8D400; }
+  .perf-kpis {
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:10px;
+  }
+  .perf-kpi {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:12px;
+    min-height:78px;
+  }
+  .perf-kpi-label {
+    color:#777;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .perf-kpi-value { color:#eee; font-size:1.55rem; font-weight:800; margin-top:8px; }
+  .perf-podium {
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+  }
+  .perf-podium-card {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:14px;
+    min-height:172px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .perf-podium-card:first-child { border-color:#C8D400; background:#151700; }
+  .perf-medal {
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#252800;
+    color:#C8D400;
+    font-weight:900;
+  }
+  .perf-podium-name { color:#eee; font-size:1.05rem; font-weight:900; line-height:1.2; }
+  .perf-podium-meta { color:#888; font-size:.78rem; line-height:1.45; }
+  .perf-podium-points { color:#C8D400; font-size:1.45rem; font-weight:900; margin-top:auto; }
+  .perf-podium-points small { color:#777; font-size:.72rem; margin-left:4px; }
+  .perf-grid {
+    display:grid;
+    grid-template-columns:minmax(0, .95fr) minmax(0, 1.35fr);
+    gap:14px;
+    align-items:start;
+  }
+  .perf-panel {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:14px;
+    min-width:0;
+  }
+  .perf-panel h3 {
+    color:#C8D400;
+    font-size:.88rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin-bottom:12px;
+  }
+  .perf-leader-list { display:flex; flex-direction:column; gap:8px; }
+  .perf-leader {
+    display:grid;
+    grid-template-columns:34px minmax(0, 1fr) auto;
+    gap:10px;
+    align-items:center;
+    padding:10px;
+    border:1px solid #252525;
+    border-radius:7px;
+    background:#151515;
+  }
+  .perf-rank {
+    width:30px;
+    height:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:#252800;
+    color:#C8D400;
+    font-weight:800;
+    font-size:.8rem;
+  }
+  .perf-main { min-width:0; }
+  .perf-name { color:#eee; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .perf-meta { color:#777; font-size:.76rem; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .perf-score { text-align:right; color:#eee; font-weight:800; }
+  .perf-score small { display:block; color:#777; font-size:.68rem; font-weight:600; margin-top:2px; }
+  .perf-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  .perf-table th {
+    color:#777;
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    text-align:left;
+    padding:8px;
+    border-bottom:1px solid #2a2a2a;
+  }
+  .perf-table td {
+    padding:9px 8px;
+    border-bottom:1px solid #202020;
+    vertical-align:top;
+  }
+  .perf-table tr:hover td { background:#151515; }
+  .perf-riders { color:#888; font-size:.76rem; line-height:1.45; max-width:420px; }
+  .perf-empty {
+    color:#666;
+    border:1px dashed #333;
+    border-radius:8px;
+    padding:24px;
+    text-align:center;
+    line-height:1.5;
+  }
 
   /* ── Publish page ── */
   #page-publish { display:none; height:calc(100vh - 65px); }
@@ -1326,6 +1600,15 @@ HTML = r"""<!DOCTYPE html>
     .publish-rows { grid-template-columns: 1fr; }
     .publish-select-grid { grid-template-columns: 1fr; }
     .publish-preview-shell { grid-template-columns: 1fr; }
+    #page-performance { padding: 14px; }
+    .perf-header { align-items:flex-start; flex-direction:column; }
+    .perf-controls,
+    .perf-kpis,
+    .perf-grid,
+    .perf-podium,
+    .perf-advanced { grid-template-columns: 1fr; }
+    .perf-table { min-width: 760px; }
+    #perf-table-wrap { overflow-x: auto; }
     .action-grid,
     .action-grid.two,
     .action-grid.four { grid-template-columns: 1fr; }
@@ -1374,6 +1657,7 @@ HTML = r"""<!DOCTYPE html>
   <nav class="tab-nav" id="main-tab-nav">
     <button class="tab-btn active" onclick="switchTab('cards')" id="tab-cards">🏔️ Riders</button>
     <button class="tab-btn" onclick="switchTab('equipment')" id="tab-equipment">🔧 Équipements</button>
+    <button class="tab-btn" onclick="switchTab('performance')" id="tab-performance">🏆 Performance</button>
     <button class="tab-btn" onclick="switchTab('reel')" id="tab-reel">
       🎬 Reel <span id="reel-badge" style="display:none;background:#C8D400;color:#000;
         border-radius:10px;font-size:0.7rem;padding:1px 6px;margin-left:4px;font-weight:700"></span>
@@ -1422,6 +1706,7 @@ HTML = r"""<!DOCTYPE html>
   <div class="burger-panel">
     <button class="burger-item" id="burger-cards" onclick="switchTab('cards'); closeBurger()">🏔️ Riders</button>
     <button class="burger-item" id="burger-equipment" onclick="switchTab('equipment'); closeBurger()">🔧 Équipements</button>
+    <button class="burger-item" id="burger-performance" onclick="switchTab('performance'); closeBurger()">🏆 Performance</button>
     <button class="burger-item" id="burger-reel" onclick="switchTab('reel'); closeBurger()">🎬 Reel</button>
     <button class="burger-item" id="burger-publish" onclick="switchTab('publish'); closeBurger()">
       📣 Publish <span id="burger-publish-badge" style="display:none;background:#C8D400;color:#000;
@@ -1879,6 +2164,92 @@ HTML = r"""<!DOCTYPE html>
 
 
 </div><!-- fin #page-equipment -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE PERFORMANCE ÉQUIPEMENTS                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="page-performance">
+  <div class="perf-wrap">
+    <div class="perf-header">
+      <div>
+        <div class="perf-title">🏆 Equipment Performance</div>
+        <div class="perf-sub">
+          Sélectionne un classement et une catégorie pour voir les 3 équipements qui ressortent le mieux selon les points 2026.
+        </div>
+        <div class="perf-status" id="perf-status">Synchronisation automatique active quand l’onglet est ouvert.</div>
+      </div>
+      <button class="eq-topbar-btn" onclick="refreshPerformanceData(false)">↺ Actualiser maintenant</button>
+    </div>
+
+    <div class="perf-controls">
+      <div class="perf-control">
+        <label for="perf-gender">Classement</label>
+        <select id="perf-gender" class="perf-select" onchange="renderPerformance()">
+          <option value="F">Femmes</option>
+          <option value="M">Hommes</option>
+        </select>
+      </div>
+      <div class="perf-control">
+        <label for="perf-category">Catégorie</label>
+        <select id="perf-category" class="perf-select" onchange="renderPerformance()">
+        </select>
+      </div>
+    </div>
+
+    <button class="perf-advanced-toggle" id="perf-advanced-toggle" onclick="togglePerformanceAdvanced()">
+      ▸ Advanced
+    </button>
+
+    <div class="perf-advanced" id="perf-advanced">
+      <div class="perf-control">
+        <label for="perf-top">Fenêtre riders</label>
+        <select id="perf-top" class="perf-select" onchange="renderPerformance()">
+          <option value="3">Top 3 riders</option>
+          <option value="5">Top 5 riders</option>
+          <option value="10" selected>Top 10 riders</option>
+          <option value="20">Top 20 riders</option>
+          <option value="all">Tous les classés</option>
+        </select>
+      </div>
+      <div class="perf-control">
+        <label for="perf-group">Groupement</label>
+        <select id="perf-group" class="perf-select" onchange="renderPerformance()">
+          <option value="product">Produit complet</option>
+          <option value="brand">Marque</option>
+        </select>
+      </div>
+      <div class="perf-control">
+        <label for="perf-sort">Tri</label>
+        <select id="perf-sort" class="perf-select" onchange="renderPerformance()">
+          <option value="points">Points cumulés</option>
+          <option value="count">Présence</option>
+          <option value="avg_rank">Meilleur rang moyen</option>
+          <option value="best_rank">Meilleur rider</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="perf-podium" id="perf-podium"></div>
+
+    <div class="perf-kpis">
+      <div class="perf-kpi"><div class="perf-kpi-label">Riders analysés</div><div class="perf-kpi-value" id="perf-kpi-riders">0</div></div>
+      <div class="perf-kpi"><div class="perf-kpi-label">Équipements matchés</div><div class="perf-kpi-value" id="perf-kpi-items">0</div></div>
+      <div class="perf-kpi"><div class="perf-kpi-label">Catégories</div><div class="perf-kpi-value" id="perf-kpi-cats">0</div></div>
+      <div class="perf-kpi"><div class="perf-kpi-label">Points couverts</div><div class="perf-kpi-value" id="perf-kpi-points">0</div></div>
+    </div>
+
+    <div class="perf-grid" id="perf-advanced-results" style="display:none">
+      <div class="perf-panel">
+        <h3>Leaders par catégorie</h3>
+        <div id="perf-leaders" class="perf-leader-list"></div>
+      </div>
+      <div class="perf-panel">
+        <h3>Classement détaillé</h3>
+        <div id="perf-table-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- PAGE REEL                                                               -->
@@ -2593,6 +2964,8 @@ function renderProfiles() {
 const _app = {
   profiles:        [],   // tous les profils complets
   equipment:       {},   // { handle: [items] }
+  results:         [],   // classement Résultats 2026
+  resultEvents:    [],   // manches/colonnes de points
   sponsors:        [],   // liste sponsors
   eqVariants:      [],   // liste plate [{name,url,path,folder,stem_slug}]
   categoryFolders: {},   // { "Brake Caliper": ["Brake Caliper","Brakes"], ... }
@@ -2676,6 +3049,8 @@ async function init() {
     // Stocker dans le cache global
     _app.profiles        = data.profiles         || [];
     _app.equipment       = data.equipment        || {};
+    _app.results         = data.results?.riders  || [];
+    _app.resultEvents    = data.results?.events  || [];
     _app.sponsors        = data.sponsors         || [];
     _app.eqVariants      = data.eq_variants      || [];
     _app.categoryFolders = data.category_folders || {};
@@ -3012,12 +3387,286 @@ async function reloadExcel() {
   location.reload();
 }
 
+// ── Equipment performance ───────────────────────────────────────────────────
+let _perfInitialized = false;
+let _perfAdvancedOpen = false;
+let _perfRefreshInFlight = false;
+let _activeTab = 'cards';
+const _PERF_ORDER = [
+  'Frame', 'Fork', 'Rear Shock', 'Handlebar', 'Dropper Post', 'Saddle',
+  'Crankset', 'Chain', 'Derailleur', 'Brake Lever', 'Brake Caliper',
+  'Wheels', 'Tires', 'Pedals', 'Grip', 'Shoes', 'Helmet', 'Protection', 'Goggles', 'Disk'
+];
+
+function _esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function _perfKey(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function _perfCategories() {
+  const set = new Set();
+  Object.values(_app.equipment || {}).forEach(items => {
+    (items || []).forEach(it => { if (it.category) set.add(it.category); });
+  });
+  return Array.from(set).sort((a, b) => {
+    const ia = _PERF_ORDER.indexOf(a);
+    const ib = _PERF_ORDER.indexOf(b);
+    if (ia >= 0 || ib >= 0) return (ia >= 0 ? ia : 999) - (ib >= 0 ? ib : 999);
+    return a.localeCompare(b);
+  });
+}
+
+function initPerformancePage() {
+  if (!_perfInitialized) {
+    _perfInitialized = true;
+    const sel = document.getElementById('perf-category');
+    if (sel) {
+      const cats = _perfCategories();
+      sel.innerHTML = cats.map(cat => `<option value="${_esc(cat)}">${_esc(cat)}</option>`).join('');
+      if (cats.includes('Fork')) sel.value = 'Fork';
+    }
+  }
+  renderPerformance();
+  refreshPerformanceData(true);
+}
+
+function togglePerformanceAdvanced() {
+  _perfAdvancedOpen = !_perfAdvancedOpen;
+  document.getElementById('perf-advanced')?.classList.toggle('open', _perfAdvancedOpen);
+  document.getElementById('perf-advanced-results').style.display = _perfAdvancedOpen ? 'grid' : 'none';
+  const btn = document.getElementById('perf-advanced-toggle');
+  if (btn) {
+    btn.classList.toggle('active', _perfAdvancedOpen);
+    btn.textContent = _perfAdvancedOpen ? '▾ Advanced' : '▸ Advanced';
+  }
+}
+
+async function refreshPerformanceData(silent = false) {
+  if (_perfRefreshInFlight) return;
+  _perfRefreshInFlight = true;
+  const status = document.getElementById('perf-status');
+  if (status && !silent) status.textContent = 'Actualisation des résultats depuis Google Sheet...';
+  try {
+    const res = await fetch('/api/performance-results?refresh=1');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    _app.results = data.results?.riders || [];
+    _app.resultEvents = data.results?.events || [];
+    renderPerformance();
+    if (status) {
+      const d = new Date();
+      status.textContent = `Résultats synchronisés à ${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}. Auto-refresh actif.`;
+    }
+  } catch(e) {
+    if (status) status.textContent = 'Actualisation impossible pour le moment. Les données locales restent affichées.';
+  } finally {
+    _perfRefreshInFlight = false;
+  }
+}
+
+function _perfSelectedRiders() {
+  const gender = document.getElementById('perf-gender')?.value || 'F';
+  const topVal = document.getElementById('perf-top')?.value || '10';
+  let rows = (_app.results || []).filter(r => r.total_points > 0 && r.instagram);
+  rows = rows.filter(r => r.genre === gender);
+
+  rows = rows.slice().sort((a, b) => {
+    return (a.rank || 999) - (b.rank || 999);
+  });
+
+  if (topVal !== 'all') {
+    const limit = Number(topVal);
+    rows = rows.filter(r => Number(r.rank || 999) <= limit);
+  }
+  return rows;
+}
+
+function _perfItemLabel(item, groupMode) {
+  const brand = (item?.brand || '').trim();
+  const ref = (item?.reference || '').trim();
+  if (groupMode === 'brand') return brand || 'Unknown brand';
+  return [brand, ref].filter(Boolean).join(' · ') || brand || ref || 'Unknown product';
+}
+
+function _perfStats() {
+  const category = document.getElementById('perf-category')?.value || 'all';
+  const groupMode = document.getElementById('perf-group')?.value || 'product';
+  const riders = _perfSelectedRiders();
+  const stats = new Map();
+  let itemHits = 0;
+  let pointsCovered = 0;
+
+  riders.forEach(rider => {
+    const handle = String(rider.instagram || '').replace(/^@/, '').toLowerCase();
+    const items = _app.equipment?.[handle] || [];
+    const selectedItems = category === 'all'
+      ? items
+      : items.filter(it => it.category === category);
+
+    selectedItems.forEach(item => {
+      if (!item?.brand && !item?.reference) return;
+      const label = _perfItemLabel(item, groupMode);
+      const key = `${item.category}::${_perfKey(label)}`;
+      if (!stats.has(key)) {
+        stats.set(key, {
+          category: item.category,
+          label,
+          brand: item.brand || '',
+          reference: item.reference || '',
+          count: 0,
+          points: 0,
+          bestRank: 999,
+          rankSum: 0,
+          riders: [],
+        });
+      }
+      const st = stats.get(key);
+      const pts = Number(rider.total_points || 0);
+      const rank = Number(rider.rank || 999);
+      st.count += 1;
+      st.points += pts;
+      st.bestRank = Math.min(st.bestRank, rank);
+      st.rankSum += rank;
+      st.riders.push({
+        name: rider.name,
+        genre: rider.genre,
+        rank,
+        points: pts,
+        flag: rider.flag || '',
+      });
+      itemHits += 1;
+      pointsCovered += pts;
+    });
+  });
+
+  const rows = Array.from(stats.values()).map(st => ({
+    ...st,
+    avgRank: st.count ? st.rankSum / st.count : 999,
+  }));
+  return { riders, rows, itemHits, pointsCovered };
+}
+
+function _perfSortRows(rows) {
+  const sort = document.getElementById('perf-sort')?.value || 'points';
+  return rows.slice().sort((a, b) => {
+    if (sort === 'count') return (b.count - a.count) || (b.points - a.points) || (a.avgRank - b.avgRank);
+    if (sort === 'avg_rank') return (a.avgRank - b.avgRank) || (b.points - a.points) || (b.count - a.count);
+    if (sort === 'best_rank') return (a.bestRank - b.bestRank) || (b.points - a.points) || (b.count - a.count);
+    return (b.points - a.points) || (b.count - a.count) || (a.avgRank - b.avgRank);
+  });
+}
+
+function renderPerformance() {
+  const podiumEl = document.getElementById('perf-podium');
+  const leadersEl = document.getElementById('perf-leaders');
+  const tableEl = document.getElementById('perf-table-wrap');
+  if (!podiumEl || !leadersEl || !tableEl) return;
+
+  const category = document.getElementById('perf-category')?.value || 'all';
+  const { riders, rows, itemHits, pointsCovered } = _perfStats();
+  const sorted = _perfSortRows(rows);
+  const cats = new Set(rows.map(r => r.category));
+
+  document.getElementById('perf-kpi-riders').textContent = riders.length;
+  document.getElementById('perf-kpi-items').textContent = itemHits;
+  document.getElementById('perf-kpi-cats').textContent = cats.size;
+  document.getElementById('perf-kpi-points').textContent = Math.round(pointsCovered);
+
+  if (!riders.length) {
+    podiumEl.innerHTML = '<div class="perf-empty" style="grid-column:1/-1">Aucun rider classé avec un handle Instagram exploitable.</div>';
+    leadersEl.innerHTML = '<div class="perf-empty">Aucun rider classé avec un handle Instagram exploitable.</div>';
+    tableEl.innerHTML = '<div class="perf-empty">Vérifie l’onglet Résultats 2026 et les profils Instagram.</div>';
+    return;
+  }
+  if (!rows.length) {
+    podiumEl.innerHTML = '<div class="perf-empty" style="grid-column:1/-1">Aucun équipement trouvé pour cette sélection.</div>';
+    leadersEl.innerHTML = '<div class="perf-empty">Aucun équipement trouvé pour cette sélection.</div>';
+    tableEl.innerHTML = '<div class="perf-empty">Essaie une autre catégorie ou une fenêtre plus large.</div>';
+    return;
+  }
+
+  const topThree = sorted.slice(0, 3);
+  podiumEl.innerHTML = topThree.map((st, idx) => {
+    const ridersText = st.riders
+      .sort((a, b) => a.rank - b.rank)
+      .slice(0, 3)
+      .map(r => `${r.flag ? r.flag + ' ' : ''}#${r.rank} ${r.name}`)
+      .join('<br>');
+    return `<div class="perf-podium-card">
+      <div class="perf-medal">#${idx + 1}</div>
+      <div class="perf-podium-name">${_esc(st.label)}</div>
+      <div class="perf-podium-meta">${st.count} rider${st.count > 1 ? 's' : ''} · rang moyen ${st.avgRank.toFixed(1)}<br>${ridersText}</div>
+      <div class="perf-podium-points">${Math.round(st.points)}<small>pts</small></div>
+    </div>`;
+  }).join('');
+
+  let leaderRows = [];
+  if (category === 'all') {
+    _perfCategories().forEach(cat => {
+      const best = _perfSortRows(rows.filter(r => r.category === cat))[0];
+      if (best) leaderRows.push(best);
+    });
+  } else {
+    leaderRows = sorted.slice(0, 8);
+  }
+
+  leadersEl.innerHTML = leaderRows.map((st, idx) => `
+    <div class="perf-leader">
+      <div class="perf-rank">${idx + 1}</div>
+      <div class="perf-main">
+        <div class="perf-name">${_esc(st.label)}</div>
+        <div class="perf-meta">${_esc(st.category)} · ${st.count} rider${st.count > 1 ? 's' : ''} · rang moyen ${st.avgRank.toFixed(1)}</div>
+      </div>
+      <div class="perf-score">${Math.round(st.points)}<small>pts</small></div>
+    </div>
+  `).join('');
+
+  tableEl.innerHTML = `
+    <table class="perf-table">
+      <thead>
+        <tr>
+          <th>Catégorie</th>
+          <th>Équipement</th>
+          <th>Riders</th>
+          <th>Points</th>
+          <th>Rang moy.</th>
+          <th>Top rider</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sorted.slice(0, 40).map(st => {
+          const riderText = st.riders
+            .sort((a, b) => a.rank - b.rank)
+            .slice(0, 5)
+            .map(r => `${r.flag ? r.flag + ' ' : ''}#${r.rank} ${r.name} (${Math.round(r.points)} pts)`)
+            .join('<br>');
+          return `<tr>
+            <td>${_esc(st.category)}</td>
+            <td><strong>${_esc(st.label)}</strong></td>
+            <td>${st.count}</td>
+            <td>${Math.round(st.points)}</td>
+            <td>${st.avgRank.toFixed(1)}</td>
+            <td class="perf-riders">${riderText}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
 // ── Tab navigation ────────────────────────────────────────────────────────
 const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'audit'];
 
 function switchTab(tab) {
+  _activeTab = tab;
   // Tabs principaux
-  ['cards','equipment','reel','publish'].forEach(t => {
+  ['cards','equipment','performance','reel','publish'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
     document.getElementById('burger-'+t)?.classList.toggle('active', t === tab);
   });
@@ -3034,6 +3683,7 @@ function switchTab(tab) {
   // Affichage pages
   document.getElementById('page-cards').style.display       = tab === 'cards'       ? 'grid'  : 'none';
   document.getElementById('page-equipment').style.display   = tab === 'equipment'   ? 'block' : 'none';
+  document.getElementById('page-performance').style.display = tab === 'performance' ? 'block' : 'none';
   document.getElementById('page-logos').style.display       = tab === 'logos'       ? 'block' : 'none';
   document.getElementById('page-riders').style.display      = tab === 'riders'      ? 'block' : 'none';
   document.getElementById('page-reel').style.display        = tab === 'reel'        ? 'block' : 'none';
@@ -3042,11 +3692,16 @@ function switchTab(tab) {
   document.getElementById('page-audit').style.display       = tab === 'audit'       ? 'block' : 'none';
 
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
+  if (tab === 'performance') initPerformancePage();
   if (tab === 'reel') { renderReelPage(); _initReelRiderList(); }
   if (tab === 'publish') publishInit();
   if (tab === 'connections') connRefreshGoogle();
   if (tab === 'audit') loadEqAudit();
 }
+
+setInterval(() => {
+  if (_activeTab === 'performance') refreshPerformanceData(true);
+}, 60000);
 
 // ── Connexions ────────────────────────────────────────────────────────────────
 function connClick(platform) {
@@ -5871,6 +6526,7 @@ def api_preload():
     """Retourne TOUT en un seul appel : profils, équipements, sponsors."""
     _, _, profiles = get_engine()
     eq = get_equipment()
+    results = get_results_2026()
 
     # ── Profils complets ──
     full_profiles = []
@@ -5922,10 +6578,19 @@ def api_preload():
     return jsonify({
         "profiles":         full_profiles,
         "equipment":        eq_by_handle,
+        "results":          results,
         "sponsors":         sponsors,
         "eq_variants":      eq_variants,
         "category_folders": gec.CATEGORY_FOLDERS,
     })
+
+
+@app.route("/api/performance-results")
+def api_performance_results():
+    """Retourne les résultats 2026, avec refresh optionnel du cache Google Sheet."""
+    if request.args.get("refresh") == "1":
+        _cache.pop("results_2026", None)
+    return jsonify({"results": get_results_2026()})
 
 
 @app.route("/api/reload", methods=["POST"])

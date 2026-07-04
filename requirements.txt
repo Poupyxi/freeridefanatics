@@ -3,6 +3,7 @@
 
 flask>=3.0
 pillow>=10.0
+numpy>=2.0
 openpyxl>=3.1
 instaloader>=4.14
 yt-dlp>=2024.1

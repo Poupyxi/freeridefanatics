@@ -562,6 +562,9 @@ def load_profiles_from_gsheet():
 
 def load_profiles():
     print(f"📂 Tracker : {EXCEL_FILE.name}")
+    if not EXCEL_FILE.exists():
+        print(f"⚠️  Tracker absent : {EXCEL_FILE} — fallback sur données vides")
+        return []
     wb = openpyxl.load_workbook(EXCEL_FILE, data_only=True)
 
     ws_riders = wb["🏆 Riders"]

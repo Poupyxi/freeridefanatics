@@ -2711,8 +2711,12 @@ async function logosBrowseFolder() {
     _logosFolder = d.path;
     document.getElementById('logos-folder-display').textContent = d.path;
     document.getElementById('logos-folder-display').style.color = '#C8D400';
+    const modeNote = d.native_dialog
+      ? '<span style="color:#888">Dialogue natif utilisé</span>'
+      : '<span style="color:#888">Dossier par défaut utilisé</span>';
+    const extraNote = d.message ? ` · <span style="color:#888">${d.message}</span>` : '';
     document.getElementById('logos-folder-stats').innerHTML =
-      `<span style="color:#C8D400">✅ ${d.count} logos détectés dans ce dossier</span>`;
+      `${modeNote}${extraNote}<br><span style="color:#C8D400">✅ ${d.count} logos détectés dans ce dossier</span>`;
     // Auto-scan si une URL est déjà présente
     if (document.getElementById('logos-url').value.trim()) logosScrap();
   } finally {
@@ -2869,7 +2873,9 @@ async function ridersBrowseFolder(type) {
     else               _ridersMgr.picFolder = d.path;
     const el = document.getElementById(pathId);
     el.textContent = d.path; el.classList.add('set');
-    document.getElementById(statsId).textContent = `${d.count} fichier(s) trouvé(s)`;
+    const modeNote = d.native_dialog ? 'Dialogue natif utilisé' : 'Dossier par défaut utilisé';
+    const extraNote = d.message ? ` · ${d.message}` : '';
+    document.getElementById(statsId).innerHTML = `${modeNote}${extraNote}<br>${d.count} fichier(s) trouvé(s)`;
   } catch(e) {
     document.getElementById(statsId).textContent = '❌ ' + e.message;
   } finally {
@@ -4806,37 +4812,87 @@ def _svg_to_png(svg_bytes, out_path, size=400):
             return True
     return False
 
+
+def _count_supported_files(folder: Path, suffixes: set[str]) -> int:
+    try:
+        return sum(
+            1 for f in folder.iterdir()
+            if f.is_file() and f.suffix.lower() in suffixes
+        )
+    except Exception:
+        return 0
+
+
+def _browse_folder_or_default(prompt: str, default_folder: Path, suffixes: set[str]):
+    """
+    Ouvre un dialogue natif uniquement quand l'environnement le permet.
+    Sinon, retourne le dossier par défaut du projet.
+
+    Important: en mode web distant, un sélecteur natif côté serveur ne peut pas
+    viser le disque local du navigateur. Le fallback par défaut évite de bloquer
+    le dashboard sur Linux/VPS.
+    """
+    default_folder = Path(default_folder)
+    default_folder.mkdir(parents=True, exist_ok=True)
+
+    native_available = sys.platform == "darwin"
+    if native_available:
+        try:
+            import shutil
+            import subprocess
+
+            if shutil.which("osascript"):
+                script = (
+                    f'set defaultFolder to POSIX file "{default_folder}" as alias\n'
+                    f'POSIX path of (choose folder with prompt "{prompt}" '
+                    f'default location defaultFolder)'
+                )
+                result = subprocess.run(
+                    ["osascript", "-e", script],
+                    capture_output=True, text=True, timeout=60
+                )
+                if result.returncode == 0:
+                    folder = (result.stdout or "").strip()
+                    if folder:
+                        chosen = Path(folder)
+                        return {
+                            "ok": True,
+                            "path": folder,
+                            "count": _count_supported_files(chosen, suffixes),
+                            "source": "native",
+                            "native_dialog": True,
+                        }
+
+                err = (result.stderr or "").strip()
+                if "User canceled" in err or "cancelled" in err.lower():
+                    return {"ok": False, "error": "Annulé"}
+        except Exception as e:
+            # Si le dialogue natif échoue, on retombe sur le dossier du projet.
+            fallback_note = str(e)
+        else:
+            fallback_note = ""
+    else:
+        fallback_note = ""
+
+    return {
+        "ok": True,
+        "path": str(default_folder),
+        "count": _count_supported_files(default_folder, suffixes),
+        "source": "default",
+        "native_dialog": False,
+        "message": "Dialogue natif indisponible, dossier par défaut utilisé",
+        **({"note": fallback_note} if fallback_note else {}),
+    }
+
 @app.route("/api/logos/browse-folder")
 def api_logos_browse_folder():
-    """Ouvre un dialogue natif macOS via osascript (thread-safe)."""
+    """Sélectionne un dossier logos, avec fallback vers le dossier du projet."""
     try:
-        default = str(BASE_DIR / "logos")
-        script = (
-            f'set defaultFolder to POSIX file "{default}" as alias\n'
-            f'POSIX path of (choose folder with prompt "Choisir le dossier logos" '
-            f'default location defaultFolder)'
-        )
-        result = subprocess.run(
-            ["osascript", "-e", script],
-            capture_output=True, text=True, timeout=60
-        )
-        if result.returncode != 0:
-            # Annulé par l'utilisateur ou erreur
-            err = result.stderr.strip()
-            if "User canceled" in err or "cancelled" in err.lower():
-                return jsonify({"ok": False, "error": "Annulé"})
-            return jsonify({"ok": False, "error": err or "Erreur osascript"})
-
-        folder = result.stdout.strip()
-        if not folder:
-            return jsonify({"ok": False, "error": "Aucun dossier sélectionné"})
-
-        logos_dir = Path(folder)
-        existing = [f.name for f in logos_dir.iterdir()
-                    if f.suffix.lower() in ('.png', '.svg', '.jpg', '.webp')]
-        return jsonify({"ok": True, "path": folder, "count": len(existing)})
-    except subprocess.TimeoutExpired:
-        return jsonify({"ok": False, "error": "Timeout — dialogue fermé ?"})
+        return jsonify(_browse_folder_or_default(
+            "Choisir le dossier logos",
+            BASE_DIR / "logos",
+            {".png", ".svg", ".jpg", ".jpeg", ".webp"},
+        ))
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 
@@ -4993,32 +5049,14 @@ def _riders_load_csv():
 @app.route("/api/riders/browse-folder")
 def api_riders_browse_folder():
     rtype = request.args.get("type", "pp")  # 'pp' ou 'pic'
-    label = "portraits (PPRiders)" if rtype == "pp" else "photos action (PictureRiders)"
     default_sub = "PPRiders" if rtype == "pp" else "PictureRiders"
-    default = str(BASE_DIR / default_sub)
+    label = "portraits (PPRiders)" if rtype == "pp" else "photos action (PictureRiders)"
     try:
-        script = (
-            f'set defaultFolder to POSIX file "{default}" as alias\n'
-            f'POSIX path of (choose folder with prompt "Choisir le dossier {label}" '
-            f'default location defaultFolder)'
-        )
-        result = subprocess.run(
-            ["osascript", "-e", script],
-            capture_output=True, text=True, timeout=60
-        )
-        if result.returncode != 0:
-            err = result.stderr.strip()
-            if "User canceled" in err or "cancelled" in err.lower():
-                return jsonify({"ok": False, "error": "Annulé"})
-            return jsonify({"ok": False, "error": err or "Erreur osascript"})
-        folder = result.stdout.strip()
-        if not folder:
-            return jsonify({"ok": False, "error": "Aucun dossier"})
-        d = Path(folder)
-        count = sum(1 for f in d.iterdir() if f.suffix.lower() in {".jpg", ".jpeg", ".png"})
-        return jsonify({"ok": True, "path": folder, "count": count})
-    except subprocess.TimeoutExpired:
-        return jsonify({"ok": False, "error": "Timeout"})
+        return jsonify(_browse_folder_or_default(
+            f"Choisir le dossier {label}",
+            BASE_DIR / default_sub,
+            {".jpg", ".jpeg", ".png", ".webp"},
+        ))
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 

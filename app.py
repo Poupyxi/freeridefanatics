@@ -150,6 +150,79 @@ def get_results_2026():
     _cache["results_2026"] = {"events": [e["name"] for e in events], "riders": parsed}
     return _cache["results_2026"]
 
+def _sheet_rows_as_dicts(rows):
+    if not rows:
+        return []
+    header_idx = 0
+    for i, row in enumerate(rows[:6]):
+        lowered = [str(c or "").strip().lower() for c in row]
+        if any(c in lowered for c in ("brand", "name", "tag_type", "instagram_handle")):
+            header_idx = i
+            break
+    headers = [str(c or "").strip() for c in rows[header_idx]]
+    out = []
+    for row in rows[header_idx + 1:]:
+        row = list(row) + [""] * max(0, len(headers) - len(row))
+        item = {headers[i]: str(row[i] or "").strip() for i in range(len(headers)) if headers[i]}
+        if any(item.values()):
+            out.append(item)
+    return out
+
+def _clean_social_handle(value):
+    value = str(value or "").strip()
+    if not value:
+        return ""
+    value = value.replace("https://www.instagram.com/", "").replace("https://instagram.com/", "")
+    value = value.replace("http://www.instagram.com/", "").replace("http://instagram.com/", "")
+    value = value.lstrip("@").split("?")[0].split("#")[0].strip("/")
+    return f"@{value}" if value else ""
+
+def get_brand_tags():
+    if "brand_tags" in _cache:
+        return _cache["brand_tags"]
+
+    rows = gc._fetch_gsheet_csv_by_gid(1345104699) or gc._fetch_gsheet_csv("Brand") or []
+    brands = []
+    for row in _sheet_rows_as_dicts(rows):
+        name = row.get("brand") or row.get("Brand") or row.get("name") or row.get("Name") or ""
+        handle = row.get("instagram_handle") or row.get("Instagram") or row.get("handle") or ""
+        status = row.get("status") or row.get("Status") or ""
+        if not name:
+            continue
+        brands.append({
+            "brand": name.strip(),
+            "instagram_handle": _clean_social_handle(handle),
+            "website": row.get("website") or row.get("Website") or "",
+            "status": status,
+            "notes": row.get("notes") or row.get("Notes") or "",
+        })
+    _cache["brand_tags"] = brands
+    return brands
+
+def get_context_tags():
+    if "context_tags" in _cache:
+        return _cache["context_tags"]
+
+    rows = gc._fetch_gsheet_csv_by_gid(755371970) or gc._fetch_gsheet_csv("Tags") or []
+    tags = []
+    for row in _sheet_rows_as_dicts(rows):
+        name = row.get("name") or row.get("Name") or ""
+        handle = row.get("instagram_handle") or row.get("Instagram") or ""
+        hashtag = row.get("default_hashtag") or row.get("hashtag") or ""
+        if not name and not handle and not hashtag:
+            continue
+        tags.append({
+            "tag_type": row.get("tag_type") or row.get("type") or "",
+            "name": name,
+            "instagram_handle": _clean_social_handle(handle),
+            "default_hashtag": hashtag.strip(),
+            "context": row.get("context") or "",
+            "status": row.get("status") or "",
+            "notes": row.get("notes") or "",
+        })
+    _cache["context_tags"] = tags
+    return tags
+
 # ── HTML ──────────────────────────────────────────────────────────────────────
 
 HTML = r"""<!DOCTYPE html>
@@ -623,6 +696,98 @@ HTML = r"""<!DOCTYPE html>
     min-height:38px;
     padding:8px 6px;
     font-size:.78rem;
+  }
+  .publish-helper-row {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .publish-mini-btn {
+    background:#181818;
+    color:#aaa;
+    border:1px solid #333;
+    border-radius:6px;
+    padding:7px 10px;
+    font-size:.74rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .publish-mini-btn:hover { color:#eee; border-color:#555; }
+  .publish-checklist {
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+  .publish-check-row {
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    color:#888;
+    font-size:.78rem;
+    line-height:1.35;
+  }
+  .publish-check-dot {
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    background:#181818;
+    border:1px solid #333;
+    color:#555;
+    font-size:.68rem;
+    font-weight:900;
+  }
+  .publish-check-row.ok .publish-check-dot {
+    background:#252800;
+    border-color:#C8D400;
+    color:#C8D400;
+  }
+  .publish-check-row.warn .publish-check-dot {
+    background:#241600;
+    border-color:#8a5a00;
+    color:#f0a000;
+  }
+  .publish-history-list {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .publish-history-item {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:7px;
+    padding:9px;
+    cursor:pointer;
+  }
+  .publish-history-item:hover { border-color:#555; }
+  .publish-history-title {
+    color:#eee;
+    font-weight:800;
+    font-size:.8rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .publish-history-meta {
+    color:#666;
+    font-size:.7rem;
+    margin-top:4px;
+  }
+  .publish-history-actions {
+    display:flex;
+    gap:6px;
+    margin-top:8px;
+  }
+  .publish-history-actions button {
+    flex:1;
+    min-height:28px;
+    margin-top:0;
+    padding:5px 8px;
+    font-size:.7rem;
   }
   .publish-preview-box {
     width:100%;
@@ -1401,6 +1566,43 @@ HTML = r"""<!DOCTYPE html>
   .eq-photo-thumb:hover { border-color: #555; transform: scale(1.04); }
   .eq-photo-thumb.selected { border-color: #C8D400; box-shadow: 0 0 0 1px #C8D400; }
   .eq-photo-name { font-size: 0.58rem; color: #555; text-align: center; margin-top: 2px; max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .asset-tags-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .asset-tags-card {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:16px;
+    min-width:0;
+  }
+  .asset-tags-card h3 {
+    color:#C8D400;
+    font-size:.9rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .asset-tags-stats { color:#777; font-size:12px; margin-bottom:12px; }
+  .asset-tags-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .asset-tags-table th {
+    color:#777;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    text-align:left;
+    border-bottom:1px solid #2a2a2a;
+    padding:7px 6px;
+  }
+  .asset-tags-table td {
+    border-bottom:1px solid #202020;
+    padding:7px 6px;
+    vertical-align:top;
+  }
+  .asset-tag-ok { color:#C8D400; font-weight:700; }
+  .asset-tag-missing { color:#666; }
 
   /* ── Champs éditables équipement ── */
   .field-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; }
@@ -1606,7 +1808,8 @@ HTML = r"""<!DOCTYPE html>
     .perf-kpis,
     .perf-grid,
     .perf-podium,
-    .perf-advanced { grid-template-columns: 1fr; }
+    .perf-advanced,
+    .asset-tags-grid { grid-template-columns: 1fr; }
     .perf-table { min-width: 760px; }
     #perf-table-wrap { overflow-x: auto; }
     .action-grid,
@@ -1688,6 +1891,9 @@ HTML = r"""<!DOCTYPE html>
         <button class="dashboard-menu-btn" id="tab-audit" onclick="switchTab('audit'); closeDashboard()">
           📋 Audit Équipements
         </button>
+        <button class="dashboard-menu-btn" id="tab-brandtags" onclick="switchTab('brandtags'); closeDashboard()">
+          🏷 Brand & Tags
+        </button>
         <div class="dashboard-section-label" style="margin-top:6px">Settings</div>
         <button class="dashboard-menu-btn" id="tab-connections" onclick="switchTab('connections'); closeDashboard()">
           🔗 Connexions
@@ -1716,6 +1922,7 @@ HTML = r"""<!DOCTYPE html>
     <button class="burger-item" id="burger-riders" onclick="switchTab('riders'); closeBurger()">👤 Riders</button>
     <button class="burger-item" id="burger-logos" onclick="switchTab('logos'); closeBurger()">🖼 Logos</button>
     <button class="burger-item" id="burger-audit" onclick="switchTab('audit'); closeBurger()">📋 Audit Équipements</button>
+    <button class="burger-item" id="burger-brandtags" onclick="switchTab('brandtags'); closeBurger()">🏷 Brand & Tags</button>
     <div class="burger-divider">Settings</div>
     <button class="burger-item" id="burger-connections" onclick="switchTab('connections'); closeBurger()">🔗 Connexions</button>
   </div>
@@ -2408,6 +2615,19 @@ HTML = r"""<!DOCTYPE html>
         </div>
         <div class="collapsible-body">
           <div class="publish-field">
+            <label for="publish-template">Template</label>
+            <div class="publish-helper-row">
+              <select id="publish-template" class="publish-input" onchange="publishApplyTemplate(this.value, true)" style="flex:1;min-width:180px">
+                <option value="auto">Auto selon la source</option>
+                <option value="rider_card">Rider card</option>
+                <option value="equipment_highlight">Equipment highlight</option>
+                <option value="reel">Reel</option>
+                <option value="race_result">Race result</option>
+              </select>
+              <button class="publish-mini-btn" onclick="publishApplyTemplate(document.getElementById('publish-template')?.value || 'auto', true)">Appliquer</button>
+            </div>
+          </div>
+          <div class="publish-field">
             <label for="publish-title">Titre interne</label>
             <input id="publish-title" class="publish-input" type="text" placeholder="Nom du post" list="publish-title-suggestions">
             <datalist id="publish-title-suggestions"></datalist>
@@ -2435,6 +2655,21 @@ HTML = r"""<!DOCTYPE html>
           <div class="publish-field" style="margin-top:10px">
             <label for="publish-alt">Alt text</label>
             <textarea id="publish-alt" class="publish-textarea" placeholder="Texte d'accessibilité / descriptif image..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="collapsible" id="pubcol-history">
+        <div class="collapsible-header" onclick="toggleCol('pubcol-history')">
+          <span class="section-title">Historique publish</span><span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-body">
+          <div class="publish-helper-row" style="margin-bottom:10px">
+            <button class="publish-mini-btn" onclick="publishSaveHistory(true)">＋ Sauver la préparation</button>
+            <button class="publish-mini-btn" onclick="publishClearHistory()">Vider</button>
+          </div>
+          <div class="publish-history-list" id="publish-history-list">
+            <div class="publish-meta">Aucune publication préparée.</div>
           </div>
         </div>
       </div>
@@ -2470,7 +2705,7 @@ HTML = r"""<!DOCTYPE html>
         <div class="publish-action-row compact">
           <button class="btn btn-secondary" onclick="publishAutoFill(true)">↺ Auto</button>
           <button class="btn btn-secondary" id="publish-open-btn" onclick="publishOpenInstagram()">📱 Instagram</button>
-          <button class="btn btn-secondary" onclick="publishCopyCaption()">📋 Caption</button>
+          <button class="btn btn-secondary" onclick="publishCopyCaption()">📋 Copier tout</button>
         </div>
       </div>
       <div class="publish-status" id="publish-status"></div>
@@ -2490,8 +2725,9 @@ HTML = r"""<!DOCTYPE html>
       <div class="publish-preview-side">
         <div class="publish-preview-head">
           <span class="publish-preview-title">Preview copy</span>
-          <button class="btn btn-secondary publish-copy-mini" id="publish-preview-copy-btn" onclick="publishCopyCaption()" disabled>📋 Copier</button>
+          <button class="btn btn-secondary publish-copy-mini" id="publish-preview-copy-btn" onclick="publishCopyCaption()" disabled>📋 Copier tout</button>
         </div>
+        <div class="publish-checklist" id="publish-checklist"></div>
         <div class="publish-preview-caption" id="publish-preview-caption" style="display:none;max-height:58vh;overflow:auto"></div>
       </div>
     </div>
@@ -2699,6 +2935,40 @@ HTML = r"""<!DOCTYPE html>
     <tbody id="riders-tbody"></tbody>
   </table>
 </div><!-- fin #page-riders -->
+
+<!-- ══════════════════ PAGE BRAND & TAGS ══════════════════ -->
+<div id="page-brandtags" style="display:none;padding:28px 24px 48px;max-width:1300px;margin:0 auto">
+  <h2 style="color:#C8D400;margin-bottom:6px;font-size:1.1rem;letter-spacing:1px">🏷 BRAND & TAGS</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:20px">
+    Données lues depuis les onglets Google Sheet Brand et Tags. Elles alimentent automatiquement les captions Publish.
+  </p>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn" onclick="refreshBrandTags()">↺ Resync Brand & Tags</button>
+    <span id="brandtags-status" style="font-size:12px;color:#666"></span>
+  </div>
+  <div class="asset-tags-grid">
+    <div class="asset-tags-card">
+      <h3>Brand handles</h3>
+      <div class="asset-tags-stats" id="brandtags-brand-stats">Chargement…</div>
+      <div style="overflow:auto;max-height:520px">
+        <table class="asset-tags-table">
+          <thead><tr><th>Brand</th><th>Instagram</th><th>Status</th></tr></thead>
+          <tbody id="brandtags-brand-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="asset-tags-card">
+      <h3>Context tags</h3>
+      <div class="asset-tags-stats" id="brandtags-context-stats">Chargement…</div>
+      <div style="overflow:auto;max-height:520px">
+        <table class="asset-tags-table">
+          <thead><tr><th>Type</th><th>Name</th><th>Tag</th></tr></thead>
+          <tbody id="brandtags-context-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div><!-- fin #page-brandtags -->
 
 <!-- ══════════════════ PAGE CONNECTIONS ══════════════════ -->
 <div id="page-connections">
@@ -2966,6 +3236,8 @@ const _app = {
   equipment:       {},   // { handle: [items] }
   results:         [],   // classement Résultats 2026
   resultEvents:    [],   // manches/colonnes de points
+  brandTags:       [],   // onglet Brand
+  contextTags:     [],   // onglet Tags
   sponsors:        [],   // liste sponsors
   eqVariants:      [],   // liste plate [{name,url,path,folder,stem_slug}]
   categoryFolders: {},   // { "Brake Caliper": ["Brake Caliper","Brakes"], ... }
@@ -3051,6 +3323,8 @@ async function init() {
     _app.equipment       = data.equipment        || {};
     _app.results         = data.results?.riders  || [];
     _app.resultEvents    = data.results?.events  || [];
+    _app.brandTags       = data.brand_tags       || [];
+    _app.contextTags     = data.context_tags     || [];
     _app.sponsors        = data.sponsors         || [];
     _app.eqVariants      = data.eq_variants      || [];
     _app.categoryFolders = data.category_folders || {};
@@ -3661,7 +3935,7 @@ function renderPerformance() {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────
-const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'audit'];
+const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'audit', 'brandtags'];
 
 function switchTab(tab) {
   _activeTab = tab;
@@ -3690,6 +3964,7 @@ function switchTab(tab) {
   document.getElementById('page-publish').style.display     = tab === 'publish'     ? 'block' : 'none';
   document.getElementById('page-connections').style.display = tab === 'connections' ? 'block' : 'none';
   document.getElementById('page-audit').style.display       = tab === 'audit'       ? 'block' : 'none';
+  document.getElementById('page-brandtags').style.display   = tab === 'brandtags'   ? 'block' : 'none';
 
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
   if (tab === 'performance') initPerformancePage();
@@ -3697,11 +3972,66 @@ function switchTab(tab) {
   if (tab === 'publish') publishInit();
   if (tab === 'connections') connRefreshGoogle();
   if (tab === 'audit') loadEqAudit();
+  if (tab === 'brandtags') renderBrandTagsPage();
 }
 
 setInterval(() => {
   if (_activeTab === 'performance') refreshPerformanceData(true);
 }, 60000);
+
+// ── Brand & Tags assets ─────────────────────────────────────────────────────
+function _tagStatusClass(value) {
+  return String(value || '').trim() ? 'asset-tag-ok' : 'asset-tag-missing';
+}
+
+function renderBrandTagsPage() {
+  const brandBody = document.getElementById('brandtags-brand-tbody');
+  const contextBody = document.getElementById('brandtags-context-tbody');
+  if (!brandBody || !contextBody) return;
+
+  const brands = (_app.brandTags || []).slice().sort((a, b) => String(a.brand || '').localeCompare(String(b.brand || '')));
+  const contexts = (_app.contextTags || []).slice().sort((a, b) => String(a.tag_type || '').localeCompare(String(b.tag_type || '')) || String(a.name || '').localeCompare(String(b.name || '')));
+  const brandsWithHandle = brands.filter(b => b.instagram_handle).length;
+  const contextWithTag = contexts.filter(t => t.instagram_handle || t.default_hashtag).length;
+
+  document.getElementById('brandtags-brand-stats').textContent =
+    `${brands.length} marques · ${brandsWithHandle} handles renseignés`;
+  document.getElementById('brandtags-context-stats').textContent =
+    `${contexts.length} tags contextuels · ${contextWithTag} actifs`;
+
+  brandBody.innerHTML = brands.map(b => `
+    <tr>
+      <td>${_esc(b.brand || '')}</td>
+      <td class="${_tagStatusClass(b.instagram_handle)}">${_esc(b.instagram_handle || 'à compléter')}</td>
+      <td>${_esc(b.status || '')}</td>
+    </tr>
+  `).join('');
+
+  contextBody.innerHTML = contexts.map(t => {
+    const tag = [t.instagram_handle, t.default_hashtag].filter(Boolean).join(' · ');
+    return `<tr>
+      <td>${_esc(t.tag_type || '')}</td>
+      <td>${_esc(t.name || '')}</td>
+      <td class="${_tagStatusClass(tag)}">${_esc(tag || 'à compléter')}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function refreshBrandTags() {
+  const status = document.getElementById('brandtags-status');
+  if (status) status.textContent = 'Synchronisation depuis Google Sheet...';
+  try {
+    const res = await fetch('/api/brand-tags?refresh=1');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    _app.brandTags = data.brand_tags || [];
+    _app.contextTags = data.context_tags || [];
+    renderBrandTagsPage();
+    if (status) status.textContent = 'Brand & Tags synchronisés.';
+  } catch(e) {
+    if (status) status.textContent = 'Synchronisation impossible pour le moment.';
+  }
+}
 
 // ── Connexions ────────────────────────────────────────────────────────────────
 function connClick(platform) {
@@ -5378,6 +5708,7 @@ function _publishDefaultCaption(kind) {
   const ig = rider?.instagram ? '@' + rider.instagram.replace(/^@/, '') : '';
   const it = _eqSelectedItem;
   const brandHandle = _publishBrandHandle(it);
+  const contextHandles = _publishContextHandles().slice(0, 3);
   const parts = [];
   if (riderName) parts.push(riderName);
   if (ig) parts.push(ig);
@@ -5392,12 +5723,18 @@ function _publishDefaultCaption(kind) {
   } else {
     parts.push('Freeride Fanatics');
   }
+  contextHandles.forEach(h => parts.push(h));
   const lead = parts.filter(Boolean).join(' · ');
-  const tags = '#freeridefanatics #mtb #downhill';
+  const tags = _publishDefaultHashtags(kind);
   return lead ? `${lead}\n\n${tags}` : tags;
 }
 
 function _publishBrandHandle(item) {
+  const brand = String(item?.brand || '').trim();
+  if (brand) {
+    const found = (_app.brandTags || []).find(b => _publishSlug(b.brand) === _publishSlug(brand));
+    if (found?.instagram_handle) return found.instagram_handle;
+  }
   const raw = [
     item?.brand_instagram,
     item?.brandInstagram,
@@ -5410,6 +5747,23 @@ function _publishBrandHandle(item) {
   if (!raw) return '';
   const clean = String(raw).trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '');
   return clean ? '@' + clean : '';
+}
+
+function _publishSlug(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function _publishContextHandles() {
+  return Array.from(new Set((_app.contextTags || [])
+    .map(t => t.instagram_handle)
+    .filter(Boolean)));
+}
+
+function _publishContextHashtags() {
+  return Array.from(new Set((_app.contextTags || [])
+    .map(t => t.default_hashtag)
+    .filter(Boolean)));
 }
 
 function _publishContext(kind) {
@@ -5445,6 +5799,7 @@ function _publishDefaultHashtags(kind) {
   if (kind === 'rider') tags.push('#ridercard', '#mtb', '#downhill');
   if (kind === 'equipment') tags.push('#equipmentcheck', '#mtb', '#bikecheck');
   if (kind === 'reel') tags.push('#reels', '#mtb', '#downhill');
+  _publishContextHashtags().slice(0, 4).forEach(tag => tags.push(tag));
   if (ctx.category) tags.push('#' + ctx.category.toLowerCase().replace(/[^a-z0-9]+/g, ''));
   if (ctx.equipmentName) {
     const brand = (ctx.item?.brand || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
@@ -5458,9 +5813,11 @@ function _publishDefaultFirstComment(kind) {
   const bits = [];
   if (ctx.instagram) bits.push(ctx.instagram);
   if (ctx.brandHandle) bits.push(ctx.brandHandle);
+  _publishContextHandles().slice(0, 3).forEach(h => bits.push(h));
   if (ctx.equipmentName) bits.push(ctx.equipmentName);
   if (ctx.category && !ctx.equipmentName) bits.push(ctx.category);
-  return bits.length ? bits.join(' · ') : 'Full setup on Freeride Fanatics.';
+  const unique = Array.from(new Set(bits.filter(Boolean)));
+  return unique.length ? unique.join(' · ') : 'Full setup on Freeride Fanatics.';
 }
 
 function _publishDefaultAlt(kind) {
@@ -5479,6 +5836,96 @@ function _publishDefaultMusic(kind) {
   if (kind === 'reel') return { value: 'high_energy', note: 'High energy / quick cuts' };
   if (kind === 'equipment') return { value: 'clean_electro', note: 'Clean electro / product reveal' };
   return { value: 'cinematic', note: 'Cinematic build / athlete intro' };
+}
+
+function _publishTemplateKind(kind, template) {
+  if (template && template !== 'auto') return template;
+  if (kind === 'equipment') return 'equipment_highlight';
+  if (kind === 'reel') return 'reel';
+  return 'rider_card';
+}
+
+function _publishRiderResult(ctx) {
+  const handle = String(ctx.rider?.instagram || '').replace(/^@/, '').toLowerCase();
+  if (!handle) return null;
+  return (_app.results || []).find(r => String(r.instagram || '').replace(/^@/, '').toLowerCase() === handle) || null;
+}
+
+function _publishTemplateDefaults(kind, template = 'auto') {
+  const ctx = _publishContext(kind);
+  const mode = _publishTemplateKind(kind, template);
+  const result = _publishRiderResult(ctx);
+  const riderLine = [ctx.riderName, ctx.instagram].filter(Boolean).join(' · ');
+  const itemLine = [ctx.category, ctx.equipmentName, ctx.brandHandle, ctx.details].filter(Boolean).join(' · ');
+  const contextHandles = _publishContextHandles().slice(0, 3).join(' · ');
+  const contextLine = contextHandles ? `\n\n${contextHandles}` : '';
+  const resultLine = result
+    ? `Current 2026 ranking: #${result.rank} ${result.genre === 'F' ? 'Women Elite' : 'Men Elite'} · ${Math.round(result.total_points)} pts`
+    : 'Current 2026 ranking update';
+
+  if (mode === 'race_result') {
+    return {
+      title: result && ctx.riderName ? `Race result · ${ctx.riderName}` : 'Race result update',
+      caption: [riderLine, resultLine, itemLine].filter(Boolean).join('\n') + contextLine,
+      hashtags: ['#freeridefanatics', '#ucimtbworldseries', '#downhill', '#mtb', ..._publishContextHashtags()].join(' '),
+      firstComment: [ctx.instagram, ctx.brandHandle, ..._publishContextHandles().slice(0, 3)].filter(Boolean).join(' · '),
+      alt: `Freeride Fanatics race result post${ctx.riderName ? ` featuring ${ctx.riderName}` : ''}.`,
+      music: { value: 'high_energy', note: 'High energy / race recap' },
+    };
+  }
+
+  if (mode === 'equipment_highlight') {
+    return {
+      title: ctx.equipmentName ? `Equipment highlight · ${ctx.equipmentName}` : _publishDefaultTitle(kind),
+      caption: [riderLine, itemLine || 'Equipment highlight'].filter(Boolean).join('\n') + contextLine,
+      hashtags: _publishDefaultHashtags('equipment'),
+      firstComment: _publishDefaultFirstComment('equipment'),
+      alt: _publishDefaultAlt('equipment'),
+      music: _publishDefaultMusic('equipment'),
+    };
+  }
+
+  if (mode === 'reel') {
+    return {
+      title: ctx.riderName ? `Reel · ${ctx.riderName}` : 'Freeride Fanatics reel',
+      caption: [riderLine || 'Freeride Fanatics reel', 'Equipment selection ready for Instagram Reel.'].filter(Boolean).join('\n') + contextLine,
+      hashtags: _publishDefaultHashtags('reel'),
+      firstComment: [ctx.instagram, ..._publishContextHandles().slice(0, 3)].filter(Boolean).join(' · '),
+      alt: _publishDefaultAlt('reel'),
+      music: _publishDefaultMusic('reel'),
+    };
+  }
+
+  return {
+    title: _publishDefaultTitle('rider'),
+    caption: [riderLine || 'Freeride Fanatics rider card', result ? resultLine : '', contextHandles].filter(Boolean).join('\n'),
+    hashtags: _publishDefaultHashtags('rider'),
+    firstComment: [ctx.instagram, ..._publishContextHandles().slice(0, 3)].filter(Boolean).join(' · '),
+    alt: _publishDefaultAlt('rider'),
+    music: _publishDefaultMusic('rider'),
+  };
+}
+
+function publishApplyTemplate(template = 'auto', force = true) {
+  const kind = _publishState.kind || _publishDraftKind || 'rider';
+  const defaults = _publishTemplateDefaults(kind, template);
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (force || !String(el.value || '').trim()) el.value = value || '';
+  };
+  set('publish-title', defaults.title);
+  set('publish-caption', defaults.caption);
+  set('publish-location', _publishDefaultLocation(kind));
+  set('publish-hashtags', defaults.hashtags);
+  set('publish-first-comment', defaults.firstComment);
+  set('publish-alt', defaults.alt);
+  const musicSel = document.getElementById('publish-music-select');
+  const musicNote = document.getElementById('publish-music-note');
+  if (musicSel && (force || !musicSel.value)) musicSel.value = defaults.music?.value || '';
+  if (musicNote && (force || !musicNote.value.trim())) musicNote.value = defaults.music?.note || '';
+  publishPersist();
+  publishRender();
 }
 
 function _publishFillDatalists(kind) {
@@ -5548,6 +5995,133 @@ function _publishCombinedText() {
   return blocks.join('\n\n');
 }
 
+function _publishChecklistItems() {
+  const text = _publishCombinedText();
+  const caption = (document.getElementById('publish-caption')?.value || '').trim();
+  const hashtags = (document.getElementById('publish-hashtags')?.value || '').trim();
+  const kind = _publishState.kind || _publishDraftKind || 'rider';
+  const ctx = _publishContext(kind);
+  const needsBrand = kind === 'equipment' && !!ctx.item?.brand;
+  const hasBrand = !needsBrand || !!ctx.brandHandle;
+  const hasContext = _publishContextHandles().length > 0 || _publishContextHashtags().length > 0;
+  return [
+    { ok: !!_publishState.url, label: 'Média généré et sélectionné' },
+    { ok: caption.length >= 10, label: 'Caption prête' },
+    { ok: hashtags.includes('#'), label: 'Hashtags présents' },
+    { ok: hasBrand, warn: needsBrand && !hasBrand, label: needsBrand ? 'Handle marque trouvé via Brand' : 'Aucun tag marque requis' },
+    { ok: hasContext, warn: !hasContext, label: 'Tags contexte disponibles via Tags' },
+    { ok: text.length >= 20, label: 'Texte Instagram complet copiable' },
+  ];
+}
+
+function renderPublishChecklist() {
+  const el = document.getElementById('publish-checklist');
+  if (!el) return;
+  el.innerHTML = _publishChecklistItems().map(item => {
+    const cls = item.ok ? 'ok' : item.warn ? 'warn' : '';
+    const icon = item.ok ? '✓' : item.warn ? '!' : '·';
+    return `<div class="publish-check-row ${cls}">
+      <span class="publish-check-dot">${icon}</span>
+      <span>${_esc(item.label)}</span>
+    </div>`;
+  }).join('');
+}
+
+function _publishHistoryLoad() {
+  try {
+    const data = JSON.parse(localStorage.getItem('freeride_publish_history') || '[]');
+    return Array.isArray(data) ? data : [];
+  } catch(_) {
+    return [];
+  }
+}
+
+function _publishHistorySave(items) {
+  localStorage.setItem('freeride_publish_history', JSON.stringify(items.slice(0, 30)));
+}
+
+function publishSaveHistory(manual = false) {
+  const text = _publishCombinedText();
+  if (!text.trim()) {
+    if (manual) document.getElementById('publish-status').textContent = '⚠️ Rien à sauvegarder';
+    return;
+  }
+  const item = {
+    id: Date.now(),
+    created_at: new Date().toISOString(),
+    kind: _publishState.kind || _publishDraftKind || '',
+    template: document.getElementById('publish-template')?.value || 'auto',
+    source_name: _publishState.name || '',
+    title: document.getElementById('publish-title')?.value || '',
+    caption: document.getElementById('publish-caption')?.value || '',
+    location: document.getElementById('publish-location')?.value || '',
+    hashtags: document.getElementById('publish-hashtags')?.value || '',
+    first_comment: document.getElementById('publish-first-comment')?.value || '',
+    alt: document.getElementById('publish-alt')?.value || '',
+    music_select: document.getElementById('publish-music-select')?.value || '',
+    music_note: document.getElementById('publish-music-note')?.value || '',
+    text,
+  };
+  const prev = _publishHistoryLoad().filter(x => x.text !== item.text);
+  _publishHistorySave([item, ...prev]);
+  renderPublishHistory();
+  if (manual) document.getElementById('publish-status').textContent = '💾 Préparation sauvegardée';
+}
+
+function renderPublishHistory() {
+  const el = document.getElementById('publish-history-list');
+  if (!el) return;
+  const items = _publishHistoryLoad();
+  if (!items.length) {
+    el.innerHTML = '<div class="publish-meta">Aucune publication préparée.</div>';
+    return;
+  }
+  el.innerHTML = items.slice(0, 12).map(item => {
+    const date = new Date(item.created_at);
+    const label = item.title || item.source_name || 'Publication préparée';
+    return `<div class="publish-history-item">
+      <div class="publish-history-title">${_esc(label)}</div>
+      <div class="publish-history-meta">${_esc(item.kind || 'publish')} · ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+      <div class="publish-history-actions">
+        <button class="btn btn-secondary" onclick="publishRestoreHistory(${item.id})">Restaurer</button>
+        <button class="btn btn-secondary" onclick="publishDeleteHistory(${item.id})">Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function publishRestoreHistory(id) {
+  const item = _publishHistoryLoad().find(x => Number(x.id) === Number(id));
+  if (!item) return;
+  const set = (field, value) => {
+    const el = document.getElementById(field);
+    if (el) el.value = value || '';
+  };
+  set('publish-template', item.template || 'auto');
+  set('publish-title', item.title);
+  set('publish-caption', item.caption);
+  set('publish-location', item.location);
+  set('publish-hashtags', item.hashtags);
+  set('publish-first-comment', item.first_comment);
+  set('publish-alt', item.alt);
+  set('publish-music-select', item.music_select);
+  set('publish-music-note', item.music_note);
+  publishPersist();
+  publishRender();
+  document.getElementById('publish-status').textContent = '↺ Préparation restaurée';
+}
+
+function publishDeleteHistory(id) {
+  _publishHistorySave(_publishHistoryLoad().filter(x => Number(x.id) !== Number(id)));
+  renderPublishHistory();
+}
+
+function publishClearHistory() {
+  if (!confirm('Vider l’historique Publish ?')) return;
+  _publishHistorySave([]);
+  renderPublishHistory();
+}
+
 function publishPersist() {
   try {
     localStorage.setItem('freeride_publish_settings', JSON.stringify({
@@ -5558,6 +6132,7 @@ function publishPersist() {
       selection_equipment: _publishSelection.equipment || [],
       selection_reel: _publishSelection.reel || [],
       title: document.getElementById('publish-title')?.value || '',
+      template: document.getElementById('publish-template')?.value || 'auto',
       caption: document.getElementById('publish-caption')?.value || '',
       location: document.getElementById('publish-location')?.value || '',
       hashtags: document.getElementById('publish-hashtags')?.value || '',
@@ -5579,6 +6154,7 @@ function publishLoadSettings() {
       if (el && value != null) el.value = value;
     };
     set('publish-title', saved.title);
+    set('publish-template', saved.template || 'auto');
     set('publish-caption', saved.caption);
     set('publish-location', saved.location);
     set('publish-hashtags', saved.hashtags);
@@ -5771,6 +6347,7 @@ function publishRender() {
     meta.textContent = '';
     if (count) count.textContent = '0 élément';
     if (status) status.textContent = 'Génère d’abord une carte ou un reel.';
+    renderPublishChecklist();
     return;
   }
 
@@ -5806,6 +6383,7 @@ function publishRender() {
   captionBox.style.display = 'block';
   captionBox.textContent = combined || 'Aucun texte saisi.';
   if (copyBtn) copyBtn.disabled = !combined;
+  renderPublishChecklist();
   if (status) status.textContent = '';
 }
 
@@ -5816,24 +6394,22 @@ function publishAutoFill(force = false) {
     return;
   }
 
-  const title = document.getElementById('publish-title');
-  const caption = document.getElementById('publish-caption');
-  const location = document.getElementById('publish-location');
-  const hashtags = document.getElementById('publish-hashtags');
-  const firstComment = document.getElementById('publish-first-comment');
-  const alt = document.getElementById('publish-alt');
+  const template = document.getElementById('publish-template')?.value || 'auto';
+  const defaults = _publishTemplateDefaults(kind, template);
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && (force || !String(el.value || '').trim())) el.value = value || '';
+  };
+  set('publish-title', defaults.title);
+  set('publish-caption', defaults.caption);
+  set('publish-location', _publishDefaultLocation(kind));
+  set('publish-hashtags', defaults.hashtags);
+  set('publish-first-comment', defaults.firstComment);
+  set('publish-alt', defaults.alt);
   const musicSel = document.getElementById('publish-music-select');
   const musicNote = document.getElementById('publish-music-note');
-  const music = _publishDefaultMusic(kind);
-
-  if (title && (force || !title.value.trim())) title.value = _publishDefaultTitle(kind);
-  if (caption && (force || !caption.value.trim())) caption.value = _publishDefaultCaption(kind);
-  if (location && (force || !location.value.trim())) location.value = _publishDefaultLocation(kind);
-  if (hashtags && (force || !hashtags.value.trim())) hashtags.value = _publishDefaultHashtags(kind);
-  if (firstComment && (force || !firstComment.value.trim())) firstComment.value = _publishDefaultFirstComment(kind);
-  if (alt && (force || !alt.value.trim())) alt.value = _publishDefaultAlt(kind);
-  if (musicSel && (force || !musicSel.value)) musicSel.value = music.value;
-  if (musicNote && (force || !musicNote.value.trim())) musicNote.value = music.note;
+  if (musicSel && (force || !musicSel.value)) musicSel.value = defaults.music?.value || '';
+  if (musicNote && (force || !musicNote.value.trim())) musicNote.value = defaults.music?.note || '';
   _publishFillDatalists(kind);
 
   publishPersist();
@@ -5870,7 +6446,8 @@ async function publishCopyCaption() {
   if (!txt) return;
   try {
     await navigator.clipboard.writeText(txt);
-    document.getElementById('publish-status').textContent = '✅ Caption copiée';
+    publishSaveHistory(false);
+    document.getElementById('publish-status').textContent = '✅ Tout le texte Instagram est copié';
   } catch(e) {
     document.getElementById('publish-status').textContent = '❌ Impossible de copier';
   }
@@ -5899,6 +6476,7 @@ async function publishShare() {
     const files = await _publishCurrentFiles();
     const canShareFiles = useShare && navigator.canShare && navigator.canShare({ files });
     if (navigator.share && canShareFiles) {
+      publishSaveHistory(false);
       await navigator.share({
         title: document.getElementById('publish-title')?.value || 'Freeride Fanatics',
         text,
@@ -5912,6 +6490,7 @@ async function publishShare() {
     }
     await publishDownload();
     if (text) await navigator.clipboard.writeText(text);
+    publishSaveHistory(false);
     status.textContent = '⚠️ Partage natif indisponible, média téléchargé + caption copiée';
     if (openInstagram) {
       setTimeout(() => { _publishLaunchInstagramApp(); }, 400);
@@ -5978,6 +6557,7 @@ function publishInit() {
   }
 
   publishRefreshOptions(_publishState.id || null);
+  renderPublishHistory();
   publishRender();
 }
 
@@ -6527,6 +7107,8 @@ def api_preload():
     _, _, profiles = get_engine()
     eq = get_equipment()
     results = get_results_2026()
+    brand_tags = get_brand_tags()
+    context_tags = get_context_tags()
 
     # ── Profils complets ──
     full_profiles = []
@@ -6579,6 +7161,8 @@ def api_preload():
         "profiles":         full_profiles,
         "equipment":        eq_by_handle,
         "results":          results,
+        "brand_tags":       brand_tags,
+        "context_tags":     context_tags,
         "sponsors":         sponsors,
         "eq_variants":      eq_variants,
         "category_folders": gec.CATEGORY_FOLDERS,
@@ -6591,6 +7175,18 @@ def api_performance_results():
     if request.args.get("refresh") == "1":
         _cache.pop("results_2026", None)
     return jsonify({"results": get_results_2026()})
+
+
+@app.route("/api/brand-tags")
+def api_brand_tags():
+    """Retourne les handles marques et tags contextuels depuis Google Sheet."""
+    if request.args.get("refresh") == "1":
+        _cache.pop("brand_tags", None)
+        _cache.pop("context_tags", None)
+    return jsonify({
+        "brand_tags": get_brand_tags(),
+        "context_tags": get_context_tags(),
+    })
 
 
 @app.route("/api/reload", methods=["POST"])

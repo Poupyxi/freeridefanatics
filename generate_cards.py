@@ -928,9 +928,8 @@ def draw_logos(card, logo_paths):
     if LOGO_DIRECTION == "col":
         # ── MODE COLONNE : logos empilés verticalement ──────────────────────
         # Chaque logo est centré sur le même axe vertical.
-        # LOGO_X = décalage horizontal par rapport au centre du panneau (0 = centré)
-        center_x = panel_left + max_width // 2
-        x_offset = LOGO_X if LOGO_X is not None else 0
+        # LOGO_X est une vraie position X quand elle est fournie; Auto centre dans le panneau.
+        center_x = LOGO_X if LOGO_X is not None else panel_left + max_width // 2
         y = LOGO_Y
         for logo in logos:
             # Limite la largeur au panneau
@@ -938,22 +937,17 @@ def draw_logos(card, logo_paths):
                 scale = max_width / logo.width
                 logo = logo.resize((max_width, max(1, int(logo.height * scale))), Image.LANCZOS)
             # Centre le logo sur l'axe + décalage
-            x = center_x - logo.width // 2 + x_offset
+            x = center_x - logo.width // 2
             card_rgba.paste(logo, (x, y), logo)
             y += logo.height + LOGO_GAP
 
     else:
-        # ── MODE LIGNE : logos côte à côte (défaut) ─────────────────────────
+        # ── MODE LIGNE : toujours une seule rangée horizontale ───────────────
+        # On conserve LOGO_H visible et on ne force plus de retour à la ligne :
+        # si la rangée est trop large, elle dépasse simplement l'image.
         total_w = sum(l.width for l in logos) + LOGO_GAP * (len(logos) - 1)
-
-        # Si trop large : réduit tous proportionnellement
-        if total_w > max_width:
-            scale = max_width / total_w
-            logos = [l.resize((max(1, int(l.width * scale)), max(1, int(l.height * scale))),
-                               Image.LANCZOS) for l in logos]
-            total_w = sum(l.width for l in logos) + LOGO_GAP * (len(logos) - 1)
-
-        x = LOGO_X if LOGO_X is not None else panel_left + (max_width - total_w) // 2
+        center_x = LOGO_X if LOGO_X is not None else panel_left + max_width // 2
+        x = center_x - total_w // 2
         y = LOGO_Y
         for logo in logos:
             card_rgba.paste(logo, (x, y), logo)

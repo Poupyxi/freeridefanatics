@@ -11,6 +11,7 @@ Dépendances : pip install flask
 import io
 import sys
 import importlib
+import os
 from pathlib import Path
 from flask import Flask, jsonify, request, send_file, Response, session, redirect as flask_redirect
 
@@ -20,6 +21,22 @@ sys.path.insert(0, str(BASE_DIR))
 import generate_cards as gc
 
 app = Flask(__name__)
+
+# ── Secrets locaux ────────────────────────────────────────────────────────────
+# Les clés sensibles restent dans config.py (fichier ignoré par Git).
+try:
+    import config as _local_config
+except Exception:
+    _local_config = None
+
+def _secret_config(name, default=""):
+    value = getattr(_local_config, name, None) if _local_config else None
+    return str(value if value not in (None, "") else os.environ.get(name, default)).strip()
+
+META_APP_ID = _secret_config("META_APP_ID")
+META_APP_SECRET = _secret_config("META_APP_SECRET")
+META_ACCESS_TOKEN = _secret_config("META_ACCESS_TOKEN")
+INSTAGRAM_BUSINESS_ACCOUNT_ID = _secret_config("INSTAGRAM_BUSINESS_ACCOUNT_ID")
 
 # ── OAuth / Session ───────────────────────────────────────────────────────────
 import secrets as _secrets, json as _json
@@ -298,6 +315,7 @@ HTML = r"""<!DOCTYPE html>
   }
   .dashboard-btn:hover,
   .dashboard-dropdown.open .dashboard-btn { color: #C8D400; border-color: #C8D400; }
+  .dashboard-btn.active { color: #C8D400; border-color: #C8D400; background: #252800; }
   .dashboard-btn.has-active { color: #C8D400; border-color: #444; background: #252800; }
 
   .dashboard-menu {
@@ -432,6 +450,75 @@ HTML = r"""<!DOCTYPE html>
   .reel-remove { font-size:1rem; cursor:pointer; color:#555; transition:color .15s; flex-shrink:0; }
   .reel-remove:hover { color:#e55; }
   .reel-empty { text-align:center; color:#444; font-size:0.82rem; padding:30px 0; }
+  .reel-library-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .reel-library-title {
+    color:#C8D400;
+    font-size:.74rem;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .reel-library-grid {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .reel-library-card {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .reel-library-thumb {
+    width:100%;
+    aspect-ratio:4/5;
+    background:#080808;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#555;
+    font-size:.72rem;
+  }
+  .reel-library-thumb img {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+  }
+  .reel-library-body {
+    padding:7px;
+  }
+  .reel-library-label {
+    color:#ddd;
+    font-size:.7rem;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .reel-library-meta {
+    color:#666;
+    font-size:.62rem;
+    margin-top:2px;
+  }
+  .reel-library-add {
+    width:100%;
+    min-height:28px;
+    margin-top:7px;
+    padding:5px 7px;
+    font-size:.68rem;
+  }
+  .reel-section-separator {
+    border-top:1px solid #242424;
+    margin:12px 0 10px;
+    padding-top:10px;
+  }
 
   /* ── Performance page ── */
   #page-performance { display:none; min-height:calc(100vh - 65px); padding:22px; }
@@ -518,6 +605,60 @@ HTML = r"""<!DOCTYPE html>
     text-transform:uppercase;
   }
   .perf-kpi-value { color:#eee; font-size:1.55rem; font-weight:800; margin-top:8px; }
+  .perf-infographic {
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 340px;
+    gap:14px;
+    align-items:stretch;
+    background:#0d0d0d;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:14px;
+  }
+  .perf-infographic-preview {
+    min-height:420px;
+    background:#080808;
+    border:1px solid #202020;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .perf-infographic-preview img {
+    max-width:100%;
+    max-height:70vh;
+    object-fit:contain;
+    display:block;
+  }
+  .perf-infographic-side {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .perf-infographic-side h3 {
+    color:#C8D400;
+    margin:0;
+    font-size:.95rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .perf-infographic-side p {
+    color:#777;
+    font-size:.8rem;
+    line-height:1.5;
+    margin:0;
+  }
+  .perf-infographic-actions {
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-top:4px;
+  }
+  .perf-infographic-actions .btn {
+    margin-top:0;
+    width:100%;
+  }
   .perf-podium {
     display:grid;
     grid-template-columns:repeat(3, minmax(0, 1fr));
@@ -719,6 +860,28 @@ HTML = r"""<!DOCTYPE html>
     flex-direction:column;
     gap:7px;
   }
+  .publish-check-summary {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    background:#101010;
+    color:#aaa;
+    font-size:.78rem;
+    font-weight:800;
+  }
+  .publish-check-summary.ok {
+    border-color:#C8D400;
+    color:#C8D400;
+    background:#202400;
+  }
+  .publish-check-score {
+    color:#eee;
+    font-size:.82rem;
+  }
   .publish-check-row {
     display:flex;
     align-items:flex-start;
@@ -751,6 +914,21 @@ HTML = r"""<!DOCTYPE html>
     border-color:#8a5a00;
     color:#f0a000;
   }
+  .publish-check-text {
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .publish-check-label {
+    color:#bdbdbd;
+    font-weight:800;
+  }
+  .publish-check-detail {
+    color:#666;
+    font-size:.72rem;
+  }
+  .publish-check-row.ok .publish-check-label { color:#C8D400; }
+  .publish-check-row.warn .publish-check-label { color:#f0a000; }
   .publish-history-list {
     display:flex;
     flex-direction:column;
@@ -876,6 +1054,99 @@ HTML = r"""<!DOCTYPE html>
     color:#666;
     line-height:1.5;
   }
+  /* ── Library page ── */
+  #page-library { display:none; padding:28px 24px 48px; max-width:1400px; margin:0 auto; }
+  .library-toolbar {
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    margin:18px 0;
+  }
+  .library-field {
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    min-width:160px;
+  }
+  .library-field label {
+    color:#666;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .library-field input,
+  .library-field select {
+    background:#111;
+    border:1px solid #333;
+    border-radius:7px;
+    color:#ddd;
+    padding:8px 10px;
+    font-size:13px;
+  }
+  .library-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    gap:12px;
+  }
+  .library-card {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .library-thumb {
+    width:100%;
+    aspect-ratio:4/5;
+    background:#080808;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#555;
+    overflow:hidden;
+  }
+  .library-thumb img,
+  .library-thumb video {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:#080808;
+  }
+  .library-body { padding:11px; }
+  .library-title {
+    color:#eee;
+    font-size:.86rem;
+    font-weight:900;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .library-meta {
+    color:#666;
+    font-size:.72rem;
+    margin-top:4px;
+    line-height:1.45;
+  }
+  .library-actions {
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:7px;
+    margin-top:10px;
+  }
+  .library-actions button {
+    min-height:30px;
+    margin-top:0;
+    padding:6px 7px;
+    font-size:.7rem;
+  }
+  .library-empty {
+    border:1px dashed #333;
+    border-radius:8px;
+    padding:28px;
+    color:#666;
+    text-align:center;
+    font-size:.9rem;
+  }
   /* ── Logos page ── */
   #page-logos { display:none; padding:24px; max-width:1000px; margin:0 auto; }
   .logos-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
@@ -897,6 +1168,116 @@ HTML = r"""<!DOCTYPE html>
   .btn-select-all { background:none; border:1px solid #444; color:#aaa; padding:5px 12px;
     border-radius:5px; cursor:pointer; font-size:12px; }
   .btn-select-all:hover { border-color:#C8D400; color:#C8D400; }
+
+  /* ── Quality Center ── */
+  #page-quality { display:none; padding:28px 24px 48px; max-width:1400px; margin:0 auto; }
+  .quality-kpis {
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:12px;
+    margin:18px 0;
+  }
+  .quality-kpi {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px;
+    padding:14px;
+  }
+  .quality-kpi-label {
+    color:#666;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .quality-kpi-value {
+    color:#eee;
+    font-size:1.55rem;
+    font-weight:900;
+    margin-top:6px;
+  }
+  .quality-kpi.good .quality-kpi-value { color:#C8D400; }
+  .quality-kpi.warn .quality-kpi-value { color:#f0a000; }
+  .quality-kpi.critical .quality-kpi-value { color:#f55; }
+  .quality-toolbar {
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    margin:18px 0;
+  }
+  .quality-field {
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    min-width:160px;
+  }
+  .quality-field label {
+    color:#666;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .quality-field select,
+  .quality-field input {
+    background:#111;
+    border:1px solid #333;
+    border-radius:7px;
+    color:#ddd;
+    padding:8px 10px;
+    font-size:13px;
+  }
+  .quality-table-wrap {
+    background:#0d0d0d;
+    border:1px solid #222;
+    border-radius:8px;
+    overflow:auto;
+    max-height:64vh;
+  }
+  .quality-table {
+    width:100%;
+    border-collapse:collapse;
+    min-width:920px;
+    font-size:12px;
+  }
+  .quality-table th {
+    position:sticky;
+    top:0;
+    z-index:1;
+    background:#111;
+    color:#C8D400;
+    text-align:left;
+    padding:9px 10px;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    border-bottom:1px solid #333;
+  }
+  .quality-table td {
+    padding:9px 10px;
+    border-bottom:1px solid #171717;
+    color:#aaa;
+    vertical-align:top;
+  }
+  .quality-table tr:hover td { background:#141414; }
+  .quality-pill {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:68px;
+    padding:3px 7px;
+    border-radius:999px;
+    border:1px solid #333;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .quality-pill.critical { color:#f55; border-color:#5a2020; background:#220808; }
+  .quality-pill.warning { color:#f0a000; border-color:#5a3a00; background:#241600; }
+  .quality-pill.ok { color:#C8D400; border-color:#586000; background:#202400; }
+  .quality-target { color:#eee; font-weight:800; }
+  .quality-detail { color:#777; line-height:1.45; }
+  .quality-action { color:#C8D400; font-weight:800; }
 
   /* ── Connections page ── */
   #page-connections { display:none; padding:32px 24px; max-width:960px; margin:0 auto; }
@@ -1152,6 +1533,7 @@ HTML = r"""<!DOCTYPE html>
   }
   .action-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .action-grid.four { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 46px; }
+  .action-grid.library-rider { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 46px; }
   .action-grid .btn,
   .action-grid .btn-undo {
     width: 100%;
@@ -1684,8 +2066,12 @@ HTML = r"""<!DOCTYPE html>
   }
   .lock-btn:hover { color: #888; }
   .lock-btn.locked { color: #C8D400; }
-  .slider-row.locked input[type=range] { opacity: 0.3; pointer-events: none; }
-  .slider-row.locked input.slider-val  { opacity: 0.5; pointer-events: none; }
+  .slider-row.locked input[type=range],
+  .slider-row.locked input.slider-val {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .slider-row.locked input.slider-val { opacity: 0.55; }
 
   /* ── Profils ── */
   .profile-save-row { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -1809,6 +2195,8 @@ HTML = r"""<!DOCTYPE html>
     .perf-grid,
     .perf-podium,
     .perf-advanced,
+    .perf-infographic,
+    .quality-kpis,
     .asset-tags-grid { grid-template-columns: 1fr; }
     .perf-table { min-width: 760px; }
     #perf-table-wrap { overflow-x: auto; }
@@ -1874,6 +2262,10 @@ HTML = r"""<!DOCTYPE html>
   <!-- Zone droite -->
   <div class="header-right">
     <button class="btn btn-reload" onclick="reloadExcel()">↺ Recharger</button>
+    <button class="dashboard-btn" id="tab-library" onclick="switchTab('library')">
+      📚 Library <span id="library-badge" style="display:none;background:#C8D400;color:#000;
+        border-radius:10px;font-size:0.68rem;padding:1px 6px;margin-left:4px;font-weight:700"></span>
+    </button>
 
     <!-- Dashboard dropdown (desktop) -->
     <div class="dashboard-dropdown" id="dashboard-dropdown">
@@ -1887,6 +2279,9 @@ HTML = r"""<!DOCTYPE html>
         </button>
         <button class="dashboard-menu-btn" id="tab-logos" onclick="switchTab('logos'); closeDashboard()">
           🖼 Logos
+        </button>
+        <button class="dashboard-menu-btn" id="tab-quality" onclick="switchTab('quality'); closeDashboard()">
+          ✅ Quality Center
         </button>
         <button class="dashboard-menu-btn" id="tab-audit" onclick="switchTab('audit'); closeDashboard()">
           📋 Audit Équipements
@@ -1918,9 +2313,14 @@ HTML = r"""<!DOCTYPE html>
       📣 Publish <span id="burger-publish-badge" style="display:none;background:#C8D400;color:#000;
         border-radius:10px;font-size:0.65rem;padding:1px 5px;margin-left:4px;font-weight:700"></span>
     </button>
+    <button class="burger-item" id="burger-library" onclick="switchTab('library'); closeBurger()">
+      📚 Library <span id="burger-library-badge" style="display:none;background:#C8D400;color:#000;
+        border-radius:10px;font-size:0.65rem;padding:1px 5px;margin-left:4px;font-weight:700"></span>
+    </button>
     <div class="burger-divider">Assets Management</div>
     <button class="burger-item" id="burger-riders" onclick="switchTab('riders'); closeBurger()">👤 Riders</button>
     <button class="burger-item" id="burger-logos" onclick="switchTab('logos'); closeBurger()">🖼 Logos</button>
+    <button class="burger-item" id="burger-quality" onclick="switchTab('quality'); closeBurger()">✅ Quality Center</button>
     <button class="burger-item" id="burger-audit" onclick="switchTab('audit'); closeBurger()">📋 Audit Équipements</button>
     <button class="burger-item" id="burger-brandtags" onclick="switchTab('brandtags'); closeBurger()">🏷 Brand & Tags</button>
     <div class="burger-divider">Settings</div>
@@ -2132,20 +2532,20 @@ HTML = r"""<!DOCTYPE html>
         </div>
         <div class="slider-row">
           <span class="slider-label">Hauteur</span>
-          <input type="range" id="logo_h" min="20" max="200" value="38" onmousedown="captureHistory()" oninput="updateSlider(this,'val_lh')">
-          <input type="text" class="slider-val" id="val_lh" value="38" onfocus="this.select()" onchange="syncVal('val_lh','logo_h')">
+          <input type="range" id="logo_h" min="20" max="200" value="50" onmousedown="captureHistory()" oninput="updateSlider(this,'val_lh')">
+          <input type="text" class="slider-val" id="val_lh" value="50" onfocus="this.select()" onchange="syncVal('val_lh','logo_h')">
           <button class="lock-btn" id="lock_logo_h" onclick="toggleLock('lock_logo_h','logo_h')" title="Verrouiller">🔓</button>
         </div>
         <div class="slider-row">
           <span class="slider-label">Position Y</span>
-          <input type="range" id="logo_y" min="900" max="1340" value="1280" onmousedown="captureHistory()" oninput="updateSlider(this,'val_ly')">
-          <input type="text" class="slider-val" id="val_ly" value="1280" onfocus="this.select()" onchange="syncVal('val_ly','logo_y')">
+          <input type="range" id="logo_y" min="0" max="1350" value="1200" onmousedown="captureHistory()" oninput="updateSlider(this,'val_ly')">
+          <input type="text" class="slider-val" id="val_ly" value="1200" onfocus="this.select()" onchange="syncVal('val_ly','logo_y')">
           <button class="lock-btn" id="lock_logo_y" onclick="toggleLock('lock_logo_y','logo_y')" title="Verrouiller">🔓</button>
         </div>
         <div class="slider-row">
           <span class="slider-label">Position X</span>
-          <input type="range" id="logo_x" min="-1" max="1060" value="-1" onmousedown="captureHistory()" oninput="updateSlider(this,'val_lx',true)">
-          <input type="text" class="slider-val" id="val_lx" value="Auto" onfocus="this.select()" onchange="syncVal('val_lx','logo_x',true)">
+          <input type="range" id="logo_x" min="-1" max="1080" value="810" onmousedown="captureHistory()" oninput="updateSlider(this,'val_lx',true)">
+          <input type="text" class="slider-val" id="val_lx" value="810" onfocus="this.select()" onchange="syncVal('val_lx','logo_x',true)">
           <button class="lock-btn" id="lock_logo_x" onclick="toggleLock('lock_logo_x','logo_x')" title="Verrouiller">🔓</button>
         </div>
       </div>
@@ -2156,13 +2556,10 @@ HTML = r"""<!DOCTYPE html>
   <!-- Actions fixées en bas -->
   <div class="panel-actions sticky">
     <button class="btn btn-generate" onclick="generate()">▶ Générer la carte</button>
-    <div class="action-grid four">
+    <div class="action-grid library-rider">
       <button class="btn btn-download" id="btn-dl" disabled onclick="download()">⬇ Télécharger</button>
-      <button class="btn btn-secondary" id="cards-add-publish-btn" disabled onclick="addRiderCardToPublish()">
-        ＋ Publish
-      </button>
-      <button class="btn btn-secondary" id="cards-add-reel-btn" disabled onclick="addRiderCardToReel()">
-        ＋ Reel
+      <button class="btn btn-secondary" id="cards-add-library-btn" disabled onclick="addRiderCardToLibrary()">
+        ＋ Library
       </button>
       <button class="btn-undo" id="btn-undo" disabled onclick="undo()" title="Ctrl+Z">↩</button>
     </div>
@@ -2347,11 +2744,8 @@ HTML = r"""<!DOCTYPE html>
     <button class="btn btn-generate" onclick="generateEqCard()">▶ Générer la carte</button>
     <div class="action-grid">
       <button class="btn btn-download" id="eq-page-dl-btn" disabled onclick="downloadEqCard()">⬇ Télécharger</button>
-      <button class="btn btn-secondary" id="eq-add-publish-btn" disabled onclick="addEqCardToPublish()">
-        ＋ Publish
-      </button>
-      <button class="btn btn-secondary" id="eq-add-reel-btn" disabled onclick="addToReel()">
-        ＋ Reel
+      <button class="btn btn-secondary" id="eq-add-library-btn" disabled onclick="addEqCardToLibrary()">
+        ＋ Library
       </button>
     </div>
     <div class="error-msg" id="eq-error-msg"></div>
@@ -2445,6 +2839,25 @@ HTML = r"""<!DOCTYPE html>
       <div class="perf-kpi"><div class="perf-kpi-label">Points couverts</div><div class="perf-kpi-value" id="perf-kpi-points">0</div></div>
     </div>
 
+    <div class="perf-infographic">
+      <div class="perf-infographic-preview" id="perf-infographic-preview">
+        <div class="perf-empty">Génère une infographie Top 10 depuis le classement sélectionné.</div>
+      </div>
+      <div class="perf-infographic-side">
+        <h3>Infographie classement</h3>
+        <p>
+          Format vertical prêt pour Instagram. Le visuel reprend l’esprit classement barres,
+          en version Freeride Fanatics : fond sombre, grille technique, rangs, points et présence riders.
+        </p>
+        <div class="perf-infographic-actions">
+          <button class="btn btn-generate" onclick="generatePerformanceInfographic()">▶ Générer l’infographie</button>
+          <button class="btn btn-download" id="perf-info-download-btn" disabled onclick="downloadPerformanceInfographic()">⬇ Télécharger</button>
+          <button class="btn btn-secondary" id="perf-info-library-btn" disabled onclick="addPerformanceInfographicToLibrary()">＋ Library</button>
+        </div>
+        <div class="publish-meta" id="perf-infographic-status"></div>
+      </div>
+    </div>
+
     <div class="perf-grid" id="perf-advanced-results" style="display:none">
       <div class="perf-panel">
         <h3>Leaders par catégorie</h3>
@@ -2469,11 +2882,21 @@ HTML = r"""<!DOCTYPE html>
 
     <div class="collapsible open" id="reelcol-items">
       <div class="collapsible-header" onclick="toggleCol('reelcol-items')">
-        <span class="section-title">🎬 Cartes du reel</span><span class="collapsible-arrow">▼</span>
+        <span class="section-title">📚 Library & Reel</span><span class="collapsible-arrow">▼</span>
       </div>
       <div class="collapsible-body">
+        <div class="reel-library-header">
+          <span class="reel-library-title">Library disponible</span>
+          <button class="publish-mini-btn" onclick="renderReelLibrary()">↺</button>
+        </div>
+        <div id="reel-library-list" class="reel-library-grid">
+          <div class="reel-empty" style="grid-column:1/-1;padding:14px 0">Aucune carte dans la Library.</div>
+        </div>
+        <div class="reel-section-separator">
+          <div class="reel-library-title">Timeline du Reel</div>
+        </div>
         <div id="reel-item-list">
-          <div class="reel-empty">Aucune carte ajoutée.<br>Génère une carte dans l'onglet Équipements<br>et clique <b>＋ Reel</b>.</div>
+          <div class="reel-empty">Aucune carte ajoutée.<br>Ajoute une carte depuis la Library ci-dessus.</div>
         </div>
       </div>
     </div>
@@ -2505,6 +2928,19 @@ HTML = r"""<!DOCTYPE html>
         <div class="publish-field" style="margin-bottom:8px">
           <label for="reel_title">Titre reel</label>
           <input id="reel_title" class="publish-input" type="text" placeholder="Ex: Top 3 Forks Women 2026">
+        </div>
+        <div class="publish-select-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
+          <div class="publish-field">
+            <label for="reel_perf_category">Équipement ciblé</label>
+            <select id="reel_perf_category" class="publish-input"></select>
+          </div>
+          <div class="publish-field">
+            <label for="reel_perf_gender">Classement</label>
+            <select id="reel_perf_gender" class="publish-input">
+              <option value="F">Femmes</option>
+              <option value="M">Hommes</option>
+            </select>
+          </div>
         </div>
         <div class="publish-helper-row" style="margin-bottom:10px">
           <button class="publish-mini-btn" onclick="addReelTitleCard('intro')">＋ Intro</button>
@@ -2564,8 +3000,8 @@ HTML = r"""<!DOCTYPE html>
     </div>
     <div class="action-grid two">
       <button class="btn btn-download" id="reel-dl-btn" disabled onclick="downloadEqReel()">⬇ Télécharger MP4</button>
-      <button class="btn btn-secondary" id="reel-add-publish-btn" disabled onclick="addEqReelToPublish()">
-        ＋ Publish
+      <button class="btn btn-secondary" id="reel-add-library-btn" disabled onclick="addEqReelToLibrary()">
+        ＋ Library
       </button>
     </div>
     <div id="reel-error-msg" style="display:none;font-size:0.78rem;padding:4px 0;text-align:center"></div>
@@ -2585,6 +3021,37 @@ HTML = r"""<!DOCTYPE html>
 
 </div><!-- fin .layout -->
 </div><!-- fin #page-reel -->
+
+<!-- ══════════════════ PAGE LIBRARY ══════════════════ -->
+<div id="page-library">
+  <h2 style="color:#C8D400;margin-bottom:4px;font-size:1.1rem;letter-spacing:1px">📚 LIBRARY</h2>
+  <p style="color:#555;font-size:12px;margin-bottom:20px">
+    Historique des médias générés. Ajoute ici tes cartes et reels, puis réutilise-les dans Reel ou Publish.
+  </p>
+
+  <div class="library-toolbar">
+    <div class="library-field">
+      <label for="library-kind-filter">Type</label>
+      <select id="library-kind-filter" onchange="renderLibraryPage()">
+        <option value="all">Tout</option>
+        <option value="rider">Rider cards</option>
+        <option value="equipment">Equipment cards</option>
+        <option value="reel">Reels</option>
+      </select>
+    </div>
+    <div class="library-field" style="flex:1;min-width:260px">
+      <label for="library-search">Recherche</label>
+      <input id="library-search" placeholder="Rider, équipement, template..." oninput="renderLibraryPage()">
+    </div>
+    <button class="btn" onclick="renderLibraryPage()">↺ Actualiser</button>
+    <button class="btn btn-secondary" onclick="clearLibrary()">Vider</button>
+  </div>
+
+  <div class="publish-meta" id="library-status" style="margin-bottom:14px"></div>
+  <div class="library-grid" id="library-grid">
+    <div class="library-empty">Aucun média dans la Library pour le moment.</div>
+  </div>
+</div><!-- fin #page-library -->
 
 <!-- ══════════════════ PAGE PUBLISH ══════════════════ -->
 <div id="page-publish">
@@ -3114,6 +3581,83 @@ HTML = r"""<!DOCTYPE html>
   </div><!-- /conn-grid -->
 </div><!-- fin #page-connections -->
 
+<!-- ══════════════════ PAGE QUALITY CENTER ══════════════════ -->
+<div id="page-quality">
+  <h2 style="color:#C8D400;margin-bottom:4px;font-size:1.1rem;letter-spacing:1px">✅ QUALITY CENTER</h2>
+  <p style="color:#555;font-size:12px;margin-bottom:20px">
+    Vue consolidée des assets et données à corriger avant de générer des cartes, reels et posts Publish.
+  </p>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <button class="btn" onclick="renderQualityCenter()">↺ Actualiser</button>
+    <button class="btn" onclick="rescanEqPhotos(true).then(renderQualityCenter)">📸 Rescan photos équipement</button>
+    <button class="btn" onclick="refreshBrandTags().then(renderQualityCenter)">🏷 Resync Brand & Tags</button>
+    <span id="quality-status" style="font-size:12px;color:#666"></span>
+  </div>
+
+  <div class="quality-kpis">
+    <div class="quality-kpi good">
+      <div class="quality-kpi-label">Score assets</div>
+      <div class="quality-kpi-value" id="quality-score">0%</div>
+    </div>
+    <div class="quality-kpi critical">
+      <div class="quality-kpi-label">Critiques</div>
+      <div class="quality-kpi-value" id="quality-critical">0</div>
+    </div>
+    <div class="quality-kpi warn">
+      <div class="quality-kpi-label">Warnings</div>
+      <div class="quality-kpi-value" id="quality-warning">0</div>
+    </div>
+    <div class="quality-kpi">
+      <div class="quality-kpi-label">Checks total</div>
+      <div class="quality-kpi-value" id="quality-total">0</div>
+    </div>
+  </div>
+
+  <div class="quality-toolbar">
+    <div class="quality-field">
+      <label for="quality-severity">Severity</label>
+      <select id="quality-severity" onchange="renderQualityCenter()">
+        <option value="all">Tout</option>
+        <option value="critical">Critique</option>
+        <option value="warning">Warning</option>
+        <option value="ok">OK</option>
+      </select>
+    </div>
+    <div class="quality-field">
+      <label for="quality-type">Type</label>
+      <select id="quality-type" onchange="renderQualityCenter()">
+        <option value="all">Tout</option>
+        <option value="rider">Rider</option>
+        <option value="equipment">Equipment</option>
+        <option value="brand">Brand</option>
+        <option value="tag">Tags</option>
+      </select>
+    </div>
+    <div class="quality-field" style="flex:1;min-width:260px">
+      <label for="quality-search">Recherche</label>
+      <input id="quality-search" placeholder="Rider, marque, équipement, tag..." oninput="renderQualityCenter()">
+    </div>
+  </div>
+
+  <div class="quality-table-wrap">
+    <table class="quality-table">
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Type</th>
+          <th>Cible</th>
+          <th>Détail</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="quality-tbody">
+        <tr><td colspan="5" style="color:#555">Chargement…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- fin #page-quality -->
+
 <!-- ══════════════════ PAGE AUDIT ══════════════════ -->
 <div id="page-audit" style="display:none;padding:28px 24px 48px;max-width:1400px;margin:0 auto">
   <h2 style="color:#C8D400;margin-bottom:4px;font-size:1.1rem;letter-spacing:1px">📋 AUDIT ÉQUIPEMENTS</h2>
@@ -3172,8 +3716,17 @@ const lockedSliders = new Set();
 
 function toggleLock(lockId, rangeId) {
   const btn = document.getElementById(lockId);
+  const range = document.getElementById(rangeId);
   const row = btn.closest('.slider-row');
-  if (lockedSliders.has(rangeId)) {
+  const valueInput = row ? row.querySelector('.slider-val') : null;
+  const setLocked = !lockedSliders.has(rangeId);
+
+  if (range) range.disabled = setLocked;
+  if (valueInput) valueInput.disabled = setLocked;
+  btn.setAttribute('aria-pressed', setLocked ? 'true' : 'false');
+  btn.title = setLocked ? 'Déverrouiller' : 'Verrouiller';
+
+  if (!setLocked) {
     lockedSliders.delete(rangeId);
     btn.textContent = '🔓';
     btn.classList.remove('locked');
@@ -3368,6 +3921,8 @@ async function init() {
       has_photo: p.has_photo,
     }));
     renderRiderList();
+    initReelPerformanceControls();
+    updateLibraryBadge();
 
     _setLoadingProgress(88, 'Chargement des logos…');
 
@@ -3540,7 +4095,7 @@ document.addEventListener('keydown', e => {
 const SECTION_DEFAULTS = {
   photo: { photo_zoom: 100, offset_x: -200, offset_y: 0 },
   text:  { text_x: 580, text_top: 80, sz_label: 36, sz_value: 54, sz_value_sm: 40, gap: 50 },
-  logos: { logo_h: 38, logo_y: 1280, logo_x: -1, logo_dir: 'row' },
+  logos: { logo_h: 50, logo_y: 1200, logo_x: 810, logo_dir: 'row' },
 };
 
 function resetSection(section) {
@@ -3590,6 +4145,7 @@ function syncVal(valId, rangeId, autoMode=false) {
   debouncedGenerate();
 }
 function switchDir() {
+  captureHistory();
   const input  = document.getElementById('logo_dir');
   const toggle = document.getElementById('dir-toggle');
   const isCol  = input.value === 'col';
@@ -3656,8 +4212,7 @@ async function generate() {
     document.getElementById('placeholder').style.display = 'none';
     lastSlug = slug;
     document.getElementById('btn-dl').disabled = false;
-    document.getElementById('cards-add-publish-btn').disabled = false;
-    document.getElementById('cards-add-reel-btn').disabled = false;
+    document.getElementById('cards-add-library-btn').disabled = false;
     _lastRiderCardUrl = url;
     _lastPublishSource = {
       kind: 'rider',
@@ -3693,6 +4248,7 @@ async function reloadExcel() {
 let _perfInitialized = false;
 let _perfAdvancedOpen = false;
 let _perfRefreshInFlight = false;
+let _lastPerfInfographic = null;
 let _activeTab = 'cards';
 const _PERF_ORDER = [
   'Frame', 'Fork', 'Rear Shock', 'Handlebar', 'Dropper Post', 'Saddle',
@@ -3772,9 +4328,7 @@ async function refreshPerformanceData(silent = false) {
   }
 }
 
-function _perfSelectedRiders() {
-  const gender = document.getElementById('perf-gender')?.value || 'F';
-  const topVal = document.getElementById('perf-top')?.value || '10';
+function _perfSelectedRidersFor(gender = 'F', topVal = '10') {
   let rows = (_app.results || []).filter(r => r.total_points > 0 && r.instagram);
   rows = rows.filter(r => r.genre === gender);
 
@@ -3789,6 +4343,12 @@ function _perfSelectedRiders() {
   return rows;
 }
 
+function _perfSelectedRiders() {
+  const gender = document.getElementById('perf-gender')?.value || 'F';
+  const topVal = document.getElementById('perf-top')?.value || '10';
+  return _perfSelectedRidersFor(gender, topVal);
+}
+
 function _perfItemLabel(item, groupMode) {
   const brand = (item?.brand || '').trim();
   const ref = (item?.reference || '').trim();
@@ -3796,10 +4356,8 @@ function _perfItemLabel(item, groupMode) {
   return [brand, ref].filter(Boolean).join(' · ') || brand || ref || 'Unknown product';
 }
 
-function _perfStats() {
-  const category = document.getElementById('perf-category')?.value || 'all';
-  const groupMode = document.getElementById('perf-group')?.value || 'product';
-  const riders = _perfSelectedRiders();
+function _perfStatsFor({ category = 'all', gender = 'F', topVal = '10', groupMode = 'product' } = {}) {
+  const riders = _perfSelectedRidersFor(gender, topVal);
   const stats = new Map();
   let itemHits = 0;
   let pointsCovered = 0;
@@ -3854,14 +4412,250 @@ function _perfStats() {
   return { riders, rows, itemHits, pointsCovered };
 }
 
-function _perfSortRows(rows) {
-  const sort = document.getElementById('perf-sort')?.value || 'points';
+function _perfStats() {
+  const category = document.getElementById('perf-category')?.value || 'all';
+  const gender = document.getElementById('perf-gender')?.value || 'F';
+  const topVal = document.getElementById('perf-top')?.value || '10';
+  const groupMode = document.getElementById('perf-group')?.value || 'product';
+  return _perfStatsFor({ category, gender, topVal, groupMode });
+}
+
+function _perfSortRowsBy(rows, sort = 'points') {
   return rows.slice().sort((a, b) => {
     if (sort === 'count') return (b.count - a.count) || (b.points - a.points) || (a.avgRank - b.avgRank);
     if (sort === 'avg_rank') return (a.avgRank - b.avgRank) || (b.points - a.points) || (b.count - a.count);
     if (sort === 'best_rank') return (a.bestRank - b.bestRank) || (b.points - a.points) || (b.count - a.count);
     return (b.points - a.points) || (b.count - a.count) || (a.avgRank - b.avgRank);
   });
+}
+
+function _perfSortRows(rows) {
+  const sort = document.getElementById('perf-sort')?.value || 'points';
+  return _perfSortRowsBy(rows, sort);
+}
+
+function _perfInfoRoundRect(ctx, x, y, w, h, r) {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function _perfInfoWrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  lines.slice(0, maxLines).forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+  return Math.min(lines.length, maxLines) * lineHeight;
+}
+
+function _perfInfoFilename(category, gender) {
+  const g = gender === 'F' ? 'women' : 'men';
+  const cat = String(category || 'equipment').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return `freeride_top10_${cat}_${g}.png`;
+}
+
+function generatePerformanceInfographic() {
+  const preview = document.getElementById('perf-infographic-preview');
+  const status = document.getElementById('perf-infographic-status');
+  const category = document.getElementById('perf-category')?.value || 'all';
+  const gender = document.getElementById('perf-gender')?.value || 'F';
+  const topVal = document.getElementById('perf-top')?.value || '10';
+  const groupMode = document.getElementById('perf-group')?.value || 'product';
+  const sort = document.getElementById('perf-sort')?.value || 'points';
+  const { riders, rows } = _perfStatsFor({ category, gender, topVal, groupMode });
+  const top = _perfSortRowsBy(rows, sort).slice(0, 10);
+  if (!top.length) {
+    if (status) status.textContent = 'Aucun classement disponible pour cette sélection.';
+    return;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1350;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const green = '#C8D400';
+  const bg = '#0b0b0b';
+  const panel = '#121212';
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const grd = ctx.createLinearGradient(0, 0, W, H);
+  grd.addColorStop(0, 'rgba(200,212,0,0.26)');
+  grd.addColorStop(0.45, 'rgba(200,212,0,0.08)');
+  grd.addColorStop(1, 'rgba(255,255,255,0.02)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.055)';
+  ctx.lineWidth = 1;
+  for (let x = 70; x < W - 70; x += 72) {
+    ctx.beginPath(); ctx.moveTo(x, 112); ctx.lineTo(x, H - 115); ctx.stroke();
+  }
+  for (let y = 140; y < H - 110; y += 72) {
+    ctx.beginPath(); ctx.moveTo(55, y); ctx.lineTo(W - 55, y); ctx.stroke();
+  }
+
+  ctx.save();
+  ctx.translate(58, H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.font = '800 24px system-ui, sans-serif';
+  ctx.letterSpacing = '4px';
+  ctx.fillText('FREERIDE FANATICS  •  EQUIPMENT RANKING', -330, 0);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(W - 42, H / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.font = '800 22px system-ui, sans-serif';
+  ctx.fillText(`${gender === 'F' ? 'WOMEN' : 'MEN'}  •  2026 SEASON`, -210, 0);
+  ctx.restore();
+
+  _perfInfoRoundRect(ctx, 88, 90, 904, 1160, 34);
+  ctx.fillStyle = panel;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(200,212,0,0.38)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = green;
+  ctx.font = '900 34px system-ui, sans-serif';
+  ctx.fillText('FREERIDE FANATICS', 132, 155);
+  ctx.fillStyle = '#f2f2f2';
+  ctx.font = '800 42px system-ui, sans-serif';
+  ctx.fillText('LE TOP 10', 132, 260);
+  ctx.font = '900 84px system-ui, sans-serif';
+  const title = category === 'all' ? 'EQUIPMENT' : category.toUpperCase();
+  _perfInfoWrapText(ctx, title, 132, 340, 760, 86, 2);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.font = '700 25px system-ui, sans-serif';
+  const subtitle = `${gender === 'F' ? 'Women' : 'Men'} · ${topVal === 'all' ? 'all ranked riders' : `top ${topVal} riders`} · ${groupMode === 'brand' ? 'brands' : 'products'}`;
+  ctx.fillText(subtitle, 132, 455);
+
+  const maxPoints = Math.max(...top.map(r => Number(r.points || 0)), 1);
+  const maxCount = Math.max(...top.map(r => Number(r.count || 0)), 1);
+  const barX = 318;
+  const barY = 538;
+  const rowH = 70;
+  const barMax = 486;
+  const barH = 26;
+
+  top.forEach((item, idx) => {
+    const y = barY + idx * rowH;
+    const pct = riders.length ? (item.count / riders.length) * 100 : 0;
+    const barW = Math.max(34, Math.round((sort === 'count' ? item.count / maxCount : item.points / maxPoints) * barMax));
+    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(170, y + 13, 24, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#f4f4f4';
+    ctx.font = '900 22px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(idx + 1).padStart(2, '0'), 170, y + 21);
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    _perfInfoRoundRect(ctx, barX, y, barW, barH, 13);
+    ctx.fill();
+    ctx.fillStyle = green;
+    _perfInfoRoundRect(ctx, barX, y, Math.max(12, Math.round(barW * 0.08)), barH, 13);
+    ctx.fill();
+
+    ctx.fillStyle = '#f3f3f3';
+    ctx.font = '900 28px system-ui, sans-serif';
+    _perfInfoWrapText(ctx, item.label, 215, y + 58, 430, 30, 1);
+
+    ctx.fillStyle = '#f3f3f3';
+    ctx.font = '900 28px system-ui, sans-serif';
+    ctx.fillText(`${pct.toFixed(1).replace('.', ',')}%`, barX + barW + 24, y + 24);
+    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+    ctx.font = '700 20px system-ui, sans-serif';
+    ctx.fillText(`(${item.count} rider${item.count > 1 ? 's' : ''}) · ${Math.round(item.points)} pts`, barX + barW + 24, y + 50);
+  });
+
+  ctx.fillStyle = green;
+  ctx.font = '900 54px system-ui, sans-serif';
+  ctx.fillText('FF . 26', 700, 1165);
+  ctx.fillStyle = 'rgba(255,255,255,0.76)';
+  ctx.font = '800 25px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText('INFOGRAPHIE 2026', 700, 1108);
+  ctx.fillText(new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase(), 132, 1188);
+
+  ctx.strokeStyle = 'rgba(200,212,0,0.55)';
+  ctx.lineWidth = 5;
+  [[113, 113], [967, 113], [113, 1227], [967, 1227]].forEach(([x, y]) => {
+    ctx.beginPath();
+    ctx.arc(x, y, 13, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  const url = canvas.toDataURL('image/png');
+  const name = _perfInfoFilename(category, gender);
+  _lastPerfInfographic = { url, name, category, gender, label: `Top 10 ${category === 'all' ? 'Equipment' : category} · ${gender === 'F' ? 'Women' : 'Men'}` };
+  if (preview) preview.innerHTML = `<img src="${url}" alt="Performance infographic">`;
+  document.getElementById('perf-info-download-btn').disabled = false;
+  document.getElementById('perf-info-library-btn').disabled = false;
+  if (status) status.textContent = `Infographie prête : ${top.length} lignes · ${riders.length} riders analysés.`;
+}
+
+function downloadPerformanceInfographic() {
+  if (!_lastPerfInfographic) return;
+  const a = document.createElement('a');
+  a.href = _lastPerfInfographic.url;
+  a.download = _lastPerfInfographic.name;
+  a.click();
+}
+
+async function addPerformanceInfographicToLibrary() {
+  if (!_lastPerfInfographic) return;
+  const btn = document.getElementById('perf-info-library-btn');
+  const status = document.getElementById('perf-infographic-status');
+  try {
+    await _libraryAdd('equipment', {
+      label: _lastPerfInfographic.label || 'Performance infographic',
+      url: _lastPerfInfographic.url,
+      name: _lastPerfInfographic.name,
+      mime: 'image/png',
+    }, {
+      type: 'performance_infographic',
+      category: _lastPerfInfographic.category || '',
+      gender: _lastPerfInfographic.gender || '',
+    });
+    if (btn) {
+      btn.textContent = '✓ Library';
+      btn.style.background = '#C8D400';
+      btn.style.color = '#000';
+      setTimeout(() => { btn.textContent = '＋ Library'; btn.style.background = ''; btn.style.color = ''; }, 1200);
+    }
+    if (status) status.textContent = 'Infographie ajoutée à la Library.';
+  } catch(e) {
+    if (status) status.textContent = 'Library : ' + e.message;
+  }
 }
 
 function renderPerformance() {
@@ -3963,12 +4757,12 @@ function renderPerformance() {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────
-const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'audit', 'brandtags'];
+const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'quality', 'audit', 'brandtags'];
 
 function switchTab(tab) {
   _activeTab = tab;
   // Tabs principaux
-  ['cards','equipment','performance','reel','publish'].forEach(t => {
+  ['cards','equipment','performance','reel','publish','library'].forEach(t => {
     document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
     document.getElementById('burger-'+t)?.classList.toggle('active', t === tab);
   });
@@ -3989,16 +4783,20 @@ function switchTab(tab) {
   document.getElementById('page-logos').style.display       = tab === 'logos'       ? 'block' : 'none';
   document.getElementById('page-riders').style.display      = tab === 'riders'      ? 'block' : 'none';
   document.getElementById('page-reel').style.display        = tab === 'reel'        ? 'block' : 'none';
+  document.getElementById('page-library').style.display     = tab === 'library'     ? 'block' : 'none';
   document.getElementById('page-publish').style.display     = tab === 'publish'     ? 'block' : 'none';
   document.getElementById('page-connections').style.display = tab === 'connections' ? 'block' : 'none';
+  document.getElementById('page-quality').style.display     = tab === 'quality'     ? 'block' : 'none';
   document.getElementById('page-audit').style.display       = tab === 'audit'       ? 'block' : 'none';
   document.getElementById('page-brandtags').style.display   = tab === 'brandtags'   ? 'block' : 'none';
 
   if (tab === 'equipment' && !_eqRidersLoaded) initEqPage();
   if (tab === 'performance') initPerformancePage();
-  if (tab === 'reel') { renderReelPage(); _initReelRiderList(); }
+  if (tab === 'reel') { initReelPerformanceControls(); renderReelPage(); _initReelRiderList(); }
+  if (tab === 'library') renderLibraryPage();
   if (tab === 'publish') publishInit();
   if (tab === 'connections') connRefreshGoogle();
+  if (tab === 'quality') renderQualityCenter();
   if (tab === 'audit') loadEqAudit();
   if (tab === 'brandtags') renderBrandTagsPage();
 }
@@ -4059,6 +4857,246 @@ async function refreshBrandTags() {
   } catch(e) {
     if (status) status.textContent = 'Synchronisation impossible pour le moment.';
   }
+}
+
+// ── Quality Center ───────────────────────────────────────────────────────────
+function _qualityIssue(severity, type, target, detail, action, search = '') {
+  return { severity, type, target, detail, action, search: `${type} ${target} ${detail} ${action} ${search}`.toLowerCase() };
+}
+
+function _qualityBrandHasLogo(brand) {
+  if (!brand) return false;
+  const norm = s => String(s || '').toLowerCase().replace(/[\s\-_\/\.]/g, '');
+  const b = norm(brand);
+  return (_app.sponsors || []).some(s => {
+    const values = [s.key, s.label, s.file].map(norm).filter(Boolean);
+    return values.some(v => v.includes(b) || b.includes(v));
+  });
+}
+
+function _qualityBrandHandle(brand) {
+  if (!brand) return '';
+  const row = (_app.brandTags || []).find(b => _publishSlug(b.brand) === _publishSlug(brand));
+  return row?.instagram_handle || '';
+}
+
+function _qualityBuildIssues() {
+  const issues = [];
+  const seenBrands = new Map();
+  const profiles = _app.profiles || [];
+  const equipment = _app.equipment || {};
+
+  profiles.forEach(profile => {
+    const name = `${profile.prenom || ''} ${profile.nom || ''}`.trim() || profile.instagram || 'Rider';
+    const handle = String(profile.instagram || '').replace(/^@/, '').toLowerCase();
+    if (!profile.has_photo) {
+      issues.push(_qualityIssue(
+        'critical',
+        'rider',
+        name,
+        'Photo PP manquante.',
+        'Ajoute une photo dans PPRiders ou utilise le gestionnaire Riders.',
+        profile.instagram
+      ));
+    }
+    if (!handle) {
+      issues.push(_qualityIssue(
+        'critical',
+        'rider',
+        name,
+        'Handle Instagram manquant.',
+        'Complète Instagram dans le Sheet riders.',
+        name
+      ));
+      return;
+    }
+
+    const items = equipment[handle] || [];
+    if (!items.length) {
+      issues.push(_qualityIssue(
+        'warning',
+        'equipment',
+        name,
+        'Aucun équipement renseigné pour ce rider.',
+        'Complète les colonnes équipement dans le Google Sheet.',
+        profile.instagram
+      ));
+    }
+
+    items.forEach(item => {
+      const label = `${name} · ${item.category || 'Equipment'}`;
+      const itemName = [item.brand, item.reference].filter(Boolean).join(' ');
+      if (!item.brand || !item.reference) {
+        issues.push(_qualityIssue(
+          'critical',
+          'equipment',
+          label,
+          `Donnée équipement incomplète${itemName ? ` : ${itemName}` : ''}.`,
+          'Complète marque et référence dans le Sheet.',
+          `${profile.instagram} ${itemName}`
+        ));
+      }
+      if (item.brand) {
+        seenBrands.set(_publishSlug(item.brand), item.brand);
+      }
+      if (item.brand && item.reference && !_eqCheckPhoto(item)) {
+        issues.push(_qualityIssue(
+          'warning',
+          'equipment',
+          label,
+          `Photo équipement manquante pour ${itemName}.`,
+          'Ajoute une image dans le dossier Equipment de cette catégorie, puis Rescan photos.',
+          `${profile.instagram} ${itemName} ${item.details || ''}`
+        ));
+      }
+      if (item.brand && !_qualityBrandHasLogo(item.brand)) {
+        issues.push(_qualityIssue(
+          'warning',
+          'brand',
+          item.brand,
+          'Logo marque non détecté.',
+          'Ajoute le logo dans le gestionnaire Logos.',
+          itemName
+        ));
+      }
+      if (item.brand && !_qualityBrandHandle(item.brand)) {
+        issues.push(_qualityIssue(
+          'warning',
+          'brand',
+          item.brand,
+          'Handle Instagram marque manquant dans Brand.',
+          'Complète instagram_handle dans l’onglet Brand.',
+          itemName
+        ));
+      }
+    });
+  });
+
+  (_app.brandTags || []).forEach(row => {
+    const brand = String(row.brand || '').trim();
+    if (!brand) return;
+    const used = seenBrands.has(_publishSlug(brand));
+    if (used && !row.instagram_handle) {
+      issues.push(_qualityIssue(
+        'warning',
+        'brand',
+        brand,
+        'Marque utilisée mais handle Instagram vide.',
+        'Complète le handle dans Brand pour améliorer Publish.',
+        row.status || ''
+      ));
+    }
+  });
+
+  const contexts = _app.contextTags || [];
+  if (!contexts.length) {
+    issues.push(_qualityIssue(
+      'warning',
+      'tag',
+      'Tags',
+      'Aucun tag contextuel chargé.',
+      'Ajoute ou resynchronise l’onglet Tags.',
+      ''
+    ));
+  }
+  contexts.forEach(row => {
+    const name = row.name || row.tag_type || 'Tag';
+    if (!row.instagram_handle && !row.default_hashtag) {
+      issues.push(_qualityIssue(
+        'warning',
+        'tag',
+        name,
+        'Tag contextuel sans handle ni hashtag.',
+        'Complète instagram_handle ou default_hashtag dans Tags.',
+        row.tag_type || ''
+      ));
+    }
+  });
+
+  const okRows = [];
+  const totalProfiles = profiles.length;
+  const completeProfiles = profiles.filter(profile => {
+    const handle = String(profile.instagram || '').replace(/^@/, '').toLowerCase();
+    const items = equipment[handle] || [];
+    return profile.has_photo && handle && items.length && items.every(item =>
+      item.brand && item.reference && _eqCheckPhoto(item) && _qualityBrandHasLogo(item.brand)
+    );
+  }).length;
+  okRows.push(_qualityIssue(
+    'ok',
+    'rider',
+    'Riders complets',
+    `${completeProfiles}/${totalProfiles} riders ont PP + équipements exploitables.`,
+    'Continuer à compléter les warnings restants.',
+    ''
+  ));
+
+  const brands = Array.from(seenBrands.values());
+  const brandsWithHandle = brands.filter(brand => _qualityBrandHandle(brand)).length;
+  okRows.push(_qualityIssue(
+    'ok',
+    'brand',
+    'Brand handles',
+    `${brandsWithHandle}/${brands.length} marques utilisées ont un handle Instagram.`,
+    'Compléter Brand pour atteindre 100%.',
+    ''
+  ));
+
+  const unique = [];
+  const seen = new Set();
+  [...issues, ...okRows].forEach(issue => {
+    const key = `${issue.severity}|${issue.type}|${issue.target}|${issue.detail}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    unique.push(issue);
+  });
+  return unique;
+}
+
+function renderQualityCenter() {
+  const tbody = document.getElementById('quality-tbody');
+  if (!tbody) return;
+  const severity = document.getElementById('quality-severity')?.value || 'all';
+  const type = document.getElementById('quality-type')?.value || 'all';
+  const query = (document.getElementById('quality-search')?.value || '').trim().toLowerCase();
+  const all = _qualityBuildIssues();
+  const critical = all.filter(i => i.severity === 'critical').length;
+  const warning = all.filter(i => i.severity === 'warning').length;
+  const actionable = critical + warning;
+  const totalChecks = all.length;
+  const score = totalChecks ? Math.max(0, Math.round((totalChecks - actionable) / totalChecks * 100)) : 100;
+
+  document.getElementById('quality-score').textContent = `${score}%`;
+  document.getElementById('quality-critical').textContent = critical;
+  document.getElementById('quality-warning').textContent = warning;
+  document.getElementById('quality-total').textContent = totalChecks;
+  const status = document.getElementById('quality-status');
+  if (status) status.textContent = `${_app.profiles.length} riders · ${Object.keys(_app.equipment || {}).length} fiches équipements · ${(_app.eqVariants || []).length} photos équipement`;
+
+  const filtered = all.filter(item => {
+    if (severity !== 'all' && item.severity !== severity) return false;
+    if (type !== 'all' && item.type !== type) return false;
+    if (query && !item.search.includes(query)) return false;
+    return true;
+  });
+
+  const order = { critical: 0, warning: 1, ok: 2 };
+  filtered.sort((a, b) => (order[a.severity] - order[b.severity]) || a.type.localeCompare(b.type) || a.target.localeCompare(b.target));
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#666">Aucun résultat pour ces filtres.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(item => `
+    <tr>
+      <td><span class="quality-pill ${item.severity}">${_esc(item.severity)}</span></td>
+      <td>${_esc(item.type)}</td>
+      <td class="quality-target">${_esc(item.target)}</td>
+      <td class="quality-detail">${_esc(item.detail)}</td>
+      <td class="quality-action">${_esc(item.action)}</td>
+    </tr>
+  `).join('');
 }
 
 // ── Connexions ────────────────────────────────────────────────────────────────
@@ -5235,8 +6273,7 @@ async function generateEqCard(silent = false) {
     img.src = url; img.style.display = 'block';
     document.getElementById('eq-placeholder').style.display = 'none';
     document.getElementById('eq-page-dl-btn').disabled = false;
-    document.getElementById('eq-add-publish-btn').disabled = false;
-    document.getElementById('eq-add-reel-btn').disabled = false;
+    document.getElementById('eq-add-library-btn').disabled = false;
   } catch(e) {
     area.classList.remove('loading');
     if (!silent) { document.getElementById('eq-error-msg').textContent = '❌ ' + e.message; document.getElementById('eq-error-msg').style.display = 'block'; }
@@ -5269,9 +6306,11 @@ function addRiderCardToReel() {
   });
   _updateReelBadge();
   const btn = document.getElementById('cards-add-reel-btn');
-  btn.textContent = '✓ Ajouté';
-  btn.style.background = '#C8D400'; btn.style.color = '#000';
-  setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+  if (btn) {
+    btn.textContent = '✓ Ajouté';
+    btn.style.background = '#C8D400'; btn.style.color = '#000';
+    setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+  }
 }
 
 function addRiderCardToPublish() {
@@ -5363,23 +6402,163 @@ function addReelTitleCard(mode = 'intro', title = '', subtitle = '') {
   renderReelPage();
 }
 
-function buildPerformanceTop3Reel() {
-  if (!_perfInitialized) initPerformancePage();
-  const category = document.getElementById('perf-category')?.value || 'Fork';
-  const gender = document.getElementById('perf-gender')?.value || 'F';
-  const { rows } = _perfStats();
-  const top = _perfSortRows(rows.filter(r => category === 'all' || r.category === category)).slice(0, 3);
+function initReelPerformanceControls() {
+  const sel = document.getElementById('reel_perf_category');
+  if (!sel) return;
+  const previous = sel.value;
+  const cats = _perfCategories();
+  sel.innerHTML = cats.map(cat => `<option value="${_esc(cat)}">${_esc(cat)}</option>`).join('');
+  if (previous && cats.includes(previous)) sel.value = previous;
+  else if (cats.includes('Fork')) sel.value = 'Fork';
+}
+
+function _reelLoadImage(src) {
+  return new Promise((resolve) => {
+    if (!src) return resolve(null);
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function _reelDrawCover(ctx, img, x, y, w, h) {
+  const scale = Math.min(w / img.width, h / img.height);
+  const iw = img.width * scale;
+  const ih = img.height * scale;
+  ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
+}
+
+function _reelWrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  lines.slice(0, maxLines).forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+  return Math.min(lines.length, maxLines) * lineHeight;
+}
+
+function _reelFindEquipmentPhoto(item) {
+  const norm = s => (s || '').toLowerCase().replace(/[\s\-_\/\.]/g, '');
+  const bNorm = norm(item.brand);
+  const rNorm = norm(item.reference);
+  const words = (item.reference || '').toLowerCase().split(/\s+/).filter(w => w.length > 2).map(norm);
+  const catFolders = (_app.categoryFolders[item.category] || [item.category]).map(norm);
+  const inFolder = _app.eqVariants.filter(f => f.folder && catFolders.includes(norm(f.folder)));
+  const candidates = inFolder.length ? inFolder : _app.eqVariants.filter(f => !f.folder);
+  const score = f => {
+    const s = norm(f.name);
+    if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return 0;
+    if (bNorm && s.includes(bNorm)) return 1;
+    if (words.length && words.some(w => s.includes(w))) return 2;
+    return 9;
+  };
+  return candidates
+    .map(f => ({ ...f, score: score(f) }))
+    .filter(f => f.score < 9)
+    .sort((a, b) => a.score - b.score)[0] || null;
+}
+
+async function _reelPerformanceCardCanvas(stat, idx, gender, category) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1350;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#101010';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#C8D400';
+  ctx.fillRect(0, 0, canvas.width, 14);
+  ctx.fillRect(0, canvas.height - 14, canvas.width, 14);
+
+  ctx.fillStyle = '#1b1b1b';
+  ctx.fillRect(82, 130, 916, 620);
+  const photo = _reelFindEquipmentPhoto(stat);
+  const img = await _reelLoadImage(photo?.url || '');
+  if (img) {
+    ctx.fillStyle = '#f4f4f4';
+    ctx.fillRect(112, 160, 856, 560);
+    _reelDrawCover(ctx, img, 145, 185, 790, 510);
+  } else {
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(112, 160, 856, 560);
+    ctx.fillStyle = '#555';
+    ctx.font = '800 42px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('NO EQUIPMENT PHOTO', canvas.width / 2, 455);
+  }
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#C8D400';
+  ctx.font = '900 88px system-ui, sans-serif';
+  ctx.fillText(`#${idx + 1}`, 90, 895);
+  ctx.fillStyle = '#f5f5f5';
+  ctx.font = '900 58px system-ui, sans-serif';
+  _reelWrapText(ctx, stat.label, 230, 865, 760, 66, 3);
+
+  ctx.fillStyle = '#9a9a9a';
+  ctx.font = '700 30px system-ui, sans-serif';
+  const genderLabel = gender === 'F' ? 'Women' : 'Men';
+  ctx.fillText(`${genderLabel} · ${category} · ${stat.count} rider${stat.count > 1 ? 's' : ''}`, 90, 1045);
+
+  ctx.fillStyle = '#C8D400';
+  ctx.font = '900 54px system-ui, sans-serif';
+  ctx.fillText(`${Math.round(stat.points)} pts`, 90, 1122);
+  ctx.fillStyle = '#777';
+  ctx.font = '700 27px system-ui, sans-serif';
+  ctx.fillText(`Average rank ${stat.avgRank.toFixed(1)} · Best rank #${stat.bestRank}`, 90, 1172);
+
+  const ridersText = stat.riders
+    .slice().sort((a, b) => a.rank - b.rank)
+    .slice(0, 3)
+    .map(r => `#${r.rank} ${r.name}`)
+    .join('   ');
+  ctx.fillStyle = '#bdbdbd';
+  ctx.font = '700 27px system-ui, sans-serif';
+  _reelWrapText(ctx, ridersText, 90, 1232, 900, 34, 2);
+  return canvas.toDataURL('image/png');
+}
+
+async function buildPerformanceTop3Reel() {
+  initReelPerformanceControls();
+  const category = document.getElementById('reel_perf_category')?.value || 'Fork';
+  const gender = document.getElementById('reel_perf_gender')?.value || 'F';
+  const { rows } = _perfStatsFor({ category, gender, topVal: '10', groupMode: 'product' });
+  const top = _perfSortRowsBy(rows, 'points').slice(0, 3);
   if (!top.length) {
-    _reelLog('❌ Aucun Top 3 Performance disponible. Ouvre Performance et choisis une catégorie.', true);
+    _reelLog('❌ Aucun Top 3 Performance disponible pour ce genre et cet équipement.', true);
     return;
   }
   const label = `${gender === 'F' ? 'Women' : 'Men'} Top 3 ${category}`;
   document.getElementById('reel_title').value = label;
+  _reelLog(`⚙ Construction du Top 3 ${category} ${gender === 'F' ? 'femmes' : 'hommes'}…`);
   addReelTitleCard('intro', label, 'Equipment performance ranking');
-  top.forEach((item, idx) => {
-    addReelTitleCard('intro', `#${idx + 1} ${item.label}`, `${Math.round(item.points)} pts · ${item.count} rider${item.count > 1 ? 's' : ''}`);
-  });
+  for (const [idx, item] of top.entries()) {
+    const url = await _reelPerformanceCardCanvas(item, idx, gender, category);
+    _reelItems.push({
+      id: ++_reelIdSeq,
+      label: `#${idx + 1} ${item.label}`,
+      sub: `${Math.round(item.points)} pts · ${item.count} rider${item.count > 1 ? 's' : ''}`,
+      preview_url: url,
+      photo_path: '',
+      rider_instagram: '',
+      is_selection: false,
+      card_params: null,
+      prerendered_url: url,
+      type: 'performance',
+    });
+  }
   addReelTitleCard('outro', 'Full breakdown', 'Built from 2026 results');
+  _reelLog(`✅ Top 3 Performance ajouté (${top.length} cartes visuelles).`);
 }
 
 function _updateReelBadge() {
@@ -5427,9 +6606,11 @@ function addToReel() {
 
   // Flash du bouton
   const btn = document.getElementById('eq-add-reel-btn');
-  btn.textContent = '✓ Ajouté';
-  btn.style.background = '#C8D400'; btn.style.color = '#000';
-  setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+  if (btn) {
+    btn.textContent = '✓ Ajouté';
+    btn.style.background = '#C8D400'; btn.style.color = '#000';
+    setTimeout(() => { btn.textContent = '＋ Reel'; btn.style.background=''; btn.style.color=''; }, 1200);
+  }
 }
 
 function addEqCardToPublish() {
@@ -5483,9 +6664,10 @@ function renderReelPage() {
   const list = document.getElementById('reel-item-list');
   const grid = document.getElementById('reel-preview-grid');
   if (!list) return;
+  renderReelLibrary();
 
   if (_reelItems.length === 0) {
-    list.innerHTML = '<div class="reel-empty">Aucune carte ajoutée.<br>Génère une carte dans l\'onglet Équipements<br>et clique <b>＋ Reel</b>.</div>';
+    list.innerHTML = '<div class="reel-empty">Aucune carte ajoutée.<br>Ajoute une carte depuis la Library ci-dessus.</div>';
     if (grid) grid.innerHTML = '';
     return;
   }
@@ -5496,7 +6678,7 @@ function renderReelPage() {
       <img class="reel-thumb" src="${it.preview_url}" alt="">
       <div class="reel-info">
         <div class="reel-label">${it.label}</div>
-        <div class="reel-sub">${it.type === 'title' ? 'Title card' : it.rider_instagram ? '@' + it.rider_instagram.replace(/^@/,'') : '—'}</div>
+        <div class="reel-sub">${it.type === 'title' ? 'Title card' : it.type === 'performance' ? 'Performance card' : it.type === 'library' ? 'Library card' : it.rider_instagram ? '@' + it.rider_instagram.replace(/^@/,'') : '—'}</div>
       </div>
       <span class="reel-star ${it.is_selection ? 'active' : ''}"
             onclick="toggleReelSelection(${it.id})" title="Rider's Selection">★</span>
@@ -5546,6 +6728,42 @@ function renderReelPage() {
   }
 }
 
+function _reelLibraryItems() {
+  return (_libraryItems || []).filter(item => item.kind !== 'reel' && String(item.mime || '').startsWith('image'));
+}
+
+function renderReelLibrary() {
+  const box = document.getElementById('reel-library-list');
+  if (!box) return;
+  const items = _reelLibraryItems().slice(0, 8);
+  if (!items.length) {
+    box.innerHTML = '<div class="reel-empty" style="grid-column:1/-1;padding:14px 0">Aucune carte dans la Library.<br>Génère une carte puis clique <b>＋ Library</b>.</div>';
+    return;
+  }
+  box.innerHTML = items.map(item => `
+    <div class="reel-library-card">
+      <div class="reel-library-thumb" id="reel-lib-thumb-${item.id}">Chargement…</div>
+      <div class="reel-library-body">
+        <div class="reel-library-label">${_esc(item.label || item.name || item.kind)}</div>
+        <div class="reel-library-meta">${_esc(item.kind)} · ${_esc(item.name || '')}</div>
+        <button class="btn btn-secondary reel-library-add" onclick="libraryAddToReel('${item.id}')">＋ Ajouter</button>
+      </div>
+    </div>
+  `).join('');
+  items.forEach(item => _renderReelLibraryThumb(item));
+}
+
+async function _renderReelLibraryThumb(item) {
+  const box = document.getElementById(`reel-lib-thumb-${item.id}`);
+  if (!box) return;
+  const url = await _libraryUrl(item.id);
+  if (!url) {
+    box.textContent = 'Média indisponible';
+    return;
+  }
+  box.innerHTML = `<img src="${url}" alt="">`;
+}
+
 // Convertit un blob URL en base64 via canvas (fiable pour les grandes images)
 async function _imgToBase64(blobUrl) {
   return new Promise((resolve, reject) => {
@@ -5576,7 +6794,7 @@ async function generateEqReel() {
   _reelLog('');
 
   if (_reelItems.length === 0) {
-    _reelLog('❌ Ajoute au moins une carte via ＋ Reel', true); return;
+    _reelLog('❌ Ajoute au moins une carte depuis la Library', true); return;
   }
 
   _reelLog(`⚙ Préparation de ${_reelItems.length} carte(s)…`);
@@ -5590,7 +6808,7 @@ async function generateEqReel() {
     const items_payload = [];
     for (const it of _reelItems) {
       let b64 = null;
-      if ((it.type === 'rider' || it.type === 'title') && it.preview_url) {
+      if ((it.type === 'rider' || it.type === 'title' || it.type === 'performance' || it.type === 'library') && it.preview_url) {
         try {
           b64 = await _imgToBase64(it.preview_url);
         } catch(e) {
@@ -5641,7 +6859,7 @@ async function generateEqReel() {
       mime: 'video/mp4',
     };
     g('reel-dl-btn').disabled = false;
-    g('reel-add-publish-btn').disabled = false;
+    g('reel-add-library-btn').disabled = false;
 
     // Lecteur vidéo
     const vid = g('reel-video-player');
@@ -5676,6 +6894,322 @@ function addEqReelToPublish() {
   btn.textContent = '✓ Ajouté';
   btn.style.background = '#C8D400'; btn.style.color = '#000';
   setTimeout(() => { btn.textContent = '＋ Publish'; btn.style.background=''; btn.style.color=''; }, 1200);
+}
+
+// ── Library ──────────────────────────────────────────────────────────────────
+const _LIBRARY_META_KEY = 'freeride_creation_library';
+let _libraryItems = _libraryLoadMeta();
+let _libraryObjectUrls = {};
+
+function _libraryLoadMeta() {
+  try {
+    const data = JSON.parse(localStorage.getItem(_LIBRARY_META_KEY) || '[]');
+    return Array.isArray(data) ? data : [];
+  } catch(_) {
+    return [];
+  }
+}
+
+function _librarySaveMeta() {
+  localStorage.setItem(_LIBRARY_META_KEY, JSON.stringify(_libraryItems.slice(0, 120)));
+  updateLibraryBadge();
+}
+
+function _libraryDb() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error('IndexedDB indisponible dans ce navigateur'));
+      return;
+    }
+    const req = indexedDB.open('freeride_creation_library_db', 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('media')) db.createObjectStore('media', { keyPath: 'id' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('Ouverture Library impossible'));
+  });
+}
+
+async function _libraryPutBlob(id, blob) {
+  const db = await _libraryDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('media', 'readwrite');
+    tx.objectStore('media').put({ id, blob });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error('Sauvegarde média impossible'));
+  });
+}
+
+async function _libraryGetBlob(id) {
+  const db = await _libraryDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('media', 'readonly');
+    const req = tx.objectStore('media').get(id);
+    req.onsuccess = () => resolve(req.result?.blob || null);
+    req.onerror = () => reject(req.error || new Error('Lecture média impossible'));
+  });
+}
+
+async function _libraryDeleteBlob(id) {
+  const db = await _libraryDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('media', 'readwrite');
+    tx.objectStore('media').delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error('Suppression média impossible'));
+  });
+}
+
+function updateLibraryBadge() {
+  const count = _libraryItems.length;
+  ['library-badge', 'burger-library-badge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = count;
+    el.style.display = count ? 'inline' : 'none';
+  });
+}
+
+function _libraryFlash(btnId, label = '＋ Library') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.textContent = '✓ Library';
+  btn.style.background = '#C8D400';
+  btn.style.color = '#000';
+  setTimeout(() => { btn.textContent = label; btn.style.background = ''; btn.style.color = ''; }, 1200);
+}
+
+async function _libraryUrl(id) {
+  if (_libraryObjectUrls[id]) return _libraryObjectUrls[id];
+  const blob = await _libraryGetBlob(id);
+  if (!blob) return '';
+  const url = URL.createObjectURL(blob);
+  _libraryObjectUrls[id] = url;
+  return url;
+}
+
+async function _libraryAdd(kind, item, meta = {}) {
+  if (!item?.url) return null;
+  const res = await fetch(item.url);
+  if (!res.ok) throw new Error('Média introuvable');
+  const blob = await res.blob();
+  const id = `lib_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  await _libraryPutBlob(id, blob);
+  const entry = {
+    id,
+    kind,
+    label: item.label || item.name || kind,
+    name: item.name || `${kind}_${id}`,
+    mime: item.mime || blob.type || 'application/octet-stream',
+    created_at: new Date().toISOString(),
+    meta,
+  };
+  _libraryItems = [entry, ..._libraryItems.filter(x => !(x.kind === kind && x.name === entry.name && x.label === entry.label))].slice(0, 120);
+  _librarySaveMeta();
+  if (_activeTab === 'library') renderLibraryPage();
+  return entry;
+}
+
+async function addRiderCardToLibrary() {
+  if (!_lastRiderCardUrl || !lastSlug) return;
+  const sel = document.getElementById('rider');
+  const label = sel.options[sel.selectedIndex]?.text?.trim() || lastSlug;
+  try {
+    await _libraryAdd('rider', {
+      label,
+      url: _lastRiderCardUrl,
+      name: `${lastSlug || 'rider_card'}.jpg`,
+      mime: 'image/jpeg',
+    }, { rider_slug: lastSlug });
+    _libraryFlash('cards-add-library-btn');
+  } catch(e) {
+    document.getElementById('error-msg').textContent = '❌ Library : ' + e.message;
+  }
+}
+
+async function addEqCardToLibrary() {
+  if (!_lastEqCard || !_eqSelectedItem) return;
+  const it = _eqSelectedItem;
+  try {
+    await _libraryAdd('equipment', {
+      label: `${it.category} · ${[it.brand, it.reference].filter(Boolean).join(' ')}`.trim(),
+      url: _lastEqCard.url,
+      name: _lastEqCard.name || 'equipment_card.png',
+      mime: 'image/png',
+    }, {
+      category: it.category || '',
+      brand: it.brand || '',
+      reference: it.reference || '',
+      rider: _eqSelectedRider?.instagram || '',
+    });
+    _libraryFlash('eq-add-library-btn');
+  } catch(e) {
+    document.getElementById('eq-error-msg').textContent = '❌ Library : ' + e.message;
+    document.getElementById('eq-error-msg').style.display = 'block';
+  }
+}
+
+async function addEqReelToLibrary() {
+  if (!_lastEqReel) return;
+  try {
+    await _libraryAdd('reel', {
+      label: document.getElementById('reel_title')?.value || 'Reel MP4',
+      url: _lastEqReel.url,
+      name: _lastEqReel.name || 'reel.mp4',
+      mime: 'video/mp4',
+    }, {
+      cards: _reelItems.length,
+      format: document.getElementById('reel_format')?.value || 'reel',
+    });
+    _libraryFlash('reel-add-library-btn');
+  } catch(e) {
+    _reelLog('❌ Library : ' + e.message, true);
+  }
+}
+
+function _libraryFilteredItems() {
+  const kind = document.getElementById('library-kind-filter')?.value || 'all';
+  const query = (document.getElementById('library-search')?.value || '').trim().toLowerCase();
+  return _libraryItems.filter(item => {
+    if (kind !== 'all' && item.kind !== kind) return false;
+    const text = `${item.kind} ${item.label} ${item.name} ${Object.values(item.meta || {}).join(' ')}`.toLowerCase();
+    return !query || text.includes(query);
+  });
+}
+
+function renderLibraryPage() {
+  updateLibraryBadge();
+  const grid = document.getElementById('library-grid');
+  const status = document.getElementById('library-status');
+  if (!grid) return;
+  const items = _libraryFilteredItems();
+  if (status) {
+    const rider = _libraryItems.filter(x => x.kind === 'rider').length;
+    const equipment = _libraryItems.filter(x => x.kind === 'equipment').length;
+    const reel = _libraryItems.filter(x => x.kind === 'reel').length;
+    status.textContent = `${_libraryItems.length} création${_libraryItems.length > 1 ? 's' : ''} · Rider ${rider} · Equipment ${equipment} · Reel ${reel}`;
+  }
+  if (!items.length) {
+    grid.innerHTML = '<div class="library-empty">Aucun média dans la Library pour ces filtres.</div>';
+    return;
+  }
+  grid.innerHTML = items.map(item => {
+    const date = new Date(item.created_at);
+    const canReel = item.kind !== 'reel';
+    return `<div class="library-card" data-library-id="${item.id}">
+      <div class="library-thumb" id="library-thumb-${item.id}">Chargement…</div>
+      <div class="library-body">
+        <div class="library-title">${_esc(item.label)}</div>
+        <div class="library-meta">${_esc(item.kind)} · ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}<br>${_esc(item.name || '')}</div>
+        <div class="library-actions">
+          ${canReel ? `<button class="btn btn-secondary" onclick="libraryAddToReel('${item.id}')">＋ Reel</button>` : `<button class="btn btn-secondary" disabled>Reel</button>`}
+          <button class="btn btn-secondary" onclick="libraryAddToPublish('${item.id}')">＋ Publish</button>
+          <button class="btn btn-secondary" onclick="libraryDownload('${item.id}')">⬇</button>
+          <button class="btn btn-secondary" onclick="libraryDelete('${item.id}')">Suppr.</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  items.forEach(item => _libraryRenderThumb(item));
+}
+
+async function _libraryRenderThumb(item) {
+  const box = document.getElementById(`library-thumb-${item.id}`);
+  if (!box) return;
+  const url = await _libraryUrl(item.id);
+  if (!url) {
+    box.textContent = 'Média indisponible';
+    return;
+  }
+  if (String(item.mime || '').startsWith('video')) {
+    box.innerHTML = `<video src="${url}" muted preload="metadata"></video>`;
+  } else {
+    box.innerHTML = `<img src="${url}" alt="">`;
+  }
+}
+
+async function libraryAddToReel(id) {
+  const item = _libraryItems.find(x => x.id === id);
+  if (!item || item.kind === 'reel') return;
+  const url = await _libraryUrl(id);
+  if (!url) return;
+  _reelItems.push({
+    id: ++_reelIdSeq,
+    label: item.label,
+    sub: 'Library',
+    preview_url: url,
+    photo_path: '',
+    rider_instagram: item.meta?.rider || '',
+    is_selection: false,
+    card_params: null,
+    prerendered_url: url,
+    type: 'library',
+  });
+  _updateReelBadge();
+  if (_activeTab === 'reel') renderReelPage();
+  const status = document.getElementById('library-status');
+  if (status) status.textContent = 'Ajouté au Reel.';
+}
+
+async function libraryAddToPublish(id) {
+  const item = _libraryItems.find(x => x.id === id);
+  if (!item) return;
+  const url = await _libraryUrl(id);
+  if (!url) return;
+  if (!_publishInitialized) publishInit();
+  const entry = _publishAdd(item.kind, {
+    label: item.label,
+    url,
+    name: item.name,
+    mime: item.mime,
+  });
+  if (entry) {
+    _publishMarkSelected(item.kind, entry.id);
+    _publishDraftKind = item.kind;
+    _publishState = { kind: item.kind, id: entry.id, url, name: item.name, mime: item.mime };
+    publishAutoFill(false);
+    publishPersist();
+    publishRefreshOptions(entry.id);
+    publishRender();
+  }
+  const status = document.getElementById('library-status');
+  if (status) status.textContent = 'Ajouté à Publish.';
+}
+
+async function libraryDownload(id) {
+  const item = _libraryItems.find(x => x.id === id);
+  if (!item) return;
+  const url = await _libraryUrl(id);
+  if (!url) return;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = item.name || 'library-media';
+  a.click();
+}
+
+async function libraryDelete(id) {
+  _libraryItems = _libraryItems.filter(x => x.id !== id);
+  if (_libraryObjectUrls[id]) {
+    URL.revokeObjectURL(_libraryObjectUrls[id]);
+    delete _libraryObjectUrls[id];
+  }
+  try { await _libraryDeleteBlob(id); } catch(_) {}
+  _librarySaveMeta();
+  renderLibraryPage();
+}
+
+async function clearLibrary() {
+  if (!confirm('Vider toute la Library ?')) return;
+  const ids = _libraryItems.map(x => x.id);
+  _libraryItems = [];
+  Object.values(_libraryObjectUrls).forEach(url => URL.revokeObjectURL(url));
+  _libraryObjectUrls = {};
+  for (const id of ids) {
+    try { await _libraryDeleteBlob(id); } catch(_) {}
+  }
+  _librarySaveMeta();
+  renderLibraryPage();
 }
 
 let _publishInitialized = false;
@@ -6120,36 +7654,118 @@ function _publishCombinedText() {
   return blocks.join('\n\n');
 }
 
-function _publishChecklistItems() {
+function _publishTextIncludesAny(text, values) {
+  const haystack = String(text || '').toLowerCase();
+  return values.some(v => {
+    const needle = String(v || '').trim().toLowerCase();
+    return needle && haystack.includes(needle);
+  });
+}
+
+function _publishInstagramFormatStatus() {
+  if (!_publishState.url) {
+    return { ok: false, detail: 'Aucun média sélectionné.' };
+  }
+  const mime = String(_publishState.mime || '').toLowerCase();
+  const name = String(_publishState.name || '').toLowerCase();
+  const isVideo = mime.startsWith('video/') || /\.(mp4|mov|m4v)$/.test(name);
+  const isImage = mime.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/.test(name);
+  if (isVideo) {
+    const isMp4 = mime.includes('mp4') || name.endsWith('.mp4');
+    return {
+      ok: isMp4,
+      warn: !isMp4,
+      detail: isMp4 ? 'Vidéo MP4 prête pour Reel/Story Instagram.' : 'Vidéo détectée, idéalement exporte en MP4.',
+    };
+  }
+  if (isImage) {
+    return { ok: true, detail: 'Image compatible Instagram.' };
+  }
+  return { ok: false, warn: true, detail: 'Format média à vérifier avant publication.' };
+}
+
+function _publishChecklistReport() {
   const text = _publishCombinedText();
   const caption = (document.getElementById('publish-caption')?.value || '').trim();
   const hashtags = (document.getElementById('publish-hashtags')?.value || '').trim();
+  const firstComment = (document.getElementById('publish-first-comment')?.value || '').trim();
   const kind = _publishState.kind || _publishDraftKind || 'rider';
   const ctx = _publishContext(kind);
-  const needsBrand = kind === 'equipment' && !!ctx.item?.brand;
-  const hasBrand = !needsBrand || !!ctx.brandHandle;
-  const hasContext = _publishContextHandles().length > 0 || _publishContextHashtags().length > 0;
-  return [
-    { ok: !!_publishState.url, label: 'Média généré et sélectionné' },
-    { ok: caption.length >= 10, label: 'Caption prête' },
-    { ok: hashtags.includes('#'), label: 'Hashtags présents' },
-    { ok: hasBrand, warn: needsBrand && !hasBrand, label: needsBrand ? 'Handle marque trouvé via Brand' : 'Aucun tag marque requis' },
-    { ok: hasContext, warn: !hasContext, label: 'Tags contexte disponibles via Tags' },
-    { ok: text.length >= 20, label: 'Texte Instagram complet copiable' },
+  const brandHandles = [ctx.brandHandle].filter(Boolean);
+  const needsBrand = ['equipment', 'reel'].includes(kind) && !!ctx.item?.brand;
+  const brandMentioned = !needsBrand || _publishTextIncludesAny(`${caption}\n${firstComment}`, brandHandles);
+  const contextValues = [..._publishContextHandles(), ..._publishContextHashtags()];
+  const hasEventTags = contextValues.length > 0 && _publishTextIncludesAny(text, contextValues);
+  const format = _publishInstagramFormatStatus();
+  const captionOk = caption.length >= 20 && hashtags.includes('#');
+
+  const items = [
+    {
+      key: 'media',
+      ok: !!_publishState.url,
+      label: 'Média OK',
+      detail: _publishState.url ? `${(_publishState.kind || kind).toUpperCase()} sélectionné : ${_publishState.name || 'source prête'}.` : 'Génère ou choisis une source avant publication.',
+    },
+    {
+      key: 'caption',
+      ok: captionOk,
+      warn: caption.length > 0 && !captionOk,
+      label: 'Caption OK',
+      detail: captionOk ? 'Caption et hashtags prêts.' : 'Ajoute une caption claire avec au moins un hashtag.',
+    },
+    {
+      key: 'brands',
+      ok: brandMentioned,
+      warn: needsBrand && !brandMentioned,
+      label: 'Handles marques OK',
+      detail: needsBrand
+        ? (brandMentioned ? `${brandHandles.join(' · ')} présent dans la publication.` : `Handle manquant pour ${ctx.item?.brand || 'la marque'}. Vérifie l’onglet Brand.`)
+        : 'Aucun handle marque obligatoire pour cette source.',
+    },
+    {
+      key: 'events',
+      ok: hasEventTags,
+      warn: !hasEventTags,
+      label: 'Tags event OK',
+      detail: hasEventTags ? 'Tags contextuels présents dans la copy.' : 'Ajoute au moins un tag depuis l’onglet Tags : UCI, Red Bull Bike, event, série, etc.',
+    },
+    {
+      key: 'format',
+      ok: format.ok,
+      warn: format.warn,
+      label: 'Format Instagram OK',
+      detail: format.detail,
+    },
   ];
+  const ready = items.filter(item => item.ok).length;
+  return { items, ready, total: items.length, allOk: ready === items.length };
+}
+
+function _publishChecklistItems() {
+  return _publishChecklistReport().items;
 }
 
 function renderPublishChecklist() {
   const el = document.getElementById('publish-checklist');
   if (!el) return;
-  el.innerHTML = _publishChecklistItems().map(item => {
+  const report = _publishChecklistReport();
+  const rows = report.items.map(item => {
     const cls = item.ok ? 'ok' : item.warn ? 'warn' : '';
     const icon = item.ok ? '✓' : item.warn ? '!' : '·';
     return `<div class="publish-check-row ${cls}">
       <span class="publish-check-dot">${icon}</span>
-      <span>${_esc(item.label)}</span>
+      <span class="publish-check-text">
+        <span class="publish-check-label">${_esc(item.label)}</span>
+        <span class="publish-check-detail">${_esc(item.detail || '')}</span>
+      </span>
     </div>`;
   }).join('');
+  el.innerHTML = `
+    <div class="publish-check-summary ${report.allOk ? 'ok' : ''}">
+      <span>Checklist publication</span>
+      <span class="publish-check-score">${report.ready}/${report.total} prêt</span>
+    </div>
+    ${rows}`;
 }
 
 function _publishHistoryLoad() {
@@ -6171,6 +7787,7 @@ function publishSaveHistory(manual = false) {
     if (manual) document.getElementById('publish-status').textContent = '⚠️ Rien à sauvegarder';
     return;
   }
+  const checklist = _publishChecklistReport();
   const item = {
     id: Date.now(),
     created_at: new Date().toISOString(),
@@ -6185,12 +7802,25 @@ function publishSaveHistory(manual = false) {
     alt: document.getElementById('publish-alt')?.value || '',
     music_select: document.getElementById('publish-music-select')?.value || '',
     music_note: document.getElementById('publish-music-note')?.value || '',
+    checklist_ready: checklist.ready,
+    checklist_total: checklist.total,
+    checklist_all_ok: checklist.allOk,
+    checklist_items: checklist.items.map(x => ({
+      key: x.key,
+      ok: !!x.ok,
+      warn: !!x.warn,
+      label: x.label,
+      detail: x.detail,
+    })),
     text,
   };
   const prev = _publishHistoryLoad().filter(x => x.text !== item.text);
   _publishHistorySave([item, ...prev]);
   renderPublishHistory();
-  if (manual) document.getElementById('publish-status').textContent = '💾 Préparation sauvegardée';
+  if (manual) {
+    document.getElementById('publish-status').textContent =
+      `💾 Préparation sauvegardée · checklist ${checklist.ready}/${checklist.total}`;
+  }
 }
 
 function renderPublishHistory() {
@@ -6204,9 +7834,15 @@ function renderPublishHistory() {
   el.innerHTML = items.slice(0, 12).map(item => {
     const date = new Date(item.created_at);
     const label = item.title || item.source_name || 'Publication préparée';
+    const score = item.checklist_total ? ` · checklist ${item.checklist_ready || 0}/${item.checklist_total}` : '';
+    const cls = item.checklist_all_ok ? 'ok' : '';
     return `<div class="publish-history-item">
       <div class="publish-history-title">${_esc(label)}</div>
-      <div class="publish-history-meta">${_esc(item.kind || 'publish')} · ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+      <div class="publish-history-meta">${_esc(item.kind || 'publish')} · ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}${_esc(score)}</div>
+      <div class="publish-check-summary ${cls}" style="margin-top:8px;padding:7px 8px">
+        <span>${item.checklist_all_ok ? 'Prêt Instagram' : 'À vérifier'}</span>
+        <span class="publish-check-score">${item.checklist_ready || 0}/${item.checklist_total || 5}</span>
+      </div>
       <div class="publish-history-actions">
         <button class="btn btn-secondary" onclick="publishRestoreHistory(${item.id})">Restaurer</button>
         <button class="btn btn-secondary" onclick="publishDeleteHistory(${item.id})">Supprimer</button>
@@ -6572,7 +8208,9 @@ async function publishCopyCaption() {
   try {
     await navigator.clipboard.writeText(txt);
     publishSaveHistory(false);
-    document.getElementById('publish-status').textContent = '✅ Tout le texte Instagram est copié';
+    const checklist = _publishChecklistReport();
+    document.getElementById('publish-status').textContent =
+      `✅ Tout le texte Instagram est copié · checklist ${checklist.ready}/${checklist.total}`;
   } catch(e) {
     document.getElementById('publish-status').textContent = '❌ Impossible de copier';
   }
@@ -6607,7 +8245,8 @@ async function publishShare() {
         text,
         files,
       });
-      status.textContent = '✅ Partagé vers le téléphone';
+      const checklist = _publishChecklistReport();
+      status.textContent = `✅ Partagé vers le téléphone · checklist ${checklist.ready}/${checklist.total}`;
       if (openInstagram) {
         setTimeout(() => { _publishLaunchInstagramApp(); }, 400);
       }
@@ -6616,7 +8255,8 @@ async function publishShare() {
     await publishDownload();
     if (text) await navigator.clipboard.writeText(text);
     publishSaveHistory(false);
-    status.textContent = '⚠️ Partage natif indisponible, média téléchargé + caption copiée';
+    const checklist = _publishChecklistReport();
+    status.textContent = `⚠️ Partage natif indisponible, média téléchargé + caption copiée · checklist ${checklist.ready}/${checklist.total}`;
     if (openInstagram) {
       setTimeout(() => { _publishLaunchInstagramApp(); }, 400);
     }

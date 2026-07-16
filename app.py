@@ -13,10 +13,12 @@ import sys
 import importlib
 import os
 from pathlib import Path
-from flask import Flask, jsonify, request, send_file, Response, session, redirect as flask_redirect
+from flask import Flask, jsonify, request, send_file, send_from_directory, Response, session, redirect as flask_redirect
 
 # ── Import du moteur de génération ───────────────────────────────────────────
 BASE_DIR = Path(__file__).parent
+ASSETS_DIR = BASE_DIR / "assets"
+APP_VERSION = "V0.8"
 sys.path.insert(0, str(BASE_DIR))
 import generate_cards as gc
 
@@ -247,7 +249,7 @@ HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Freeride Fanatics — Card Generator</title>
+<title>Freeride Fanatics V0.8 — Card Generator</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; min-height: 100vh; }
@@ -262,6 +264,43 @@ HTML = r"""<!DOCTYPE html>
   }
   header h1 { font-size: 1.3rem; color: #C8D400; letter-spacing: 2px; text-transform: uppercase; flex-shrink: 0; }
   header span { color: #888; font-size: 0.85rem; }
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid rgba(200,212,0,.45);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.7);
+    flex-shrink: 0;
+  }
+  .brand-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: max-content;
+  }
+  .brand-title span {
+    color: #C8D400;
+    font-size: inherit;
+  }
+  .brand-title .version-badge {
+    color: #111;
+    background: #C8D400;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: .06em;
+    line-height: 1.25;
+  }
+  .loading-brand-mark {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 1px solid rgba(200,212,0,.55);
+    box-shadow: 0 12px 34px rgba(0,0,0,.45);
+  }
 
   /* ── Tab nav ── */
   .tab-nav {
@@ -2191,6 +2230,7 @@ HTML = r"""<!DOCTYPE html>
       row-gap: 6px;
     }
     header h1 { font-size: 0.95rem; letter-spacing: 1px; }
+    .brand-mark { width: 30px; height: 30px; border-radius: 7px; }
 
     /* Mobile : masquer la nav desktop + dropdown, afficher burger */
     .tab-nav { display: none; }
@@ -2293,7 +2333,7 @@ HTML = r"""<!DOCTYPE html>
   position:fixed;inset:0;z-index:9999;
   background:#111;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:18px">
-  <div style="font-size:2rem">⛰️</div>
+  <img class="loading-brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg" alt="Freeride Fanatics">
   <div style="color:#C8D400;font-family:'BebasNeue-Regular',sans-serif;font-size:1.6rem;letter-spacing:2px">
     FREERIDE FANATICS
   </div>
@@ -2304,7 +2344,11 @@ HTML = r"""<!DOCTYPE html>
 </div>
 
 <header>
-  <h1>⛰️ Freeride Fanatics</h1>
+  <h1 class="brand-title">
+    <img class="brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg" alt="">
+    <span>Freeride Fanatics</span>
+    <span class="version-badge">V0.8</span>
+  </h1>
 
   <!-- Nav principale (gauche) -->
   <nav class="tab-nav" id="main-tab-nav">
@@ -9036,8 +9080,12 @@ def api_sponsors():
 
 @app.route("/logos/<path:filename>")
 def serve_logo(filename):
-    from flask import send_from_directory
     return send_from_directory(str(gc.LOGOS_DIR), filename)
+
+
+@app.route("/assets/<path:filename>")
+def serve_asset(filename):
+    return send_from_directory(str(ASSETS_DIR), filename)
 
 
 @app.route("/api/equipment/<instagram>")

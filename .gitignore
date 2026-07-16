@@ -4,6 +4,8 @@ freeride-automation-*.json
 
 # ── Config locale (IDs / URLs privées) ──
 config.py
+config.local.py
+settings.local.*
 
 # ── Photos riders (données personnelles) ──
 PPRIDERS/
@@ -19,6 +21,20 @@ output/
 flags/
 *.xlsx
 *.xls
+
+# ── Publish / connexions locales (préparations, tokens, exports) ──
+publish/
+Publish/
+prepared_posts/
+prepared-posts/
+connections/
+connexions/
+freeride_publish_*
+freeride_connection_*
+google_client_secret*
+google_token*
+meta_token*
+instagram_token*
 
 # ── Cache Python ──
 __pycache__/

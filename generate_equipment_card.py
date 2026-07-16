@@ -360,6 +360,9 @@ def generate_equipment_card(
     logo_x: "int | None" = None,
     photo_bg: tuple      = (255, 255, 255),
     use_v2: bool         = False,
+    show_rider_badge: bool = False,
+    rider_instagram: str   = "",
+    badge_radius: int      = 58,
 ) -> Image.Image:
     """
     Génère et retourne une image PIL RGBA de carte équipement.
@@ -434,6 +437,13 @@ def generate_equipment_card(
         # ── V1 : redessiner la bordure lime + clip arrondi ──
         draw.rounded_rectangle([(0, 0), (W-1, H-1)], radius=RADIUS, outline=LIME_A, width=BORDER)
         card.putalpha(_rounded_clip_mask((W, H), RADIUS))
+
+    if show_rider_badge and rider_instagram:
+        rider_photo = find_rider_photo(rider_instagram)
+        if rider_photo and rider_photo.exists():
+            card = draw_rider_badge(card, rider_photo, panel_y,
+                                    badge_radius=badge_radius,
+                                    instagram=rider_instagram)
 
     return card   # RGBA → sauvegarder en PNG
 

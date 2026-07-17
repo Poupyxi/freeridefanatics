@@ -1549,6 +1549,115 @@ HTML = r"""<!DOCTYPE html>
   .quality-manual-btn.danger:hover { border-color:#f55; color:#f55; }
   .quality-table tr.manual-ignored td { opacity:.58; }
   .quality-table tr.manual-validated td { background:#101406; }
+  .quality-daily {
+    background:#0d0d0d;
+    border:1px solid #2a2a2a;
+    border-radius:9px;
+    padding:14px;
+    margin:14px 0 4px;
+  }
+  .quality-daily-head {
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .quality-daily-title {
+    color:#C8D400;
+    font-size:14px;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .quality-daily-subtitle {
+    color:#666;
+    font-size:11px;
+    margin-top:4px;
+    line-height:1.35;
+  }
+  .quality-daily-grid {
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+  }
+  .quality-daily-card {
+    background:#111;
+    border:1px solid #242424;
+    border-radius:8px;
+    padding:12px;
+    min-width:0;
+  }
+  .quality-daily-card.warn { border-color:#403000; }
+  .quality-daily-card.critical { border-color:#462020; }
+  .quality-daily-card.optional { border-color:#26376f; }
+  .quality-daily-card-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .quality-daily-card-title {
+    color:#eee;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+  }
+  .quality-daily-count {
+    color:#C8D400;
+    font-size:18px;
+    font-weight:950;
+  }
+  .quality-daily-list {
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    margin-bottom:10px;
+  }
+  .quality-daily-item {
+    border:1px solid #202020;
+    background:#0b0b0b;
+    border-radius:7px;
+    padding:8px;
+    min-width:0;
+  }
+  .quality-daily-main {
+    color:#ddd;
+    font-size:12px;
+    font-weight:850;
+    line-height:1.3;
+    overflow-wrap:anywhere;
+  }
+  .quality-daily-sub {
+    color:#666;
+    font-size:10px;
+    line-height:1.35;
+    margin-top:4px;
+    overflow-wrap:anywhere;
+  }
+  .quality-daily-empty {
+    color:#666;
+    font-size:12px;
+    border:1px dashed #282828;
+    border-radius:7px;
+    padding:10px;
+  }
+  .quality-daily-action {
+    width:100%;
+    background:#161616;
+    border:1px solid #333;
+    color:#C8D400;
+    border-radius:7px;
+    padding:8px 10px;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .quality-daily-action:hover { border-color:#C8D400; background:#202400; }
   .quality-assets {
     background:#0d0d0d;
     border:1px solid #222;
@@ -1730,6 +1839,9 @@ HTML = r"""<!DOCTYPE html>
   .quality-expected code {
     color:#C8D400;
     font-family:monospace;
+  }
+  @media (max-width: 1050px) {
+    .quality-daily-grid { grid-template-columns:1fr; }
   }
 
   /* ── Connections page ── */
@@ -2287,6 +2399,7 @@ HTML = r"""<!DOCTYPE html>
   }
   .sponsor-chip:hover { border-color: #777; }
   .sponsor-chip.active { border-color: #C8D400; background: #252800; }
+  .sponsor-chip.auto-active { border-color: #555; background: #171717; }
   .sponsor-chip.active::after {
     content: '✓';
     position: absolute;
@@ -2304,6 +2417,7 @@ HTML = r"""<!DOCTYPE html>
     transition: opacity .15s;
   }
   .sponsor-chip.active img { opacity: 1; filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(30deg); }
+  .sponsor-chip.auto-active img { opacity: .95; }
   .sponsor-chip span {
     font-size: 0.58rem;
     color: #777;
@@ -2312,6 +2426,7 @@ HTML = r"""<!DOCTYPE html>
     letter-spacing: 0.5px;
   }
   .sponsor-chip.active span { color: #C8D400; }
+  .sponsor-chip.auto-active span { color: #bbb; }
 
   .toggle-switch {
     width: 44px; height: 24px;
@@ -4273,6 +4388,10 @@ HTML = r"""<!DOCTYPE html>
     </div>
   </div>
 
+  <div class="quality-daily" id="quality-daily-dashboard">
+    <div class="quality-assets-note">Chargement du tableau de bord quotidien…</div>
+  </div>
+
   <div class="quality-assets" id="quality-asset-summary">
     <div class="quality-assets-note">Chargement des photos équipement manquantes…</div>
   </div>
@@ -4304,6 +4423,7 @@ HTML = r"""<!DOCTYPE html>
         <option value="all">Tout</option>
         <option value="equipment_photo">Photos manquantes</option>
         <option value="equipment_category">Catégories suspectes</option>
+        <option value="sheet_data">Données Sheet</option>
         <option value="optional">Optionnels Publish</option>
       </select>
     </div>
@@ -4518,6 +4638,49 @@ let genderFilter = 'all';  // 'all' | 'F' | 'M'
 let _lastRiderCardUrl = null;
 let _lastPublishSource = null; // { kind, url, name, mime }
 
+function _foldSponsorText(value) {
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function _sponsorChipMatchesName(chip, name) {
+  const target = _foldSponsorText(name);
+  if (!target) return false;
+  const values = [
+    chip?.dataset?.key || '',
+    chip?.querySelector('span')?.textContent || '',
+    chip?.querySelector('img')?.alt || '',
+  ].map(_foldSponsorText).filter(Boolean);
+  return values.some(v => v.includes(target) || target.includes(v));
+}
+
+function clearSponsorSelection() {
+  selectedSponsors.clear();
+  document.querySelectorAll('.sponsor-chip').forEach(chip => {
+    chip.classList.remove('active', 'auto-active');
+    const input = chip.querySelector('input');
+    if (input) input.checked = false;
+  });
+}
+
+function syncAutoSponsors(profile) {
+  clearSponsorSelection();
+  const names = Array.isArray(profile?.sponsors) ? profile.sponsors.filter(Boolean) : [];
+  let matched = 0;
+  document.querySelectorAll('.sponsor-chip').forEach(chip => {
+    const isAuto = names.some(name => _sponsorChipMatchesName(chip, name));
+    chip.classList.toggle('auto-active', isAuto);
+    if (isAuto) matched++;
+  });
+  const badge = document.getElementById('sponsor-mode');
+  if (badge) {
+    badge.textContent = names.length
+      ? `AUTO ${matched}/${names.length}`
+      : 'AUTO équipement';
+  }
+}
+
 // ── Rider list ─────────────────────────────────────────────────────────────
 function setGender(g) {
   genderFilter = (genderFilter === g) ? 'all' : g;  // re-clic = reset
@@ -4649,6 +4812,7 @@ async function onRiderChange() {
   const profile = _app.profiles.find(p => p.slug === slug);
   if (!profile) return;
   _originalProfile = profile;
+  syncAutoSponsors(profile);
   _fillEditFields(profile);
   const editCol = document.getElementById('col-edit');
   editCol.style.display = 'block';
@@ -4728,7 +4892,15 @@ function filterSponsors(query) {
 function toggleSponsor(key, checked) {
   if (checked) selectedSponsors.add(key);
   else selectedSponsors.delete(key);
+  if (selectedSponsors.size === 0) {
+    const slug = document.getElementById('rider')?.value || '';
+    const profile = _app.profiles.find(p => p.slug === slug);
+    syncAutoSponsors(profile);
+    debouncedGenerate(200);
+    return;
+  }
   document.querySelectorAll('.sponsor-chip').forEach(c => {
+    c.classList.remove('auto-active');
     c.classList.toggle('active', c.dataset.key === key && checked ||
                                  c.dataset.key !== key && c.querySelector('input').checked);
   });
@@ -6812,6 +6984,96 @@ function renderQualityAssetSummary(allIssues) {
   `;
 }
 
+function _qualityTopUniquePhotos(missing, limit = 6) {
+  const rows = [];
+  const seen = new Set();
+  missing
+    .slice()
+    .sort((a, b) => (a.priority || 99) - (b.priority || 99) || String(a.itemName).localeCompare(String(b.itemName)))
+    .forEach(item => {
+      const key = `${item.category}|${_brandKey(item.brand)}|${_ffFold(item.reference)}`;
+      if (seen.has(key) || rows.length >= limit) return;
+      seen.add(key);
+      rows.push(item);
+    });
+  return rows;
+}
+
+function _qualitySheetDataIssues(issues) {
+  return issues.filter(item =>
+    item.type === 'equipment'
+    && !item.assetKind
+    && item.severity !== 'ok'
+    && (item.detail.includes('incomplète') || item.detail.includes('Aucun équipement'))
+  );
+}
+
+function renderQualityDailyDashboard(activeIssues) {
+  const box = document.getElementById('quality-daily-dashboard');
+  if (!box) return;
+  const missing = activeIssues.filter(i => i.assetKind === 'equipment_photo');
+  const categories = activeIssues.filter(i => i.assetKind === 'equipment_category');
+  const sheetData = _qualitySheetDataIssues(activeIssues);
+  const photos = _qualityTopUniquePhotos(missing, 6);
+  const categoryRows = categories.slice().sort((a, b) => (a.priority || 99) - (b.priority || 99)).slice(0, 5);
+  const sheetRows = sheetData.slice().sort((a, b) => a.severity.localeCompare(b.severity) || a.target.localeCompare(b.target)).slice(0, 5);
+
+  const list = (rows, empty, render) => rows.length
+    ? `<div class="quality-daily-list">${rows.map(render).join('')}</div>`
+    : `<div class="quality-daily-empty">${_esc(empty)}</div>`;
+
+  box.innerHTML = `
+    <div class="quality-daily-head">
+      <div>
+        <div class="quality-daily-title">Aujourd’hui</div>
+        <div class="quality-daily-subtitle">Les corrections utiles à faire en premier, sans parcourir toute la table.</div>
+      </div>
+      <button class="quality-daily-action" style="width:auto;min-width:180px" onclick="qualityCopyDailyTodo()">Copier la todo</button>
+    </div>
+    <div class="quality-daily-grid">
+      <div class="quality-daily-card warn">
+        <div class="quality-daily-card-head">
+          <span class="quality-daily-card-title">Photos prioritaires</span>
+          <span class="quality-daily-count">${missing.length}</span>
+        </div>
+        ${list(photos, 'Aucune photo équipement prioritaire à traiter.', item => `
+          <div class="quality-daily-item">
+            <div class="quality-daily-main">${_qualityPriorityLabel(item.priority)} · ${_esc(item.category)} · ${_esc(item.itemName || [item.brand, item.reference].filter(Boolean).join(' '))}</div>
+            <div class="quality-daily-sub">${_esc(item.expectedFilename || _qualityExpectedFilename(item))}</div>
+          </div>
+        `)}
+        <button class="quality-daily-action" onclick="qualityFilterIssueKind('equipment_photo')">Voir les photos</button>
+      </div>
+      <div class="quality-daily-card critical">
+        <div class="quality-daily-card-head">
+          <span class="quality-daily-card-title">Catégories suspectes</span>
+          <span class="quality-daily-count">${categories.length}</span>
+        </div>
+        ${list(categoryRows, 'Aucune catégorie suspecte détectée.', item => `
+          <div class="quality-daily-item">
+            <div class="quality-daily-main">${_esc(item.itemName || item.target)}</div>
+            <div class="quality-daily-sub">${_esc(item.riderName || item.target)} · ${_esc(item.category)} → ${_esc(item.expectedCategory || '')}</div>
+          </div>
+        `)}
+        <button class="quality-daily-action" onclick="qualityFilterIssueKind('equipment_category')">Voir les catégories</button>
+      </div>
+      <div class="quality-daily-card optional">
+        <div class="quality-daily-card-head">
+          <span class="quality-daily-card-title">Données Sheet</span>
+          <span class="quality-daily-count">${sheetData.length}</span>
+        </div>
+        ${list(sheetRows, 'Aucune donnée Sheet bloquante à corriger.', item => `
+          <div class="quality-daily-item">
+            <div class="quality-daily-main">${_esc(item.target)}</div>
+            <div class="quality-daily-sub">${_esc(item.detail)}</div>
+          </div>
+        `)}
+        <button class="quality-daily-action" onclick="qualityFilterIssueKind('sheet_data')">Voir les données</button>
+      </div>
+    </div>
+  `;
+}
+
 function qualityFilterAssetCategory(category) {
   const sev = document.getElementById('quality-severity');
   const type = document.getElementById('quality-type');
@@ -6832,7 +7094,7 @@ function qualityFilterIssueKind(issueKind) {
   const search = document.getElementById('quality-search');
   if (state) state.value = 'active';
   if (type) type.value = issueKind === 'optional' ? 'all' : 'equipment';
-  if (sev) sev.value = issueKind === 'optional' ? 'optional' : 'warning';
+  if (sev) sev.value = issueKind === 'optional' ? 'optional' : issueKind === 'sheet_data' ? 'all' : 'warning';
   if (kind) kind.value = issueKind;
   if (search) search.value = '';
   renderQualityCenter();
@@ -6948,6 +7210,7 @@ function renderQualityCenter() {
   const actionable = critical + warning;
   const totalChecks = active.length;
   const score = totalChecks ? Math.max(0, Math.round((totalChecks - actionable) / totalChecks * 100)) : 100;
+  renderQualityDailyDashboard(active);
   renderQualityAssetSummary(active);
 
   document.getElementById('quality-score').textContent = `${score}%`;
@@ -6965,6 +7228,7 @@ function renderQualityCenter() {
     if (type !== 'all' && item.type !== type) return false;
     if (issueKind === 'equipment_photo' && item.assetKind !== 'equipment_photo') return false;
     if (issueKind === 'equipment_category' && item.assetKind !== 'equipment_category') return false;
+    if (issueKind === 'sheet_data' && !_qualitySheetDataIssues([item]).length) return false;
     if (issueKind === 'optional' && item.severity !== 'optional') return false;
     if (query && !item.search.includes(query)) return false;
     return true;
@@ -10326,6 +10590,7 @@ def api_profile(slug):
         "achievements": profile.get("palmares", ""),       # clé interne = "palmares"
         "team":         profile.get("team", ""),
         "instagram":    profile.get("instagram", ""),
+        "sponsors":     profile.get("sponsors", []),
     })
 
 
@@ -10770,6 +11035,7 @@ def api_preload():
             "achievements": p.get("palmares", ""),        # clé interne = "palmares"
             "team":         p.get("team", ""),
             "instagram":    p.get("instagram", ""),
+            "sponsors":     p.get("sponsors", []),
         })
 
     # ── Équipements indexés par handle ──
@@ -11299,14 +11565,14 @@ def _riders_find_photo(handle: str, search_dir: Path):
     h = handle.lstrip("@").lower()
     h_strip = h.replace(".", "").replace("-", "").replace("_", "")
     # Match exact avec ou sans @
-    for ext in (".jpg", ".jpeg", ".png"):
+    for ext in (".jpg", ".jpeg", ".png", ".webp"):
         for stem in (f"@{h}", h):
             p = search_dir / (stem + ext)
             if p.exists():
                 return p, p.name
     # Fuzzy match sur tous les fichiers
     for f in sorted(search_dir.iterdir()):
-        if f.suffix.lower() not in {".jpg", ".jpeg", ".png"}:
+        if f.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue
         stem = f.stem.lower().lstrip("@")
         stem_s = stem.replace(".", "").replace("-", "").replace("_", "").replace(" ", "")
@@ -11318,8 +11584,24 @@ def _riders_find_photo(handle: str, search_dir: Path):
 
 
 def _riders_load_csv():
-    """Charge les riders depuis equipment_men.csv + equipment_women.csv."""
+    """Charge les handles riders depuis la source active, avec fallback CSV historique."""
+    try:
+        _, _, profiles = get_engine()
+        handles = []
+        seen = set()
+        for p in profiles:
+            ig = (p.get("instagram") or "").strip()
+            key = ig.lstrip("@").lower()
+            if ig and key not in seen:
+                handles.append(ig)
+                seen.add(key)
+        if handles:
+            return handles
+    except Exception:
+        pass
+
     riders = []
+    seen = set()
     for fname in ("equipment_men.csv", "equipment_women.csv"):
         p = BASE_DIR / fname
         if not p.exists():
@@ -11328,9 +11610,22 @@ def _riders_load_csv():
         with open(p, newline="", encoding="utf-8") as f:
             for row in _csv.DictReader(f):
                 ig = (row.get("Instagram") or "").strip()
-                if ig:
+                key = ig.lstrip("@").lower()
+                if ig and key not in seen:
                     riders.append(ig)
+                    seen.add(key)
     return riders
+
+def _riders_display_name(handle):
+    key = str(handle or "").lstrip("@").lower()
+    try:
+        _, _, profiles = get_engine()
+        profile = next((p for p in profiles if (p.get("instagram") or "").lstrip("@").lower() == key), None)
+        if profile:
+            return f"{profile.get('prenom', '')} {profile.get('nom', '')}".strip() or key.replace("_", " ").title()
+    except Exception:
+        pass
+    return key.replace("_", " ").title()
 
 
 @app.route("/api/riders/browse-folder")
@@ -11365,7 +11660,7 @@ def api_riders_scan_photos():
     for ig in handles:
         pp_path,  pp_file  = _riders_find_photo(ig, pp_dir)
         pic_path, pic_file = _riders_find_photo(ig, pic_dir)
-        display = ig.lstrip("@").replace("_", " ").title()
+        display = _riders_display_name(ig)
         result.append({
             "instagram":   ig,
             "display_name": display,
@@ -11403,7 +11698,13 @@ def api_riders_thumb():
         return ("", 403)
     if not ok or not resolved.exists():
         return ("", 404)
-    mime = "image/png" if resolved.suffix.lower() == ".png" else "image/jpeg"
+    suffix = resolved.suffix.lower()
+    if suffix == ".png":
+        mime = "image/png"
+    elif suffix == ".webp":
+        mime = "image/webp"
+    else:
+        mime = "image/jpeg"
     return send_file(str(resolved), mimetype=mime)
 
 

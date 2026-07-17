@@ -780,30 +780,29 @@ def find_photo(profile):
     instagram = profile.get("instagram", "").lstrip("@").lower()
     nom       = profile["nom"].lower().replace(" ", "_").replace("-", "_")
     prenom    = profile["prenom"].lower().replace(" ", "_").replace("-", "_")
-    nom_ascii = _ascii(nom).replace("_","")
-    prenom_ascii = _ascii(prenom)
+    nom_ascii = _ascii(nom).replace("_","").replace("-","")
+    prenom_ascii = _ascii(prenom).replace("_","").replace("-","")
+    instagram_ascii = _ascii(instagram).replace("_","").replace("-","").replace(".","")
 
     candidates = []
     if instagram:
         candidates += [f"@{instagram}", instagram]
-    candidates += [f"{nom}_{prenom}", f"{prenom}_{nom}", nom, prenom]
+    candidates += [f"{nom}_{prenom}", f"{prenom}_{nom}"]
 
     for directory in [d for d in [PHOTOS_DIR, BASE_DIR] if d.exists()]:
         # 1. Correspondance exacte
         for stem in candidates:
-            for ext in [".jpg", ".jpeg", ".png"]:
+            for ext in [".jpg", ".jpeg", ".png", ".webp"]:
                 p = directory / (stem + ext)
                 if p.exists():
                     return p
         # 2. Correspondance partielle (avec normalisation unicode)
         for f in sorted(directory.iterdir()):
-            if f.suffix.lower() not in [".jpg", ".jpeg", ".png"]:
+            if f.suffix.lower() not in [".jpg", ".jpeg", ".png", ".webp"]:
                 continue
             stem_l     = f.stem.lower().lstrip("@")
             stem_ascii = _ascii(stem_l).replace("_","").replace("-","")
-            if instagram and (_ascii(instagram) in stem_ascii or stem_ascii in _ascii(instagram)):
-                return f
-            if nom_ascii and nom_ascii in stem_ascii:
+            if instagram_ascii and (instagram_ascii in stem_ascii or stem_ascii in instagram_ascii):
                 return f
             if prenom_ascii and prenom_ascii in stem_ascii and nom_ascii in stem_ascii:
                 return f
@@ -892,11 +891,21 @@ def extract_brands(equipment_list):
 
 
 def _find_logo_file(stem):
-    """Cherche le fichier logo pour un stem donné — SVG prioritaire sur PNG."""
-    for ext in [".svg", ".png"]:
+    """Cherche le fichier logo pour un stem donné — SVG prioritaire, casse tolérante."""
+    exts = [".svg", ".png", ".webp", ".jpg", ".jpeg"]
+    for ext in exts:
         p = LOGOS_DIR / (stem + ext)
         if p.exists():
             return p
+    if LOGOS_DIR.exists():
+        stem_lower = stem.lower()
+        priority = {".svg": 4, ".png": 3, ".webp": 2, ".jpg": 1, ".jpeg": 1}
+        matches = [
+            f for f in LOGOS_DIR.iterdir()
+            if f.is_file() and f.suffix.lower() in priority and f.stem.lower() == stem_lower
+        ]
+        if matches:
+            return sorted(matches, key=lambda f: (-priority.get(f.suffix.lower(), 0), f.name.lower()))[0]
     return None
 
 def brands_from_names(names):

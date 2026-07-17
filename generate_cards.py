@@ -624,6 +624,42 @@ EQUIPMENT_COLUMNS = [
     "Disk",
 ]
 
+_WHEEL_BRANDS = {
+    "bontrager", "crankbrothers", "crank brothers", "dt swiss", "enve", "e*thirteen",
+    "ethirteen", "hope", "industry nine", "mavic", "newmen", "nobl", "oquo",
+    "reserve", "reynolds", "roval", "syncros",
+}
+
+_TIRE_BRANDS = {
+    "continental", "goodyear", "maxxis", "michelin", "pirelli", "schwalbe", "vittoria",
+}
+
+def _equipment_cell_brand(raw):
+    return (str(raw or "").split(";", 1)[0]).strip().lower()
+
+def _fix_shifted_women_disk_row(raw_by_col):
+    """
+    Certaines lignes Women sont remplies avec l'ordre Men, sans colonne Disk.
+    Dans ce cas Disk contient les roues, Wheels les pneus, Tires les pédales, etc.
+    On corrige uniquement quand le pattern est évident.
+    """
+    disk_brand = _equipment_cell_brand(raw_by_col.get("disk", ""))
+    wheels_brand = _equipment_cell_brand(raw_by_col.get("wheels", ""))
+    if disk_brand not in _WHEEL_BRANDS or wheels_brand not in _TIRE_BRANDS:
+        return raw_by_col
+
+    original = dict(raw_by_col)
+    shifted = dict(raw_by_col)
+    shifted["disk"] = ""
+    shifted["wheels"] = original.get("disk", "")
+    shifted["tires"] = original.get("wheels", "")
+    shifted["pedals"] = original.get("tires", "")
+    shifted["shoes"] = original.get("pedals", "")
+    shifted["helmet"] = original.get("shoes", "")
+    shifted["protection"] = original.get("helmet", "")
+    shifted["goggles"] = original.get("protection", "")
+    return shifted
+
 def _extract_instagram_handle(val):
     """Extrait le handle depuis une URL Instagram ou un handle brut."""
     import re
@@ -709,14 +745,19 @@ def load_equipment_from_gsheet():
                 equipment[handle] = {}
             # Index case-insensitive pour matcher GRIP/Grip, CHAIN/Chain, etc.
             header_lower = [h.lower() for h in header]
+            raw_by_col = {}
+            for i, name in enumerate(header_lower):
+                if name:
+                    raw_by_col[name] = row[i].strip() if i < len(row) else ""
+            if "women" in sheet_name.lower() and "disk" in raw_by_col:
+                raw_by_col = _fix_shifted_women_disk_row(raw_by_col)
             for col in EQUIPMENT_COLUMNS:
                 col_lower = col.lower()
-                if col_lower not in header_lower:
+                if col_lower not in raw_by_col:
                     continue
-                idx = header_lower.index(col_lower)
-                if idx >= len(row) or not row[idx].strip():
+                raw = raw_by_col.get(col_lower, "").strip()
+                if not raw:
                     continue
-                raw = row[idx].strip()
                 parts = [p.strip() for p in raw.split(";")]
                 equipment[handle][col] = {
                     "brand":     parts[0] if len(parts) > 0 else "",

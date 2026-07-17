@@ -15,6 +15,7 @@ Usage direct :
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 import sys, textwrap, subprocess, tempfile
+import re, unicodedata
 
 # ── Chemins ───────────────────────────────────────────────────────────────────
 BASE_DIR     = Path(__file__).parent
@@ -152,8 +153,58 @@ def _make_bg() -> Image.Image:
 
 # ── Chercher photo produit + variantes couleur ────────────────────────────────
 def _eq_slug(s: str) -> str:
-    """Normalise brand/référence pour comparaison : minuscules, sans espaces/tirets."""
-    return s.lower().replace(" ", "").replace("-", "").replace("/", "")
+    """Normalise brand/référence pour comparaison robuste."""
+    value = unicodedata.normalize("NFKD", str(s or ""))
+    value = "".join(ch for ch in value if not unicodedata.combining(ch))
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+_BRAND_ALIASES = {
+    "brembolever": "brembo",
+    "comencal": "commencal",
+    "commencal": "commencal",
+    "e13": "ethirteen",
+    "ethirteen": "ethirteen",
+    "oneupcomponents": "oneup",
+    "ohlins": "ohlins",
+    "rental": "renthal",
+    "specialized": "sworks",
+    "sworks": "specialized",
+}
+
+def _brand_keys(brand: str) -> set[str]:
+    raw = _eq_slug(brand)
+    key = _BRAND_ALIASES.get(raw, raw)
+    return {v for v in (raw, key) if v}
+
+def _reference_tokens(reference: str) -> list[str]:
+    generic = {
+        "pro", "team", "factory", "ultimate", "carbon", "alloy", "aluminum",
+        "proto", "prototype", "racing", "line", "black", "white", "red", "blue",
+        "green", "gold", "silver", "gravity", "dh", "mtb",
+    }
+    raw = unicodedata.normalize("NFKD", str(reference or ""))
+    raw = "".join(ch for ch in raw if not unicodedata.combining(ch))
+    return [
+        _eq_slug(w) for w in re.split(r"[^a-zA-Z0-9]+", raw.lower())
+        if len(_eq_slug(w)) >= 3 and _eq_slug(w) not in generic
+    ]
+
+def _photo_score(path: Path, brand: str, reference: str) -> int:
+    name_slug = _eq_slug(path.stem)
+    brand_match = any(key in name_slug for key in _brand_keys(brand))
+    ref_slug = _eq_slug(reference)
+    tokens = _reference_tokens(reference)
+    token_hit = any(t in name_slug for t in tokens)
+    ref_hit = bool(ref_slug and len(ref_slug) >= 4 and ref_slug in name_slug)
+    if brand_match and ref_hit:
+        return 0
+    if brand_match and token_hit:
+        return 1
+    if brand_match:
+        return 2
+    if token_hit or ref_hit:
+        return 6
+    return 99
 
 def _search_dirs(category: str) -> list:
     """Retourne les dossiers à chercher pour une catégorie donnée."""
@@ -178,25 +229,20 @@ def find_eq_photo_variants(brand: str, reference: str, category: str = "") -> li
     """
     if not EQ_PHOTOS.exists():
         return []
-    brand_slug = _eq_slug(brand)
-    ref_slug   = _eq_slug(reference)
     exts = {".jpg", ".jpeg", ".png", ".webp"}
-    results = []
+    ranked = []
     seen = set()
 
     for d in _search_dirs(category):
         for f in sorted(d.iterdir()):
             if f.suffix.lower() not in exts:
                 continue
-            name_slug = _eq_slug(f.stem)
-            # Correspond si le nom commence par brand+model (ou brand seul)
-            if name_slug.startswith(brand_slug + ref_slug) or \
-               (ref_slug and name_slug.startswith(brand_slug) and ref_slug in name_slug) or \
-               (not ref_slug and name_slug.startswith(brand_slug)):
+            score = _photo_score(f, brand, reference)
+            if score < 7:
                 if f not in seen:
                     seen.add(f)
-                    results.append(f)
-    return results
+                    ranked.append((score, f))
+    return [f for _, f in sorted(ranked, key=lambda item: (item[0], item[1].name.lower()))]
 
 def find_eq_photo(brand: str, reference: str, category: str = "") -> Path | None:
     """Retourne la 1ʳᵉ photo trouvée (sans préférence de couleur)."""

@@ -61,6 +61,144 @@ _GOOGLE_SCOPES = [
     'https://www.googleapis.com/auth/userinfo.profile',
 ]
 
+_DEFAULT_GSHEET_ID = getattr(gc, "GSHEET_ID", "")
+_SETTINGS_FILE = _OAUTH_DIR / 'app_settings.json'
+
+def _load_app_settings():
+    try:
+        return _json.loads(_SETTINGS_FILE.read_text()) if _SETTINGS_FILE.exists() else {}
+    except Exception:
+        return {}
+
+def _save_app_settings(data):
+    _SETTINGS_FILE.write_text(_json.dumps(data or {}, indent=2))
+
+def _extract_gsheet_id(value):
+    import re
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    match = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", text)
+    if match:
+        return match.group(1)
+    if re.fullmatch(r"[a-zA-Z0-9_-]{20,}", text):
+        return text
+    return ""
+
+def _active_gsheet_id():
+    settings = _load_app_settings()
+    return settings.get("gsheet_id") or _DEFAULT_GSHEET_ID
+
+def _active_gsheet_url():
+    gsheet_id = _active_gsheet_id()
+    return f"https://docs.google.com/spreadsheets/d/{gsheet_id}/edit" if gsheet_id else ""
+
+def _apply_gsheet_settings():
+    gc.GSHEET_ID = _active_gsheet_id()
+
+_apply_gsheet_settings()
+
+def _fetch_gsheet_rows_for_id(gsheet_id, sheet_name=None, gid=None):
+    import csv as _csv
+    import io as _io
+    import urllib.parse as _urlparse
+    import urllib.request as _urlrequest
+    if gid is not None:
+      url = f"https://docs.google.com/spreadsheets/d/{gsheet_id}/gviz/tq?tqx=out:csv&gid={gid}"
+    else:
+      encoded = _urlparse.quote(str(sheet_name or ""))
+      url = f"https://docs.google.com/spreadsheets/d/{gsheet_id}/gviz/tq?tqx=out:csv&sheet={encoded}"
+    try:
+        req = _urlrequest.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with _urlrequest.urlopen(req, timeout=10, context=getattr(gc, "_ssl_ctx", None)) as r:
+            content = r.read().decode("utf-8")
+        rows = list(_csv.reader(_io.StringIO(content)))
+        if rows and rows[0]:
+            return rows
+    except Exception:
+        return None
+    return None
+
+def _sheet_header_index(rows):
+    if not rows:
+        return 0
+    header_markers = {
+        "firstname", "lastname", "instagram", "frame", "fork", "tires", "tyres",
+        "brand", "instagramhandle", "tagtype", "defaulthashtag", "team",
+    }
+    scored = []
+    for i, row in enumerate(rows[:8]):
+        values = [str(c or "").strip() for c in row]
+        filled = sum(1 for c in values if c)
+        if filled:
+            keys = {_sheet_header_key(c) for c in values if c}
+            marker_hits = len(keys & header_markers)
+            scored.append((marker_hits * 50 + filled, -i, i))
+    if not scored:
+        return 0
+    scored.sort(reverse=True)
+    return scored[0][2]
+
+def _sheet_non_empty_rows(rows):
+    if not rows:
+        return 0
+    header_idx = _sheet_header_index(rows)
+    count = 0
+    for row in rows[header_idx + 1:]:
+        if any(str(c or "").strip() for c in row):
+            count += 1
+    return count
+
+def _sheet_header_values(rows):
+    if not rows:
+        return []
+    row = rows[_sheet_header_index(rows)] if rows else []
+    return [str(c or "").strip().lower() for c in row]
+
+def _sheet_header_key(value):
+    import re as _re
+    import unicodedata as _unicodedata
+    text = _unicodedata.normalize("NFKD", str(value or ""))
+    text = "".join(ch for ch in text if not _unicodedata.combining(ch))
+    return _re.sub(r"[^a-z0-9]+", "", text.lower())
+
+def _test_sheet_candidate(gsheet_id, candidates, required_headers=()):
+    for candidate in candidates:
+        rows = _fetch_gsheet_rows_for_id(
+            gsheet_id,
+            sheet_name=candidate.get("name"),
+            gid=candidate.get("gid"),
+        )
+        if not rows:
+            continue
+        headers = _sheet_header_values(rows)
+        header_keys = {_sheet_header_key(h) for h in headers if h}
+        missing_headers = []
+        for group in required_headers:
+            if isinstance(group, (list, tuple, set)):
+                label = str(next(iter(group), "")).strip()
+                aliases = group
+            else:
+                label = str(group).strip()
+                aliases = (group,)
+            alias_keys = {_sheet_header_key(alias) for alias in aliases if str(alias or "").strip()}
+            if alias_keys and not (header_keys & alias_keys):
+                missing_headers.append(label)
+        if missing_headers:
+            return {
+                "ok": False,
+                "row_count": _sheet_non_empty_rows(rows),
+                "matched": candidate.get("label") or candidate.get("name") or f"gid {candidate.get('gid')}",
+                "detail": "Colonnes manquantes : " + ", ".join(missing_headers),
+            }
+        return {
+            "ok": True,
+            "row_count": _sheet_non_empty_rows(rows),
+            "matched": candidate.get("label") or candidate.get("name") or f"gid {candidate.get('gid')}",
+            "detail": "Onglet détecté.",
+        }
+    return {"ok": False, "row_count": 0, "matched": "", "detail": "Onglet introuvable ou inaccessible."}
+
 # Cache global (rechargé au premier appel)
 _cache = {}
 
@@ -77,6 +215,7 @@ def get_engine():
     return _cache["bg"], _cache["fonts"], _cache["profiles"]
 
 def reload_engine():
+    _apply_gsheet_settings()
     _cache.clear()
     get_engine()
 
@@ -250,6 +389,8 @@ HTML = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Freeride Fanatics V0.8 — Card Generator</title>
+<link rel="icon" href="/assets/brand/freeride-fanatics-summer.jpg">
+<link rel="apple-touch-icon" href="/assets/brand/freeride-fanatics-summer.jpg">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; min-height: 100vh; }
@@ -1274,7 +1415,7 @@ HTML = r"""<!DOCTYPE html>
   #page-quality { display:none; padding:28px 24px 48px; max-width:1400px; margin:0 auto; }
   .quality-kpis {
     display:grid;
-    grid-template-columns:repeat(4, minmax(0, 1fr));
+    grid-template-columns:repeat(5, minmax(0, 1fr));
     gap:12px;
     margin:18px 0;
   }
@@ -1299,6 +1440,7 @@ HTML = r"""<!DOCTYPE html>
   .quality-kpi.good .quality-kpi-value { color:#C8D400; }
   .quality-kpi.warn .quality-kpi-value { color:#f0a000; }
   .quality-kpi.critical .quality-kpi-value { color:#f55; }
+  .quality-kpi.optional .quality-kpi-value { color:#8aa0ff; }
   .quality-toolbar {
     display:flex;
     gap:10px;
@@ -1337,7 +1479,7 @@ HTML = r"""<!DOCTYPE html>
   .quality-table {
     width:100%;
     border-collapse:collapse;
-    min-width:920px;
+    min-width:1180px;
     font-size:12px;
   }
   .quality-table th {
@@ -1375,10 +1517,220 @@ HTML = r"""<!DOCTYPE html>
   }
   .quality-pill.critical { color:#f55; border-color:#5a2020; background:#220808; }
   .quality-pill.warning { color:#f0a000; border-color:#5a3a00; background:#241600; }
+  .quality-pill.optional { color:#8aa0ff; border-color:#26376f; background:#10162c; }
   .quality-pill.ok { color:#C8D400; border-color:#586000; background:#202400; }
+  .quality-pill.active { color:#eee; border-color:#444; background:#181818; }
+  .quality-pill.required { color:#eee; border-color:#444; background:#181818; }
+  .quality-pill.nice_to_have { color:#8aa0ff; border-color:#26376f; background:#10162c; }
+  .quality-pill.ignored { color:#777; border-color:#333; background:#151515; }
+  .quality-pill.validated { color:#C8D400; border-color:#586000; background:#202400; }
   .quality-target { color:#eee; font-weight:800; }
   .quality-detail { color:#777; line-height:1.45; }
   .quality-action { color:#C8D400; font-weight:800; }
+  .quality-manual-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+  }
+  .quality-manual-btn {
+    background:#141414;
+    border:1px solid #333;
+    color:#aaa;
+    border-radius:6px;
+    padding:5px 8px;
+    font-size:10px;
+    font-weight:900;
+    cursor:pointer;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .quality-manual-btn:hover { border-color:#C8D400; color:#C8D400; }
+  .quality-manual-btn.danger:hover { border-color:#f55; color:#f55; }
+  .quality-table tr.manual-ignored td { opacity:.58; }
+  .quality-table tr.manual-validated td { background:#101406; }
+  .quality-assets {
+    background:#0d0d0d;
+    border:1px solid #222;
+    border-radius:8px;
+    padding:14px;
+    margin:14px 0 4px;
+  }
+  .quality-assets-head {
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .quality-assets-title {
+    color:#eee;
+    font-size:13px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .quality-assets-note { color:#666; font-size:11px; margin-top:4px; }
+  .quality-assets-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+    gap:10px;
+  }
+  .quality-work-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .quality-work-card {
+    border:1px solid #272727;
+    background:#101010;
+    border-radius:8px;
+    padding:11px;
+    cursor:pointer;
+    color:inherit;
+    font:inherit;
+    text-align:left;
+    width:100%;
+  }
+  .quality-work-card:hover { border-color:#C8D400; background:#151515; }
+  .quality-work-label {
+    color:#777;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .quality-work-value {
+    color:#eee;
+    font-size:24px;
+    font-weight:950;
+    line-height:1;
+    margin:8px 0 6px;
+  }
+  .quality-work-note { color:#666; font-size:11px; line-height:1.35; }
+  .quality-today {
+    margin-top:12px;
+    border-top:1px solid #222;
+    padding-top:12px;
+  }
+  .quality-today-title {
+    color:#eee;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:8px;
+  }
+  .quality-today-list {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:8px;
+  }
+  .quality-today-item {
+    background:#0b0b0b;
+    border:1px solid #222;
+    border-radius:7px;
+    padding:8px;
+    color:#aaa;
+    font-size:11px;
+    line-height:1.35;
+  }
+  .quality-asset-card {
+    border:1px solid #272727;
+    background:#111;
+    border-radius:8px;
+    padding:11px;
+    cursor:pointer;
+    color:inherit;
+    font:inherit;
+    text-align:left;
+    width:100%;
+  }
+  .quality-asset-card:hover { border-color:#C8D400; background:#151515; }
+  .quality-asset-top {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .quality-asset-cat { color:#eee; font-weight:900; font-size:13px; }
+  .quality-asset-count { color:#C8D400; font-size:22px; font-weight:950; line-height:1; }
+  .quality-asset-meta { color:#777; font-size:11px; line-height:1.45; }
+  .quality-priority {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:58px;
+    padding:3px 7px;
+    border:1px solid #333;
+    border-radius:999px;
+    color:#aaa;
+    background:#151515;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .quality-priority.p1,
+  .quality-priority.p2,
+  .quality-priority.p3 { color:#f55; border-color:#5a2020; background:#220808; }
+  .quality-priority.p4,
+  .quality-priority.p5,
+  .quality-priority.p6 { color:#f0a000; border-color:#5a3a00; background:#241600; }
+  .quality-candidate-btn {
+    margin-top:8px;
+    background:#161616;
+    border:1px solid #444;
+    color:#C8D400;
+    border-radius:6px;
+    padding:6px 9px;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .quality-candidate-btn:hover { border-color:#C8D400; background:#202400; }
+  .quality-candidates { display:none; margin-top:10px; }
+  .quality-candidates.open { display:block; }
+  .quality-candidate-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+    gap:8px;
+  }
+  .quality-candidate {
+    border:1px solid #252525;
+    background:#0b0b0b;
+    border-radius:7px;
+    padding:7px;
+  }
+  .quality-candidate img {
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:contain;
+    background:#181818;
+    border-radius:5px;
+    margin-bottom:6px;
+  }
+  .quality-candidate-name {
+    color:#ddd;
+    font-size:10px;
+    font-weight:800;
+    overflow-wrap:anywhere;
+    line-height:1.25;
+  }
+  .quality-candidate-reason { color:#777; font-size:10px; margin-top:4px; line-height:1.25; }
+  .quality-expected {
+    margin-top:8px;
+    color:#777;
+    font-size:10px;
+    line-height:1.35;
+    overflow-wrap:anywhere;
+  }
+  .quality-expected code {
+    color:#C8D400;
+    font-family:monospace;
+  }
 
   /* ── Connections page ── */
   #page-connections { display:none; padding:32px 24px; max-width:960px; margin:0 auto; }
@@ -1433,6 +1785,105 @@ HTML = r"""<!DOCTYPE html>
   .conn-btn:hover { border-color:#555; color:#eee; }
   .conn-card.connected .conn-btn { color:#cc4400; border-color:#3a1000; background:#1a0a00; }
   .conn-card.connected .conn-btn:hover { border-color:#cc4400; }
+
+  /* ── Settings page ── */
+  #page-settings { display:none; padding:32px 24px; max-width:960px; margin:0 auto; }
+  #page-settings h2 { color:#C8D400; font-size:1.1rem; letter-spacing:1px; margin-bottom:4px; }
+  #page-settings .settings-subtitle { color:#555; font-size:12px; margin-bottom:24px; }
+  .settings-card {
+    background:#111;
+    border:1px solid #222;
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .settings-card-title {
+    color:#eee;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:12px;
+  }
+  .settings-field { display:flex; flex-direction:column; gap:7px; margin-bottom:12px; }
+  .settings-field label {
+    color:#666;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .settings-input {
+    width:100%;
+    background:#0b0b0b;
+    border:1px solid #333;
+    border-radius:7px;
+    color:#eee;
+    padding:10px 11px;
+    font-size:13px;
+    font-family:monospace;
+  }
+  .settings-input:focus { outline:none; border-color:#C8D400; }
+  .settings-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .settings-status { color:#777; font-size:12px; margin-top:10px; line-height:1.45; }
+  .settings-status.ok { color:#C8D400; }
+  .settings-status.err { color:#f55; }
+  .settings-current {
+    color:#aaa;
+    font-size:12px;
+    word-break:break-all;
+    line-height:1.45;
+    background:#0b0b0b;
+    border:1px solid #222;
+    border-radius:7px;
+    padding:10px;
+  }
+  .settings-test-table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:12px;
+    font-size:12px;
+  }
+  .settings-test-table th {
+    color:#C8D400;
+    text-align:left;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    padding:8px;
+    border-bottom:1px solid #333;
+  }
+  .settings-test-table td {
+    color:#aaa;
+    padding:8px;
+    border-bottom:1px solid #1d1d1d;
+    vertical-align:top;
+  }
+  .settings-test-ok { color:#C8D400; font-weight:900; }
+  .settings-test-missing { color:#f55; font-weight:900; }
+  .settings-test-muted { color:#666; font-size:11px; }
+  .settings-checklist {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:10px;
+    margin-top:10px;
+  }
+  .settings-check-item {
+    background:#0b0b0b;
+    border:1px solid #222;
+    border-radius:8px;
+    padding:10px;
+  }
+  .settings-check-title {
+    color:#eee;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+  .settings-check-cols {
+    color:#777;
+    font-size:11px;
+    line-height:1.45;
+  }
 
   /* ── Riders page ── */
   #page-riders { display:none; padding:24px; max-width:1100px; margin:0 auto; }
@@ -2395,7 +2846,10 @@ HTML = r"""<!DOCTYPE html>
         <button class="dashboard-menu-btn" id="tab-brandtags" onclick="switchTab('brandtags'); closeDashboard()">
           🏷 Brand & Tags
         </button>
-        <div class="dashboard-section-label" style="margin-top:6px">Settings</div>
+        <div class="dashboard-section-label" style="margin-top:6px">Paramètres</div>
+        <button class="dashboard-menu-btn" id="tab-settings" onclick="switchTab('settings'); closeDashboard()">
+          ⚙ Paramètres
+        </button>
         <button class="dashboard-menu-btn" id="tab-connections" onclick="switchTab('connections'); closeDashboard()">
           🔗 Connexions
         </button>
@@ -2429,7 +2883,8 @@ HTML = r"""<!DOCTYPE html>
     <button class="burger-item" id="burger-quality" onclick="switchTab('quality'); closeBurger()">✅ Quality Center</button>
     <button class="burger-item" id="burger-audit" onclick="switchTab('audit'); closeBurger()">📋 Audit Équipements</button>
     <button class="burger-item" id="burger-brandtags" onclick="switchTab('brandtags'); closeBurger()">🏷 Brand & Tags</button>
-    <div class="burger-divider">Settings</div>
+    <div class="burger-divider">Paramètres</div>
+    <button class="burger-item" id="burger-settings" onclick="switchTab('settings'); closeBurger()">⚙ Paramètres</button>
     <button class="burger-item" id="burger-connections" onclick="switchTab('connections'); closeBurger()">🔗 Connexions</button>
   </div>
 </div>
@@ -3622,8 +4077,47 @@ HTML = r"""<!DOCTYPE html>
         </table>
       </div>
     </div>
-  </div>
+</div>
 </div><!-- fin #page-brandtags -->
+
+<!-- ══════════════════ PAGE SETTINGS ══════════════════ -->
+<div id="page-settings">
+  <h2>⚙ PARAMÈTRES</h2>
+  <p class="settings-subtitle">Configuration locale de la source de données.</p>
+
+  <div class="settings-card">
+    <div class="settings-card-title">Google Sheet</div>
+    <div class="settings-field">
+      <label for="settings-gsheet-url">Lien ou ID du Google Sheet</label>
+      <input id="settings-gsheet-url" class="settings-input" type="text"
+        placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+    </div>
+    <div class="settings-actions">
+      <button class="btn btn-secondary" onclick="settingsTestGoogleSheet()">Tester</button>
+      <button class="btn" onclick="settingsSaveGoogleSheet()">Sauvegarder</button>
+      <button class="btn btn-secondary" onclick="settingsResetGoogleSheet()">Réinitialiser</button>
+      <button class="btn btn-secondary" onclick="settingsOpenGoogleSheet()">Ouvrir</button>
+    </div>
+    <div class="settings-status" id="settings-gsheet-status"></div>
+    <div id="settings-gsheet-test"></div>
+  </div>
+
+  <div class="settings-card">
+    <div class="settings-card-title">Sheet actif</div>
+    <div class="settings-current" id="settings-gsheet-current">Chargement…</div>
+  </div>
+
+  <div class="settings-card">
+    <div class="settings-card-title">Modèle attendu</div>
+    <div class="settings-current">
+      Le test vérifie les onglets indispensables, leur nombre de lignes et les colonnes minimales nécessaires au fonctionnement de l’app.
+    </div>
+    <div class="settings-actions" style="margin-top:12px">
+      <button class="btn btn-secondary" onclick="settingsCopySheetChecklist()">Copier la checklist Sheet</button>
+    </div>
+    <div class="settings-checklist" id="settings-sheet-checklist"></div>
+  </div>
+</div><!-- fin #page-settings -->
 
 <!-- ══════════════════ PAGE CONNECTIONS ══════════════════ -->
 <div id="page-connections">
@@ -3752,6 +4246,7 @@ HTML = r"""<!DOCTYPE html>
     <button class="btn" onclick="renderQualityCenter()">↺ Actualiser</button>
     <button class="btn" onclick="rescanEqPhotos(true).then(renderQualityCenter)">📸 Rescan photos équipement</button>
     <button class="btn" onclick="refreshBrandTags().then(renderQualityCenter)">🏷 Resync Brand & Tags</button>
+    <button class="btn btn-secondary" onclick="qualityCopyDailyTodo()">Copier la todo du jour</button>
     <span id="quality-status" style="font-size:12px;color:#666"></span>
   </div>
 
@@ -3765,13 +4260,21 @@ HTML = r"""<!DOCTYPE html>
       <div class="quality-kpi-value" id="quality-critical">0</div>
     </div>
     <div class="quality-kpi warn">
-      <div class="quality-kpi-label">Warnings</div>
+      <div class="quality-kpi-label">Manquants</div>
       <div class="quality-kpi-value" id="quality-warning">0</div>
     </div>
+    <div class="quality-kpi optional">
+      <div class="quality-kpi-label">Optionnels</div>
+      <div class="quality-kpi-value" id="quality-optional">0</div>
+    </div>
     <div class="quality-kpi">
-      <div class="quality-kpi-label">Checks total</div>
+      <div class="quality-kpi-label">Checks actifs</div>
       <div class="quality-kpi-value" id="quality-total">0</div>
     </div>
+  </div>
+
+  <div class="quality-assets" id="quality-asset-summary">
+    <div class="quality-assets-note">Chargement des photos équipement manquantes…</div>
   </div>
 
   <div class="quality-toolbar">
@@ -3781,6 +4284,7 @@ HTML = r"""<!DOCTYPE html>
         <option value="all">Tout</option>
         <option value="critical">Critique</option>
         <option value="warning">Warning</option>
+        <option value="optional">Optionnel</option>
         <option value="ok">OK</option>
       </select>
     </div>
@@ -3792,6 +4296,24 @@ HTML = r"""<!DOCTYPE html>
         <option value="equipment">Equipment</option>
         <option value="brand">Brand</option>
         <option value="tag">Tags</option>
+      </select>
+    </div>
+    <div class="quality-field">
+      <label for="quality-kind">Sujet</label>
+      <select id="quality-kind" onchange="renderQualityCenter()">
+        <option value="all">Tout</option>
+        <option value="equipment_photo">Photos manquantes</option>
+        <option value="equipment_category">Catégories suspectes</option>
+        <option value="optional">Optionnels Publish</option>
+      </select>
+    </div>
+    <div class="quality-field">
+      <label for="quality-state">Statut</label>
+      <select id="quality-state" onchange="renderQualityCenter()">
+        <option value="active">Actifs</option>
+        <option value="ignored">Ignorés</option>
+        <option value="validated">Validés</option>
+        <option value="all">Tout</option>
       </select>
     </div>
     <div class="quality-field" style="flex:1;min-width:260px">
@@ -3806,13 +4328,16 @@ HTML = r"""<!DOCTYPE html>
         <tr>
           <th>Severity</th>
           <th>Type</th>
+          <th>Besoin</th>
+          <th>Statut</th>
+          <th>Priorité</th>
           <th>Cible</th>
           <th>Détail</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody id="quality-tbody">
-        <tr><td colspan="5" style="color:#555">Chargement…</td></tr>
+        <tr><td colspan="8" style="color:#555">Chargement…</td></tr>
       </tbody>
     </table>
   </div>
@@ -5428,7 +5953,7 @@ function renderPerformance() {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────
-const _DASHBOARD_TABS = ['logos', 'riders', 'connections', 'quality', 'audit', 'brandtags'];
+const _DASHBOARD_TABS = ['logos', 'riders', 'settings', 'connections', 'quality', 'audit', 'brandtags'];
 
 function switchTab(tab) {
   _activeTab = tab;
@@ -5456,6 +5981,7 @@ function switchTab(tab) {
   document.getElementById('page-reel').style.display        = tab === 'reel'        ? 'block' : 'none';
   document.getElementById('page-library').style.display     = tab === 'library'     ? 'block' : 'none';
   document.getElementById('page-publish').style.display     = tab === 'publish'     ? 'block' : 'none';
+  document.getElementById('page-settings').style.display    = tab === 'settings'    ? 'block' : 'none';
   document.getElementById('page-connections').style.display = tab === 'connections' ? 'block' : 'none';
   document.getElementById('page-quality').style.display     = tab === 'quality'     ? 'block' : 'none';
   document.getElementById('page-audit').style.display       = tab === 'audit'       ? 'block' : 'none';
@@ -5466,6 +5992,7 @@ function switchTab(tab) {
   if (tab === 'reel') { initReelPerformanceControls(); renderReelPage(); _initReelRiderList(); }
   if (tab === 'library') renderLibraryPage();
   if (tab === 'publish') publishInit();
+  if (tab === 'settings') settingsLoadGoogleSheet();
   if (tab === 'connections') connRefreshGoogle();
   if (tab === 'quality') renderQualityCenter();
   if (tab === 'audit') loadEqAudit();
@@ -5530,24 +6057,434 @@ async function refreshBrandTags() {
   }
 }
 
+// ── Settings ────────────────────────────────────────────────────────────────
+const _SETTINGS_SHEET_MODEL = [
+  { label: 'Riders', cols: ['First Name', 'Last Name', 'Instagram', 'Team'] },
+  { label: 'Equipment Women', cols: ['G', 'Instagram', 'Frame', 'Fork', 'Tires'] },
+  { label: 'Equipment Men', cols: ['G', 'Instagram', 'Frame', 'Fork', 'Tires'] },
+  { label: 'Résultats 2026', cols: ['First Name', 'Last Name', 'event columns'] },
+  { label: 'Brand', cols: ['brand', 'instagram_handle', 'status'] },
+  { label: 'Tags', cols: ['tag_type', 'name', 'instagram_handle', 'default_hashtag'] },
+];
+
+function settingsRenderSheetChecklist() {
+  const box = document.getElementById('settings-sheet-checklist');
+  if (!box) return;
+  box.innerHTML = _SETTINGS_SHEET_MODEL.map(item => `
+    <div class="settings-check-item">
+      <div class="settings-check-title">${_esc(item.label)}</div>
+      <div class="settings-check-cols">${item.cols.map(col => _esc(col)).join(' · ')}</div>
+    </div>
+  `).join('');
+}
+
+function settingsSheetChecklistText() {
+  return [
+    'Freeride Fanatics - checklist Google Sheet',
+    '',
+    ..._SETTINGS_SHEET_MODEL.map(item => `- ${item.label}: ${item.cols.join(', ')}`),
+  ].join('\n');
+}
+
+async function settingsCopySheetChecklist() {
+  const status = document.getElementById('settings-gsheet-status');
+  try {
+    await navigator.clipboard.writeText(settingsSheetChecklistText());
+    if (status) {
+      status.className = 'settings-status ok';
+      status.textContent = 'Checklist Google Sheet copiée.';
+    }
+  } catch(e) {
+    if (status) {
+      status.className = 'settings-status err';
+      status.textContent = 'Impossible de copier la checklist.';
+    }
+  }
+}
+
+async function settingsLoadGoogleSheet() {
+  const input = document.getElementById('settings-gsheet-url');
+  const current = document.getElementById('settings-gsheet-current');
+  const status = document.getElementById('settings-gsheet-status');
+  if (!input || !current) return;
+  settingsRenderSheetChecklist();
+  try {
+    const data = await fetch('/api/settings/google-sheet').then(r => r.json());
+    input.value = data.active_url || '';
+    current.textContent = data.active_url || 'Aucun Google Sheet configuré';
+    if (status) {
+      status.className = 'settings-status';
+      status.textContent = data.source === 'settings' ? 'Source personnalisée active.' : 'Source par défaut active.';
+    }
+  } catch(e) {
+    if (status) {
+      status.className = 'settings-status err';
+      status.textContent = 'Impossible de charger les paramètres.';
+    }
+  }
+}
+
+async function settingsSaveGoogleSheet() {
+  const input = document.getElementById('settings-gsheet-url');
+  const status = document.getElementById('settings-gsheet-status');
+  const value = input?.value?.trim() || '';
+  if (!value) {
+    if (status) {
+      status.className = 'settings-status err';
+      status.textContent = 'Ajoute un lien ou un ID Google Sheet.';
+    }
+    return;
+  }
+  try {
+    const res = await fetch('/api/settings/google-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sheet_url: value }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Paramètre invalide');
+    if (status) {
+      status.className = 'settings-status ok';
+      status.textContent = 'Google Sheet sauvegardé. Rechargement des données…';
+    }
+    setTimeout(() => location.reload(), 600);
+  } catch(e) {
+    if (status) {
+      status.className = 'settings-status err';
+      status.textContent = e.message || 'Sauvegarde impossible.';
+    }
+  }
+}
+
+async function settingsTestGoogleSheet() {
+  const input = document.getElementById('settings-gsheet-url');
+  const status = document.getElementById('settings-gsheet-status');
+  const target = document.getElementById('settings-gsheet-test');
+  const value = input?.value?.trim() || '';
+  if (!value) {
+    if (status) {
+      status.className = 'settings-status err';
+      status.textContent = 'Ajoute un lien ou un ID Google Sheet à tester.';
+    }
+    if (target) target.innerHTML = '';
+    return;
+  }
+  if (status) {
+    status.className = 'settings-status';
+    status.textContent = 'Test du Google Sheet en cours…';
+  }
+  if (target) target.innerHTML = '';
+  try {
+    const res = await fetch('/api/settings/google-sheet/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sheet_url: value }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Test impossible');
+    if (status) {
+      status.className = data.all_ok ? 'settings-status ok' : 'settings-status err';
+      status.textContent = data.all_ok
+        ? 'Google Sheet compatible.'
+        : 'Google Sheet incomplet : vérifie les onglets manquants.';
+    }
+    if (target) {
+      target.innerHTML = `
+        <table class="settings-test-table">
+          <thead>
+            <tr><th>Onglet</th><th>Statut</th><th>Lignes</th><th>Détail</th></tr>
+          </thead>
+          <tbody>
+            ${(data.sheets || []).map(sheet => `
+              <tr>
+                <td>${_esc(sheet.label || sheet.key)}</td>
+                <td class="${sheet.ok ? 'settings-test-ok' : 'settings-test-missing'}">${sheet.ok ? 'OK' : 'Manquant'}</td>
+                <td>${Number(sheet.row_count || 0)}</td>
+                <td>
+                  ${_esc(sheet.detail || '')}
+                  ${sheet.matched ? `<div class="settings-test-muted">${_esc(sheet.matched)}</div>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+  } catch(e) {
+    if (status) {
+      status.className = 'settings-status err';
+      status.textContent = e.message || 'Test impossible.';
+    }
+  }
+}
+
+async function settingsResetGoogleSheet() {
+  const status = document.getElementById('settings-gsheet-status');
+  try {
+    const res = await fetch('/api/settings/google-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reset: true }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Réinitialisation impossible');
+    if (status) {
+      status.className = 'settings-status ok';
+      status.textContent = 'Source par défaut restaurée. Rechargement des données…';
+    }
+    setTimeout(() => location.reload(), 600);
+  } catch(e) {
+    if (status) {
+      status.className = 'settings-status err';
+      status.textContent = e.message || 'Réinitialisation impossible.';
+    }
+  }
+}
+
+function settingsOpenGoogleSheet() {
+  const value = document.getElementById('settings-gsheet-url')?.value?.trim();
+  if (!value) return;
+  const url = value.startsWith('http')
+    ? value
+    : `https://docs.google.com/spreadsheets/d/${encodeURIComponent(value)}/edit`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 // ── Quality Center ───────────────────────────────────────────────────────────
-function _qualityIssue(severity, type, target, detail, action, search = '') {
-  return { severity, type, target, detail, action, search: `${type} ${target} ${detail} ${action} ${search}`.toLowerCase() };
+function _qualityIssue(severity, type, target, detail, action, search = '', extra = {}) {
+  const requirement = extra.requirement || (severity === 'optional' ? 'nice_to_have' : 'required');
+  return { severity, type, target, detail, action, requirement, search: `${type} ${target} ${detail} ${action} ${search}`.toLowerCase(), ...extra };
+}
+
+const _QUALITY_MANUAL_STORAGE = 'frf_quality_manual_status_v1';
+
+function _qualityManualMap() {
+  try { return JSON.parse(localStorage.getItem(_QUALITY_MANUAL_STORAGE) || '{}') || {}; }
+  catch(e) { return {}; }
+}
+
+function _qualitySaveManualMap(map) {
+  try { localStorage.setItem(_QUALITY_MANUAL_STORAGE, JSON.stringify(map || {})); }
+  catch(e) {}
+}
+
+function _qualityIssueKey(issue) {
+  return [
+    issue.type,
+    issue.target,
+    issue.detail,
+    issue.category || '',
+    issue.brand || '',
+    issue.reference || '',
+    issue.assetKind || '',
+  ].map(_ffFold).join('|');
+}
+
+function _qualityDecorateManual(issue) {
+  const key = _qualityIssueKey(issue);
+  const state = _qualityManualMap()[key] || 'active';
+  return { ...issue, key, manualState: state };
+}
+
+function qualitySetManualStatus(key, status) {
+  const map = _qualityManualMap();
+  if (!status || status === 'active') delete map[key];
+  else map[key] = status;
+  _qualitySaveManualMap(map);
+  renderQualityCenter();
+}
+
+function _ffFold(value) {
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+const _BRAND_ALIASES = {
+  brembolever: 'brembo',
+  commencal: 'commencal',
+  comencal: 'commencal',
+  e13: 'ethirteen',
+  ethirteen: 'ethirteen',
+  oneupcomponents: 'oneup',
+  ohlins: 'ohlins',
+  rental: 'renthal',
+  specialized: 'sworks',
+  sworks: 'specialized',
+};
+
+function _brandKey(value) {
+  const key = _ffFold(value);
+  return _BRAND_ALIASES[key] || key;
+}
+
+function _brandKeys(value) {
+  const key = _brandKey(value);
+  const raw = _ffFold(value);
+  return Array.from(new Set([key, raw, _BRAND_ALIASES[raw]].filter(Boolean)));
+}
+
+function _referenceTokens(value) {
+  const generic = new Set([
+    'pro', 'team', 'factory', 'ultimate', 'carbon', 'alloy', 'aluminum',
+    'proto', 'prototype', 'racing', 'line', 'black', 'white', 'red', 'blue',
+    'green', 'gold', 'silver', 'gravity', 'dh', 'mtb'
+  ]);
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map(_ffFold)
+    .filter(w => w.length >= 3 && !generic.has(w));
+}
+
+function _equipmentPhotoScore(item, file) {
+  const fileKey = _ffFold(file?.name || file?.stem || '');
+  if (!fileKey) return 99;
+  const brandMatches = _brandKeys(item?.brand).some(key => key && fileKey.includes(key));
+  const refKey = _ffFold(item?.reference);
+  const tokens = _referenceTokens(item?.reference);
+  const tokenHits = tokens.filter(t => fileKey.includes(t)).length;
+  const distinctiveRefHit = tokenHits > 0 || (refKey.length >= 4 && fileKey.includes(refKey));
+
+  if (brandMatches && refKey && fileKey.includes(refKey)) return 0;
+  if (brandMatches && distinctiveRefHit) return 1;
+  if (brandMatches) return 2;
+  if (distinctiveRefHit) return 6;
+  return 99;
+}
+
+const _QUALITY_ASSET_PRIORITY = {
+  Frame: 1,
+  Fork: 2,
+  Helmet: 3,
+  Tires: 4,
+  'Rear Shock': 5,
+  Wheels: 6,
+  'Brake Lever': 7,
+  Derailleur: 8,
+  Handlebar: 9,
+  Crankset: 10,
+  Pedals: 11,
+  Goggles: 12,
+  Protection: 13,
+  'Dropper Post': 14,
+  Saddle: 15,
+  Shoes: 16,
+  GRIP: 17,
+  CHAIN: 18,
+  Disk: 19,
+};
+
+function _qualityPriority(category) {
+  return _QUALITY_ASSET_PRIORITY[category] || 99;
+}
+
+function _qualityPriorityClass(priority) {
+  if (!priority || priority >= 99) return 'p99';
+  return `p${Math.min(priority, 9)}`;
+}
+
+function _qualityPriorityLabel(priority) {
+  return priority && priority < 99 ? `P${priority}` : 'P?';
+}
+
+function _qualityCategoryFiles(category) {
+  const norm = s => (s || '').toLowerCase().replace(/[\s\-_\/\.]/g, '');
+  const folders = (_app.categoryFolders?.[category] || [category]).map(norm);
+  return (_app.eqVariants || []).filter(f => folders.includes(norm(f.folder || '')));
+}
+
+function _qualityTokenScore(queryToken, fileTokens, fileKey) {
+  if (!queryToken || queryToken.length < 3) return 0;
+  if (fileKey.includes(queryToken)) return 8;
+  let best = 0;
+  fileTokens.forEach(token => {
+    if (!token || token.length < 3) return;
+    if (token.includes(queryToken) || queryToken.includes(token)) best = Math.max(best, 5);
+    else if (token.slice(0, 4) === queryToken.slice(0, 4)) best = Math.max(best, 3);
+    else if (token.slice(0, 3) === queryToken.slice(0, 3)) best = Math.max(best, 2);
+  });
+  return best;
+}
+
+function _qualityFindPhotoCandidates(item, limit = 5) {
+  const files = _qualityCategoryFiles(item.category);
+  const brandKeys = _brandKeys(item.brand).filter(k => k.length >= 3);
+  const refTokens = _referenceTokens(item.reference);
+  const queryTokens = Array.from(new Set([...brandKeys, ...refTokens]));
+  if (!files.length || !queryTokens.length) return [];
+
+  return files.map(file => {
+    const fileKey = _ffFold(file.name || file.stem || '');
+    const fileTokens = String(file.name || file.stem || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .map(_ffFold)
+      .filter(w => w.length >= 3);
+    const hits = [];
+    let score = 0;
+    queryTokens.forEach(token => {
+      const tokenScore = _qualityTokenScore(token, fileTokens, fileKey);
+      if (tokenScore > 0) {
+        score += tokenScore;
+        hits.push(token);
+      }
+    });
+    return {
+      ...file,
+      candidateScore: score,
+      reason: hits.length ? `match: ${hits.slice(0, 3).join(', ')}` : '',
+    };
+  })
+    .filter(file => file.candidateScore >= 5)
+    .sort((a, b) => b.candidateScore - a.candidateScore || String(a.name).localeCompare(String(b.name)))
+    .slice(0, limit);
+}
+
+function _qualityExpectedFilename(item) {
+  const category = String(item?.category || 'Equipment').trim() || 'Equipment';
+  const cleanPart = value => String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\/\\:]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const base = [cleanPart(item?.brand), cleanPart(item?.reference)]
+    .filter(Boolean)
+    .join(';') || 'image';
+  return `Equipment/${category}/${base}.png`;
+}
+
+const _QUALITY_TIRE_BRANDS = new Set(['continental', 'maxxis', 'michelin', 'schwalbe', 'vittoria', 'pirelli', 'goodyear']);
+
+function _qualitySuspectedCategory(item) {
+  const category = item?.category || '';
+  const brand = _brandKey(item?.brand);
+  const ref = _ffFold(item?.reference);
+
+  if (category !== 'Crankset' && (brand === '5dev' || /crank|cranks|crankset/.test(ref))) return 'Crankset';
+  if (category !== 'Tires' && (_QUALITY_TIRE_BRANDS.has(brand) || /assegai|argotal|kryptotal|shorty|highroller|hillbilly|butcher|magicmary|tackychan|albert|tire|tyre/.test(ref))) return 'Tires';
+  if (category !== 'Wheels' && /wheel|wheelset|rim|rims|fr1500|ex471|synthesis|blacklabel|carbondh|30dh|mc32/.test(ref)) return 'Wheels';
+  if (category !== 'Pedals' && (/pedal|mallet|x3ti/.test(ref) || brand === 'ht')) return 'Pedals';
+  if (category !== 'Saddle' && /saddle|alpaca|cloud|kaslo|ifly/.test(ref)) return 'Saddle';
+  if (category !== 'Helmet' && /helmet|legitcarbon|status/.test(ref) && category !== 'Goggles') return 'Helmet';
+  return '';
 }
 
 function _qualityBrandHasLogo(brand) {
   if (!brand) return false;
-  const norm = s => String(s || '').toLowerCase().replace(/[\s\-_\/\.]/g, '');
-  const b = norm(brand);
+  const brandKeys = _brandKeys(brand);
   return (_app.sponsors || []).some(s => {
-    const values = [s.key, s.label, s.file].map(norm).filter(Boolean);
-    return values.some(v => v.includes(b) || b.includes(v));
+    const values = [s.key, s.label, s.file].map(_brandKey).filter(Boolean);
+    return values.some(v => brandKeys.some(b => v.includes(b) || b.includes(v)));
   });
 }
 
 function _qualityBrandHandle(brand) {
   if (!brand) return '';
-  const row = (_app.brandTags || []).find(b => _publishSlug(b.brand) === _publishSlug(brand));
+  const brandKeys = _brandKeys(brand);
+  const row = (_app.brandTags || []).find(b => brandKeys.includes(_brandKey(b.brand)));
   return row?.instagram_handle || '';
 }
 
@@ -5608,36 +6545,76 @@ function _qualityBuildIssues() {
         ));
       }
       if (item.brand) {
-        seenBrands.set(_publishSlug(item.brand), item.brand);
+        seenBrands.set(_brandKey(item.brand), item.brand);
       }
-      if (item.brand && item.reference && !_eqCheckPhoto(item)) {
+      const suspectedCategory = _qualitySuspectedCategory(item);
+      const categoryMismatch = Boolean(suspectedCategory && suspectedCategory !== item.category);
+      if (categoryMismatch) {
+        issues.push(_qualityIssue(
+          'warning',
+          'equipment',
+          label,
+          `Catégorie suspecte pour ${itemName}. Attendu plutôt : ${suspectedCategory}.`,
+          'Corrige la colonne dans le Google Sheet, puis actualise les données.',
+          `${profile.instagram} ${item.category || ''} ${suspectedCategory} ${itemName} ${item.details || ''}`,
+          {
+            assetKind: 'equipment_category',
+            category: item.category || 'Equipment',
+            expectedCategory: suspectedCategory,
+            brand: item.brand || '',
+            reference: item.reference || '',
+            itemName,
+            riderName: name,
+            instagram: profile.instagram || '',
+            priority: _qualityPriority(suspectedCategory),
+          }
+        ));
+      }
+      if (item.brand && item.reference && !categoryMismatch && !_eqCheckPhoto(item)) {
+        const priority = _qualityPriority(item.category);
+        const candidates = _qualityFindPhotoCandidates(item);
+        const expectedFilename = _qualityExpectedFilename(item);
         issues.push(_qualityIssue(
           'warning',
           'equipment',
           label,
           `Photo équipement manquante pour ${itemName}.`,
           'Ajoute une image dans le dossier Equipment de cette catégorie, puis Rescan photos.',
-          `${profile.instagram} ${itemName} ${item.details || ''}`
+          `${profile.instagram} ${item.category || ''} ${itemName} ${item.details || ''}`,
+          {
+            assetKind: 'equipment_photo',
+            category: item.category || 'Equipment',
+            brand: item.brand || '',
+            reference: item.reference || '',
+            itemName,
+            riderName: name,
+            instagram: profile.instagram || '',
+            priority,
+            candidates,
+            expectedFilename,
+          }
         ));
       }
       if (item.brand && !_qualityBrandHasLogo(item.brand)) {
         issues.push(_qualityIssue(
-          'warning',
+          'optional',
           'brand',
           item.brand,
           'Logo marque non détecté.',
-          'Ajoute le logo dans le gestionnaire Logos.',
-          itemName
+          'Optionnel : ajoute le logo pour améliorer le rendu visuel des cartes.',
+          itemName,
+          { requirement: 'nice_to_have' }
         ));
       }
       if (item.brand && !_qualityBrandHandle(item.brand)) {
         issues.push(_qualityIssue(
-          'warning',
+          'optional',
           'brand',
           item.brand,
           'Handle Instagram marque manquant dans Brand.',
-          'Complète instagram_handle dans l’onglet Brand.',
-          itemName
+          'Optionnel : complète instagram_handle pour améliorer Publish.',
+          itemName,
+          { requirement: 'nice_to_have' }
         ));
       }
     });
@@ -5646,15 +6623,16 @@ function _qualityBuildIssues() {
   (_app.brandTags || []).forEach(row => {
     const brand = String(row.brand || '').trim();
     if (!brand) return;
-    const used = seenBrands.has(_publishSlug(brand));
+    const used = seenBrands.has(_brandKey(brand));
     if (used && !row.instagram_handle) {
       issues.push(_qualityIssue(
-        'warning',
+        'optional',
         'brand',
         brand,
         'Marque utilisée mais handle Instagram vide.',
-        'Complète le handle dans Brand pour améliorer Publish.',
-        row.status || ''
+        'Optionnel : complète le handle dans Brand pour améliorer Publish.',
+        row.status || '',
+        { requirement: 'nice_to_have' }
       ));
     }
   });
@@ -5662,24 +6640,26 @@ function _qualityBuildIssues() {
   const contexts = _app.contextTags || [];
   if (!contexts.length) {
     issues.push(_qualityIssue(
-      'warning',
+      'optional',
       'tag',
       'Tags',
       'Aucun tag contextuel chargé.',
-      'Ajoute ou resynchronise l’onglet Tags.',
-      ''
+      'Optionnel : ajoute ou resynchronise l’onglet Tags pour Publish.',
+      '',
+      { requirement: 'nice_to_have' }
     ));
   }
   contexts.forEach(row => {
     const name = row.name || row.tag_type || 'Tag';
     if (!row.instagram_handle && !row.default_hashtag) {
       issues.push(_qualityIssue(
-        'warning',
+        'optional',
         'tag',
         name,
         'Tag contextuel sans handle ni hashtag.',
-        'Complète instagram_handle ou default_hashtag dans Tags.',
-        row.tag_type || ''
+        'Optionnel : complète instagram_handle ou default_hashtag dans Tags.',
+        row.tag_type || '',
+        { requirement: 'nice_to_have' }
       ));
     }
   });
@@ -5719,9 +6699,237 @@ function _qualityBuildIssues() {
     const key = `${issue.severity}|${issue.type}|${issue.target}|${issue.detail}`;
     if (seen.has(key)) return;
     seen.add(key);
-    unique.push(issue);
+    unique.push(_qualityDecorateManual(issue));
   });
   return unique;
+}
+
+function renderQualityAssetSummary(allIssues) {
+  const box = document.getElementById('quality-asset-summary');
+  if (!box) return;
+  const missing = allIssues.filter(i => i.assetKind === 'equipment_photo');
+  const categoryIssues = allIssues.filter(i => i.assetKind === 'equipment_category');
+  const optionalIssues = allIssues.filter(i => i.severity === 'optional');
+  const summaryCards = `
+    <div class="quality-work-grid">
+      <button class="quality-work-card" onclick="qualityFilterIssueKind('equipment_photo')">
+        <div class="quality-work-label">Vraiment manquant</div>
+        <div class="quality-work-value">${missing.length}</div>
+        <div class="quality-work-note">Photos équipement à créer ou récupérer.</div>
+      </button>
+      <button class="quality-work-card" onclick="qualityFilterIssueKind('equipment_category')">
+        <div class="quality-work-label">Catégorie suspecte</div>
+        <div class="quality-work-value">${categoryIssues.length}</div>
+        <div class="quality-work-note">Lignes Sheet probablement placées dans la mauvaise colonne.</div>
+      </button>
+      <button class="quality-work-card" onclick="qualityFilterIssueKind('optional')">
+        <div class="quality-work-label">Optionnel Publish</div>
+        <div class="quality-work-value">${optionalIssues.length}</div>
+        <div class="quality-work-note">Handles, logos et tags utiles mais non bloquants.</div>
+      </button>
+    </div>
+  `;
+  if (!missing.length) {
+    box.innerHTML = `
+      ${summaryCards}
+      <div class="quality-assets-head">
+        <div>
+          <div class="quality-assets-title">Photos équipement manquantes</div>
+          <div class="quality-assets-note">Aucune photo équipement manquante détectée avec les règles actuelles.</div>
+        </div>
+        <span class="quality-pill ok">OK</span>
+      </div>
+    `;
+    return;
+  }
+
+  const groups = new Map();
+  missing.forEach(issue => {
+    const category = issue.category || 'Equipment';
+    if (!groups.has(category)) {
+      groups.set(category, {
+        category,
+        priority: issue.priority || _qualityPriority(category),
+        rows: [],
+        unique: new Set(),
+        candidates: 0,
+      });
+    }
+    const group = groups.get(category);
+    group.rows.push(issue);
+    group.unique.add(`${_brandKey(issue.brand)}|${_ffFold(issue.reference)}`);
+    if ((issue.candidates || []).length) group.candidates += 1;
+  });
+
+  const ordered = Array.from(groups.values())
+    .sort((a, b) => a.priority - b.priority || b.rows.length - a.rows.length || a.category.localeCompare(b.category));
+  const totalUnique = new Set(missing.map(i => `${i.category}|${_brandKey(i.brand)}|${_ffFold(i.reference)}`)).size;
+  const today = [];
+  const seenToday = new Set();
+  missing
+    .slice()
+    .sort((a, b) => (a.priority || 99) - (b.priority || 99) || String(a.itemName).localeCompare(String(b.itemName)))
+    .forEach(item => {
+      const key = `${item.category}|${_brandKey(item.brand)}|${_ffFold(item.reference)}`;
+      if (seenToday.has(key) || today.length >= 10) return;
+      seenToday.add(key);
+      today.push(item);
+    });
+
+  box.innerHTML = `
+    ${summaryCards}
+    <div class="quality-assets-head">
+      <div>
+        <div class="quality-assets-title">Photos équipement réellement manquantes</div>
+        <div class="quality-assets-note">${missing.length} lignes rider · ${totalUnique} équipements uniques · priorité automatique par impact visuel.</div>
+      </div>
+      <span class="quality-pill warning">${missing.length}</span>
+    </div>
+    <div class="quality-assets-grid">
+      ${ordered.map(group => `
+        <button class="quality-asset-card" onclick="qualityFilterAssetCategory('${_esc(group.category)}')" title="Filtrer ${_esc(group.category)}">
+          <div class="quality-asset-top">
+            <span class="quality-asset-cat">${_esc(group.category)}</span>
+            <span class="quality-priority ${_qualityPriorityClass(group.priority)}">${_qualityPriorityLabel(group.priority)}</span>
+          </div>
+          <div class="quality-asset-count">${group.rows.length}</div>
+          <div class="quality-asset-meta">${group.unique.size} équipement${group.unique.size > 1 ? 's' : ''} unique${group.unique.size > 1 ? 's' : ''}<br>${group.candidates} avec candidat proche</div>
+        </button>
+      `).join('')}
+    </div>
+    <div class="quality-today">
+      <div class="quality-today-title">Photos à récupérer aujourd’hui</div>
+      <div class="quality-today-list">
+        ${today.map(item => `
+          <div class="quality-today-item">
+            <strong>${_qualityPriorityLabel(item.priority)} · ${_esc(item.category)}</strong><br>
+            ${_esc(item.itemName || [item.brand, item.reference].filter(Boolean).join(' '))}<br>
+            <span style="color:#666">${_esc(item.expectedFilename || _qualityExpectedFilename(item))}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function qualityFilterAssetCategory(category) {
+  const sev = document.getElementById('quality-severity');
+  const type = document.getElementById('quality-type');
+  const kind = document.getElementById('quality-kind');
+  const search = document.getElementById('quality-search');
+  if (sev) sev.value = 'warning';
+  if (type) type.value = 'equipment';
+  if (kind) kind.value = 'equipment_photo';
+  if (search) search.value = category;
+  renderQualityCenter();
+}
+
+function qualityFilterIssueKind(issueKind) {
+  const sev = document.getElementById('quality-severity');
+  const type = document.getElementById('quality-type');
+  const kind = document.getElementById('quality-kind');
+  const state = document.getElementById('quality-state');
+  const search = document.getElementById('quality-search');
+  if (state) state.value = 'active';
+  if (type) type.value = issueKind === 'optional' ? 'all' : 'equipment';
+  if (sev) sev.value = issueKind === 'optional' ? 'optional' : 'warning';
+  if (kind) kind.value = issueKind;
+  if (search) search.value = '';
+  renderQualityCenter();
+}
+
+function qualityToggleCandidatePanel(btn) {
+  const panel = btn?.closest('td')?.querySelector('.quality-candidates');
+  if (!panel) return;
+  panel.classList.toggle('open');
+}
+
+function _qualityPriorityCell(item) {
+  if (!['equipment_photo', 'equipment_category'].includes(item.assetKind)) return '<span style="color:#444">-</span>';
+  const priority = item.priority || _qualityPriority(item.category);
+  return `<span class="quality-priority ${_qualityPriorityClass(priority)}">${_qualityPriorityLabel(priority)}</span>`;
+}
+
+function _qualityRequirementCell(item) {
+  const value = item.requirement === 'nice_to_have' ? 'optionnel' : 'requis';
+  const cls = item.requirement === 'nice_to_have' ? 'nice_to_have' : 'required';
+  return `<span class="quality-pill ${cls}">${value}</span>`;
+}
+
+function _qualityManualStateCell(item) {
+  const state = item.manualState || 'active';
+  const labels = { active: 'actif', ignored: 'ignoré', validated: 'validé' };
+  return `<span class="quality-pill ${state}">${labels[state] || state}</span>`;
+}
+
+function _qualityManualControls(item) {
+  if (item.severity === 'ok') return '';
+  const key = _esc(item.key || '');
+  if (item.manualState === 'ignored' || item.manualState === 'validated') {
+    return `
+      <div class="quality-manual-actions">
+        <button class="quality-manual-btn" onclick="qualitySetManualStatus('${key}', 'active')">Réactiver</button>
+      </div>
+    `;
+  }
+  return `
+    <div class="quality-manual-actions">
+      <button class="quality-manual-btn" onclick="qualitySetManualStatus('${key}', 'validated')">Valider</button>
+      <button class="quality-manual-btn danger" onclick="qualitySetManualStatus('${key}', 'ignored')">Ignorer</button>
+    </div>
+  `;
+}
+
+function _qualityActionHtml(item) {
+  const candidates = item.candidates || [];
+  const expected = item.assetKind === 'equipment_photo'
+    ? `<div class="quality-expected">Nom attendu : <code>${_esc(item.expectedFilename || _qualityExpectedFilename(item))}</code></div>`
+    : '';
+  const candidateHtml = item.assetKind === 'equipment_photo' ? (candidates.length ? `
+    <button class="quality-candidate-btn" onclick="qualityToggleCandidatePanel(this)">Voir ${candidates.length} candidat${candidates.length > 1 ? 's' : ''}</button>
+    <div class="quality-candidates">
+      <div class="quality-candidate-grid">
+        ${candidates.map(c => `
+          <div class="quality-candidate">
+            <img src="${_esc(c.url)}" alt="${_esc(c.name)}">
+            <div class="quality-candidate-name">${_esc(c.folder ? `${c.folder}/` : '')}${_esc(c.name)}</div>
+            <div class="quality-candidate-reason">${_esc(c.reason || 'fichier proche')}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '<div class="quality-assets-note" style="margin-top:8px">Aucun candidat proche dans le dossier de cette catégorie.</div>') : '';
+  return `<div class="quality-action">${_esc(item.action)}</div>${expected}${candidateHtml}${_qualityManualControls(item)}`;
+}
+
+async function qualityCopyDailyTodo() {
+  const issues = _qualityBuildIssues().filter(i => (i.manualState || 'active') === 'active');
+  const photos = issues
+    .filter(i => i.assetKind === 'equipment_photo')
+    .sort((a, b) => (a.priority || 99) - (b.priority || 99) || String(a.itemName).localeCompare(String(b.itemName)));
+  const categories = issues.filter(i => i.assetKind === 'equipment_category');
+  const optionals = issues.filter(i => i.severity === 'optional');
+  const lines = ['Freeride Fanatics - todo qualité du jour', ''];
+  lines.push(`Photos réellement manquantes (${photos.length})`);
+  photos.slice(0, 25).forEach(item => {
+    lines.push(`- ${_qualityPriorityLabel(item.priority)} ${item.category}: ${item.itemName || `${item.brand} ${item.reference}`} -> ${item.expectedFilename || _qualityExpectedFilename(item)}`);
+  });
+  if (photos.length > 25) lines.push(`- ... ${photos.length - 25} autres photos`);
+  lines.push('', `Catégories suspectes (${categories.length})`);
+  categories.slice(0, 25).forEach(item => {
+    lines.push(`- ${item.riderName || item.target}: ${item.itemName || `${item.brand} ${item.reference}`} est dans ${item.category}, vérifier ${item.expectedCategory}`);
+  });
+  if (categories.length > 25) lines.push(`- ... ${categories.length - 25} autres lignes`);
+  lines.push('', `Optionnels Publish (${optionals.length})`);
+  optionals.slice(0, 15).forEach(item => lines.push(`- ${item.target}: ${item.detail}`));
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    const status = document.getElementById('quality-status');
+    if (status) status.textContent = 'Todo qualité copiée.';
+  } catch(e) {
+    const status = document.getElementById('quality-status');
+    if (status) status.textContent = 'Impossible de copier la todo.';
+  }
 }
 
 function renderQualityCenter() {
@@ -5729,43 +6937,61 @@ function renderQualityCenter() {
   if (!tbody) return;
   const severity = document.getElementById('quality-severity')?.value || 'all';
   const type = document.getElementById('quality-type')?.value || 'all';
+  const issueKind = document.getElementById('quality-kind')?.value || 'all';
+  const stateFilter = document.getElementById('quality-state')?.value || 'active';
   const query = (document.getElementById('quality-search')?.value || '').trim().toLowerCase();
   const all = _qualityBuildIssues();
-  const critical = all.filter(i => i.severity === 'critical').length;
-  const warning = all.filter(i => i.severity === 'warning').length;
+  const active = all.filter(i => (i.manualState || 'active') === 'active');
+  const critical = active.filter(i => i.severity === 'critical').length;
+  const warning = active.filter(i => i.severity === 'warning').length;
+  const optional = active.filter(i => i.severity === 'optional').length;
   const actionable = critical + warning;
-  const totalChecks = all.length;
+  const totalChecks = active.length;
   const score = totalChecks ? Math.max(0, Math.round((totalChecks - actionable) / totalChecks * 100)) : 100;
+  renderQualityAssetSummary(active);
 
   document.getElementById('quality-score').textContent = `${score}%`;
   document.getElementById('quality-critical').textContent = critical;
   document.getElementById('quality-warning').textContent = warning;
+  document.getElementById('quality-optional').textContent = optional;
   document.getElementById('quality-total').textContent = totalChecks;
   const status = document.getElementById('quality-status');
   if (status) status.textContent = `${_app.profiles.length} riders · ${Object.keys(_app.equipment || {}).length} fiches équipements · ${(_app.eqVariants || []).length} photos équipement`;
 
   const filtered = all.filter(item => {
+    const itemState = item.manualState || 'active';
+    if (stateFilter !== 'all' && itemState !== stateFilter) return false;
     if (severity !== 'all' && item.severity !== severity) return false;
     if (type !== 'all' && item.type !== type) return false;
+    if (issueKind === 'equipment_photo' && item.assetKind !== 'equipment_photo') return false;
+    if (issueKind === 'equipment_category' && item.assetKind !== 'equipment_category') return false;
+    if (issueKind === 'optional' && item.severity !== 'optional') return false;
     if (query && !item.search.includes(query)) return false;
     return true;
   });
 
-  const order = { critical: 0, warning: 1, ok: 2 };
-  filtered.sort((a, b) => (order[a.severity] - order[b.severity]) || a.type.localeCompare(b.type) || a.target.localeCompare(b.target));
+  const order = { critical: 0, warning: 1, optional: 2, ok: 3 };
+  filtered.sort((a, b) => {
+    const pa = a.assetKind === 'equipment_photo' ? (a.priority || 99) : 99;
+    const pb = b.assetKind === 'equipment_photo' ? (b.priority || 99) : 99;
+    return (order[a.severity] - order[b.severity]) || a.type.localeCompare(b.type) || (pa - pb) || a.target.localeCompare(b.target);
+  });
 
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="color:#666">Aucun résultat pour ces filtres.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="color:#666">Aucun résultat pour ces filtres.</td></tr>';
     return;
   }
 
   tbody.innerHTML = filtered.map(item => `
-    <tr>
+    <tr class="${item.manualState === 'ignored' ? 'manual-ignored' : item.manualState === 'validated' ? 'manual-validated' : ''}">
       <td><span class="quality-pill ${item.severity}">${_esc(item.severity)}</span></td>
       <td>${_esc(item.type)}</td>
+      <td>${_qualityRequirementCell(item)}</td>
+      <td>${_qualityManualStateCell(item)}</td>
+      <td>${_qualityPriorityCell(item)}</td>
       <td class="quality-target">${_esc(item.target)}</td>
       <td class="quality-detail">${_esc(item.detail)}</td>
-      <td class="quality-action">${_esc(item.action)}</td>
+      <td>${_qualityActionHtml(item)}</td>
     </tr>
   `).join('');
 }
@@ -5808,11 +7034,13 @@ async function connRefreshGoogle() {
   try {
     const d = await fetch('/api/auth/google/status').then(r => r.json());
     if (!d.configured) {
+      card.classList.remove('connected');
       statusEl.innerHTML = '<span class="dot" style="background:#f90"></span>client_secret.json requis';
       btn.textContent = 'Configurer ↗';
       btn.style.background = '';
       btn.onclick = () => window.open('https://console.cloud.google.com/apis/credentials', '_blank');
     } else if (d.connected) {
+      card.classList.add('connected');
       statusEl.innerHTML = `<span class="dot" style="background:#4CAF50"></span>${d.email || 'Connecté'}`;
       btn.textContent = 'Déconnecter';
       btn.style.background = '#2a2a2a';
@@ -5822,6 +7050,7 @@ async function connRefreshGoogle() {
         connRefreshGoogle();
       };
     } else {
+      card.classList.remove('connected');
       statusEl.innerHTML = '<span class="dot"></span>Non connecté';
       btn.textContent = 'Se connecter';
       btn.style.background = '';
@@ -6654,29 +7883,16 @@ let _eqSelectedRider = null;  // profil complet du rider sélectionné (pour bad
 // ── Checks statut par item d'équipement ──────────────────────────────────────
 function _eqCheckPhoto(it) {
   const norm = s => (s || '').toLowerCase().replace(/[\s\-_\/\.]/g, '');
-  const bNorm = norm(it.brand);
-  const rNorm = norm(it.reference);
-  const words = (it.reference || '').toLowerCase().split(/\s+/)
-    .filter(w => w.length > 2).map(norm);
   const catFolders = (_app.categoryFolders[it.category] || [it.category]).map(norm);
   return _app.eqVariants.some(f => {
     if (!catFolders.includes(norm(f.folder || ''))) return false;
-    const s = norm(f.name);
-    if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return true;
-    if (bNorm && s.includes(bNorm)) return true;
-    if (words.length && words.some(w => s.includes(w))) return true;
-    return false;
+    return _equipmentPhotoScore(it, f) < 7;
   });
 }
 
 function _eqCheckLogo(brand) {
   if (!brand) return false;
-  const norm = s => s.toLowerCase().replace(/[\s\-_\/]/g, '');
-  const b = norm(brand);
-  return _app.sponsors.some(s => {
-    const k = norm(s.key || s.label || '');
-    return k && (k.includes(b) || b.includes(k));
-  });
+  return _qualityBrandHasLogo(brand);
 }
 
 function onEqRiderClick(slug) {
@@ -6787,8 +8003,6 @@ function loadColorVariants(it) {
   let variants = _app.varCache[cacheKey];
   if (!variants) {
     const norm = s => (s||'').toLowerCase().replace(/[\s\-\_\/\.]/g, '');
-    const bNorm = norm(it.brand);
-    const rNorm = norm(it.reference);
     // Dossiers valides pour cette catégorie
     const catFolders = (_app.categoryFolders[it.category] || [it.category])
       .map(f => norm(f));
@@ -6799,21 +8013,13 @@ function loadColorVariants(it) {
       return catFolders.includes(norm(f.folder));
     });
 
-    const score = f => {
-      const s = norm(f.name);
-      if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return 0;  // marque + modèle
-      if (bNorm && s.includes(bNorm)) return 1;                                  // marque seule
-      const words = (it.reference||'').toLowerCase().split(/\s+/).filter(Boolean);
-      if (words.some(w => w.length > 2 && s.includes(norm(w)))) return 2;       // mot-clé ref
-      return 3;                                                                   // hors sujet
-    };
+    const score = f => _equipmentPhotoScore(it, f);
 
     if (inFolder.length === 0) {
       // Fallback : racine Equipment/ si aucun dossier matche
-      variants = _app.eqVariants.filter(f => !f.folder && score(f) < 3);
+      variants = _app.eqVariants.filter(f => !f.folder && score(f) < 7);
     } else {
-      // Garder marque OU modèle (scores 0, 1, 2) — exclure les hors-sujet (score 3)
-      const matched = inFolder.filter(f => score(f) < 3).sort((a, b) => score(a) - score(b));
+      const matched = inFolder.filter(f => score(f) < 7).sort((a, b) => score(a) - score(b));
       if (matched.length > 0) {
         variants = matched;
       } else {
@@ -7131,22 +8337,12 @@ function _reelWrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
 
 function _reelFindEquipmentPhoto(item) {
   const norm = s => (s || '').toLowerCase().replace(/[\s\-_\/\.]/g, '');
-  const bNorm = norm(item.brand);
-  const rNorm = norm(item.reference);
-  const words = (item.reference || '').toLowerCase().split(/\s+/).filter(w => w.length > 2).map(norm);
   const catFolders = (_app.categoryFolders[item.category] || [item.category]).map(norm);
   const inFolder = _app.eqVariants.filter(f => f.folder && catFolders.includes(norm(f.folder)));
   const candidates = inFolder.length ? inFolder : _app.eqVariants.filter(f => !f.folder);
-  const score = f => {
-    const s = norm(f.name);
-    if (bNorm && rNorm && s.includes(bNorm) && s.includes(rNorm)) return 0;
-    if (bNorm && s.includes(bNorm)) return 1;
-    if (words.length && words.some(w => s.includes(w))) return 2;
-    return 9;
-  };
   return candidates
-    .map(f => ({ ...f, score: score(f) }))
-    .filter(f => f.score < 9)
+    .map(f => ({ ...f, score: _equipmentPhotoScore(item, f) }))
+    .filter(f => f.score < 7)
     .sort((a, b) => a.score - b.score)[0] || null;
 }
 
@@ -8078,7 +9274,8 @@ function _publishDefaultCaption(kind) {
 function _publishBrandHandle(item) {
   const brand = String(item?.brand || '').trim();
   if (brand) {
-    const found = (_app.brandTags || []).find(b => _publishSlug(b.brand) === _publishSlug(brand));
+    const brandKeys = _brandKeys(brand);
+    const found = (_app.brandTags || []).find(b => brandKeys.includes(_brandKey(b.brand)));
     if (found?.instagram_handle) return found.instagram_handle;
   }
   const raw = [
@@ -8212,7 +9409,7 @@ function _publishTemplateDefaults(kind, template = 'auto') {
   if (mode === 'race_result') {
     return {
       title: result && ctx.riderName ? `Race result · ${ctx.riderName}` : 'Race result update',
-      caption: [riderLine, resultLine, itemLine].filter(Boolean).join('\n') + contextLine,
+      caption: [riderLine, resultLine, itemLine ? `Setup focus: ${itemLine}` : 'Race result recap.'].filter(Boolean).join('\n') + contextLine,
       hashtags: ['#freeridefanatics', '#ucimtbworldseries', '#downhill', '#mtb', ..._publishContextHashtags()].join(' '),
       firstComment: [ctx.instagram, ctx.brandHandle, ..._publishContextHandles().slice(0, 3)].filter(Boolean).join(' · '),
       alt: `Freeride Fanatics race result post${ctx.riderName ? ` featuring ${ctx.riderName}` : ''}.`,
@@ -8223,7 +9420,7 @@ function _publishTemplateDefaults(kind, template = 'auto') {
   if (mode === 'equipment_highlight') {
     return {
       title: ctx.equipmentName ? `Equipment highlight · ${ctx.equipmentName}` : _publishDefaultTitle(kind),
-      caption: [riderLine, itemLine || 'Equipment highlight'].filter(Boolean).join('\n') + contextLine,
+      caption: [riderLine, itemLine || 'Equipment highlight', 'Bike check prepared for Freeride Fanatics.'].filter(Boolean).join('\n') + contextLine,
       hashtags: _publishDefaultHashtags('equipment'),
       firstComment: _publishDefaultFirstComment('equipment'),
       alt: _publishDefaultAlt('equipment'),
@@ -8244,7 +9441,7 @@ function _publishTemplateDefaults(kind, template = 'auto') {
 
   return {
     title: _publishDefaultTitle('rider'),
-    caption: [riderLine || 'Freeride Fanatics rider card', result ? resultLine : '', contextHandles].filter(Boolean).join('\n'),
+    caption: [riderLine || 'Freeride Fanatics rider card', result ? resultLine : 'Rider profile ready for the season.', contextHandles].filter(Boolean).join('\n'),
     hashtags: _publishDefaultHashtags('rider'),
     firstComment: [ctx.instagram, ..._publishContextHandles().slice(0, 3)].filter(Boolean).join(' · '),
     alt: _publishDefaultAlt('rider'),
@@ -8523,13 +9720,17 @@ function renderPublishHistory() {
     const label = item.title || item.source_name || 'Publication préparée';
     const score = item.checklist_total ? ` · checklist ${item.checklist_ready || 0}/${item.checklist_total}` : '';
     const cls = item.checklist_all_ok ? 'ok' : '';
+    const missing = (item.checklist_items || []).filter(x => !x.ok).map(x => x.label).slice(0, 3);
+    const preview = [item.caption, item.hashtags].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
     return `<div class="publish-history-item">
       <div class="publish-history-title">${_esc(label)}</div>
-      <div class="publish-history-meta">${_esc(item.kind || 'publish')} · ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}${_esc(score)}</div>
+      <div class="publish-history-meta">${_esc(item.kind || 'publish')} · ${_esc(item.template || 'auto')} · ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}${_esc(score)}${item.source_name ? `<br>Source : ${_esc(item.source_name)}` : ''}</div>
       <div class="publish-check-summary ${cls}" style="margin-top:8px;padding:7px 8px">
         <span>${item.checklist_all_ok ? 'Prêt Instagram' : 'À vérifier'}</span>
         <span class="publish-check-score">${item.checklist_ready || 0}/${item.checklist_total || 5}</span>
       </div>
+      ${missing.length ? `<div class="publish-history-meta" style="margin-top:6px;color:#f0a000">À vérifier : ${_esc(missing.join(' · '))}</div>` : ''}
+      ${preview ? `<div class="publish-history-meta" style="margin-top:6px">${_esc(preview.slice(0, 150))}${preview.length > 150 ? '…' : ''}</div>` : ''}
       <div class="publish-history-actions">
         <button class="btn btn-secondary" onclick="publishRestoreHistory(${item.id})">Restaurer</button>
         <button class="btn btn-secondary" onclick="publishDeleteHistory(${item.id})">Supprimer</button>
@@ -9451,45 +10652,9 @@ def api_generate_eq_reel():
 @app.route("/api/equipment-audit")
 def api_equipment_audit():
     """Audit croisé : pour chaque rider, vérifie données Sheet + photo dossier."""
-    import re as _re
+    import generate_equipment_card as _gec
     eq  = get_equipment()
     _, _, profiles = get_engine()
-
-    # Index des fichiers par catégorie : category → list of filenames (lower)
-    eq_photos_dir = BASE_DIR / "Equipment"
-    cat_files = {}
-    if eq_photos_dir.exists():
-        for sub in eq_photos_dir.iterdir():
-            if sub.is_dir():
-                cat_files[sub.name] = [
-                    f.name for f in sub.iterdir()
-                    if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
-                ]
-
-    def _norm(s):
-        return _re.sub(r'[\s\-_/\.]', '', (s or '').lower())
-
-    import generate_equipment_card as _gec
-    def _has_photo(cat, brand, reference):
-        # Chercher dans tous les alias de dossiers pour cette catégorie
-        folder_names = _gec.CATEGORY_FOLDERS.get(cat, [cat])
-        files = []
-        for fn in folder_names:
-            files.extend(cat_files.get(fn, []))
-        if not files:
-            return False
-        b = _norm(brand)
-        r = _norm(reference)
-        words = [_norm(w) for w in (reference or '').split() if len(w) > 2]
-        for fname in files:
-            s = _norm(fname)
-            if b and r and b in s and r in s:
-                return True   # match exact
-            if b and b in s:
-                return True   # match marque
-            if words and any(w in s for w in words):
-                return True   # match mot-clé modèle
-        return False
 
     rows = []
     for p in profiles:
@@ -9503,7 +10668,7 @@ def api_equipment_audit():
             else:
                 brand = item.get("brand", "")
                 ref   = item.get("reference", "")
-                if _has_photo(cat, brand, ref):
+                if _gec.find_eq_photo_variants(brand, ref, cat):
                     cats[cat] = "ok"          # données + photo
                 else:
                     cats[cat] = "no_photo"    # données mais pas de photo
@@ -9665,6 +10830,153 @@ def api_brand_tags():
     return jsonify({
         "brand_tags": get_brand_tags(),
         "context_tags": get_context_tags(),
+    })
+
+@app.route("/api/settings/google-sheet")
+def api_settings_google_sheet():
+    settings = _load_app_settings()
+    active_id = _active_gsheet_id()
+    return jsonify({
+        "active_id": active_id,
+        "active_url": _active_gsheet_url(),
+        "default_id": _DEFAULT_GSHEET_ID,
+        "source": "settings" if settings.get("gsheet_id") else "config",
+    })
+
+@app.route("/api/settings/google-sheet", methods=["POST"])
+def api_settings_google_sheet_update():
+    data = request.get_json(silent=True) or {}
+    settings = _load_app_settings()
+    if data.get("reset"):
+        settings.pop("gsheet_id", None)
+        settings.pop("gsheet_url", None)
+    else:
+        raw_value = str(data.get("sheet_url") or data.get("sheet_id") or "").strip()
+        gsheet_id = _extract_gsheet_id(raw_value)
+        if not gsheet_id:
+            return jsonify({"ok": False, "error": "Lien ou ID Google Sheet invalide."}), 400
+        settings["gsheet_id"] = gsheet_id
+        settings["gsheet_url"] = f"https://docs.google.com/spreadsheets/d/{gsheet_id}/edit"
+    _save_app_settings(settings)
+    _apply_gsheet_settings()
+    _cache.clear()
+    return jsonify({
+        "ok": True,
+        "active_id": _active_gsheet_id(),
+        "active_url": _active_gsheet_url(),
+        "source": "settings" if settings.get("gsheet_id") else "config",
+    })
+
+@app.route("/api/settings/google-sheet/test", methods=["POST"])
+def api_settings_google_sheet_test():
+    data = request.get_json(silent=True) or {}
+    raw_value = str(data.get("sheet_url") or data.get("sheet_id") or "").strip()
+    gsheet_id = _extract_gsheet_id(raw_value)
+    if not gsheet_id:
+        return jsonify({"ok": False, "error": "Lien ou ID Google Sheet invalide."}), 400
+
+    specs = [
+        {
+            "key": "riders",
+            "label": "Riders",
+            "required_headers": [
+                ("First Name", "Prénom", "Prenom"),
+                ("Last Name", "Nom"),
+                ("Instagram", "Handle"),
+                ("Team", "Équipe", "Equipe"),
+            ],
+            "candidates": [
+                {"name": "👤 Profils", "label": "👤 Profils"},
+                {"name": "Riders", "label": "Riders"},
+                {"name": "🏆 Riders", "label": "🏆 Riders"},
+            ],
+        },
+        {
+            "key": "equipment_women",
+            "label": "Equipment Women",
+            "required_headers": [
+                ("G", "Gender", "Genre"),
+                ("Instagram", "Handle"),
+                ("Frame", "Cadre"),
+                ("Fork", "Fourche"),
+                ("Tires", "Tyres", "Pneus"),
+            ],
+            "candidates": [
+                {"name": "🔧 Equipment Women", "label": "🔧 Equipment Women"},
+                {"name": "Equipment Women", "label": "Equipment Women"},
+                {"gid": 455020136, "label": "gid 455020136"},
+            ],
+        },
+        {
+            "key": "equipment_men",
+            "label": "Equipment Men",
+            "required_headers": [
+                ("G", "Gender", "Genre"),
+                ("Instagram", "Handle"),
+                ("Frame", "Cadre"),
+                ("Fork", "Fourche"),
+                ("Tires", "Tyres", "Pneus"),
+            ],
+            "candidates": [
+                {"name": "🔧 Equipment Men", "label": "🔧 Equipment Men"},
+                {"name": "Equipment Men", "label": "Equipment Men"},
+                {"gid": 1424770374, "label": "gid 1424770374"},
+            ],
+        },
+        {
+            "key": "results_2026",
+            "label": "Résultats 2026",
+            "required_headers": [
+                ("First Name", "Prénom", "Prenom"),
+                ("Last Name", "Nom"),
+            ],
+            "candidates": [
+                {"name": "📊 Résultats 2026", "label": "📊 Résultats 2026"},
+                {"name": "Résultats 2026", "label": "Résultats 2026"},
+                {"gid": 581226329, "label": "gid 581226329"},
+            ],
+        },
+        {
+            "key": "brand",
+            "label": "Brand",
+            "required_headers": [
+                ("brand", "marque"),
+                ("instagram_handle", "instagram", "handle"),
+            ],
+            "candidates": [
+                {"name": "Brand", "label": "Brand"},
+                {"gid": 1345104699, "label": "gid 1345104699"},
+            ],
+        },
+        {
+            "key": "tags",
+            "label": "Tags",
+            "required_headers": [
+                ("tag_type", "type"),
+                ("name", "nom"),
+                ("instagram_handle", "instagram", "handle"),
+                ("default_hashtag", "hashtag"),
+            ],
+            "candidates": [
+                {"name": "Tags", "label": "Tags"},
+                {"gid": 755371970, "label": "gid 755371970"},
+            ],
+        },
+    ]
+
+    sheets = []
+    for spec in specs:
+        result = _test_sheet_candidate(gsheet_id, spec["candidates"], spec.get("required_headers", ()))
+        sheets.append({
+            "key": spec["key"],
+            "label": spec["label"],
+            **result,
+        })
+    return jsonify({
+        "ok": True,
+        "sheet_id": gsheet_id,
+        "all_ok": all(sheet["ok"] for sheet in sheets),
+        "sheets": sheets,
     })
 
 

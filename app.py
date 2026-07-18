@@ -2675,6 +2675,20 @@ HTML = r"""<!DOCTYPE html>
     font-family: inherit; transition: border-color .15s;
   }
   .eq-text-input:focus { border-color: #C8D400; }
+  .eq-mode-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .eq-mode-btn {
+    background: #121212; border: 1px solid #333; color: #999; border-radius: 6px;
+    padding: 8px 10px; cursor: pointer; font-size: .72rem; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+  .eq-mode-btn.active { border-color: #C8D400; color: #C8D400; background: rgba(200,212,0,.08); }
+  .eq-free-controls { display: none; gap: 8px; flex-direction: column; }
+  .eq-free-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .eq-select {
+    width: 100%; background: #111; border: 1px solid #2e2e2e; border-radius: 6px;
+    color: #eee; padding: 8px 9px; outline: none; font: inherit; font-size: .78rem;
+  }
+  .eq-source-note { color: #777; font-size: 11px; line-height: 1.35; }
 
   /* ── Color swatches ── */
   .eq-swatch {
@@ -3277,22 +3291,28 @@ HTML = r"""<!DOCTYPE html>
   <div class="panel-wrapper">
   <div class="panel">
 
-    <!-- Rider -->
+    <!-- Source -->
     <div class="collapsible open" id="eqcol-rider">
       <div class="collapsible-header" onclick="toggleCol('eqcol-rider')">
-        <span class="section-title">Rider</span><span class="collapsible-arrow">▼</span>
+        <span class="section-title">Source</span><span class="collapsible-arrow">▼</span>
       </div>
       <div class="collapsible-body">
-        <div class="rider-filters">
-          <input class="search-input" id="eq-rider-search" placeholder="🔍 Rechercher…" oninput="renderEqRiderList()">
-          <div class="gender-toggle">
-            <button class="gender-btn" id="eq-btn-f" onclick="setEqGender('F')">♀</button>
-            <div class="gender-separator"></div>
-            <button class="gender-btn" id="eq-btn-m" onclick="setEqGender('M')">♂</button>
-          </div>
+        <div class="eq-mode-tabs">
+          <button class="eq-mode-btn active" id="eq-mode-rider" onclick="setEqMode('rider')">Rider</button>
+          <button class="eq-mode-btn" id="eq-mode-free" onclick="setEqMode('free')">Libre</button>
         </div>
-        <div id="eq-rider-select"
-          style="height:200px;overflow-y:auto;border:1px solid #2a2a2a;border-radius:6px;background:#0d0d0d"></div>
+        <div id="eq-rider-controls">
+          <div class="rider-filters">
+            <input class="search-input" id="eq-rider-search" placeholder="🔍 Rechercher…" oninput="renderEqRiderList()">
+            <div class="gender-toggle">
+              <button class="gender-btn" id="eq-btn-f" onclick="setEqGender('F')">♀</button>
+              <div class="gender-separator"></div>
+              <button class="gender-btn" id="eq-btn-m" onclick="setEqGender('M')">♂</button>
+            </div>
+          </div>
+          <div id="eq-rider-select"
+            style="height:200px;overflow-y:auto;border:1px solid #2a2a2a;border-radius:6px;background:#0d0d0d"></div>
+        </div>
       </div>
     </div>
 
@@ -3302,12 +3322,27 @@ HTML = r"""<!DOCTYPE html>
         <span class="section-title">🔧 Équipement</span><span class="collapsible-arrow">▼</span>
       </div>
       <div class="collapsible-body">
+        <div class="eq-free-controls" id="eq-free-controls">
+          <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.05em">Catégorie d’équipement</div>
+          <div class="eq-free-row">
+            <select class="eq-select" id="eq-free-category" onchange="renderEqFreeList(true)"></select>
+            <input class="search-input" id="eq-free-search" placeholder="🔍 Marque ou modèle…" oninput="renderEqFreeList(false)">
+          </div>
+          <div class="eq-source-note" id="eq-free-note">Choisis une catégorie issue du Google Sheet, puis un équipement.</div>
+        </div>
         <div class="eq-list" id="eq-page-list">
-          <div class="eq-empty">Sélectionne un rider</div>
+          <div class="eq-empty">Sélectionne un rider ou passe en mode libre</div>
         </div>
         <!-- Variantes couleur -->
         <div id="eq-color-variants" style="display:none;margin-top:10px">
-          <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">🎨 Variante</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.05em">🎨 Variante</div>
+            <label class="eq-toggle-wrap" style="min-width:auto;font-size:10px;color:#aaa">
+              <input type="checkbox" id="eq_force_category_variants"
+                     onchange="if (_eqSelectedItem) { loadColorVariants(_eqSelectedItem); eqDebouncedGenerate(100); }">
+              <span class="eq-toggle-label">Choix manuel catégorie</span>
+            </label>
+          </div>
           <div id="eq-color-swatches" style="display:flex;flex-wrap:wrap;gap:6px"></div>
         </div>
       </div>
@@ -3386,12 +3421,6 @@ HTML = r"""<!DOCTYPE html>
             <input type="text" class="slider-val" id="eq_val_badge_r" value="58"
               onfocus="this.select()" onchange="syncVal('eq_val_badge_r','eq_badge_radius');eqDebouncedGenerate()">
           </div>
-        </div>
-        <div class="eq-text-row" style="margin-top:10px;border-top:1px solid #333;padding-top:10px">
-          <label class="eq-toggle-wrap">
-            <input type="checkbox" id="eq_use_v2" onchange="eqDebouncedGenerate()">
-            <span class="eq-toggle-label" style="color:#C8D400;font-weight:bold">Background V2 <span style="font-size:10px;opacity:.7;font-weight:normal">beta</span></span>
-          </label>
         </div>
       </div>
     </div>
@@ -6500,14 +6529,14 @@ function _referenceTokens(value) {
   const generic = new Set([
     'pro', 'team', 'factory', 'ultimate', 'carbon', 'alloy', 'aluminum',
     'proto', 'prototype', 'racing', 'line', 'black', 'white', 'red', 'blue',
-    'green', 'gold', 'silver', 'gravity', 'dh', 'mtb'
+    'green', 'gold', 'silver', 'gravity', 'dh', 'mtb', 'coil'
   ]);
   return String(value || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .map(_ffFold)
-    .filter(w => w.length >= 3 && !generic.has(w));
+    .filter(w => (w.length >= 3 || (w.length >= 2 && /\d/.test(w))) && !generic.has(w));
 }
 
 function _equipmentPhotoScore(item, file) {
@@ -6516,12 +6545,18 @@ function _equipmentPhotoScore(item, file) {
   const brandMatches = _brandKeys(item?.brand).some(key => key && fileKey.includes(key));
   const refKey = _ffFold(item?.reference);
   const tokens = _referenceTokens(item?.reference);
-  const tokenHits = tokens.filter(t => fileKey.includes(t)).length;
-  const distinctiveRefHit = tokenHits > 0 || (refKey.length >= 4 && fileKey.includes(refKey));
+  const modelQualifiers = ['live', 'valve', 'neo'];
+  if (modelQualifiers.some(q => fileKey.includes(q) !== refKey.includes(q))) return 99;
+  const hasSpecificRef = tokens.length > 0;
+  const strongTokens = tokens.filter(t => t.length >= 3 && !modelQualifiers.includes(t));
+  const shortDigitTokens = tokens.filter(t => t.length < 3 && /\d/.test(t));
+  const strongHit = strongTokens.length === 0 || strongTokens.some(t => fileKey.includes(t));
+  const shortDigitHit = shortDigitTokens.every(t => fileKey.includes(t));
+  const tokenHit = hasSpecificRef && strongHit && shortDigitHit;
+  const distinctiveRefHit = tokenHit || (hasSpecificRef && refKey.length >= 4 && fileKey.includes(refKey));
 
-  if (brandMatches && refKey && fileKey.includes(refKey)) return 0;
+  if (brandMatches && hasSpecificRef && refKey && fileKey.includes(refKey)) return 0;
   if (brandMatches && distinctiveRefHit) return 1;
-  if (brandMatches) return 2;
   if (distinctiveRefHit) return 6;
   return 99;
 }
@@ -8012,6 +8047,7 @@ let _eqSelectedItem = null;
 let _eqSelectedPhotoPath = '';
 let _eqItemsData    = [];
 let _lastEqCard     = null;
+let _eqMode         = 'rider';  // 'rider' | 'free'
 
 async function rescanEqPhotos(silent = false) {
   try {
@@ -8027,6 +8063,7 @@ async function initEqPage() {
   _eqRiders = riders;
   _eqRidersLoaded = true;
   renderEqRiderList();
+  renderEqFreeCategoryOptions();
   fetch('/api/reload-equipment', { method: 'POST' });
   rescanEqPhotos(true);   // rescan photos au premier chargement
 }
@@ -8105,8 +8142,182 @@ async function reloadEqData() {
   const orig = btn?.textContent;
   if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
   await fetch('/api/reload-equipment', { method: 'POST' });
+  try {
+    const data = await fetch('/api/preload').then(r => r.json());
+    _app.profiles        = data.profiles         || _app.profiles;
+    _app.equipment       = data.equipment        || {};
+    _app.eqVariants      = data.eq_variants      || _app.eqVariants;
+    _app.categoryFolders = data.category_folders || _app.categoryFolders;
+    _app.varCache        = {};
+    riders = _app.profiles.map(p => ({
+      slug: p.slug, prenom: p.prenom, nom: p.nom, genre: p.genre,
+      has_photo: p.has_photo, instagram: p.instagram,
+    }));
+    _eqRiders = riders;
+    renderEqRiderList();
+    renderEqFreeCategoryOptions();
+  } catch(e) {
+    console.warn('reloadEqData preload error', e);
+  }
   if (btn) { btn.textContent = orig || '↺ Actualiser le Sheet'; btn.disabled = false; }
-  if (_eqSelectedSlug) onEqRiderChange(_eqSelectedSlug);
+  if (_eqMode === 'free') renderEqFreeList(false);
+  else if (_eqSelectedSlug) onEqRiderChange(_eqSelectedSlug);
+}
+
+function _eqResetGeneratedState(message = 'Sélectionne un équipement') {
+  _eqSelectedItem = null;
+  _eqSelectedPhotoPath = '';
+  _lastEqCard = null;
+  _lastPublishSource = null;
+  const dl = document.getElementById('eq-page-dl-btn');
+  const lib = document.getElementById('eq-add-library-btn');
+  const ph = document.getElementById('eq-placeholder');
+  const img = document.getElementById('eq-preview-img');
+  const variants = document.getElementById('eq-color-variants');
+  if (dl) dl.disabled = true;
+  if (lib) lib.disabled = true;
+  if (ph) { ph.style.display = 'block'; ph.innerHTML = `<span>🔧</span>${message}`; }
+  if (img) img.style.display = 'none';
+  if (variants) variants.style.display = 'none';
+  document.getElementById('eq-preview-area')?.classList.remove('loading');
+}
+
+function _eqAllSheetItems() {
+  const rows = [];
+  Object.entries(_app.equipment || {}).forEach(([handle, items]) => {
+    (items || []).forEach(it => {
+      if (!it?.category) return;
+      if (!(it.brand || it.reference || it.details)) return;
+      rows.push({
+        category: it.category || '',
+        brand: it.brand || '',
+        reference: it.reference || '',
+        details: it.details || '',
+        raw: it.raw || '',
+        rider_handle: handle || '',
+      });
+    });
+  });
+  return rows;
+}
+
+function _eqFreeCategories() {
+  return Array.from(new Set(_eqAllSheetItems().map(it => it.category).filter(Boolean)))
+    .sort((a, b) => {
+      const pa = _qualityPriority(a);
+      const pb = _qualityPriority(b);
+      if (pa !== pb) return pa - pb;
+      return a.localeCompare(b);
+    });
+}
+
+function _eqFreeItemsForCategory(category) {
+  const map = new Map();
+  _eqAllSheetItems()
+    .filter(it => it.category === category)
+    .forEach(it => {
+      const key = [it.category, it.brand, it.reference, it.details].map(v => String(v || '').trim()).join('|');
+      if (!map.has(key)) {
+        map.set(key, { ...it, count: 0, riders: [] });
+      }
+      const entry = map.get(key);
+      entry.count += 1;
+      if (it.rider_handle) entry.riders.push(it.rider_handle);
+    });
+  return Array.from(map.values()).sort((a, b) => {
+    const sa = _equipmentPhotoScore(a, { name: `${a.brand}${a.reference}` });
+    const sb = _equipmentPhotoScore(b, { name: `${b.brand}${b.reference}` });
+    if (sa !== sb) return sa - sb;
+    return `${a.brand} ${a.reference}`.localeCompare(`${b.brand} ${b.reference}`);
+  });
+}
+
+function renderEqFreeCategoryOptions() {
+  const sel = document.getElementById('eq-free-category');
+  if (!sel) return;
+  const prev = sel.value;
+  const cats = _eqFreeCategories();
+  sel.innerHTML = cats.length
+    ? cats.map(c => `<option value="${c}">${c}</option>`).join('')
+    : '<option value="">Aucune catégorie</option>';
+  if (prev && cats.includes(prev)) sel.value = prev;
+  else if (cats.length) sel.value = cats[0];
+}
+
+function renderEqFreeList(resetSelection = false) {
+  const list = document.getElementById('eq-page-list');
+  const category = document.getElementById('eq-free-category')?.value || '';
+  const query = (document.getElementById('eq-free-search')?.value || '').trim().toLowerCase();
+  const note = document.getElementById('eq-free-note');
+  if (!list) return;
+  if (resetSelection) _eqResetGeneratedState('Choisis un équipement libre');
+  if (!category) {
+    _eqItemsData = [];
+    list.innerHTML = '<div class="eq-empty">Aucune catégorie disponible dans le Sheet</div>';
+    if (note) note.textContent = 'Aucun équipement exploitable trouvé dans le Google Sheet.';
+    return;
+  }
+  const items = _eqFreeItemsForCategory(category).filter(it => {
+    if (!query) return true;
+    return `${it.category} ${it.brand} ${it.reference} ${it.details}`.toLowerCase().includes(query);
+  });
+  _eqItemsData = items.map(it => ({ ...it, source: 'free' }));
+  if (note) {
+    const total = _eqFreeItemsForCategory(category).length;
+    note.textContent = `${items.length}/${total} modèle${total > 1 ? 's' : ''} disponible${total > 1 ? 's' : ''} depuis le Google Sheet.`;
+  }
+  if (!items.length) {
+    list.innerHTML = '<div class="eq-empty">Aucun équipement pour cette recherche</div>';
+    return;
+  }
+  list.innerHTML = _eqItemsData.map((it, i) => {
+    const hasDesc  = !!(it.brand && it.reference);
+    const hasPhoto = _eqCheckPhoto(it);
+    const hasLogo  = _eqCheckLogo(it.brand);
+    const score    = (hasDesc ? 1 : 0) + (hasPhoto ? 1 : 0) + (hasLogo ? 1 : 0);
+    const dotCls   = score === 3 ? 'eq-dot-ok' : score > 0 ? 'eq-dot-partial' : 'eq-dot-empty';
+    const count    = it.count ? `<span style="margin-left:auto;font-size:9px;color:#777">${it.count}x</span>` : '';
+    return `
+    <div class="eq-item" id="eq-page-item-${i}" onclick="selectEqItem(${i})" style="display:flex;align-items:center;gap:5px">
+      <span class="eq-rider-dot ${dotCls}" style="flex-shrink:0"></span>
+      <span class="eq-cat" style="flex-shrink:0">${it.category}</span>
+      <span class="eq-brand" style="flex-shrink:0">${it.brand || '—'}</span>
+      <span class="eq-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${it.reference || ''}</span>
+      ${count}
+    </div>`;
+  }).join('');
+}
+
+function setEqMode(mode) {
+  _eqMode = mode === 'free' ? 'free' : 'rider';
+  document.getElementById('eq-mode-rider')?.classList.toggle('active', _eqMode === 'rider');
+  document.getElementById('eq-mode-free')?.classList.toggle('active', _eqMode === 'free');
+  const riderControls = document.getElementById('eq-rider-controls');
+  const freeControls = document.getElementById('eq-free-controls');
+  if (riderControls) riderControls.style.display = _eqMode === 'rider' ? 'block' : 'none';
+  if (freeControls) freeControls.style.display = _eqMode === 'free' ? 'flex' : 'none';
+  const badgeToggle = document.getElementById('eq_rider_selection');
+  if (badgeToggle) {
+    badgeToggle.disabled = _eqMode === 'free';
+    if (_eqMode === 'free') badgeToggle.checked = false;
+  }
+  toggleEqRiderSelectionControls();
+
+  _eqSelectedRider = null;
+  _eqSelectedSlug = _eqMode === 'rider' ? _eqSelectedSlug : '';
+  document.querySelectorAll('#eq-rider-select .eq-rider-item').forEach(el => el.classList.remove('active'));
+  _eqResetGeneratedState(_eqMode === 'free' ? 'Choisis une catégorie puis un équipement' : 'Sélectionne un rider');
+
+  if (_eqMode === 'free') {
+    renderEqFreeCategoryOptions();
+    renderEqFreeList(true);
+    smoothCollapseAndScroll('eqcol-rider', 'eqcol-items');
+  } else if (_eqSelectedSlug) {
+    onEqRiderChange(_eqSelectedSlug);
+  } else {
+    const list = document.getElementById('eq-page-list');
+    if (list) list.innerHTML = '<div class="eq-empty">Sélectionne un rider</div>';
+  }
 }
 
 function setEqGender(g) {
@@ -8138,6 +8349,7 @@ function renderEqRiderList() {
   container.innerHTML = filtered.map(r => `
     <div class="eq-rider-item${r.slug === _eqSelectedSlug ? ' active' : ''}"
          data-slug="${r.slug}" onclick="onEqRiderClick('${r.slug}')">
+      <span class="eq-rider-dot ${_eqRiderDotClass(r.slug)}"></span>
       <span>${r.genre === 'F' ? '♀' : '♂'} ${r.prenom} ${r.nom}</span>
     </div>`).join('');
 }
@@ -8257,29 +8469,41 @@ function selectEqItem(idx) {
 }
 
 function loadColorVariants(it) {
+  if (!it) return;
   const varBox   = document.getElementById('eq-color-variants');
   const swatches = document.getElementById('eq-color-swatches');
   varBox.style.display = 'none';
   swatches.innerHTML = '';
+  _eqSelectedPhotoPath = '';
+  varBox.querySelectorAll('.eq-variant-warning').forEach(el => el.remove());
 
   // Lookup local — dossier catégorie d'abord, puis score de pertinence
-  const cacheKey = `${it.brand||''}|${it.reference||''}|${it.category||''}`;
+  const forceCategory = document.getElementById('eq_force_category_variants')?.checked || false;
+  const cacheKey = `${it.brand||''}|${it.reference||''}|${it.category||''}|${forceCategory ? 'manual' : 'strict'}`;
   let variants = _app.varCache[cacheKey];
+  const norm = s => (s||'').toLowerCase().replace(/[\s\-\_\/\.]/g, '');
+  // Dossiers valides pour cette catégorie
+  const catFolders = (_app.categoryFolders[it.category] || [it.category])
+    .map(f => norm(f));
+
+  // 1. Filtrer par dossier catégorie
+  const inFolder = _app.eqVariants.filter(f => {
+    if (!f.folder) return false;
+    return catFolders.includes(norm(f.folder));
+  });
+
   if (!variants) {
-    const norm = s => (s||'').toLowerCase().replace(/[\s\-\_\/\.]/g, '');
-    // Dossiers valides pour cette catégorie
-    const catFolders = (_app.categoryFolders[it.category] || [it.category])
-      .map(f => norm(f));
-
-    // 1. Filtrer par dossier catégorie
-    const inFolder = _app.eqVariants.filter(f => {
-      if (!f.folder) return false;
-      return catFolders.includes(norm(f.folder));
-    });
-
     const score = f => _equipmentPhotoScore(it, f);
 
-    if (inFolder.length === 0) {
+    if (forceCategory) {
+      variants = [...inFolder].sort((a, b) => {
+        const sa = score(a);
+        const sb = score(b);
+        if (sa !== sb) return sa - sb;
+        return String(a.name || '').localeCompare(String(b.name || ''));
+      });
+      variants._manualCategory = true;
+    } else if (inFolder.length === 0) {
       // Fallback : racine Equipment/ si aucun dossier matche
       variants = _app.eqVariants.filter(f => !f.folder && score(f) < 7);
     } else {
@@ -8287,8 +8511,8 @@ function loadColorVariants(it) {
       if (matched.length > 0) {
         variants = matched;
       } else {
-        // Aucun match — afficher tout le dossier avec un avertissement
-        variants = [...inFolder];
+        // Rider sélectionné : ne jamais afficher toute la catégorie si le modèle ne matche pas.
+        variants = [];
         variants._noMatch = true;
       }
     }
@@ -8297,9 +8521,15 @@ function loadColorVariants(it) {
 
   if (variants.length > 0) {
     varBox.style.display = 'block';
+    if (variants._manualCategory) {
+      swatches.insertAdjacentHTML('beforebegin',
+        `<div class="eq-variant-warning" style="color:#C8D400;font-size:11px;margin-bottom:6px">
+          Choix manuel actif : toutes les photos disponibles dans « ${it.category||'cette catégorie'} » sont affichées.
+        </div>`);
+    }
     if (variants._noMatch) {
       swatches.insertAdjacentHTML('beforebegin',
-        `<div style="color:#f90;font-size:11px;margin-bottom:6px">
+        `<div class="eq-variant-warning" style="color:#f90;font-size:11px;margin-bottom:6px">
           ⚠️ Aucune photo trouvée pour « ${it.brand||''} ${it.reference||''} » — toutes les variantes affichées
         </div>`);
     }
@@ -8314,6 +8544,7 @@ function loadColorVariants(it) {
         document.querySelectorAll('.eq-swatch').forEach(s => s.classList.remove('active'));
         sw.classList.add('active');
         _eqSelectedPhotoPath = v.path;
+        eqDebouncedGenerate(100);
       };
       const lbl = document.createElement('div');
       lbl.className = 'eq-swatch-label';
@@ -8323,6 +8554,12 @@ function loadColorVariants(it) {
       swatches.appendChild(wrap);
       if (i === 0) _eqSelectedPhotoPath = v.path;
     });
+  } else if (variants._noMatch || (it.brand || it.reference)) {
+    varBox.style.display = 'block';
+    swatches.insertAdjacentHTML('beforebegin',
+      `<div class="eq-variant-warning" style="color:#f90;font-size:11px;margin-bottom:6px">
+        ⚠️ Aucune photo exacte trouvée pour « ${it.brand||''} ${it.reference||''} ». La carte utilisera le logo de marque si disponible.
+      </div>`);
   }
 }
 
@@ -8382,7 +8619,7 @@ async function generateEqCard(silent = false) {
   const show_details   = g('eq_show_details')?.checked   ?? true;
   const show_logo      = g('eq_show_logo')?.checked      ?? false;
   const rider_selection = g('eq_rider_selection')?.checked ?? false;
-  const use_v2         = g('eq_use_v2')?.checked         ?? false;
+  const use_v2         = false;
   const brand_text     = g('eq_brand_text')?.value     || it.brand     || '';
   const reference_text = g('eq_reference_text')?.value || it.reference || '';
   const details_text   = g('eq_details_text')?.value   || it.details   || '';
@@ -8740,7 +8977,7 @@ function addToReel() {
       show_details:   g('eq_show_details')?.checked   ?? true,
       show_logo:      g('eq_show_logo')?.checked      ?? false,
       photo_bg:       _hexToRgb(g('eq_photo_bg')?.value || '#ffffff'),
-      use_v2:         g('eq_use_v2')?.checked           ?? false,
+      use_v2:         false,
       show_rider_badge: riderSelection,
       rider_instagram: (_eqSelectedRider?.instagram || '').replace(/^@/, ''),
       badge_radius:   parseInt(g('eq_badge_radius')?.value || 58),

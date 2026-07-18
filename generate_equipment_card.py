@@ -14,7 +14,7 @@ Usage direct :
 
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-import sys, textwrap, subprocess, tempfile
+import sys, textwrap, subprocess, tempfile, io
 import re, unicodedata
 
 # ── Chemins ───────────────────────────────────────────────────────────────────
@@ -160,6 +160,7 @@ def _eq_slug(s: str) -> str:
 
 _BRAND_ALIASES = {
     "brembolever": "brembo",
+    "bluegrass": "bluegrass",
     "comencal": "commencal",
     "commencal": "commencal",
     "e13": "ethirteen",
@@ -169,6 +170,8 @@ _BRAND_ALIASES = {
     "rental": "renthal",
     "specialized": "sworks",
     "sworks": "specialized",
+    "troyleedesigns": "troyleedesigns",
+    "tld": "troyleedesigns",
 }
 
 def _brand_keys(brand: str) -> set[str]:
@@ -180,13 +183,14 @@ def _reference_tokens(reference: str) -> list[str]:
     generic = {
         "pro", "team", "factory", "ultimate", "carbon", "alloy", "aluminum",
         "proto", "prototype", "racing", "line", "black", "white", "red", "blue",
-        "green", "gold", "silver", "gravity", "dh", "mtb",
+        "green", "gold", "silver", "gravity", "dh", "mtb", "coil",
     }
     raw = unicodedata.normalize("NFKD", str(reference or ""))
     raw = "".join(ch for ch in raw if not unicodedata.combining(ch))
     return [
         _eq_slug(w) for w in re.split(r"[^a-zA-Z0-9]+", raw.lower())
-        if len(_eq_slug(w)) >= 3 and _eq_slug(w) not in generic
+        if (len(_eq_slug(w)) >= 3 or (len(_eq_slug(w)) >= 2 and any(ch.isdigit() for ch in _eq_slug(w))))
+        and _eq_slug(w) not in generic
     ]
 
 def _photo_score(path: Path, brand: str, reference: str) -> int:
@@ -194,14 +198,20 @@ def _photo_score(path: Path, brand: str, reference: str) -> int:
     brand_match = any(key in name_slug for key in _brand_keys(brand))
     ref_slug = _eq_slug(reference)
     tokens = _reference_tokens(reference)
-    token_hit = any(t in name_slug for t in tokens)
-    ref_hit = bool(ref_slug and len(ref_slug) >= 4 and ref_slug in name_slug)
+    model_qualifiers = ("live", "valve", "neo")
+    if any((q in name_slug) != (q in ref_slug) for q in model_qualifiers):
+        return 99
+    has_specific_ref = bool(tokens)
+    strong_tokens = [t for t in tokens if len(t) >= 3 and t not in model_qualifiers]
+    short_digit_tokens = [t for t in tokens if len(t) < 3 and any(ch.isdigit() for ch in t)]
+    strong_hit = not strong_tokens or any(t in name_slug for t in strong_tokens)
+    short_digit_hit = all(t in name_slug for t in short_digit_tokens)
+    token_hit = has_specific_ref and strong_hit and short_digit_hit
+    ref_hit = bool(has_specific_ref and ref_slug and len(ref_slug) >= 4 and ref_slug in name_slug)
     if brand_match and ref_hit:
         return 0
     if brand_match and token_hit:
         return 1
-    if brand_match:
-        return 2
     if token_hit or ref_hit:
         return 6
     return 99
@@ -250,15 +260,33 @@ def find_eq_photo(brand: str, reference: str, category: str = "") -> Path | None
     return variants[0] if variants else None
 
 def find_logo(brand: str) -> Path | None:
-    """Cherche le logo de la marque dans logos/."""
+    """Cherche le logo de la marque dans logos/ avec extensions et casse tolérantes."""
     if not LOGOS_DIR.exists():
         return None
-    brand_slug = brand.lower().replace(" ", "_").replace("/", "_")
-    for stem in [brand_slug, brand.lower(), brand_slug.split("_")[0]]:
-        for ext in [".svg", ".png"]:
-            p = LOGOS_DIR / (stem + ext)
-            if p.exists():
-                return p
+    exts = {".svg": 4, ".png": 3, ".webp": 2, ".jpg": 1, ".jpeg": 1}
+    brand_keys = _brand_keys(brand)
+    brand_slug = _eq_slug(brand)
+    direct_stems = {
+        brand.lower().replace(" ", "_").replace("/", "_"),
+        brand.lower().replace("/", "_"),
+        brand_slug,
+    }
+    direct_stems.update(brand_keys)
+
+    files = [f for f in LOGOS_DIR.iterdir() if f.is_file() and f.suffix.lower() in exts]
+    for stem in direct_stems:
+        for ext in sorted(exts, key=lambda e: -exts[e]):
+            for f in files:
+                if f.suffix.lower() == ext and f.stem.lower() == stem.lower():
+                    return f
+
+    ranked = []
+    for f in files:
+        stem_slug = _eq_slug(f.stem)
+        if any(key and (key in stem_slug or stem_slug in key) for key in brand_keys):
+            ranked.append((exts[f.suffix.lower()], len(stem_slug), f.name.lower(), f))
+    if ranked:
+        return sorted(ranked, key=lambda x: (-x[0], x[1], x[2]))[0][3]
     return None
 
 # ── Placement image produit ───────────────────────────────────────────────────
@@ -439,7 +467,7 @@ def generate_equipment_card(
     else:
         # Fallback : logo de marque
         logo_path = find_logo(brand)
-        if logo_path and logo_path.exists() and logo_path.suffix.lower() == ".png":
+        if logo_path and logo_path.exists():
             try:
                 _place_logo_centered(card, logo_path,
                                      zoom=zoom, offset_x=photo_x, offset_y=photo_y,
@@ -457,9 +485,13 @@ def generate_equipment_card(
     # ── Logo de marque en bas du panel (optionnel) ──
     if show_logo and brand:
         logo_path = find_logo(brand)
-        if logo_path and logo_path.exists() and logo_path.suffix.lower() == ".png":
+        if logo_path and logo_path.exists():
             try:
-                logo   = Image.open(logo_path).convert("RGBA")
+                if logo_path.suffix.lower() == ".svg":
+                    from cairosvg import svg2png
+                    logo = Image.open(io.BytesIO(svg2png(url=str(logo_path), output_width=logo_h * 8))).convert("RGBA")
+                else:
+                    logo = Image.open(logo_path).convert("RGBA")
                 ratio  = logo_h / logo.height
                 logo   = logo.resize((max(1, int(logo.width * ratio)), logo_h), Image.LANCZOS)
                 lx     = logo_x if logo_x is not None else ((W - logo.width) // 2)
@@ -497,25 +529,27 @@ def generate_equipment_card(
 # ── Rider photo lookup ────────────────────────────────────────────────────────
 def find_rider_photo(instagram: str) -> "Path | None":
     """Cherche la PP du rider dans PPRIDERS/ par handle Instagram."""
-    if not PPRIDERS_DIR.exists():
+    dirs = [d for d in [BASE_DIR / "PPRiders", BASE_DIR / "PPRIDERS"] if d.exists()]
+    if not dirs:
         return None
     handle = instagram.lstrip("@").lower()
     # version sans ponctuation (pour les noms de fichiers qui ont supprimé les points/tirets)
-    handle_stripped = handle.replace(".", "").replace("-", "")
-    for ext in [".jpg", ".jpeg", ".png"]:
-        for stem in [f"@{handle}", handle]:
-            p = PPRIDERS_DIR / (stem + ext)
-            if p.exists():
-                return p
-    for f in sorted(PPRIDERS_DIR.iterdir()):
-        if f.suffix.lower() not in {".jpg", ".jpeg", ".png"}:
-            continue
-        stem = f.stem.lower().lstrip("@")
-        stem_stripped = stem.replace(".", "").replace("-", "")
-        if handle in stem or stem in handle:
-            return f
-        if handle_stripped and (handle_stripped in stem_stripped or stem_stripped in handle_stripped):
-            return f
+    handle_stripped = re.sub(r"[\s._-]+", "", handle)
+    for directory in dirs:
+        for ext in [".jpg", ".jpeg", ".png", ".webp"]:
+            for stem in [f"@{handle}", handle]:
+                p = directory / (stem + ext)
+                if p.exists():
+                    return p
+        for f in sorted(directory.iterdir()):
+            if f.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
+                continue
+            stem = f.stem.lower().lstrip("@")
+            stem_stripped = re.sub(r"[\s._-]+", "", stem)
+            if handle in stem or stem in handle:
+                return f
+            if handle_stripped and (handle_stripped in stem_stripped or stem_stripped in handle_stripped):
+                return f
     return None
 
 

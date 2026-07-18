@@ -3619,11 +3619,11 @@ HTML = r"""<!DOCTYPE html>
 
     <div class="perf-grid" id="perf-advanced-results" style="display:none">
       <div class="perf-panel">
-        <h3>Leaders par catégorie</h3>
+        <h3 id="perf-leaders-title">Leaders par catégorie</h3>
         <div id="perf-leaders" class="perf-leader-list"></div>
       </div>
       <div class="perf-panel">
-        <h3>Classement détaillé</h3>
+        <h3 id="perf-table-title">Classement détaillé</h3>
         <div id="perf-table-wrap"></div>
       </div>
     </div>
@@ -3719,6 +3719,38 @@ HTML = r"""<!DOCTYPE html>
                  oninput="updateSlider(this,'reel_val_cf')">
           <input type="text" class="slider-val" id="reel_val_cf" value="0.5"
                  onfocus="this.select()" onchange="syncVal('reel_val_cf','reel_crossfade')">
+        </div>
+        <div class="publish-field" style="margin:8px 0">
+          <label for="reel_audio_file">Audio</label>
+          <input id="reel_audio_file" class="publish-input" type="file" accept="audio/*">
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Volume</span>
+          <input type="range" id="reel_audio_volume" min="0" max="1.5" value="0.75" step="0.05"
+                 oninput="updateSlider(this,'reel_val_audio_volume')">
+          <input type="text" class="slider-val" id="reel_val_audio_volume" value="0.75"
+                 onfocus="this.select()" onchange="syncVal('reel_val_audio_volume','reel_audio_volume')">
+        </div>
+        <div class="publish-field" style="margin:8px 0">
+          <label for="reel_sfx_transition">Effet transition</label>
+          <select id="reel_sfx_transition" class="publish-input">
+            <option value="">Aucun</option>
+            <option value="swoosh_fast">Swoosh fast</option>
+            <option value="swoosh_soft">Swoosh soft</option>
+            <option value="swoosh_deep">Swoosh deep</option>
+            <option value="swoosh_riser">Swoosh riser</option>
+            <option value="transition_hit">Transition hit</option>
+            <option value="impact_deep">Impact deep</option>
+            <option value="camera_click">Camera click</option>
+            <option value="pop_clean">Pop clean</option>
+          </select>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Volume SFX</span>
+          <input type="range" id="reel_sfx_volume" min="0" max="1.5" value="0.8" step="0.05"
+                 oninput="updateSlider(this,'reel_val_sfx_volume')">
+          <input type="text" class="slider-val" id="reel_val_sfx_volume" value="0.8"
+                 onfocus="this.select()" onchange="syncVal('reel_val_sfx_volume','reel_sfx_volume')">
         </div>
         <div class="eq-text-row" style="margin-top:6px">
           <label class="eq-toggle-wrap">
@@ -5173,7 +5205,10 @@ function initPerformancePage() {
     const sel = document.getElementById('perf-category');
     if (sel) {
       const cats = _perfCategories();
-      sel.innerHTML = cats.map(cat => `<option value="${_esc(cat)}">${_esc(cat)}</option>`).join('');
+      sel.innerHTML = [
+        '<option value="all">Toutes catégories</option>',
+        ...cats.map(cat => `<option value="${_esc(cat)}">${_esc(cat)}</option>`)
+      ].join('');
       if (cats.includes('Fork')) sel.value = 'Fork';
     }
   }
@@ -6045,6 +6080,19 @@ function renderPerformance() {
   if (!podiumEl || !leadersEl || !tableEl) return;
 
   const view = document.getElementById('perf-view')?.value || 'equipment';
+  const category = document.getElementById('perf-category')?.value || 'all';
+  const leadersTitle = document.getElementById('perf-leaders-title');
+  const tableTitle = document.getElementById('perf-table-title');
+  if (leadersTitle) {
+    leadersTitle.textContent = view === 'riders'
+      ? 'Top riders'
+      : (view === 'teams' ? 'Top teams' : (category === 'all' ? 'Leaders par catégorie' : `Top ${category}`));
+  }
+  if (tableTitle) {
+    tableTitle.textContent = view === 'riders'
+      ? 'Classement riders détaillé'
+      : (view === 'teams' ? 'Classement teams détaillé' : 'Classement équipements détaillé');
+  }
   const categoryControl = document.getElementById('perf-category')?.closest('.perf-control');
   const groupControl = document.getElementById('perf-group')?.closest('.perf-control');
   if (categoryControl) categoryControl.style.display = view === 'equipment' ? '' : 'none';
@@ -6059,7 +6107,6 @@ function renderPerformance() {
     return;
   }
 
-  const category = document.getElementById('perf-category')?.value || 'all';
   const { riders, rows, itemHits, pointsCovered } = _perfStats();
   const sorted = _perfSortRows(rows);
   const cats = new Set(rows.map(r => r.category));
@@ -9163,6 +9210,15 @@ async function _imgToBase64(blobUrl) {
   });
 }
 
+function _fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.onerror = () => reject(reader.error || new Error('Lecture du fichier impossible'));
+    reader.readAsDataURL(file);
+  });
+}
+
 function _reelLog(msg, isError = false) {
   const el = document.getElementById('reel-error-msg');
   if (!el) return;
@@ -9211,8 +9267,22 @@ async function generateEqReel() {
     const cf  = parseFloat(g('reel_crossfade')?.value    || 0.5);
     const showBadge = g('reel_show_badge')?.checked ?? true;
     const exportFormat = g('reel_format')?.value || 'reel';
+    const transitionSfx = g('reel_sfx_transition')?.value || '';
+    const transitionSfxVolume = Math.max(0, Math.min(1.5, parseFloat(g('reel_sfx_volume')?.value || 0.8)));
+    const audioFile = g('reel_audio_file')?.files?.[0] || null;
+    const audioVolume = Math.max(0, Math.min(1.5, parseFloat(g('reel_audio_volume')?.value || 0.75)));
+    let audioPayload = null;
+    if (audioFile) {
+      _reelLog('⚙ Encodage de l’audio…');
+      audioPayload = {
+        name: audioFile.name || 'audio',
+        mime: audioFile.type || 'audio/mpeg',
+        b64: await _fileToBase64(audioFile),
+        volume: audioVolume,
+      };
+    }
 
-    _reelLog(`⚙ Génération du MP4 (${items_payload.length} frames)…`);
+    _reelLog(`⚙ Génération du MP4 (${items_payload.length} frames${audioPayload ? ' + audio' : ''})…`);
     const badgeRiderIg  = document.getElementById('reel-rider-select')?.value || '';
     const badgeRadius   = parseInt(g('reel_badge_radius')?.value || 58);
     const res = await fetch('/api/generate-eq-reel', {
@@ -9222,7 +9292,10 @@ async function generateEqReel() {
                              crossfade: cf, show_rider_badge: showBadge,
                              export_format: exportFormat,
                              badge_rider_ig: badgeRiderIg,
-                             badge_radius: badgeRadius }),
+                             badge_radius: badgeRadius,
+                             audio: audioPayload,
+                             transition_sfx: transitionSfx,
+                             transition_sfx_volume: transitionSfxVolume }),
     });
 
     if (!res.ok) {
@@ -11022,6 +11095,9 @@ def api_generate_eq_reel():
         badge_rider_ig   = data.get("badge_rider_ig", "")
         badge_radius     = int(data.get("badge_radius", 58))
         export_format    = data.get("export_format", "reel")
+        audio_data       = data.get("audio") or {}
+        transition_sfx   = str(data.get("transition_sfx") or "").strip()
+        transition_sfx_volume = max(0.0, min(1.5, float(data.get("transition_sfx_volume", 0.8) or 0.8)))
 
         if not items:
             return jsonify({"error": "Aucun item"}), 400
@@ -11100,6 +11176,7 @@ def api_generate_eq_reel():
 
         n   = len(png_paths)
         dur = dur_per_card
+        video_output = tmpdir / "reel_video.mp4"
         output = tmpdir / "reel.mp4"
         size_map = {
             "reel":   (1080, 1920),
@@ -11117,7 +11194,7 @@ def api_generate_eq_reel():
         if n == 1:
             cmd = ["ffmpeg","-y","-r","30","-loop","1","-t",str(dur),"-i",str(png_paths[0]),
                    "-vf", vf_single,
-                   "-c:v","libx264","-r","30",str(output)]
+                   "-c:v","libx264","-r","30",str(video_output)]
         else:
             inputs = []
             for p in png_paths:
@@ -11137,12 +11214,106 @@ def api_generate_eq_reel():
             fc = ";".join(fmt_parts + xfade_parts)
             cmd = ["ffmpeg","-y"] + inputs + [
                 "-filter_complex", fc,
-                "-map","[vout]","-c:v","libx264","-r","30",str(output)]
+                "-map","[vout]","-c:v","libx264","-r","30",str(video_output)]
 
         cmd[0] = ffmpeg_bin
         result = subprocess.run(cmd, capture_output=True, timeout=120)
         if result.returncode != 0:
             raise RuntimeError(result.stderr.decode()[-600:])
+
+        total_duration = dur if n == 1 else max(0.5, n * dur - (n - 1) * crossfade)
+        audio_tracks = []
+        audio_b64 = audio_data.get("b64") if isinstance(audio_data, dict) else ""
+        if audio_b64:
+            if len(audio_b64) > 70_000_000:
+                return jsonify({"error": "Audio trop lourd"}), 400
+            raw_audio = base64.b64decode(audio_b64.split(",")[-1])
+            mime = str(audio_data.get("mime") or "").lower()
+            ext = ".mp3"
+            if "wav" in mime:
+                ext = ".wav"
+            elif "mp4" in mime or "m4a" in mime or "aac" in mime:
+                ext = ".m4a"
+            elif "ogg" in mime:
+                ext = ".ogg"
+            audio_path = tmpdir / f"audio{ext}"
+            audio_path.write_bytes(raw_audio)
+            volume = max(0.0, min(1.5, float(audio_data.get("volume", 0.75) or 0.75)))
+            fade_out = max(0.0, total_duration - 0.6)
+            audio_tracks.append({
+                "path": audio_path,
+                "loop": True,
+                "filter": f"volume={volume},afade=t=in:st=0:d=0.25,afade=t=out:st={fade_out:.3f}:d=0.45",
+            })
+
+        if transition_sfx and n > 1:
+            safe_sfx = "".join(c for c in transition_sfx if c.isalnum() or c == "_")
+            sfx_path = Path(__file__).resolve().parent / "assets" / "sfx" / f"{safe_sfx}.wav"
+            if not safe_sfx or not sfx_path.exists():
+                return jsonify({"error": "Effet sonore introuvable"}), 400
+            import array, sys, wave
+            with wave.open(str(sfx_path), "rb") as src:
+                if src.getnchannels() != 1 or src.getsampwidth() != 2:
+                    return jsonify({"error": "Format SFX non supporté"}), 400
+                sample_rate = src.getframerate()
+                samples = array.array("h")
+                samples.frombytes(src.readframes(src.getnframes()))
+                if sys.byteorder != "little":
+                    samples.byteswap()
+            total_frames = int(total_duration * sample_rate) + len(samples) + 1
+            mix = array.array("h", [0]) * total_frames
+            transition_step = max(0.1, dur - crossfade)
+            for idx in range(1, n):
+                start = int(idx * transition_step * sample_rate)
+                for j, sample in enumerate(samples):
+                    pos = start + j
+                    if pos >= len(mix):
+                        break
+                    value = mix[pos] + int(sample * transition_sfx_volume)
+                    mix[pos] = max(-32768, min(32767, value))
+            sfx_mix_path = tmpdir / "transition_sfx.wav"
+            with wave.open(str(sfx_mix_path), "wb") as dst:
+                dst.setnchannels(1)
+                dst.setsampwidth(2)
+                dst.setframerate(sample_rate)
+                dst.writeframes(mix.tobytes())
+            audio_tracks.append({
+                "path": sfx_mix_path,
+                "loop": False,
+                "filter": "anull",
+            })
+
+        if audio_tracks:
+            mux_cmd = [
+                ffmpeg_bin, "-y",
+                "-i", str(video_output),
+            ]
+            for track in audio_tracks:
+                if track["loop"]:
+                    mux_cmd += ["-stream_loop", "-1"]
+                mux_cmd += ["-i", str(track["path"])]
+            filter_parts = []
+            labels = []
+            for idx, track in enumerate(audio_tracks, start=1):
+                label = f"a{idx}"
+                filter_parts.append(f"[{idx}:a]{track['filter']}[{label}]")
+                labels.append(f"[{label}]")
+            if len(labels) == 1:
+                filter_parts.append(f"{labels[0]}anull[aout]")
+            else:
+                filter_parts.append("".join(labels) + f"amix=inputs={len(labels)}:duration=first:dropout_transition=0[aout]")
+            mux_cmd += [
+                "-t", f"{total_duration:.3f}",
+                "-filter_complex", ";".join(filter_parts),
+                "-map", "0:v:0", "-map", "[aout]",
+                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+                "-shortest", str(output),
+            ]
+            result = subprocess.run(mux_cmd, capture_output=True, timeout=120)
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr.decode()[-600:])
+        else:
+            output = video_output
 
         buf = io.BytesIO(output.read_bytes())
         return send_file(buf, mimetype="video/mp4", download_name="reel_equipment.mp4")

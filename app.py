@@ -59,6 +59,7 @@ _GOOGLE_SCOPES = [
     'openid',
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/spreadsheets',
 ]
 
 _DEFAULT_GSHEET_ID = getattr(gc, "GSHEET_ID", "")
@@ -754,7 +755,7 @@ HTML = r"""<!DOCTYPE html>
   .perf-overview-label { color:#777; font-size:.65rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px; }
   .perf-overview-row {
     display:grid;
-    grid-template-columns:25px minmax(0, 1fr) auto;
+    grid-template-columns:25px minmax(0, 1fr) auto 27px;
     align-items:center;
     gap:7px;
     min-height:34px;
@@ -765,6 +766,19 @@ HTML = r"""<!DOCTYPE html>
   .perf-overview-rank { color:#C8D400; font-weight:900; }
   .perf-overview-name { color:#eee; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .perf-overview-points { color:#aaa; font-weight:800; white-space:nowrap; }
+  .perf-card-generate {
+    width:27px;
+    height:27px;
+    border:1px solid #3b4000;
+    border-radius:6px;
+    background:#202300;
+    color:#C8D400;
+    cursor:pointer;
+    font-size:.72rem;
+    font-weight:900;
+  }
+  .perf-card-generate:hover { background:#C8D400; color:#111; }
+  .perf-card-generate:disabled { cursor:not-allowed; opacity:.22; }
   .perf-analysis-title { margin-top:4px; color:#eee; font-size:.95rem; letter-spacing:.06em; text-transform:uppercase; }
   .perf-controls {
     display:grid;
@@ -5325,12 +5339,81 @@ function _perfOverviewList(rows, mode, eventName) {
   return rows.map((rider, index) => {
     const rank = mode === 'event' ? index + 1 : Number(rider.rank || index + 1);
     const points = mode === 'event' ? _perfEventPoints(rider, eventName) : Number(rider.total_points || 0);
+    const handle = String(rider.instagram || '').replace(/^@/, '').toLowerCase();
+    const canGenerate = !!handle && (_app.profiles || []).some(profile =>
+      String(profile.instagram || '').replace(/^@/, '').toLowerCase() === handle
+    );
+    const generateButton = mode === 'event'
+      ? `<button class="perf-card-generate" title="Générer la carte rider avec ce résultat"
+          data-handle="${_esc(handle)}" data-event="${_esc(eventName)}" data-position="${rank}"
+          onclick="generateLatestResultCard(this)" ${canGenerate ? '' : 'disabled'}>＋</button>`
+      : '<span></span>';
     return `<div class="perf-overview-row">
       <div class="perf-overview-rank">#${rank}</div>
       <div class="perf-overview-name" title="${_esc(rider.name)}">${rider.flag ? _esc(rider.flag) + ' ' : ''}${_esc(rider.name)}</div>
       <div class="perf-overview-points">${Math.round(points)} pts</div>
+      ${generateButton}
     </div>`;
   }).join('');
+}
+
+async function generateLatestResultCard(button) {
+  const handle = String(button?.dataset?.handle || '').replace(/^@/, '').toLowerCase();
+  const eventName = String(button?.dataset?.event || '').trim();
+  const position = Number(button?.dataset?.position || 0);
+  const profile = (_app.profiles || []).find(item =>
+    String(item.instagram || '').replace(/^@/, '').toLowerCase() === handle
+  );
+  if (!profile?.slug || !position) return;
+
+  button.disabled = true;
+  button.textContent = '…';
+  genderFilter = 'all';
+  document.getElementById('btn-f').className = 'gender-btn';
+  document.getElementById('btn-m').className = 'gender-btn';
+  renderRiderList();
+  switchTab('cards');
+
+  const riderSelect = document.getElementById('rider');
+  riderSelect.value = profile.slug;
+  await onRiderChange();
+  clearTimeout(_debTimer);
+
+  const achievements = document.getElementById('ed_achievements');
+  const ordinal = position % 100 >= 11 && position % 100 <= 13
+    ? `${position}th`
+    : `${position}${position % 10 === 1 ? 'st' : position % 10 === 2 ? 'nd' : position % 10 === 3 ? 'rd' : 'th'}`;
+  const autoLine = `- ${ordinal} ${eventName || 'Dernière étape'} WC026`;
+  const existing = String(achievements.value || '').split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line && !/^WC 2026\s*[·—-]/i.test(line) && !/^-\s*\d+(?:st|nd|rd|th)\s+.+\s+WC026$/i.test(line));
+  achievements.value = [autoLine, ...existing].join('\n');
+
+  try {
+    const syncResponse = await fetch('/api/performance/sync-palmares', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        instagram: handle,
+        first_name: profile.prenom || '',
+        last_name: profile.nom || '',
+        palmares: achievements.value,
+      }),
+    });
+    const syncData = await syncResponse.json();
+    if (!syncResponse.ok || !syncData.ok) {
+      if (syncData.code === 'google_reconnect') {
+        window.open('/api/auth/google', 'google_oauth', 'width=620,height=720,scrollbars=yes,resizable=yes');
+      }
+      throw new Error(syncData.error || 'Mise à jour Google Sheets impossible');
+    }
+    profile.achievements = achievements.value;
+    await generate();
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = '＋';
+    window.alert(`Google Sheets : ${error.message}`);
+  }
 }
 
 function renderPerformanceOverview() {
@@ -11060,7 +11143,17 @@ def api_generate():
         # ── Overrides édition inline ──
         overrides = data.get("overrides", {})
         if overrides:
-            profile = {**profile, **{k: v for k, v in overrides.items() if v != ""}}
+            override_keys = {
+                "nationality": "nationalite",
+                "hometown": "ville",
+                "achievements": "palmares",
+            }
+            normalized_overrides = {
+                override_keys.get(k, k): v
+                for k, v in overrides.items()
+                if v != ""
+            }
+            profile = {**profile, **normalized_overrides}
 
         # ── Paramètres photo ──
         gc.PHOTO_ZOOM     = float(data.get("photo_zoom",  1.0))
@@ -11632,6 +11725,134 @@ def api_performance_results():
     if request.args.get("refresh") == "1":
         _cache.pop("results_2026", None)
     return jsonify({"results": get_results_2026()})
+
+
+def _sheet_column_name(index):
+    """Convertit un index de colonne zéro-based en notation A1."""
+    value = int(index) + 1
+    letters = ""
+    while value:
+        value, remainder = divmod(value - 1, 26)
+        letters = chr(65 + remainder) + letters
+    return letters
+
+
+def _google_sheets_access_token():
+    if not _GOOGLE_TOKEN_FILE.exists():
+        raise PermissionError("Reconnecte Google depuis Dashboard → Connections pour autoriser Google Sheets.")
+    try:
+        from google.oauth2.credentials import Credentials
+        from google.auth.transport.requests import Request as GoogleAuthRequest
+    except ImportError as exc:
+        raise RuntimeError("Dépendances Google OAuth manquantes.") from exc
+
+    token_data = _json.loads(_GOOGLE_TOKEN_FILE.read_text())
+    granted = set(token_data.get("scopes") or [])
+    sheets_scope = "https://www.googleapis.com/auth/spreadsheets"
+    if sheets_scope not in granted:
+        raise PermissionError("Reconnecte Google pour autoriser l’écriture dans Google Sheets.")
+
+    credentials = Credentials(
+        token=token_data.get("token"),
+        refresh_token=token_data.get("refresh_token"),
+        token_uri=token_data.get("token_uri") or "https://oauth2.googleapis.com/token",
+        client_id=token_data.get("client_id"),
+        client_secret=token_data.get("client_secret"),
+        scopes=list(granted),
+    )
+    if credentials.refresh_token:
+        credentials.refresh(GoogleAuthRequest())
+        token_data["token"] = credentials.token
+        _GOOGLE_TOKEN_FILE.write_text(_json.dumps(token_data, indent=2))
+    if not credentials.token:
+        raise PermissionError("Jeton Google indisponible. Reconnecte Google.")
+    return credentials.token
+
+
+@app.route("/api/performance/sync-palmares", methods=["POST"])
+def api_performance_sync_palmares():
+    data = request.get_json(silent=True) or {}
+    instagram = str(data.get("instagram") or "").lstrip("@").strip().lower()
+    first_name = str(data.get("first_name") or "").strip()
+    last_name = str(data.get("last_name") or "").strip()
+    palmares = str(data.get("palmares") or "").strip()
+    if not palmares or not (instagram or (first_name and last_name)):
+        return jsonify({"ok": False, "error": "Rider ou palmarès manquant."}), 400
+
+    sheet_name = "👤 Profils"
+    gsheet_id = _active_gsheet_id()
+    rows = _fetch_gsheet_rows_for_id(gsheet_id, sheet_name=sheet_name)
+    if not rows:
+        return jsonify({"ok": False, "error": "Onglet Profils introuvable."}), 404
+
+    header_index = _sheet_header_index(rows)
+    headers = [_sheet_header_key(value) for value in rows[header_index]]
+
+    def find_column(*aliases):
+        alias_keys = {_sheet_header_key(alias) for alias in aliases}
+        return next((idx for idx, key in enumerate(headers) if key in alias_keys), None)
+
+    first_col = find_column("First Name", "Prénom", "Prenom")
+    last_col = find_column("Last Name", "Nom")
+    instagram_col = find_column("Instagram", "Instagram Handle", "Handle")
+    palmares_col = find_column("Achievements", "Palmarès", "Palmares")
+    if palmares_col is None:
+        return jsonify({"ok": False, "error": "Colonne Achievements/Palmarès introuvable."}), 404
+
+    target_row = None
+    for row_index, row in enumerate(rows[header_index + 1:], start=header_index + 1):
+        padded = list(row) + [""] * max(0, len(headers) - len(row))
+        row_instagram = str(padded[instagram_col] if instagram_col is not None else "").lstrip("@").strip().lower()
+        same_handle = bool(instagram and row_instagram and instagram == row_instagram)
+        same_name = (
+            first_col is not None and last_col is not None
+            and _norm_match_name(padded[first_col]) == _norm_match_name(first_name)
+            and _norm_match_name(padded[last_col]) == _norm_match_name(last_name)
+        )
+        if same_handle or same_name:
+            target_row = row_index + 1
+            break
+    if target_row is None:
+        return jsonify({"ok": False, "error": "Rider introuvable dans l’onglet Profils."}), 404
+
+    cell = f"'{sheet_name}'!{_sheet_column_name(palmares_col)}{target_row}"
+    import urllib.parse as _urlparse
+    import urllib.request as _urlrequest
+    import urllib.error as _urlerror
+    try:
+        access_token = _google_sheets_access_token()
+        encoded_range = _urlparse.quote(cell, safe="")
+        url = (
+            f"https://sheets.googleapis.com/v4/spreadsheets/{gsheet_id}/values/{encoded_range}"
+            "?valueInputOption=RAW"
+        )
+        body = _json.dumps({"range": cell, "majorDimension": "ROWS", "values": [[palmares]]}).encode("utf-8")
+        update_request = _urlrequest.Request(
+            url,
+            data=body,
+            method="PUT",
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+        )
+        with _urlrequest.urlopen(update_request, timeout=20) as response:
+            update_result = _json.loads(response.read().decode("utf-8"))
+    except PermissionError as exc:
+        return jsonify({"ok": False, "code": "google_reconnect", "error": str(exc)}), 401
+    except _urlerror.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        return jsonify({"ok": False, "error": f"Google Sheets HTTP {exc.code}: {detail[:300]}"}), 502
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 502
+
+    _, _, profiles = get_engine()
+    for profile in profiles:
+        profile_handle = str(profile.get("instagram") or "").lstrip("@").strip().lower()
+        if (instagram and profile_handle == instagram) or (
+            _norm_match_name(profile.get("prenom")) == _norm_match_name(first_name)
+            and _norm_match_name(profile.get("nom")) == _norm_match_name(last_name)
+        ):
+            profile["palmares"] = palmares
+            break
+    return jsonify({"ok": True, "cell": cell, "updated_range": update_result.get("updatedRange", cell)})
 
 
 @app.route("/api/brand-tags")
@@ -12721,10 +12942,11 @@ def api_auth_google():
         from google_auth_oauthlib.flow import Flow
     except ImportError:
         return '<h3>pip install google-auth-oauthlib</h3>', 500
+    redirect_uri = request.host_url.rstrip('/') + '/api/auth/google/callback'
     flow = Flow.from_client_secrets_file(
         str(_GOOGLE_SECRET_FILE),
         scopes=_GOOGLE_SCOPES,
-        redirect_uri='http://localhost:5000/api/auth/google/callback'
+        redirect_uri=redirect_uri
     )
     auth_url, state = flow.authorization_url(
         access_type='offline',
@@ -12743,11 +12965,12 @@ def api_auth_google_callback():
         from google_auth_oauthlib.flow import Flow
     except ImportError:
         return '<h3>pip install google-auth-oauthlib</h3>', 500
+    redirect_uri = request.host_url.rstrip('/') + '/api/auth/google/callback'
     flow = Flow.from_client_secrets_file(
         str(_GOOGLE_SECRET_FILE),
         scopes=_GOOGLE_SCOPES,
         state=session.get('google_oauth_state'),
-        redirect_uri='http://localhost:5000/api/auth/google/callback'
+        redirect_uri=redirect_uri
     )
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials

@@ -389,8 +389,8 @@ HTML = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Freeride Fanatics V0.8 — Card Generator</title>
-<link rel="icon" href="/assets/brand/freeride-fanatics-summer.jpg">
-<link rel="apple-touch-icon" href="/assets/brand/freeride-fanatics-summer.jpg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=20260721-2">
+<link rel="apple-touch-icon" href="/assets/brand/freeride-fanatics-summer.jpg?v=20260721">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; min-height: 100vh; }
@@ -2913,7 +2913,7 @@ HTML = r"""<!DOCTYPE html>
   position:fixed;inset:0;z-index:9999;
   background:#111;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:18px">
-  <img class="loading-brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg" alt="Freeride Fanatics">
+  <img class="loading-brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg?v=20260721" alt="Freeride Fanatics">
   <div style="color:#C8D400;font-family:'BebasNeue-Regular',sans-serif;font-size:1.6rem;letter-spacing:2px">
     FREERIDE FANATICS
   </div>
@@ -2925,7 +2925,7 @@ HTML = r"""<!DOCTYPE html>
 
 <header>
   <h1 class="brand-title">
-    <img class="brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg" alt="">
+    <img class="brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg?v=20260721" alt="">
     <span>Freeride Fanatics</span>
     <span class="version-badge">V0.8</span>
   </h1>
@@ -10861,6 +10861,11 @@ def serve_logo(filename):
 @app.route("/assets/<path:filename>")
 def serve_asset(filename):
     return send_from_directory(str(ASSETS_DIR), filename)
+
+
+@app.route("/favicon.ico")
+def serve_favicon():
+    return send_from_directory(str(ASSETS_DIR / "brand"), "favicon.ico", mimetype="image/x-icon")
 
 
 @app.route("/api/equipment/<instagram>")

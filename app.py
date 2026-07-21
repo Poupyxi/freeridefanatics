@@ -714,6 +714,58 @@ HTML = r"""<!DOCTYPE html>
   .perf-title { color:#C8D400; font-size:1.45rem; letter-spacing:.08em; text-transform:uppercase; }
   .perf-sub { color:#888; margin-top:6px; line-height:1.45; max-width:760px; }
   .perf-status { color:#666; font-size:.78rem; margin-top:8px; }
+  .perf-overview {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+  .perf-event-context {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 14px;
+    background:#151700;
+    border:1px solid #363b00;
+    border-radius:9px;
+  }
+  .perf-event-competition { color:#eee; font-weight:800; }
+  .perf-event-latest { color:#C8D400; font-weight:800; text-align:right; }
+  .perf-overview-card {
+    background:#101010;
+    border:1px solid #2a2a2a;
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .perf-overview-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:13px 14px;
+    background:linear-gradient(90deg, #1d2100, #111 68%);
+    border-bottom:1px solid #303400;
+  }
+  .perf-overview-gender { color:#C8D400; font-weight:900; font-size:1rem; letter-spacing:.08em; text-transform:uppercase; }
+  .perf-overview-event { color:#888; font-size:.72rem; text-align:right; }
+  .perf-overview-columns { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .perf-overview-section { padding:12px; min-width:0; }
+  .perf-overview-section + .perf-overview-section { border-left:1px solid #242424; }
+  .perf-overview-label { color:#777; font-size:.65rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px; }
+  .perf-overview-row {
+    display:grid;
+    grid-template-columns:25px minmax(0, 1fr) auto;
+    align-items:center;
+    gap:7px;
+    min-height:34px;
+    border-top:1px solid #202020;
+    font-size:.78rem;
+  }
+  .perf-overview-row:first-of-type { border-top:0; }
+  .perf-overview-rank { color:#C8D400; font-weight:900; }
+  .perf-overview-name { color:#eee; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .perf-overview-points { color:#aaa; font-weight:800; white-space:nowrap; }
+  .perf-analysis-title { margin-top:4px; color:#eee; font-size:.95rem; letter-spacing:.06em; text-transform:uppercase; }
   .perf-controls {
     display:grid;
     grid-template-columns:repeat(2, minmax(180px, 1fr));
@@ -2871,6 +2923,11 @@ HTML = r"""<!DOCTYPE html>
     .publish-select-grid { grid-template-columns: 1fr; }
     .publish-preview-shell { grid-template-columns: 1fr; }
     #page-performance { padding: 14px; }
+    .perf-overview { grid-template-columns:1fr; }
+    .perf-event-context { align-items:flex-start; flex-direction:column; }
+    .perf-event-latest { text-align:left; }
+    .perf-overview-columns { grid-template-columns:1fr; }
+    .perf-overview-section + .perf-overview-section { border-left:0; border-top:1px solid #242424; }
     .perf-header { align-items:flex-start; flex-direction:column; }
     .perf-controls,
     .perf-kpis,
@@ -3504,6 +3561,11 @@ HTML = r"""<!DOCTYPE html>
       </div>
       <button class="eq-topbar-btn" onclick="refreshPerformanceData(false)">↺ Actualiser maintenant</button>
     </div>
+
+    <div class="perf-event-context" id="perf-event-context"></div>
+    <div class="perf-overview" id="perf-overview"></div>
+
+    <div class="perf-analysis-title">Analyse par équipement</div>
 
     <div class="perf-controls">
       <div class="perf-control">
@@ -5234,6 +5296,76 @@ function populatePerformanceInfoFields() {
   }
 }
 
+function _perfLatestEvent() {
+  const events = (_app.resultEvents || []).slice().reverse();
+  return events.find(event => (_app.results || []).some(rider =>
+    (rider.events || []).some(item => item.event === event && Number(item.points || 0) > 0)
+  )) || events[0] || '';
+}
+
+function _perfEventPoints(rider, eventName) {
+  const item = (rider?.events || []).find(event => event.event === eventName);
+  return Number(item?.points || 0);
+}
+
+function _perfOverviewRows(gender, mode, eventName) {
+  let rows = (_app.results || []).filter(rider => rider.genre === gender);
+  if (mode === 'event') {
+    rows = rows.filter(rider => _perfEventPoints(rider, eventName) > 0)
+      .sort((a, b) => (_perfEventPoints(b, eventName) - _perfEventPoints(a, eventName)) || String(a.name).localeCompare(String(b.name)));
+  } else {
+    rows = rows.filter(rider => Number(rider.total_points || 0) > 0)
+      .sort((a, b) => (Number(a.rank || 999) - Number(b.rank || 999)) || (Number(b.total_points || 0) - Number(a.total_points || 0)));
+  }
+  return rows.slice(0, 5);
+}
+
+function _perfOverviewList(rows, mode, eventName) {
+  if (!rows.length) return '<div class="perf-empty">Aucun résultat disponible.</div>';
+  return rows.map((rider, index) => {
+    const rank = mode === 'event' ? index + 1 : Number(rider.rank || index + 1);
+    const points = mode === 'event' ? _perfEventPoints(rider, eventName) : Number(rider.total_points || 0);
+    return `<div class="perf-overview-row">
+      <div class="perf-overview-rank">#${rank}</div>
+      <div class="perf-overview-name" title="${_esc(rider.name)}">${rider.flag ? _esc(rider.flag) + ' ' : ''}${_esc(rider.name)}</div>
+      <div class="perf-overview-points">${Math.round(points)} pts</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPerformanceOverview() {
+  const root = document.getElementById('perf-overview');
+  if (!root) return;
+  const latestEvent = _perfLatestEvent();
+  const context = document.getElementById('perf-event-context');
+  if (context) {
+    context.innerHTML = `
+      <div class="perf-event-competition">Compétition · UCI Downhill World Cup 2026</div>
+      <div class="perf-event-latest">Dernière étape · ${latestEvent ? _esc(latestEvent) : 'Indisponible'}</div>
+    `;
+  }
+  root.innerHTML = ['F', 'M'].map(gender => {
+    const latest = _perfOverviewRows(gender, 'event', latestEvent);
+    const overall = _perfOverviewRows(gender, 'overall', latestEvent);
+    return `<section class="perf-overview-card">
+      <div class="perf-overview-head">
+        <div class="perf-overview-gender">${gender === 'F' ? '♀ Femmes' : '♂ Hommes'}</div>
+        <div class="perf-overview-event">${latestEvent ? _esc(latestEvent) : 'Dernière compétition indisponible'}</div>
+      </div>
+      <div class="perf-overview-columns">
+        <div class="perf-overview-section">
+          <div class="perf-overview-label">Dernier résultat</div>
+          ${_perfOverviewList(latest, 'event', latestEvent)}
+        </div>
+        <div class="perf-overview-section">
+          <div class="perf-overview-label">Classement général</div>
+          ${_perfOverviewList(overall, 'overall', latestEvent)}
+        </div>
+      </div>
+    </section>`;
+  }).join('');
+}
+
 function _setPerfInfoCheckbox(id, value) {
   const el = document.getElementById(id);
   if (el) el.checked = value;
@@ -5281,6 +5413,7 @@ async function refreshPerformanceData(silent = false) {
     _app.results = data.results?.riders || [];
     _app.resultEvents = data.results?.events || [];
     populatePerformanceInfoFields();
+    renderPerformanceOverview();
     renderPerformance();
     if (status) {
       const d = new Date();
@@ -6074,6 +6207,7 @@ async function addPerformanceInfographicToLibrary() {
 }
 
 function renderPerformance() {
+  renderPerformanceOverview();
   const podiumEl = document.getElementById('perf-podium');
   const leadersEl = document.getElementById('perf-leaders');
   const tableEl = document.getElementById('perf-table-wrap');

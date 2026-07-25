@@ -39,7 +39,7 @@ CATEGORY_FOLDERS = {
     "Handlebar":    ["Handlebar", "Handle bar", "Bars"],
     "Dropper Post": ["Dropper Post", "Dropper"],
     "Saddle":       ["Saddle"],
-    "Crankset":     ["Crankset", "Cranks"],
+    "Crankset":     ["Crankset", "Crank", "Cranks"],
     "Chain":        ["Chain"],
     "Derailleur":   ["Derailleur"],
     "Brake Lever":  ["Brake Lever", "Brakes"],

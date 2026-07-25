@@ -59,6 +59,7 @@ _GOOGLE_SCOPES = [
     'openid',
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/spreadsheets',
 ]
 
 _DEFAULT_GSHEET_ID = getattr(gc, "GSHEET_ID", "")
@@ -389,11 +390,14 @@ HTML = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Freeride Fanatics V0.8 — Card Generator</title>
-<link rel="icon" href="/assets/brand/freeride-fanatics-summer.jpg">
-<link rel="apple-touch-icon" href="/assets/brand/freeride-fanatics-summer.jpg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=20260721-2">
+<link rel="apple-touch-icon" href="/assets/brand/freeride-fanatics-summer.jpg?v=20260721">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; min-height: 100vh; }
+  html { min-width: 320px; overflow-x: hidden; }
+  body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; min-height: 100vh; overflow-x: hidden; }
+  img, video, canvas { max-width: 100%; }
+  button, input, select, textarea { min-width: 0; }
 
   header {
     background: #111;
@@ -452,7 +456,13 @@ HTML = r"""<!DOCTYPE html>
     padding: 3px;
     border-radius: 8px;
     margin-left: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  .tab-nav::-webkit-scrollbar { display: none; }
   .tab-btn {
     padding: 6px 18px;
     border: none;
@@ -476,6 +486,7 @@ HTML = r"""<!DOCTYPE html>
     gap: 10px;
     margin-left: auto;
     flex-shrink: 0;
+    min-width: 0;
   }
 
   /* ── Dashboard dropdown ── */
@@ -567,7 +578,7 @@ HTML = r"""<!DOCTYPE html>
   .burger-panel {
     position: absolute;
     top: 0; right: 0;
-    width: 240px;
+    width: min(280px, calc(100vw - 40px));
     height: 100%;
     background: #111;
     border-left: 1px solid #2a2a2a;
@@ -714,6 +725,91 @@ HTML = r"""<!DOCTYPE html>
   .perf-title { color:#C8D400; font-size:1.45rem; letter-spacing:.08em; text-transform:uppercase; }
   .perf-sub { color:#888; margin-top:6px; line-height:1.45; max-width:760px; }
   .perf-status { color:#666; font-size:.78rem; margin-top:8px; }
+  .perf-overview {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+  .perf-event-context {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 14px;
+    background:#151700;
+    border:1px solid #363b00;
+    border-radius:9px;
+  }
+  .perf-event-competition { color:#eee; font-weight:800; }
+  .perf-event-latest { color:#C8D400; font-weight:800; text-align:right; }
+  .perf-result-style {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#777;
+    font-size:.68rem;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .perf-result-style select {
+    background:#0b0b0b;
+    border:1px solid #333800;
+    color:#C8D400;
+    border-radius:7px;
+    padding:7px 9px;
+    font-size:.72rem;
+    font-weight:800;
+    outline:none;
+  }
+  .perf-overview-card {
+    background:#101010;
+    border:1px solid #2a2a2a;
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .perf-overview-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:13px 14px;
+    background:linear-gradient(90deg, #1d2100, #111 68%);
+    border-bottom:1px solid #303400;
+  }
+  .perf-overview-gender { color:#C8D400; font-weight:900; font-size:1rem; letter-spacing:.08em; text-transform:uppercase; }
+  .perf-overview-event { color:#888; font-size:.72rem; text-align:right; }
+  .perf-overview-columns { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .perf-overview-section { padding:12px; min-width:0; }
+  .perf-overview-section + .perf-overview-section { border-left:1px solid #242424; }
+  .perf-overview-label { color:#777; font-size:.65rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px; }
+  .perf-overview-row {
+    display:grid;
+    grid-template-columns:25px minmax(0, 1fr) auto 27px;
+    align-items:center;
+    gap:7px;
+    min-height:34px;
+    border-top:1px solid #202020;
+    font-size:.78rem;
+  }
+  .perf-overview-row:first-of-type { border-top:0; }
+  .perf-overview-rank { color:#C8D400; font-weight:900; }
+  .perf-overview-name { color:#eee; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .perf-overview-points { color:#aaa; font-weight:800; white-space:nowrap; }
+  .perf-card-generate {
+    width:27px;
+    height:27px;
+    border:1px solid #3b4000;
+    border-radius:6px;
+    background:#202300;
+    color:#C8D400;
+    cursor:pointer;
+    font-size:.72rem;
+    font-weight:900;
+  }
+  .perf-card-generate:hover { background:#C8D400; color:#111; }
+  .perf-card-generate:disabled { cursor:not-allowed; opacity:.22; }
+  .perf-analysis-title { margin-top:4px; color:#eee; font-size:.95rem; letter-spacing:.06em; text-transform:uppercase; }
   .perf-controls {
     display:grid;
     grid-template-columns:repeat(2, minmax(180px, 1fr));
@@ -738,7 +834,7 @@ HTML = r"""<!DOCTYPE html>
   .perf-advanced-toggle.active { color:#C8D400; border-color:#C8D400; background:#252800; }
   .perf-advanced {
     display:none;
-    grid-template-columns:repeat(3, minmax(140px, 1fr));
+    grid-template-columns:repeat(4, minmax(140px, 1fr));
     gap:10px;
     background:#101010;
     border:1px solid #242424;
@@ -765,29 +861,9 @@ HTML = r"""<!DOCTYPE html>
     outline:none;
   }
   .perf-select:focus { border-color:#C8D400; }
-  .perf-kpis {
-    display:grid;
-    grid-template-columns:repeat(4, minmax(0, 1fr));
-    gap:10px;
-  }
-  .perf-kpi {
-    background:#111;
-    border:1px solid #2a2a2a;
-    border-radius:8px;
-    padding:12px;
-    min-height:78px;
-  }
-  .perf-kpi-label {
-    color:#777;
-    font-size:10px;
-    font-weight:700;
-    letter-spacing:.12em;
-    text-transform:uppercase;
-  }
-  .perf-kpi-value { color:#eee; font-size:1.55rem; font-weight:800; margin-top:8px; }
   .perf-infographic {
     display:grid;
-    grid-template-columns:minmax(0, 1fr) 340px;
+    grid-template-columns:minmax(250px, 310px) minmax(360px, 1fr) minmax(300px, 380px);
     gap:14px;
     align-items:stretch;
     background:#0d0d0d;
@@ -804,6 +880,7 @@ HTML = r"""<!DOCTYPE html>
     align-items:center;
     justify-content:center;
     overflow:hidden;
+    min-width:0;
   }
   .perf-infographic-preview img {
     max-width:100%;
@@ -811,19 +888,27 @@ HTML = r"""<!DOCTYPE html>
     object-fit:contain;
     display:block;
   }
-  .perf-infographic-side {
+  .perf-info-menu,
+  .perf-post-panel {
+    min-width:0;
+    border:1px solid #242424;
+    border-radius:8px;
+    background:#111;
+    padding:12px;
     display:flex;
     flex-direction:column;
     gap:10px;
   }
-  .perf-infographic-side h3 {
+  .perf-info-menu h3,
+  .perf-post-panel h3 {
     color:#C8D400;
     margin:0;
     font-size:.95rem;
     letter-spacing:.08em;
     text-transform:uppercase;
   }
-  .perf-infographic-side p {
+  .perf-info-menu p,
+  .perf-post-panel p {
     color:#777;
     font-size:.8rem;
     line-height:1.5;
@@ -901,37 +986,32 @@ HTML = r"""<!DOCTYPE html>
     margin-top:0;
     width:100%;
   }
-  .perf-podium {
-    display:grid;
-    grid-template-columns:repeat(3, minmax(0, 1fr));
-    gap:12px;
-  }
-  .perf-podium-card {
-    background:#111;
+  .perf-post-textarea {
+    width:100%;
+    min-height:260px;
+    resize:vertical;
+    box-sizing:border-box;
     border:1px solid #2a2a2a;
     border-radius:8px;
-    padding:14px;
-    min-height:172px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+    background:#0b0b0b;
+    color:#eee;
+    padding:11px 12px;
+    font-size:.84rem;
+    line-height:1.55;
+    outline:none;
   }
-  .perf-podium-card:first-child { border-color:#C8D400; background:#151700; }
-  .perf-medal {
-    width:34px;
-    height:34px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#252800;
-    color:#C8D400;
-    font-weight:900;
+  .perf-post-textarea:focus {
+    border-color:#C8D400;
   }
-  .perf-podium-name { color:#eee; font-size:1.05rem; font-weight:900; line-height:1.2; }
-  .perf-podium-meta { color:#888; font-size:.78rem; line-height:1.45; }
-  .perf-podium-points { color:#C8D400; font-size:1.45rem; font-weight:900; margin-top:auto; }
-  .perf-podium-points small { color:#777; font-size:.72rem; margin-left:4px; }
+  .perf-post-actions {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .perf-post-actions .btn {
+    margin-top:0;
+    width:100%;
+  }
   .perf-grid {
     display:grid;
     grid-template-columns:minmax(0, .95fr) minmax(0, 1.35fr);
@@ -1954,6 +2034,7 @@ HTML = r"""<!DOCTYPE html>
     border-collapse:collapse;
     margin-top:12px;
     font-size:12px;
+    min-width:720px;
   }
   .settings-test-table th {
     color:#C8D400;
@@ -2152,9 +2233,10 @@ HTML = r"""<!DOCTYPE html>
 
   .layout {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
     gap: 0;
     height: calc(100vh - 65px);
+    min-width: 0;
   }
 
   /* ── PANNEAU GAUCHE ── */
@@ -2164,6 +2246,7 @@ HTML = r"""<!DOCTYPE html>
     background: #222;
     border-right: 1px solid #333;
     overflow: hidden;
+    min-width: 0;
   }
   .panel {
     flex: 1;
@@ -2506,6 +2589,7 @@ HTML = r"""<!DOCTYPE html>
     background: #141414;
     position: relative;
     overflow: hidden;
+    min-width: 0;
   }
   .preview-area img {
     max-height: 90vh;
@@ -2545,6 +2629,11 @@ HTML = r"""<!DOCTYPE html>
     padding: 10px;
     margin-top: 8px;
     display: none;
+  }
+  .error-msg.warning {
+    color: #C8D400;
+    background: #171a00;
+    border-color: #3b4000;
   }
 
   /* ── Équipements ── */
@@ -2798,18 +2887,202 @@ HTML = r"""<!DOCTYPE html>
   .profile-empty { font-size: 0.78rem; color: #444; text-align: center; padding: 8px; }
 
   /* ══════════════════════════════════════════
+     RESPONSIVE TABLETTE / PETIT DESKTOP
+  ══════════════════════════════════════════ */
+  @media (max-width: 1280px) {
+    header {
+      padding: 11px 16px;
+      gap: 10px;
+    }
+    header h1 { font-size: 1.05rem; letter-spacing: 1px; }
+    .brand-title { gap: 8px; }
+    .tab-btn {
+      padding: 6px 12px;
+      font-size: 0.76rem;
+    }
+    .dashboard-btn,
+    .btn-reload {
+      font-size: 0.76rem;
+      padding: 6px 10px;
+    }
+    .layout {
+      grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+    }
+    .panel {
+      padding: 16px 16px 7px;
+    }
+    .panel-actions {
+      padding: 10px 16px 14px;
+    }
+    .perf-wrap { max-width: 100%; }
+    .publish-preview-shell {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .perf-overview,
+    .perf-grid,
+    .perf-infographic,
+    .publish-preview-shell {
+      grid-template-columns: 1fr;
+    }
+    #page-publish {
+      height: auto;
+      min-height: calc(100vh - 65px);
+    }
+    #page-publish .layout {
+      height: auto;
+      min-height: calc(100vh - 65px);
+    }
+    #publish-preview-area {
+      overflow: visible !important;
+    }
+    .publish-preview-media,
+    .publish-preview-caption,
+    #publish-preview-video {
+      max-height: 52vh !important;
+    }
+    .quality-kpis {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .riders-folders,
+    .asset-tags-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 920px) {
+    header {
+      min-height: 58px;
+    }
+    .tab-nav,
+    .dashboard-dropdown {
+      display: none;
+    }
+    .header-right {
+      gap: 0;
+    }
+    .header-right > .btn-reload,
+    .header-right > #tab-library {
+      display: none;
+    }
+    .burger-btn {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand-mark {
+      width: 31px;
+      height: 31px;
+    }
+    .brand-title .version-badge {
+      font-size: 0.62rem;
+      padding: 2px 7px;
+    }
+    .layout {
+      grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+    }
+    .action-grid,
+    .action-grid.two,
+    .action-grid.four,
+    .action-grid.library-rider,
+    .publish-action-row,
+    .publish-action-row.compact,
+    .eq-free-row {
+      grid-template-columns: 1fr;
+    }
+    .publish-action-stack .btn,
+    .action-grid .btn,
+    .action-grid .btn-undo {
+      min-height: 44px;
+    }
+    .quality-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .quality-toolbar,
+    .library-toolbar,
+    .logos-toolbar {
+      align-items: stretch;
+    }
+    .quality-field,
+    .library-field,
+    .logos-url-input,
+    .quality-toolbar .btn,
+    .library-toolbar .btn,
+    .logos-toolbar .btn {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+    #page-library,
+    #page-logos,
+    #page-riders,
+    #page-quality,
+    #page-settings,
+    #page-connections,
+    #page-brandtags {
+      padding: 20px 16px 40px;
+      max-width: 100%;
+    }
+    #page-logos,
+    #page-riders,
+    #page-brandtags {
+      overflow-x: auto;
+    }
+    .logos-table,
+    .riders-table,
+    .asset-tags-table {
+      min-width: 760px;
+    }
+    .settings-card {
+      overflow-x: auto;
+    }
+  }
+
+  @media (max-height: 820px) and (min-width: 769px) {
+    #page-equipment .panel,
+    #page-cards .panel {
+      padding-top: 12px;
+      gap: 9px;
+    }
+    #page-equipment .collapsible-header,
+    #page-cards .collapsible-header {
+      padding: 8px 10px;
+    }
+    #page-equipment .collapsible-body,
+    #page-cards .collapsible-body {
+      padding: 9px;
+    }
+    #eq-preview-img {
+      max-height: 44vh;
+    }
+    .preview-area img {
+      max-height: 84vh;
+    }
+    .sponsors-grid {
+      max-height: 220px;
+    }
+  }
+
+  /* ══════════════════════════════════════════
      RESPONSIVE MOBILE
   ══════════════════════════════════════════ */
   @media (max-width: 768px) {
 
     /* ── Header ── */
     header {
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       padding: 10px 14px 8px;
       gap: 8px;
       row-gap: 6px;
     }
     header h1 { font-size: 0.95rem; letter-spacing: 1px; }
+    .brand-title span:not(.version-badge) {
+      max-width: 48vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .brand-mark { width: 30px; height: 30px; border-radius: 7px; }
 
     /* Mobile : masquer la nav desktop + dropdown, afficher burger */
@@ -2828,10 +3101,11 @@ HTML = r"""<!DOCTYPE html>
     }
 
     /* Supprime les hauteurs fixes sur les pages */
-    #page-reel { height: auto; }
+    #page-reel { height: auto; min-height: calc(100vh - 58px); }
     #page-reel .layout { height: auto; }
-    #page-publish { height: auto; }
+    #page-publish { height: auto; min-height: calc(100vh - 58px); }
     #page-publish .layout { height: auto; }
+    #page-equipment { height: auto; min-height: calc(100vh - 58px); overflow: visible; }
     #page-equipment .layout { height: auto; }
 
     /* ── Panneau gauche : hauteur max + scroll ── */
@@ -2852,10 +3126,14 @@ HTML = r"""<!DOCTYPE html>
     .preview-area {
       min-height: 55vw;
       height: auto;
+      padding: 14px;
     }
     .preview-area img {
       max-height: 80vw;
       max-width: 96%;
+    }
+    #eq-preview-img {
+      max-height: 72vw;
     }
 
     /* ── Sliders : label plus court ── */
@@ -2870,16 +3148,39 @@ HTML = r"""<!DOCTYPE html>
     .publish-rows { grid-template-columns: 1fr; }
     .publish-select-grid { grid-template-columns: 1fr; }
     .publish-preview-shell { grid-template-columns: 1fr; }
+    .publish-preview-side {
+      padding: 10px;
+    }
+    .publish-preview-head {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    .publish-copy-mini {
+      width: 100%;
+    }
+    .publish-preview-media,
+    .publish-preview-caption,
+    #publish-preview-video {
+      max-height: 68vh !important;
+    }
     #page-performance { padding: 14px; }
+    .perf-overview { grid-template-columns:1fr; }
+    .perf-event-context { align-items:flex-start; flex-direction:column; }
+    .perf-event-latest { text-align:left; }
+    .perf-overview-columns { grid-template-columns:1fr; }
+    .perf-overview-section + .perf-overview-section { border-left:0; border-top:1px solid #242424; }
     .perf-header { align-items:flex-start; flex-direction:column; }
     .perf-controls,
-    .perf-kpis,
     .perf-grid,
-    .perf-podium,
     .perf-advanced,
     .perf-infographic,
+    .perf-info-options,
+    .perf-post-actions,
     .quality-kpis,
     .asset-tags-grid { grid-template-columns: 1fr; }
+    .perf-infographic-preview {
+      min-height: 60vw;
+    }
     .perf-table { min-width: 760px; }
     #perf-table-wrap { overflow-x: auto; }
     .action-grid,
@@ -2892,6 +3193,32 @@ HTML = r"""<!DOCTYPE html>
 
     /* ── Barre équipements ── */
     .eq-page-bar { flex-wrap: wrap; }
+    .eq-topbar {
+      padding: 8px 12px;
+    }
+    .eq-topbar-btn {
+      flex: 1 1 auto;
+    }
+    .eq-full-table {
+      min-width: 980px;
+    }
+    .quality-daily-head,
+    .quality-assets-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .quality-daily-action {
+      min-width: 0 !important;
+    }
+    .library-grid {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    .library-actions {
+      grid-template-columns: 1fr;
+    }
+    .settings-actions .btn {
+      flex: 1 1 100%;
+    }
   }
 
   @media (max-width: 420px) {
@@ -2913,7 +3240,7 @@ HTML = r"""<!DOCTYPE html>
   position:fixed;inset:0;z-index:9999;
   background:#111;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:18px">
-  <img class="loading-brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg" alt="Freeride Fanatics">
+  <img class="loading-brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg?v=20260721" alt="Freeride Fanatics">
   <div style="color:#C8D400;font-family:'BebasNeue-Regular',sans-serif;font-size:1.6rem;letter-spacing:2px">
     FREERIDE FANATICS
   </div>
@@ -2925,7 +3252,7 @@ HTML = r"""<!DOCTYPE html>
 
 <header>
   <h1 class="brand-title">
-    <img class="brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg" alt="">
+    <img class="brand-mark" src="/assets/brand/freeride-fanatics-summer.jpg?v=20260721" alt="">
     <span>Freeride Fanatics</span>
     <span class="version-badge">V0.8</span>
   </h1>
@@ -3505,6 +3832,11 @@ HTML = r"""<!DOCTYPE html>
       <button class="eq-topbar-btn" onclick="refreshPerformanceData(false)">↺ Actualiser maintenant</button>
     </div>
 
+    <div class="perf-event-context" id="perf-event-context"></div>
+    <div class="perf-overview" id="perf-overview"></div>
+
+    <div class="perf-analysis-title">Analyse par équipement</div>
+
     <div class="perf-controls">
       <div class="perf-control">
         <label for="perf-view">Vue</label>
@@ -3535,6 +3867,13 @@ HTML = r"""<!DOCTYPE html>
 
     <div class="perf-advanced" id="perf-advanced">
       <div class="perf-control">
+        <label for="perf-scope">Section</label>
+        <select id="perf-scope" class="perf-select" onchange="populatePerformanceInfoFields(); renderPerformance()">
+          <option value="season" selected>Saison 2026</option>
+          <option value="last_race">Last race</option>
+        </select>
+      </div>
+      <div class="perf-control">
         <label for="perf-top">Fenêtre riders</label>
         <select id="perf-top" class="perf-select" onchange="renderPerformance()">
           <option value="3">Top 3 riders</option>
@@ -3562,20 +3901,8 @@ HTML = r"""<!DOCTYPE html>
       </div>
     </div>
 
-    <div class="perf-podium" id="perf-podium"></div>
-
-    <div class="perf-kpis">
-      <div class="perf-kpi"><div class="perf-kpi-label">Riders analysés</div><div class="perf-kpi-value" id="perf-kpi-riders">0</div></div>
-      <div class="perf-kpi"><div class="perf-kpi-label">Équipements matchés</div><div class="perf-kpi-value" id="perf-kpi-items">0</div></div>
-      <div class="perf-kpi"><div class="perf-kpi-label">Catégories</div><div class="perf-kpi-value" id="perf-kpi-cats">0</div></div>
-      <div class="perf-kpi"><div class="perf-kpi-label">Points couverts</div><div class="perf-kpi-value" id="perf-kpi-points">0</div></div>
-    </div>
-
     <div class="perf-infographic">
-      <div class="perf-infographic-preview" id="perf-infographic-preview">
-        <div class="perf-empty">Génère une infographie Top 10 depuis le classement sélectionné.</div>
-      </div>
-      <div class="perf-infographic-side">
+      <div class="perf-info-menu">
         <h3>Infographie classement</h3>
         <p>
           Format vertical prêt pour Instagram. Le visuel reprend l’esprit classement barres,
@@ -3584,6 +3911,7 @@ HTML = r"""<!DOCTYPE html>
         <div class="perf-info-options">
           <div class="perf-info-options-title">Informations affichées</div>
           <label><input type="checkbox" id="perf-info-show-subtitle" checked> Sous-titre</label>
+          <label><input type="checkbox" id="perf-info-show-competition" checked> Compétition</label>
           <label><input type="checkbox" id="perf-info-show-bars" checked> Barres</label>
           <label><input type="checkbox" id="perf-info-show-points" checked> Points</label>
           <label><input type="checkbox" id="perf-info-show-count" checked> Riders</label>
@@ -3614,6 +3942,21 @@ HTML = r"""<!DOCTYPE html>
           <button class="btn btn-secondary" id="perf-info-library-btn" disabled onclick="addPerformanceInfographicToLibrary()">＋ Library</button>
         </div>
         <div class="publish-meta" id="perf-infographic-status"></div>
+      </div>
+      <div class="perf-infographic-preview" id="perf-infographic-preview">
+        <div class="perf-empty">Génère une infographie Top 10 depuis le classement sélectionné.</div>
+      </div>
+      <div class="perf-post-panel">
+        <h3>Texte post</h3>
+        <p>
+          Génère une caption basée sur le classement affiché, puis copie-la pour Instagram.
+        </p>
+        <textarea id="perf-post-text" class="perf-post-textarea" placeholder="Le texte du post sera généré ici..."></textarea>
+        <div class="perf-post-actions">
+          <button class="btn btn-secondary" onclick="generatePerformancePostText()">✎ Générer texte</button>
+          <button class="btn btn-secondary" id="perf-post-copy-btn" disabled onclick="copyPerformancePostText()">📋 Copier</button>
+        </div>
+        <div class="publish-meta" id="perf-post-status"></div>
       </div>
     </div>
 
@@ -4698,6 +5041,7 @@ let lastSlug = null;
 let genderFilter = 'all';  // 'all' | 'F' | 'M'
 let _lastRiderCardUrl = null;
 let _lastPublishSource = null; // { kind, url, name, mime }
+let _latestResultBadge = null;
 
 function _foldSponsorText(value) {
   return String(value || '')
@@ -4865,6 +5209,7 @@ let _originalProfile = null;
 
 async function onRiderChange() {
   const slug = document.getElementById('rider').value;
+  _latestResultBadge = null;
   lastSlug = null;
   document.getElementById('btn-dl').disabled = true;
   if (!slug) return;
@@ -5081,7 +5426,9 @@ async function generate() {
 
   const area = document.getElementById('preview-area');
   area.classList.add('loading');
-  document.getElementById('error-msg').style.display = 'none';
+  const errorMsg = document.getElementById('error-msg');
+  errorMsg.classList.remove('warning');
+  errorMsg.style.display = 'none';
 
   const params = {
     slug,
@@ -5108,6 +5455,7 @@ async function generate() {
     logo_x:      parseInt(document.getElementById('logo_x').value),
     logo_dir:    document.getElementById('logo_dir').value,
     sponsors:    selectedSponsors.size > 0 ? [...selectedSponsors] : null,
+    result_badge: _latestResultBadge,
   };
 
   try {
@@ -5144,6 +5492,7 @@ async function generate() {
   } catch(e) {
     area.classList.remove('loading');
     const msg = document.getElementById('error-msg');
+    msg.classList.remove('warning');
     msg.textContent = '❌ ' + e.message;
     msg.style.display = 'block';
   }
@@ -5234,6 +5583,187 @@ function populatePerformanceInfoFields() {
   }
 }
 
+function _perfLatestEvent() {
+  const events = (_app.resultEvents || []).slice().reverse();
+  return events.find(event => (_app.results || []).some(rider =>
+    (rider.events || []).some(item => item.event === event && Number(item.points || 0) > 0)
+  )) || events[0] || '';
+}
+
+function _perfEventPoints(rider, eventName) {
+  const item = (rider?.events || []).find(event => event.event === eventName);
+  return Number(item?.points || 0);
+}
+
+function _perfScopeMode() {
+  return document.getElementById('perf-scope')?.value || 'season';
+}
+
+function _perfScopeEvent() {
+  return _perfLatestEvent();
+}
+
+function _perfScoreForRider(rider, scopeMode = _perfScopeMode(), eventName = _perfScopeEvent()) {
+  if (scopeMode === 'last_race') return _perfEventPoints(rider, eventName);
+  return Number(rider?.total_points || 0);
+}
+
+function _perfRankForRider(rider, scopeMode = _perfScopeMode()) {
+  if (Number.isFinite(Number(rider?._perf_rank))) return Number(rider._perf_rank);
+  if (scopeMode === 'last_race') return 999;
+  return Number(rider?.rank || 999);
+}
+
+function _perfOverviewRows(gender, mode, eventName) {
+  let rows = (_app.results || []).filter(rider => rider.genre === gender);
+  if (mode === 'event') {
+    rows = rows.filter(rider => _perfEventPoints(rider, eventName) > 0)
+      .sort((a, b) => (_perfEventPoints(b, eventName) - _perfEventPoints(a, eventName)) || String(a.name).localeCompare(String(b.name)));
+  } else {
+    rows = rows.filter(rider => Number(rider.total_points || 0) > 0)
+      .sort((a, b) => (Number(a.rank || 999) - Number(b.rank || 999)) || (Number(b.total_points || 0) - Number(a.total_points || 0)));
+  }
+  return rows.slice(0, 5);
+}
+
+function _perfOverviewList(rows, mode, eventName) {
+  if (!rows.length) return '<div class="perf-empty">Aucun résultat disponible.</div>';
+  return rows.map((rider, index) => {
+    const rank = mode === 'event' ? index + 1 : Number(rider.rank || index + 1);
+    const points = mode === 'event' ? _perfEventPoints(rider, eventName) : Number(rider.total_points || 0);
+    const handle = String(rider.instagram || '').replace(/^@/, '').toLowerCase();
+    const canGenerate = !!handle && (_app.profiles || []).some(profile =>
+      String(profile.instagram || '').replace(/^@/, '').toLowerCase() === handle
+    );
+    const generateButton = mode === 'event'
+      ? `<button class="perf-card-generate" title="Générer la carte rider avec ce résultat"
+          data-handle="${_esc(handle)}" data-event="${_esc(eventName)}" data-position="${rank}"
+          onclick="generateLatestResultCard(this)" ${canGenerate ? '' : 'disabled'}>＋</button>`
+      : '<span></span>';
+    return `<div class="perf-overview-row">
+      <div class="perf-overview-rank">#${rank}</div>
+      <div class="perf-overview-name" title="${_esc(rider.name)}">${rider.flag ? _esc(rider.flag) + ' ' : ''}${_esc(rider.name)}</div>
+      <div class="perf-overview-points">${Math.round(points)} pts</div>
+      ${generateButton}
+    </div>`;
+  }).join('');
+}
+
+async function generateLatestResultCard(button) {
+  const handle = String(button?.dataset?.handle || '').replace(/^@/, '').toLowerCase();
+  const eventName = String(button?.dataset?.event || '').trim();
+  const position = Number(button?.dataset?.position || 0);
+  const profile = (_app.profiles || []).find(item =>
+    String(item.instagram || '').replace(/^@/, '').toLowerCase() === handle
+  );
+  if (!profile?.slug || !position) return;
+
+  button.disabled = true;
+  button.textContent = '…';
+  genderFilter = 'all';
+  document.getElementById('btn-f').className = 'gender-btn';
+  document.getElementById('btn-m').className = 'gender-btn';
+  renderRiderList();
+  switchTab('cards');
+
+  const riderSelect = document.getElementById('rider');
+  riderSelect.value = profile.slug;
+  await onRiderChange();
+  clearTimeout(_debTimer);
+
+  const achievements = document.getElementById('ed_achievements');
+  const ordinal = position % 100 >= 11 && position % 100 <= 13
+    ? `${position}th`
+    : `${position}${position % 10 === 1 ? 'st' : position % 10 === 2 ? 'nd' : position % 10 === 3 ? 'rd' : 'th'}`;
+  const autoLine = `- ${ordinal} ${eventName || 'Dernière étape'} WC026`;
+  const existing = String(achievements.value || '').split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line && !/^WC 2026\s*[·—-]/i.test(line) && !/^-\s*\d+(?:st|nd|rd|th)\s+.+\s+WC026$/i.test(line));
+  achievements.value = [autoLine, ...existing].join('\n');
+
+  profile.achievements = achievements.value;
+  const badgeStyle = document.getElementById('perf-result-badge-style')?.value || 'banner';
+  _latestResultBadge = position <= 3 ? { position, event: eventName, season: 'WC026', style: badgeStyle } : null;
+
+  let syncWarning = '';
+  try {
+    const syncResponse = await fetch('/api/performance/sync-palmares', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        instagram: handle,
+        first_name: profile.prenom || '',
+        last_name: profile.nom || '',
+        palmares: achievements.value,
+      }),
+    });
+    const syncData = await syncResponse.json();
+    if (!syncResponse.ok || !syncData.ok) {
+      throw new Error(syncData.error || 'Mise à jour Google Sheets impossible');
+    }
+  } catch (error) {
+    syncWarning = `Google Sheet non synchronisé : ${error.message}`;
+    console.warn('[Performance]', syncWarning);
+  }
+
+  try {
+    await generate();
+    if (syncWarning) {
+      const msg = document.getElementById('error-msg');
+      if (msg) {
+        msg.classList.add('warning');
+        msg.textContent = '⚠️ Carte générée. Google Sheet non synchronisé.';
+        msg.style.display = 'block';
+      }
+    }
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = '＋';
+    window.alert(`Génération carte : ${error.message}`);
+  }
+}
+
+function renderPerformanceOverview() {
+  const root = document.getElementById('perf-overview');
+  if (!root) return;
+  const latestEvent = _perfLatestEvent();
+  const context = document.getElementById('perf-event-context');
+  const selectedBadgeStyle = document.getElementById('perf-result-badge-style')?.value || 'banner';
+  if (context) {
+    context.innerHTML = `
+      <div class="perf-event-competition">Compétition · UCI Downhill World Cup 2026</div>
+      <div class="perf-event-latest">Dernière étape · ${latestEvent ? _esc(latestEvent) : 'Indisponible'}</div>
+      <label class="perf-result-style">
+        Badge carte
+        <select id="perf-result-badge-style">
+          <option value="banner" ${selectedBadgeStyle === 'banner' ? 'selected' : ''}>Bandeau résultat</option>
+          <option value="v1" ${selectedBadgeStyle === 'v1' ? 'selected' : ''}>Capsule V1</option>
+        </select>
+      </label>
+    `;
+  }
+  root.innerHTML = ['F', 'M'].map(gender => {
+    const latest = _perfOverviewRows(gender, 'event', latestEvent);
+    const overall = _perfOverviewRows(gender, 'overall', latestEvent);
+    return `<section class="perf-overview-card">
+      <div class="perf-overview-head">
+        <div class="perf-overview-gender">${gender === 'F' ? '♀ Femmes' : '♂ Hommes'}</div>
+        <div class="perf-overview-event">${latestEvent ? _esc(latestEvent) : 'Dernière compétition indisponible'}</div>
+      </div>
+      <div class="perf-overview-columns">
+        <div class="perf-overview-section">
+          <div class="perf-overview-label">Dernier résultat</div>
+          ${_perfOverviewList(latest, 'event', latestEvent)}
+        </div>
+        <div class="perf-overview-section">
+          <div class="perf-overview-label">Classement général</div>
+          ${_perfOverviewList(overall, 'overall', latestEvent)}
+        </div>
+      </div>
+    </section>`;
+  }).join('');
+}
+
 function _setPerfInfoCheckbox(id, value) {
   const el = document.getElementById(id);
   if (el) el.checked = value;
@@ -5243,12 +5773,14 @@ function syncPerformanceInfographicOptions() {
   const view = document.getElementById('perf-view')?.value || 'equipment';
   if (view === 'riders') {
     _setPerfInfoCheckbox('perf-info-show-subtitle', true);
+    _setPerfInfoCheckbox('perf-info-show-competition', true);
     _setPerfInfoCheckbox('perf-info-show-bars', false);
     _setPerfInfoCheckbox('perf-info-show-points', true);
     _setPerfInfoCheckbox('perf-info-show-count', false);
     _setPerfInfoCheckbox('perf-info-show-percent', false);
   } else {
     _setPerfInfoCheckbox('perf-info-show-subtitle', true);
+    _setPerfInfoCheckbox('perf-info-show-competition', true);
     _setPerfInfoCheckbox('perf-info-show-bars', true);
     _setPerfInfoCheckbox('perf-info-show-points', true);
     _setPerfInfoCheckbox('perf-info-show-count', true);
@@ -5281,6 +5813,7 @@ async function refreshPerformanceData(silent = false) {
     _app.results = data.results?.riders || [];
     _app.resultEvents = data.results?.events || [];
     populatePerformanceInfoFields();
+    renderPerformanceOverview();
     renderPerformance();
     if (status) {
       const d = new Date();
@@ -5293,18 +5826,26 @@ async function refreshPerformanceData(silent = false) {
   }
 }
 
-function _perfSelectedRidersFor(gender = 'F', topVal = '10') {
-  let rows = (_app.results || []).filter(r => r.total_points > 0 && r.instagram);
+function _perfSelectedRidersFor(gender = 'F', topVal = '10', scopeMode = _perfScopeMode(), eventName = _perfScopeEvent()) {
+  let rows = (_app.results || [])
+    .filter(r => r.instagram)
+    .map(r => ({ ...r, _perf_points: _perfScoreForRider(r, scopeMode, eventName) }))
+    .filter(r => r._perf_points > 0);
   if (gender !== 'all') rows = rows.filter(r => r.genre === gender);
 
   rows = rows.slice().sort((a, b) => {
-    if (gender === 'all') return Number(b.total_points || 0) - Number(a.total_points || 0);
-    return (a.rank || 999) - (b.rank || 999);
-  });
+    if (scopeMode === 'last_race' || gender === 'all') {
+      return (Number(b._perf_points || 0) - Number(a._perf_points || 0)) || String(a.name || '').localeCompare(String(b.name || ''));
+    }
+    return (Number(a.rank || 999) - Number(b.rank || 999)) || (Number(b._perf_points || 0) - Number(a._perf_points || 0));
+  }).map((rider, idx) => ({
+    ...rider,
+    _perf_rank: scopeMode === 'last_race' ? idx + 1 : Number(rider.rank || idx + 1),
+  }));
 
   if (topVal !== 'all') {
     const limit = Number(topVal);
-    rows = gender === 'all'
+    rows = scopeMode === 'last_race' || gender === 'all'
       ? rows.slice(0, limit)
       : rows.filter(r => Number(r.rank || 999) <= limit);
   }
@@ -5314,7 +5855,9 @@ function _perfSelectedRidersFor(gender = 'F', topVal = '10') {
 function _perfSelectedRiders() {
   const gender = document.getElementById('perf-gender')?.value || 'F';
   const topVal = document.getElementById('perf-top')?.value || '10';
-  return _perfSelectedRidersFor(gender, topVal);
+  const scopeMode = _perfScopeMode();
+  const eventName = _perfScopeEvent();
+  return _perfSelectedRidersFor(gender, topVal, scopeMode, eventName);
 }
 
 function _perfItemLabel(item, groupMode) {
@@ -5343,9 +5886,12 @@ function _perfHasRealTeam(team) {
   return !!key && !['n a', 'na', 'none', 'no team', 'independent', 'independent unknown', 'unknown'].includes(key);
 }
 
-function _perfTeamRowsFor(gender = 'all') {
+function _perfTeamRowsFor(gender = 'all', scopeMode = _perfScopeMode(), eventName = _perfScopeEvent()) {
   const profileMap = _perfProfileMap();
-  let riders = (_app.results || []).filter(r => r.total_points > 0 && r.instagram);
+  let riders = (_app.results || [])
+    .filter(r => r.instagram)
+    .map(r => ({ ...r, _perf_points: _perfScoreForRider(r, scopeMode, eventName) }))
+    .filter(r => r._perf_points > 0);
   if (gender !== 'all') riders = riders.filter(r => r.genre === gender);
   riders = riders.filter(rider => {
     const profile = _perfProfileForRider(rider, profileMap);
@@ -5373,8 +5919,8 @@ function _perfTeamRowsFor(gender = 'all') {
       });
     }
     const st = teams.get(key);
-    const pts = Number(rider.total_points || 0);
-    const rank = Number(rider.rank || 999);
+    const pts = Number(rider._perf_points || 0);
+    const rank = _perfRankForRider(rider, scopeMode);
     st.count += 1;
     st.points += pts;
     st.bestRank = Math.min(st.bestRank, rank);
@@ -5410,13 +5956,7 @@ function _perfTeamRowsFor(gender = 'all') {
 }
 
 function _perfSetKpis(items) {
-  const labels = Array.from(document.querySelectorAll('.perf-kpi-label'));
-  const ids = ['perf-kpi-riders', 'perf-kpi-items', 'perf-kpi-cats', 'perf-kpi-points'];
-  items.forEach((item, idx) => {
-    if (labels[idx]) labels[idx].textContent = item.label;
-    const el = document.getElementById(ids[idx]);
-    if (el) el.textContent = item.value;
-  });
+  void items;
 }
 
 function _perfGenderLabel(gender) {
@@ -5441,14 +5981,25 @@ function _perfDefaultCategoryLabel() {
 function _perfInfoContext() {
   const competitionInput = document.getElementById('perf-info-competition');
   const categoryInput = document.getElementById('perf-info-category-label');
-  const latestEvent = (_app.resultEvents || []).slice(-1)[0] || '';
+  const latestEvent = _perfLatestEvent();
   const competition = String(competitionInput?.value || latestEvent || 'Saison 2026').trim();
   const category = String(categoryInput?.value || _perfDefaultCategoryLabel()).trim();
   return { competition, category };
 }
 
-function _perfStatsFor({ category = 'all', gender = 'F', topVal = '10', groupMode = 'product' } = {}) {
-  const riders = _perfSelectedRidersFor(gender, topVal);
+function _perfInfoSubtitle(context) {
+  const showCompetition = document.getElementById('perf-info-show-competition')?.checked !== false;
+  const scopeMode = _perfScopeMode();
+  const parts = [
+    scopeMode === 'last_race' ? 'Last race' : '',
+    showCompetition ? context.competition : '',
+    context.category,
+  ].filter(Boolean);
+  return parts.join(' · ') || context.category || context.competition || 'Saison 2026';
+}
+
+function _perfStatsFor({ category = 'all', gender = 'F', topVal = '10', groupMode = 'product', scopeMode = _perfScopeMode(), eventName = _perfScopeEvent() } = {}) {
+  const riders = _perfSelectedRidersFor(gender, topVal, scopeMode, eventName);
   const stats = new Map();
   let itemHits = 0;
   let pointsCovered = 0;
@@ -5478,8 +6029,8 @@ function _perfStatsFor({ category = 'all', gender = 'F', topVal = '10', groupMod
         });
       }
       const st = stats.get(key);
-      const pts = Number(rider.total_points || 0);
-      const rank = Number(rider.rank || 999);
+      const pts = Number(rider._perf_points ?? _perfScoreForRider(rider, scopeMode, eventName));
+      const rank = _perfRankForRider(rider, scopeMode);
       st.count += 1;
       st.points += pts;
       st.bestRank = Math.min(st.bestRank, rank);
@@ -5508,7 +6059,9 @@ function _perfStats() {
   const gender = document.getElementById('perf-gender')?.value || 'F';
   const topVal = document.getElementById('perf-top')?.value || '10';
   const groupMode = document.getElementById('perf-group')?.value || 'product';
-  return _perfStatsFor({ category, gender, topVal, groupMode });
+  const scopeMode = _perfScopeMode();
+  const eventName = _perfScopeEvent();
+  return _perfStatsFor({ category, gender, topVal, groupMode, scopeMode, eventName });
 }
 
 function _perfSortRowsBy(rows, sort = 'points') {
@@ -5525,20 +6078,22 @@ function _perfSortRows(rows) {
   return _perfSortRowsBy(rows, sort);
 }
 
-function _renderPerformanceRiders(podiumEl, leadersEl, tableEl) {
+function _renderPerformanceRiders(leadersEl, tableEl) {
   const gender = document.getElementById('perf-gender')?.value || 'F';
   const topVal = document.getElementById('perf-top')?.value || '10';
-  const rows = _perfSelectedRidersFor(gender, topVal).map(rider => {
+  const scopeMode = _perfScopeMode();
+  const eventName = _perfScopeEvent();
+  const rows = _perfSelectedRidersFor(gender, topVal, scopeMode, eventName).map(rider => {
     const profile = _perfProfileForRider(rider);
     return {
       ...rider,
       label: rider.name || rider.instagram || 'Unknown rider',
       team: String(profile?.team || rider.team || '').trim() || 'Independent / unknown',
-      points: Number(rider.total_points || 0),
-      rank: Number(rider.rank || 999),
+      points: Number(rider._perf_points ?? _perfScoreForRider(rider, scopeMode, eventName)),
+      rank: _perfRankForRider(rider, scopeMode),
     };
   }).sort((a, b) => {
-    if (gender === 'all') return (b.points - a.points) || (a.rank - b.rank);
+    if (scopeMode === 'last_race' || gender === 'all') return (b.points - a.points) || (a.rank - b.rank);
     return (a.rank - b.rank) || (b.points - a.points);
   });
   const totalPoints = rows.reduce((sum, r) => sum + r.points, 0);
@@ -5552,20 +6107,10 @@ function _renderPerformanceRiders(podiumEl, leadersEl, tableEl) {
   ]);
 
   if (!rows.length) {
-    podiumEl.innerHTML = '<div class="perf-empty" style="grid-column:1/-1">Aucun rider classé pour cette sélection.</div>';
     leadersEl.innerHTML = '<div class="perf-empty">Aucun rider classé pour cette sélection.</div>';
     tableEl.innerHTML = '<div class="perf-empty">Vérifie l’onglet Résultats 2026.</div>';
     return;
   }
-
-  podiumEl.innerHTML = rows.slice(0, 3).map((rider, idx) => `
-    <div class="perf-podium-card">
-      <div class="perf-medal">#${idx + 1}</div>
-      <div class="perf-podium-name">${_esc(rider.label)}</div>
-      <div class="perf-podium-meta">${_esc(rider.team)}<br>${rider.flag ? _esc(rider.flag) + ' · ' : ''}${_esc(_perfGenderLabel(rider.genre || 'all'))} · rang #${rider.rank}</div>
-      <div class="perf-podium-points">${Math.round(rider.points)}<small>pts</small></div>
-    </div>
-  `).join('');
 
   leadersEl.innerHTML = rows.slice(0, 10).map((rider, idx) => `
     <div class="perf-leader">
@@ -5606,9 +6151,11 @@ function _renderPerformanceRiders(podiumEl, leadersEl, tableEl) {
   `;
 }
 
-function _renderPerformanceTeams(podiumEl, leadersEl, tableEl) {
+function _renderPerformanceTeams(leadersEl, tableEl) {
   const gender = document.getElementById('perf-gender')?.value || 'all';
-  const { riders, rows } = _perfTeamRowsFor(gender);
+  const scopeMode = _perfScopeMode();
+  const eventName = _perfScopeEvent();
+  const { riders, rows } = _perfTeamRowsFor(gender, scopeMode, eventName);
   const totalPoints = rows.reduce((sum, r) => sum + r.points, 0);
   const bestTeam = rows[0];
 
@@ -5620,22 +6167,10 @@ function _renderPerformanceTeams(podiumEl, leadersEl, tableEl) {
   ]);
 
   if (!rows.length) {
-    podiumEl.innerHTML = '<div class="perf-empty" style="grid-column:1/-1">Aucune team détectée pour cette sélection.</div>';
     leadersEl.innerHTML = '<div class="perf-empty">Aucune team détectée pour cette sélection.</div>';
     tableEl.innerHTML = '<div class="perf-empty">Vérifie les teams dans les profils riders.</div>';
     return;
   }
-
-  podiumEl.innerHTML = rows.slice(0, 3).map((team, idx) => {
-    const top = team.topRider;
-    const riderText = top ? `${top.flag ? _esc(top.flag) + ' ' : ''}${_esc(top.name)} · ${Math.round(top.points)} pts` : 'Aucun rider';
-    return `<div class="perf-podium-card">
-      <div class="perf-medal">#${idx + 1}</div>
-      <div class="perf-podium-name">${_esc(team.team)}</div>
-      <div class="perf-podium-meta">${team.count} rider${team.count > 1 ? 's' : ''} · ${team.womenCount} F / ${team.menCount} H<br>Top rider : ${riderText}</div>
-      <div class="perf-podium-points">${Math.round(team.points)}<small>pts</small></div>
-    </div>`;
-  }).join('');
 
   leadersEl.innerHTML = rows.slice(0, 10).map((team, idx) => `
     <div class="perf-leader">
@@ -5800,64 +6335,75 @@ function _perfInfographicSource() {
   const topVal = document.getElementById('perf-top')?.value || '10';
   const groupMode = document.getElementById('perf-group')?.value || 'product';
   const sort = document.getElementById('perf-sort')?.value || 'points';
+  const scopeMode = _perfScopeMode();
+  const eventName = _perfScopeEvent();
   const context = _perfInfoContext();
+  const subtitle = _perfInfoSubtitle(context);
+  const labelPrefix = scopeMode === 'last_race' ? 'Last race · ' : '';
 
   if (view === 'riders') {
-    const rows = _perfSelectedRidersFor(gender, topVal).map(rider => {
+    const rows = _perfSelectedRidersFor(gender, topVal, scopeMode, eventName).map(rider => {
       const profile = _perfProfileForRider(rider);
       return {
         label: rider.name || rider.instagram || 'Unknown rider',
+        instagram: rider.instagram || '',
         count: 1,
-        points: Number(rider.total_points || 0),
-        rank: Number(rider.rank || 999),
+        points: Number(rider._perf_points ?? _perfScoreForRider(rider, scopeMode, eventName)),
+        rank: _perfRankForRider(rider, scopeMode),
         team: String(profile?.team || rider.team || '').trim() || 'Independent / unknown',
       };
     }).sort((a, b) => (b.points - a.points) || (a.rank - b.rank));
     return {
       view,
+      scope: scopeMode,
+      eventName,
       category: 'riders',
       gender,
       riders: rows,
       top: rows.slice(0, 10),
       title: 'RIDERS',
-      subtitle: `${context.competition} · ${context.category}`,
+      subtitle,
       sideLabel: 'CLASSEMENT RIDERS',
       sideMeta: context.category,
-      label: `Top 10 Riders · ${context.competition} · ${context.category}`,
+      label: `${labelPrefix}Top 10 Riders · ${subtitle}`,
       name: _perfInfoFilename('riders', gender, view),
     };
   }
 
   if (view === 'teams') {
-    const { riders, rows } = _perfTeamRowsFor(gender);
+    const { riders, rows } = _perfTeamRowsFor(gender, scopeMode, eventName);
     return {
       view,
+      scope: scopeMode,
+      eventName,
       category: 'teams',
       gender,
       riders,
       top: rows.slice(0, 10),
       title: 'TEAMS DH',
-      subtitle: `${context.competition} · ${context.category}`,
+      subtitle,
       sideLabel: 'CLASSEMENT TEAM',
       sideMeta: context.category,
-      label: `Top 10 Teams DH · ${context.competition} · ${context.category}`,
+      label: `${labelPrefix}Top 10 Teams DH · ${subtitle}`,
       name: _perfInfoFilename('teams_dh', gender, view),
     };
   }
 
-  const { riders, rows } = _perfStatsFor({ category, gender, topVal, groupMode });
+  const { riders, rows } = _perfStatsFor({ category, gender, topVal, groupMode, scopeMode, eventName });
   const top = _perfSortRowsBy(rows, sort).slice(0, 10);
   return {
     view,
+    scope: scopeMode,
+    eventName,
     category,
     gender,
     riders,
     top,
     title: category === 'all' ? 'EQUIPMENT' : category.toUpperCase(),
-    subtitle: `${context.competition} · ${context.category}`,
+    subtitle,
     sideLabel: 'CLASSEMENT EQUIPEMENT',
     sideMeta: context.category,
-    label: `Top 10 ${category === 'all' ? 'Equipment' : category} · ${context.competition} · ${context.category}`,
+    label: `${labelPrefix}Top 10 ${category === 'all' ? 'Equipment' : category} · ${subtitle}`,
     name: _perfInfoFilename(category, gender, view),
   };
 }
@@ -6036,6 +6582,199 @@ function generatePerformanceInfographic() {
   document.getElementById('perf-info-download-btn').disabled = false;
   document.getElementById('perf-info-library-btn').disabled = false;
   if (status) status.textContent = `Infographie prête : ${top.length} lignes · ${riders.length} riders analysés.`;
+  generatePerformancePostText(true);
+}
+
+function _perfPostViewLabel(source) {
+  if (source.view === 'riders') return 'classement riders';
+  if (source.view === 'teams') return 'classement teams DH';
+  if (source.category === 'all') return 'classement équipements';
+  return `classement ${source.category}`;
+}
+
+function _perfPostRankIcon(index) {
+  return ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'][index] || `${index + 1}.`;
+}
+
+function _perfPostHandle(value) {
+  const clean = String(value || '').trim()
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+    .replace(/^@/, '')
+    .replace(/\/.*$/, '');
+  return clean ? '@' + clean : '';
+}
+
+function _perfPostUnique(values) {
+  const seen = new Set();
+  return values.map(_perfPostHandle).filter(value => {
+    const key = value.toLowerCase();
+    if (!value || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function _perfPostContextHandles() {
+  return _perfPostUnique((_app.contextTags || []).map(tag => tag.instagram_handle));
+}
+
+function _perfPostContextHashtags() {
+  return Array.from(new Set((_app.contextTags || [])
+    .map(tag => String(tag.default_hashtag || '').trim())
+    .filter(Boolean)
+    .map(tag => tag.startsWith('#') ? tag : '#' + tag.replace(/^#+/, ''))));
+}
+
+function _perfPostBrandHandle(brand) {
+  const keys = _brandKeys(brand).filter(key => key.length >= 3);
+  const row = (_app.brandTags || []).find(item => keys.includes(_brandKey(item.brand)));
+  return _perfPostHandle(row?.instagram_handle);
+}
+
+function _perfPostHandlesForName(name, mode = 'team') {
+  const target = _brandKey(name);
+  const foldedName = _ffFold(name);
+  const contextMatches = (_app.contextTags || [])
+    .filter(tag => {
+      const values = [tag.name, tag.context, tag.tag_type].map(_brandKey).filter(Boolean);
+      return values.some(value => value === target || (mode === 'team' && value.length >= 4 && (target.includes(value) || value.includes(target))));
+    })
+    .map(tag => tag.instagram_handle);
+
+  const generic = new Set(['team', 'racing', 'factory', 'gravity', 'dh', 'mtb', 'bike', 'bikes', 'cycling', 'by', 'the', 'les', 'off']);
+  const brandMatches = (_app.brandTags || [])
+    .filter(row => {
+      const brandKeys = _brandKeys(row.brand).filter(key => key.length >= 3 && !generic.has(key));
+      return brandKeys.some(key => foldedName.includes(key));
+    })
+    .map(row => row.instagram_handle);
+
+  return _perfPostUnique([...contextMatches, ...brandMatches]);
+}
+
+function _perfPostDisplayName(item, source) {
+  if (source.view === 'riders') {
+    return _perfPostHandle(item.instagram) || item.label || item.name || 'Rider';
+  }
+  if (source.view === 'teams') {
+    const handles = _perfPostHandlesForName(item.label || item.team || '');
+    return handles.length ? handles.join(' / ') : (item.label || item.team || 'Team');
+  }
+  const brandHandle = _perfPostBrandHandle(item.brand);
+  const product = [brandHandle || item.brand, item.reference].filter(Boolean).join(' · ');
+  return product || item.label || 'Equipment';
+}
+
+function _perfPostLine(item, index, source) {
+  return `${_perfPostRankIcon(index)} ${_perfPostDisplayName(item, source)}`;
+}
+
+function _perfPostHashtags(source) {
+  const tags = ['#FreerideFanatics', '#DownhillMTB', '#DHMTB', '#MountainBike', '#Downhill', '#MTBRacing', '#DownhillRacing', '#FreerideMTB', '#GravityMTB', '#WorldCupDH', '#UCIWorldCup', '#BikeLife'];
+  if (source.view === 'teams') tags.push('#MTBTeam');
+  if (source.view === 'riders') tags.push('#RiderRanking');
+  if (source.view === 'equipment') tags.push('#EquipmentCheck', '#BikeCheck');
+  const category = String(source.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  if (category && !['all', 'riders', 'teams'].includes(category)) tags.push('#' + category);
+  _perfPostContextHashtags().forEach(tag => tags.push(tag));
+  return Array.from(new Set(tags)).join(' ');
+}
+
+function _perfPostHeadline(source) {
+  const scopeLabel = source.scope === 'last_race' ? 'THE LAST RACE TOP' : 'THE TOP';
+  if (source.view === 'teams') return `🚵‍♂️ ${scopeLabel} 10 DH TEAMS 🔥`;
+  if (source.view === 'riders') return `🏁 ${scopeLabel} 10 DH RIDERS 🔥`;
+  const category = source.category === 'all' ? 'DH EQUIPMENT' : `DH ${String(source.category || 'EQUIPMENT').toUpperCase()}`;
+  return `🔧 ${scopeLabel} 5 ${category} 🔥`;
+}
+
+function _perfPostIntro(source) {
+  if (source.scope === 'last_race') {
+    if (source.view === 'teams') return 'Last race shook up the ranking. Here’s who scored big:';
+    if (source.view === 'riders') return 'Last race points are in. Here’s the sharp end of the field:';
+    return 'The setups that scored the most points in the last race:';
+  }
+  if (source.view === 'teams') return 'The battle for the top spot is intense! Here’s the current ranking:';
+  if (source.view === 'riders') return 'The pace is high and every point matters. Here’s the current ranking:';
+  return 'The setups scoring the most points right now:';
+}
+
+function _perfPostQuestion(source) {
+  if (source.view === 'teams') return 'Which team are you supporting this season? 👇';
+  if (source.view === 'riders') return 'Who are you backing for the next round? 👇';
+  return 'Which setup would you run on race day? 👇';
+}
+
+function _perfPostMissingTags(top, source) {
+  if (source.view === 'riders') {
+    return top.filter(item => !_perfPostHandle(item.instagram)).map(item => item.label || item.name).filter(Boolean);
+  }
+  if (source.view === 'teams') {
+    return top.filter(item => !_perfPostHandlesForName(item.label || item.team || '').length).map(item => item.label || item.team).filter(Boolean);
+  }
+  return top.filter(item => !_perfPostBrandHandle(item.brand)).map(item => item.brand).filter(Boolean);
+}
+
+function generatePerformancePostText(silent = false) {
+  const textarea = document.getElementById('perf-post-text');
+  const status = document.getElementById('perf-post-status');
+  const copyBtn = document.getElementById('perf-post-copy-btn');
+  if (!textarea) return;
+
+  const source = _perfInfographicSource();
+  const top = (source.top || []).slice(0, source.view === 'equipment' ? 5 : 10);
+  if (!top.length) {
+    textarea.value = '';
+    if (copyBtn) copyBtn.disabled = true;
+    if (status && !silent) status.textContent = 'Aucun texte généré : aucun classement disponible.';
+    return;
+  }
+
+  const context = _perfInfoContext();
+  const showCompetition = document.getElementById('perf-info-show-competition')?.checked !== false;
+  const contextLine = [showCompetition ? context.competition : '', context.category].filter(Boolean).join(' · ');
+  const contextHandles = _perfPostContextHandles();
+  const contextMentions = contextHandles.join(' ');
+  const ranking = top.map((item, index) => _perfPostLine(item, index, source)).join('\n');
+
+  textarea.value = [
+    _perfPostHeadline(source),
+    '',
+    contextLine ? `${contextLine}` : '',
+    contextLine ? '' : '',
+    _perfPostIntro(source),
+    '',
+    ranking,
+    '',
+    _perfPostQuestion(source),
+    contextMentions,
+    '',
+    _perfPostHashtags(source),
+  ].filter(line => line !== null && line !== undefined && line !== '').join('\n');
+
+  const missing = _perfPostMissingTags(top, source);
+  if (copyBtn) copyBtn.disabled = false;
+  if (status && !silent) {
+    status.textContent = missing.length
+      ? `Texte prêt · ${missing.length} tag${missing.length > 1 ? 's' : ''} à compléter : ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '…' : ''}`
+      : `Texte prêt : ${top.length} tags intégrés.`;
+  }
+}
+
+async function copyPerformancePostText() {
+  const textarea = document.getElementById('perf-post-text');
+  const status = document.getElementById('perf-post-status');
+  const text = String(textarea?.value || '').trim();
+  if (!text) {
+    if (status) status.textContent = 'Rien à copier pour le moment.';
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    if (status) status.textContent = 'Texte copié.';
+  } catch(e) {
+    if (status) status.textContent = 'Copie impossible automatiquement.';
+  }
 }
 
 function downloadPerformanceInfographic() {
@@ -6074,10 +6813,10 @@ async function addPerformanceInfographicToLibrary() {
 }
 
 function renderPerformance() {
-  const podiumEl = document.getElementById('perf-podium');
+  renderPerformanceOverview();
   const leadersEl = document.getElementById('perf-leaders');
   const tableEl = document.getElementById('perf-table-wrap');
-  if (!podiumEl || !leadersEl || !tableEl) return;
+  if (!leadersEl || !tableEl) return;
 
   const view = document.getElementById('perf-view')?.value || 'equipment';
   const category = document.getElementById('perf-category')?.value || 'all';
@@ -6099,11 +6838,11 @@ function renderPerformance() {
   if (groupControl) groupControl.style.display = view === 'equipment' ? '' : 'none';
 
   if (view === 'riders') {
-    _renderPerformanceRiders(podiumEl, leadersEl, tableEl);
+    _renderPerformanceRiders(leadersEl, tableEl);
     return;
   }
   if (view === 'teams') {
-    _renderPerformanceTeams(podiumEl, leadersEl, tableEl);
+    _renderPerformanceTeams(leadersEl, tableEl);
     return;
   }
 
@@ -6119,32 +6858,15 @@ function renderPerformance() {
   ]);
 
   if (!riders.length) {
-    podiumEl.innerHTML = '<div class="perf-empty" style="grid-column:1/-1">Aucun rider classé avec un handle Instagram exploitable.</div>';
     leadersEl.innerHTML = '<div class="perf-empty">Aucun rider classé avec un handle Instagram exploitable.</div>';
     tableEl.innerHTML = '<div class="perf-empty">Vérifie l’onglet Résultats 2026 et les profils Instagram.</div>';
     return;
   }
   if (!rows.length) {
-    podiumEl.innerHTML = '<div class="perf-empty" style="grid-column:1/-1">Aucun équipement trouvé pour cette sélection.</div>';
     leadersEl.innerHTML = '<div class="perf-empty">Aucun équipement trouvé pour cette sélection.</div>';
     tableEl.innerHTML = '<div class="perf-empty">Essaie une autre catégorie ou une fenêtre plus large.</div>';
     return;
   }
-
-  const topThree = sorted.slice(0, 3);
-  podiumEl.innerHTML = topThree.map((st, idx) => {
-    const ridersText = st.riders
-      .sort((a, b) => a.rank - b.rank)
-      .slice(0, 3)
-      .map(r => `${r.flag ? r.flag + ' ' : ''}#${r.rank} ${r.name}`)
-      .join('<br>');
-    return `<div class="perf-podium-card">
-      <div class="perf-medal">#${idx + 1}</div>
-      <div class="perf-podium-name">${_esc(st.label)}</div>
-      <div class="perf-podium-meta">${st.count} rider${st.count > 1 ? 's' : ''} · rang moyen ${st.avgRank.toFixed(1)}<br>${ridersText}</div>
-      <div class="perf-podium-points">${Math.round(st.points)}<small>pts</small></div>
-    </div>`;
-  }).join('');
 
   let leaderRows = [];
   if (category === 'all') {
@@ -10863,6 +11585,11 @@ def serve_asset(filename):
     return send_from_directory(str(ASSETS_DIR), filename)
 
 
+@app.route("/favicon.ico")
+def serve_favicon():
+    return send_from_directory(str(ASSETS_DIR / "brand"), "favicon.ico", mimetype="image/x-icon")
+
+
 @app.route("/api/equipment/<instagram>")
 def api_equipment(instagram):
     """Retourne les équipements d'un rider (par handle Instagram)."""
@@ -10921,7 +11648,17 @@ def api_generate():
         # ── Overrides édition inline ──
         overrides = data.get("overrides", {})
         if overrides:
-            profile = {**profile, **{k: v for k, v in overrides.items() if v != ""}}
+            override_keys = {
+                "nationality": "nationalite",
+                "hometown": "ville",
+                "achievements": "palmares",
+            }
+            normalized_overrides = {
+                override_keys.get(k, k): v
+                for k, v in overrides.items()
+                if v != ""
+            }
+            profile = {**profile, **normalized_overrides}
 
         # ── Paramètres photo ──
         gc.PHOTO_ZOOM     = float(data.get("photo_zoom",  1.0))
@@ -10948,6 +11685,7 @@ def api_generate():
 
         sponsors = data.get("sponsors")
         card = gc.generate_card(profile, fonts, bg, forced_sponsors=sponsors)
+        card = _apply_result_badge(card, data.get("result_badge"), fonts)
 
         # Retourner l'image en mémoire
         buf = io.BytesIO()
@@ -10959,6 +11697,115 @@ def api_generate():
     except Exception as e:
         import traceback; traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+def _apply_result_badge(card, badge, fonts):
+    """Ajoute un badge podium premium aux cartes issues des résultats Performance."""
+    if not isinstance(badge, dict):
+        return card
+    try:
+        position = int(badge.get("position") or 0)
+    except (TypeError, ValueError):
+        return card
+    if position not in (1, 2, 3):
+        return card
+
+    from PIL import Image, ImageDraw, ImageFont
+    if str(badge.get("style") or "").lower() == "v1":
+        return _apply_result_badge_v1(card, badge, fonts, position, Image, ImageDraw, ImageFont)
+
+    colors = {
+        1: (212, 175, 55, 255),
+        2: (192, 200, 208, 255),
+        3: (205, 127, 50, 255),
+    }
+    ordinals = {1: "1ST", 2: "2ND", 3: "3RD"}
+    event = str(badge.get("event") or "").strip()
+    event = event.replace("(", "· ").replace(")", "").strip()
+    event = event.upper()[:30] or "RACE RESULT"
+    season = str(badge.get("season") or "WC026").upper()
+
+    def badge_font(path, size, fallback_key="label"):
+        try:
+            return ImageFont.truetype(str(path), size)
+        except Exception:
+            return fonts.get(fallback_key) or ImageFont.load_default()
+
+    rank_font = badge_font(gc.FONT_LABEL_PATH, 56, "label")
+    title_font = badge_font(gc.FONT_LABEL_PATH, 44, "label")
+    meta_font = badge_font(gc.FONT_VALUE_PATH, 25, "value_sm")
+    season_font = badge_font(gc.FONT_VALUE_PATH, 21, "value_sm")
+
+    base = card.convert("RGBA")
+    overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    x1, y1 = 42, 42
+    h = 118
+    rank_w = 128
+    gap = 20
+    title = f"{ordinals[position]} PLACE"
+    title_box = draw.textbbox((0, 0), title, font=title_font)
+    event_box = draw.textbbox((0, 0), event, font=meta_font)
+    season_box = draw.textbbox((0, 0), season, font=season_font)
+    text_w = max(title_box[2] - title_box[0], event_box[2] - event_box[0])
+    season_w = season_box[2] - season_box[0]
+    w = min(650, max(500, rank_w + gap + text_w + season_w + 70))
+    x2, y2 = x1 + w, y1 + h
+
+    draw.rounded_rectangle((x1 + 7, y1 + 9, x2 + 7, y2 + 9), radius=26, fill=(0, 0, 0, 88))
+    draw.rounded_rectangle((x1, y1, x2, y2), radius=26, fill=(10, 12, 12, 226), outline=(210, 224, 0, 190), width=3)
+    draw.rectangle((x1 + 24, y1, x2 - 24, y1 + 4), fill=(210, 224, 0, 230))
+    draw.rounded_rectangle((x1 + 14, y1 + 14, x1 + rank_w, y2 - 14), radius=22, fill=colors[position])
+    draw.text((x1 + 71, y1 + 59), str(position), font=rank_font, fill=(10, 12, 12, 255), anchor="mm")
+    draw.text((x1 + rank_w + gap, y1 + 23), title, font=title_font, fill=(245, 245, 245, 255))
+    draw.text((x1 + rank_w + gap, y1 + 72), event, font=meta_font, fill=(210, 224, 0, 245))
+    draw.text((x2 - 24, y2 - 28), season, font=season_font, fill=(185, 185, 185, 230), anchor="ra")
+    return Image.alpha_composite(base, overlay).convert("RGB")
+
+
+def _apply_result_badge_v1(card, badge, fonts, position, Image, ImageDraw, ImageFont):
+    """Conserve la première capsule compacte sous l'option Capsule V1."""
+    colors = {
+        1: (212, 175, 55, 255),
+        2: (192, 200, 208, 255),
+        3: (205, 127, 50, 255),
+    }
+    event = str(badge.get("event") or "").strip()
+    event = event.split("(")[0].strip() or "RACE RESULT"
+    event = event.upper()[:18]
+
+    def badge_font(path, size, fallback_key="label"):
+        try:
+            return ImageFont.truetype(str(path), size)
+        except Exception:
+            return fonts.get(fallback_key) or ImageFont.load_default()
+
+    rank_font = badge_font(gc.FONT_LABEL_PATH, 31, "label")
+    text_font = badge_font(gc.FONT_LABEL_PATH, 25, "label")
+    meta_font = badge_font(gc.FONT_VALUE_PATH, 18, "value_sm")
+
+    base = card.convert("RGBA")
+    overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    x1, y1 = 42, 42
+    h = 68
+    chip = 70
+    gap = 12
+    rank_text = f"P{position}"
+    title = "RACE RESULT"
+    title_box = draw.textbbox((0, 0), title, font=text_font)
+    event_box = draw.textbbox((0, 0), event, font=meta_font)
+    text_w = max(title_box[2] - title_box[0], event_box[2] - event_box[0])
+    w = min(348, chip + gap + text_w + 34)
+    x2, y2 = x1 + w, y1 + h
+
+    draw.rounded_rectangle((x1 + 5, y1 + 6, x2 + 5, y2 + 6), radius=18, fill=(0, 0, 0, 72))
+    draw.rounded_rectangle((x1, y1, x2, y2), radius=18, fill=(12, 14, 14, 214), outline=(210, 224, 0, 170), width=2)
+    draw.rounded_rectangle((x1 + 8, y1 + 8, x1 + chip, y2 - 8), radius=14, fill=colors[position])
+    draw.text((x1 + 39, y1 + 36), rank_text, font=rank_font, fill=(12, 14, 14, 255), anchor="mm")
+    draw.text((x1 + chip + gap, y1 + 13), title, font=text_font, fill=(245, 245, 245, 255))
+    draw.text((x1 + chip + gap, y1 + 41), event, font=meta_font, fill=(210, 224, 0, 235))
+    return Image.alpha_composite(base, overlay).convert("RGB")
 
 
 @app.route("/api/equipment-library")
@@ -11493,6 +12340,134 @@ def api_performance_results():
     if request.args.get("refresh") == "1":
         _cache.pop("results_2026", None)
     return jsonify({"results": get_results_2026()})
+
+
+def _sheet_column_name(index):
+    """Convertit un index de colonne zéro-based en notation A1."""
+    value = int(index) + 1
+    letters = ""
+    while value:
+        value, remainder = divmod(value - 1, 26)
+        letters = chr(65 + remainder) + letters
+    return letters
+
+
+def _google_sheets_access_token():
+    if not _GOOGLE_TOKEN_FILE.exists():
+        raise PermissionError("Reconnecte Google depuis Dashboard → Connections pour autoriser Google Sheets.")
+    try:
+        from google.oauth2.credentials import Credentials
+        from google.auth.transport.requests import Request as GoogleAuthRequest
+    except ImportError as exc:
+        raise RuntimeError("Dépendances Google OAuth manquantes.") from exc
+
+    token_data = _json.loads(_GOOGLE_TOKEN_FILE.read_text())
+    granted = set(token_data.get("scopes") or [])
+    sheets_scope = "https://www.googleapis.com/auth/spreadsheets"
+    if sheets_scope not in granted:
+        raise PermissionError("Reconnecte Google pour autoriser l’écriture dans Google Sheets.")
+
+    credentials = Credentials(
+        token=token_data.get("token"),
+        refresh_token=token_data.get("refresh_token"),
+        token_uri=token_data.get("token_uri") or "https://oauth2.googleapis.com/token",
+        client_id=token_data.get("client_id"),
+        client_secret=token_data.get("client_secret"),
+        scopes=list(granted),
+    )
+    if credentials.refresh_token:
+        credentials.refresh(GoogleAuthRequest())
+        token_data["token"] = credentials.token
+        _GOOGLE_TOKEN_FILE.write_text(_json.dumps(token_data, indent=2))
+    if not credentials.token:
+        raise PermissionError("Jeton Google indisponible. Reconnecte Google.")
+    return credentials.token
+
+
+@app.route("/api/performance/sync-palmares", methods=["POST"])
+def api_performance_sync_palmares():
+    data = request.get_json(silent=True) or {}
+    instagram = str(data.get("instagram") or "").lstrip("@").strip().lower()
+    first_name = str(data.get("first_name") or "").strip()
+    last_name = str(data.get("last_name") or "").strip()
+    palmares = str(data.get("palmares") or "").strip()
+    if not palmares or not (instagram or (first_name and last_name)):
+        return jsonify({"ok": False, "error": "Rider ou palmarès manquant."}), 400
+
+    sheet_name = "👤 Profils"
+    gsheet_id = _active_gsheet_id()
+    rows = _fetch_gsheet_rows_for_id(gsheet_id, sheet_name=sheet_name)
+    if not rows:
+        return jsonify({"ok": False, "error": "Onglet Profils introuvable."}), 404
+
+    header_index = _sheet_header_index(rows)
+    headers = [_sheet_header_key(value) for value in rows[header_index]]
+
+    def find_column(*aliases):
+        alias_keys = {_sheet_header_key(alias) for alias in aliases}
+        return next((idx for idx, key in enumerate(headers) if key in alias_keys), None)
+
+    first_col = find_column("First Name", "Prénom", "Prenom")
+    last_col = find_column("Last Name", "Nom")
+    instagram_col = find_column("Instagram", "Instagram Handle", "Handle")
+    palmares_col = find_column("Achievements", "Palmarès", "Palmares")
+    if palmares_col is None:
+        return jsonify({"ok": False, "error": "Colonne Achievements/Palmarès introuvable."}), 404
+
+    target_row = None
+    for row_index, row in enumerate(rows[header_index + 1:], start=header_index + 1):
+        padded = list(row) + [""] * max(0, len(headers) - len(row))
+        row_instagram = str(padded[instagram_col] if instagram_col is not None else "").lstrip("@").strip().lower()
+        same_handle = bool(instagram and row_instagram and instagram == row_instagram)
+        same_name = (
+            first_col is not None and last_col is not None
+            and _norm_match_name(padded[first_col]) == _norm_match_name(first_name)
+            and _norm_match_name(padded[last_col]) == _norm_match_name(last_name)
+        )
+        if same_handle or same_name:
+            target_row = row_index + 1
+            break
+    if target_row is None:
+        return jsonify({"ok": False, "error": "Rider introuvable dans l’onglet Profils."}), 404
+
+    cell = f"'{sheet_name}'!{_sheet_column_name(palmares_col)}{target_row}"
+    import urllib.parse as _urlparse
+    import urllib.request as _urlrequest
+    import urllib.error as _urlerror
+    try:
+        access_token = _google_sheets_access_token()
+        encoded_range = _urlparse.quote(cell, safe="")
+        url = (
+            f"https://sheets.googleapis.com/v4/spreadsheets/{gsheet_id}/values/{encoded_range}"
+            "?valueInputOption=RAW"
+        )
+        body = _json.dumps({"range": cell, "majorDimension": "ROWS", "values": [[palmares]]}).encode("utf-8")
+        update_request = _urlrequest.Request(
+            url,
+            data=body,
+            method="PUT",
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+        )
+        with _urlrequest.urlopen(update_request, timeout=20) as response:
+            update_result = _json.loads(response.read().decode("utf-8"))
+    except PermissionError as exc:
+        return jsonify({"ok": False, "code": "google_reconnect", "error": str(exc)}), 401
+    except _urlerror.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        return jsonify({"ok": False, "error": f"Google Sheets HTTP {exc.code}: {detail[:300]}"}), 502
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 502
+
+    _, _, profiles = get_engine()
+    for profile in profiles:
+        profile_handle = str(profile.get("instagram") or "").lstrip("@").strip().lower()
+        if (instagram and profile_handle == instagram) or (
+            _norm_match_name(profile.get("prenom")) == _norm_match_name(first_name)
+            and _norm_match_name(profile.get("nom")) == _norm_match_name(last_name)
+        ):
+            profile["palmares"] = palmares
+            break
+    return jsonify({"ok": True, "cell": cell, "updated_range": update_result.get("updatedRange", cell)})
 
 
 @app.route("/api/brand-tags")
@@ -12582,10 +13557,11 @@ def api_auth_google():
         from google_auth_oauthlib.flow import Flow
     except ImportError:
         return '<h3>pip install google-auth-oauthlib</h3>', 500
+    redirect_uri = request.host_url.rstrip('/') + '/api/auth/google/callback'
     flow = Flow.from_client_secrets_file(
         str(_GOOGLE_SECRET_FILE),
         scopes=_GOOGLE_SCOPES,
-        redirect_uri='http://localhost:5000/api/auth/google/callback'
+        redirect_uri=redirect_uri
     )
     auth_url, state = flow.authorization_url(
         access_type='offline',
@@ -12604,11 +13580,12 @@ def api_auth_google_callback():
         from google_auth_oauthlib.flow import Flow
     except ImportError:
         return '<h3>pip install google-auth-oauthlib</h3>', 500
+    redirect_uri = request.host_url.rstrip('/') + '/api/auth/google/callback'
     flow = Flow.from_client_secrets_file(
         str(_GOOGLE_SECRET_FILE),
         scopes=_GOOGLE_SCOPES,
         state=session.get('google_oauth_state'),
-        redirect_uri='http://localhost:5000/api/auth/google/callback'
+        redirect_uri=redirect_uri
     )
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials

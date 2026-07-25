@@ -7274,13 +7274,21 @@ const _BRAND_ALIASES = {
   brembolever: 'brembo',
   commencal: 'commencal',
   comencal: 'commencal',
+  boxxer: 'rockshox',
+  dh38: 'ohlins',
   e13: 'ethirteen',
   ethirteen: 'ethirteen',
+  northshorebillet: 'nsb',
+  nsb: 'northshorebillet',
   oneupcomponents: 'oneup',
   ohlins: 'ohlins',
   rental: 'renthal',
+  rockshox: 'rockshox',
   specialized: 'sworks',
+  srsuntour: 'srsuntour',
   sworks: 'specialized',
+  suntour: 'srsuntour',
+  rux: 'srsuntour',
 };
 
 function _brandKey(value) {
@@ -7289,16 +7297,25 @@ function _brandKey(value) {
 }
 
 function _brandKeys(value) {
-  const key = _brandKey(value);
   const raw = _ffFold(value);
-  return Array.from(new Set([key, raw, _BRAND_ALIASES[raw]].filter(Boolean)));
+  const related = new Set([raw, _brandKey(raw), _BRAND_ALIASES[raw]].filter(Boolean));
+  Object.entries(_BRAND_ALIASES).forEach(([alias, canonical]) => {
+    if (related.has(alias) || related.has(canonical)) {
+      related.add(alias);
+      related.add(canonical);
+    }
+  });
+  return Array.from(related);
 }
 
 function _referenceTokens(value) {
   const generic = new Set([
     'pro', 'team', 'factory', 'ultimate', 'carbon', 'alloy', 'aluminum',
     'proto', 'prototype', 'racing', 'line', 'black', 'white', 'red', 'blue',
-    'green', 'gold', 'silver', 'gravity', 'dh', 'mtb', 'coil'
+    'green', 'gold', 'silver', 'gravity', 'dh', 'mtb', 'coil',
+    'frame', 'fork', 'shock', 'stem', 'handlebar', 'bar', 'bars',
+    'pedal', 'pedals', 'crank', 'crankset', 'wheel', 'wheels',
+    '29', '275', '27', '5'
   ]);
   return String(value || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -7326,6 +7343,7 @@ function _equipmentPhotoScore(item, file) {
 
   if (brandMatches && hasSpecificRef && refKey && fileKey.includes(refKey)) return 0;
   if (brandMatches && distinctiveRefHit) return 1;
+  if (brandMatches && !hasSpecificRef) return 5;
   if (distinctiveRefHit) return 6;
   return 99;
 }

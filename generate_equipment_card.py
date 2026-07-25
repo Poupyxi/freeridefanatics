@@ -161,15 +161,23 @@ def _eq_slug(s: str) -> str:
 _BRAND_ALIASES = {
     "brembolever": "brembo",
     "bluegrass": "bluegrass",
+    "boxxer": "rockshox",
     "comencal": "commencal",
     "commencal": "commencal",
+    "dh38": "ohlins",
     "e13": "ethirteen",
     "ethirteen": "ethirteen",
+    "northshorebillet": "nsb",
+    "nsb": "northshorebillet",
     "oneupcomponents": "oneup",
     "ohlins": "ohlins",
     "rental": "renthal",
+    "rockshox": "rockshox",
     "specialized": "sworks",
+    "srsuntour": "srsuntour",
     "sworks": "specialized",
+    "suntour": "srsuntour",
+    "rux": "srsuntour",
     "troyleedesigns": "troyleedesigns",
     "tld": "troyleedesigns",
 }
@@ -177,13 +185,21 @@ _BRAND_ALIASES = {
 def _brand_keys(brand: str) -> set[str]:
     raw = _eq_slug(brand)
     key = _BRAND_ALIASES.get(raw, raw)
-    return {v for v in (raw, key) if v}
+    related = {v for v in (raw, key, _BRAND_ALIASES.get(raw)) if v}
+    for alias, canonical in _BRAND_ALIASES.items():
+        if alias in related or canonical in related:
+            related.add(alias)
+            related.add(canonical)
+    return related
 
 def _reference_tokens(reference: str) -> list[str]:
     generic = {
         "pro", "team", "factory", "ultimate", "carbon", "alloy", "aluminum",
         "proto", "prototype", "racing", "line", "black", "white", "red", "blue",
         "green", "gold", "silver", "gravity", "dh", "mtb", "coil",
+        "frame", "fork", "shock", "stem", "handlebar", "bar", "bars",
+        "pedal", "pedals", "crank", "crankset", "wheel", "wheels",
+        "29", "275", "27", "5",
     }
     raw = unicodedata.normalize("NFKD", str(reference or ""))
     raw = "".join(ch for ch in raw if not unicodedata.combining(ch))
@@ -212,6 +228,8 @@ def _photo_score(path: Path, brand: str, reference: str) -> int:
         return 0
     if brand_match and token_hit:
         return 1
+    if brand_match and not has_specific_ref:
+        return 5
     if token_hit or ref_hit:
         return 6
     return 99

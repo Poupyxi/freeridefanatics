@@ -5862,9 +5862,34 @@ function _perfSelectedRiders() {
 
 function _perfItemLabel(item, groupMode) {
   const brand = (item?.brand || '').trim();
-  const ref = (item?.reference || '').trim();
+  const ref = _perfModelReference(item?.reference || '');
   if (groupMode === 'brand') return brand || 'Unknown brand';
   return [brand, ref].filter(Boolean).join(' · ') || brand || ref || 'Unknown product';
+}
+
+function _perfModelReference(reference) {
+  let ref = String(reference || '').trim();
+  if (!ref) return '';
+
+  // Sheet/reference values can include visual variants. Performance rankings
+  // should group the model, while Equipment cards still keep exact colorways.
+  ref = ref
+    .replace(/[;|].*$/g, '')
+    .replace(/\s*\((?:black|white|red|blue|green|yellow|gold|silver|grey|gray|raw|matte|gloss|satin|clear|cream|mint|camo|team|color|colour|front|rear|f|r)[^)]*\)\s*$/i, '')
+    .replace(/\b(?:electric red|gloss black|void black|pure white|pure black|white gold|black gold|red mint|blue|cream|pewter)\b/gi, ' ')
+    .replace(/\b(?:gloss|matte|satin|raw|clear|metallic|factory|team|proteam|pro rider|camo|electric)\b/gi, ' ')
+    .replace(/\b(?:black|white|red|blue|green|yellow|gold|silver|grey|gray|orange|purple|pink|brown|cream|mint|turquoise|teal|bronze|pewter|chrome|graphite)\b/gi, ' ')
+    .replace(/\b(?:29(?:er)?|27[.,]?5|mullet)\b(?=\s*$)/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return ref;
+}
+
+function _perfItemKey(item, groupMode) {
+  const brand = _brandKey(item?.brand || '');
+  if (groupMode === 'brand') return brand || 'unknownbrand';
+  const ref = _ffFold(_perfModelReference(item?.reference || ''));
+  return [brand, ref].filter(Boolean).join('::') || _perfKey(_perfItemLabel(item, groupMode));
 }
 
 function _perfProfileMap() {
@@ -6014,13 +6039,13 @@ function _perfStatsFor({ category = 'all', gender = 'F', topVal = '10', groupMod
     selectedItems.forEach(item => {
       if (!item?.brand && !item?.reference) return;
       const label = _perfItemLabel(item, groupMode);
-      const key = `${item.category}::${_perfKey(label)}`;
+      const key = `${item.category}::${_perfItemKey(item, groupMode)}`;
       if (!stats.has(key)) {
         stats.set(key, {
           category: item.category,
           label,
           brand: item.brand || '',
-          reference: item.reference || '',
+          reference: _perfModelReference(item.reference || ''),
           count: 0,
           points: 0,
           bestRank: 999,

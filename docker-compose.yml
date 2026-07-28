@@ -15,6 +15,7 @@ services:
       - ./output:/app/output
       - ./flags:/app/flags
       - ./logos:/app/logos
+      - ./assets:/app/assets:ro
       # Credentials Google OAuth + Flask secret key
       - ./data:/data
     environment:

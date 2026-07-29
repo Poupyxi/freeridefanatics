@@ -1,0 +1,9 @@
+# Sheet export cache (re-downloaded by sync.py)
+.sheet-cache.xlsx
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc

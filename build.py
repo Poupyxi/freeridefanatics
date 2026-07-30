@@ -295,8 +295,8 @@ def build_index(riders, women_count, men_count):
     </div>
     <div class="ticker-wrap">
       <div class="ticker-track">
-        <span><b>Tracking</b> Frame</span><span class="dot">·<span><b>Tracking</b> Frame</span><span class="dot">·</span><span>Fork</span><span class="dot">·</span><span>Rear Shock</span><span class="dot">·</span><span>Brakes</span><span class="dot">·</span><span>Wheels</span><span class="dot">·</span><span>Tyres</span><span class="dot">·</span><span>Protection</span><span class="dot">·</span>
-        <span><b>Tracking</b> Frame</span><span class="dot">·</span><span>Fork</span><span class="dot">·</span><span>Rear Shock</span><span class="dot">·</span><span>Brakes</span><span class="dot">·</span><span>Wheels</span><span class="dot">·</span><span>Tyres</span><span class="dot">·</span><span>Protection</span><span class="dot">·</span>
+        <span><b>Rider</b> Profiles</span><span class="dot">·</span><span><b>Pro</b> Setups</span><span class="dot">·</span><span><b>Follow</b> the Season</span><span class="dot">·</span><span><b>Race</b> Results</span><span class="dot">·</span><span><b>Check</b> Rankings</span><span class="dot">·</span><span><b>Equipment</b> Details</span><span class="dot">·</span><span><b>Shop</b> the Gear</span><span class="dot">·</span>
+        <span><b>Rider</b> Profiles</span><span class="dot">·</span><span><b>Pro</b> Setups</span><span class="dot">·</span><span><b>Follow</b> the Season</span><span class="dot">·</span><span><b>Race</b> Results</span><span class="dot">·</span><span><b>Check</b> Rankings</span><span class="dot">·</span><span><b>Equipment</b> Details</span><span class="dot">·</span><span><b>Shop</b> the Gear</span><span class="dot">·</span>
       </div>
     </div>
   </div>

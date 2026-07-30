@@ -147,7 +147,14 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
 /* bled 100px past each edge: most paths are drawn flush (0 -> 1240), so without
    this the drift below would pull their ends into view and leave a gap. The
    bleed must exceed the largest travel in the keyframes (80px). */
-.hero-waves{position:absolute; top:0; bottom:0; left:-100px; right:-100px; width:auto; z-index:0; opacity:0.55;}
+.hero-waves{position:absolute; top:0; bottom:0; left:-100px; right:-100px; width:auto; z-index:0; opacity:1;}
+/* The SVG carries stroke-opacity 0.06-0.10 which, multiplied by the old 0.55
+   container opacity, rendered the lines at 3-5% — invisible, so their drift
+   was invisible too. Overriding here (CSS beats the presentation attribute)
+   keeps the source untouched while restoring some depth between layers. */
+.hero-waves path{stroke-opacity:0.15;}
+.hero-waves path:nth-child(2n){stroke-opacity:0.11;}
+.hero-waves path:nth-child(3n){stroke-opacity:0.19;}
 .hero-inner{position:relative; z-index:1;}
 
 /* ===== Drifting line-art (hero + dark CTA) =====
@@ -156,17 +163,17 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
    moves at 4-8 px/s: below roughly 3 px/s a continuous drift reads as a still
    image, which is what a slower first attempt looked like. */
 .hero-waves path, .cta-dark .waves path{
-  animation:wave-drift 16s ease-in-out infinite alternate;
+  animation:wave-drift 9s ease-in-out infinite alternate;
   will-change:transform;
 }
 .hero-waves path:nth-child(3n+1), .cta-dark .waves path:nth-child(3n+1){
-  animation-duration:20s; animation-delay:-6s;
+  animation-duration:11s; animation-delay:-6s;
 }
 .hero-waves path:nth-child(3n+2), .cta-dark .waves path:nth-child(3n+2){
-  animation-duration:13s; animation-delay:-9s; animation-name:wave-drift-alt;
+  animation-duration:7s; animation-delay:-9s; animation-name:wave-drift-alt;
 }
 .hero-waves path:nth-child(4n), .cta-dark .waves path:nth-child(4n){
-  animation-duration:17s; animation-delay:-3s;
+  animation-duration:10s; animation-delay:-3s;
 }
 @keyframes wave-drift{
   from{transform:translate(0, 0);}
@@ -191,8 +198,8 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
 /* ===== Marquee ticker ===== */
 .ticker-wrap{
   overflow:hidden;
-  border-top:1px solid var(--line);
-  padding-top:20px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:20px;
   -webkit-mask-image:linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   mask-image:linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
@@ -612,7 +619,12 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
   padding:90px 0 0;
   overflow:hidden;
 }
-.cta-dark .waves{position:absolute; top:0; bottom:0; left:-100px; right:-100px; width:auto; opacity:0.5;}
+.cta-dark .waves{position:absolute; top:0; bottom:0; left:-100px; right:-100px; width:auto; opacity:1;}
+/* same reasoning as .hero-waves: white strokes at 0.06-0.10 times a 0.5
+   container were rendering at 3-5% against the dark panel */
+.cta-dark .waves path{stroke-opacity:0.17;}
+.cta-dark .waves path:nth-child(2n){stroke-opacity:0.12;}
+.cta-dark .waves path:nth-child(3n){stroke-opacity:0.22;}
 .cta-inner{position:relative; z-index:1; padding-bottom:80px;}
 .cta-dark .label{color:#9aa0a5;}
 .cta-dark h2{

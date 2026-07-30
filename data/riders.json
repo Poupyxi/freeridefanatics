@@ -1049,7 +1049,7 @@
   "date_of_birth": "12 Sep 2003",
   "age": 22,
   "instagram": "@bode_burke",
-  "team": "N/A",
+  "team": null,
   "sponsors": [],
   "bio": "N/A",
   "bike": {
@@ -1577,7 +1577,7 @@
   "date_of_birth": "5 Nov 2001",
   "age": 24,
   "instagram": "@olliedavis.6",
-  "team": "N/A",
+  "team": null,
   "sponsors": [],
   "bio": "N/A",
   "bike": {
@@ -1744,7 +1744,7 @@
     "brand": "RockShox",
     "model_detail": "Vivid;Prototype",
     "brand_model": "RockShox;Vivid;Prototype",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://j-techsuspension.co.uk/products/rockshox-rear-shock-vivid-coil-dh-ultimate-rc2-2027-without-tuning"
    },
    {
     "category": "Handlebar",
@@ -2519,7 +2519,7 @@
   "date_of_birth": "10 May 2004",
   "age": 22,
   "instagram": "@jennnahastings",
-  "team": "N/A",
+  "team": null,
   "sponsors": [],
   "bio": "N/A",
   "bike": {
@@ -3559,7 +3559,7 @@
   "date_of_birth": "1 Jun 2001",
   "age": 25,
   "instagram": "@stefano_introzzi",
-  "team": "N/A",
+  "team": null,
   "sponsors": [
    "bike_center_cimone",
    "ridewill.it"
@@ -5237,7 +5237,7 @@
   "date_of_birth": "8 Jun 2004",
   "age": 22,
   "instagram": "@tuhoto_ariki",
-  "team": "N/A",
+  "team": null,
   "sponsors": [],
   "bio": "- WC win Cairns 2024 - Champion Junior WC 2022",
   "bike": {
@@ -6021,7 +6021,7 @@
   "date_of_birth": "10 Apr 2001",
   "age": 25,
   "instagram": "@antoine.rogge",
-  "team": "N/A",
+  "team": null,
   "sponsors": [],
   "bio": "N/A",
   "bike": {
@@ -7602,7 +7602,7 @@
   "date_of_birth": "20 Jan 2003",
   "age": 23,
   "instagram": "@lukewayman1",
-  "team": "N/A",
+  "team": null,
   "sponsors": [],
   "bio": "N/A",
   "bike": {
@@ -7629,7 +7629,7 @@
     "brand": "Fox",
     "model_detail": "DHX2;500lb spring",
     "brand_model": "Fox;DHX2;500lb spring",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://j-techsuspension.co.uk/products/fox-dhx2-2025"
    },
    {
     "category": "Handlebar",

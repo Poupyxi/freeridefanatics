@@ -149,6 +149,13 @@ def normalize_bio(s):
 def normalize_country(s):
     return COUNTRY_TRANSLATIONS.get(s.lower(), s) if s else None
 
+# Placeholders the sheet uses for "no team"; kept as-is they surface as a real
+# team called "N/A" in the standings instead of falling back to Privateer.
+NO_VALUE = {"n/a", "na", "n.a.", "-", "--", "—", "?", "none", "tbd", "n/c"}
+
+def normalize_team(s):
+    return None if not s or s.strip().lower() in NO_VALUE else s.strip()
+
 def section_gender(cells, current):
     """Track the 'WOMEN ELITE' / 'MEN ELITE' section header rows.
     Some rider rows have a dirty G cell (stray newlines), so the section is
@@ -190,7 +197,7 @@ def parse_profiles(ws):
             "age": as_int(cells[7]),
             "instagram": insta or None,
             "bio": normalize_bio(cells[9]),
-            "team": cells[10] or None,
+            "team": normalize_team(cells[10]),
             "sponsors": [p.strip() for p in cells[11].split(";") if p.strip()] if cells[11] else [],
         }
     return profiles

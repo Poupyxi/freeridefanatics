@@ -54,6 +54,38 @@ EQUIP_GROUP_ICONS = {
     "Protection": '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 3 L27 7 V15 C27 22 22 27 16 30 C10 27 5 22 5 15 V7 Z"/></svg>',
 }
 
+# ---------------------------------------------------------------- points scales
+
+# Position -> points, keyed by competition. The source sheet only records points,
+# but the scale is a strict ladder, so the finishing position is recoverable
+# without any extra data entry. Add an entry here when a new series is tracked;
+# a competition with no scale simply shows no position.
+POINTS_SCALES = {
+    "UCI MTB World Cup DH 2026": [
+        200, 160, 140, 125, 110, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45,
+        44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30,
+    ],
+}
+
+def placing_from_points(competition, points):
+    """Finishing position implied by a points total, or None if not derivable."""
+    scale = POINTS_SCALES.get(competition)
+    if not scale or points is None:
+        return None
+    try:
+        return scale.index(points) + 1
+    except ValueError:
+        return None
+
+def ordinal(n):
+    if n is None:
+        return None
+    if 10 <= n % 100 <= 20:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
 # ---------------------------------------------------------------- helpers
 
 def prettify_category(cat):
@@ -150,6 +182,7 @@ def header_html(asset_prefix, active=""):
           </div>
         </div>
       </div>
+      <a href="{asset_prefix}standings.html"{cls('standings')}>Standings</a>
       <a href="{asset_prefix}index.html#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
@@ -319,6 +352,182 @@ def build_index(riders, women_count, men_count):
 """
     html += footer_html(prefix)
     return html
+
+def build_standings(riders):
+    """Full season standings: every rider ranked by points, plus a per-round
+    breakdown, and a team table. Events come from the data so a new round on the
+    sheet adds its column on the next build."""
+    prefix = ""
+    competitions = sorted({h.get("category") for r in riders
+                           for h in r.get("competition_history") or [] if h.get("category")})
+
+    def events_for(comp):
+        """Rounds in season order.
+
+        No rider has scored in every round, so no single history gives the full
+        calendar — but each one is a subsequence of it. Topologically sorting the
+        'this round came before that one' pairs recovers the true order."""
+        succ, indeg, seen = {}, {}, []
+        for r in riders:
+            seq = [h["event"] for h in r.get("competition_history") or []
+                   if h.get("category") == comp]
+            for ev in seq:
+                if ev not in indeg:
+                    indeg[ev], succ[ev] = 0, set()
+                    seen.append(ev)
+            for a, b in zip(seq, seq[1:]):
+                if b not in succ[a]:
+                    succ[a].add(b)
+                    indeg[b] += 1
+
+        order, ready = [], [e for e in seen if indeg[e] == 0]
+        while ready:
+            ready.sort(key=seen.index)  # deterministic tie-break
+            ev = ready.pop(0)
+            order.append(ev)
+            for nxt in succ[ev]:
+                indeg[nxt] -= 1
+                if indeg[nxt] == 0:
+                    ready.append(nxt)
+        # contradictory data would leave a cycle — fall back rather than drop rounds
+        return order if len(order) == len(seen) else seen
+
+    def points_map(r, comp):
+        return {h["event"]: h.get("points")
+                for h in r.get("competition_history") or [] if h.get("category") == comp}
+
+    def rider_rows(group, comp, events):
+        entries = []
+        for r in riders:
+            if r.get("gender_category") != group:
+                continue
+            pts = points_map(r, comp)
+            total = sum(v for v in pts.values() if v)
+            if not total:
+                continue
+            entries.append((total, r, pts))
+        entries.sort(key=lambda e: (-e[0], e[1]["display_name"]))
+
+        rows = []
+        for i, (total, r, pts) in enumerate(entries, start=1):
+            cells = []
+            for ev in events:
+                p = pts.get(ev)
+                place = placing_from_points(comp, p)
+                title = f' title="{esc(ordinal(place))}"' if place else ""
+                cls = " scored" if p else " blank"
+                cells.append(f'<td class="rd{cls}"{title}>{p if p else "·"}</td>')
+            medal = f" p{i}" if i <= 3 else ""
+            rows.append(f"""<tr>
+            <td class="pos{medal}">{i}</td>
+            <td class="who"><a href="riders/{r['slug']}.html">{esc(r['display_name'])}</a>
+              <span class="sub">{esc(r.get('team') or 'Privateer')}</span></td>
+            <td class="nat">{esc(r.get('country_code') or '')}</td>
+            {"".join(cells)}
+            <td class="total">{total}</td>
+          </tr>""")
+        return rows, len(entries)
+
+    def team_rows(comp, events):
+        totals, members = {}, {}
+        for r in riders:
+            team = r.get("team") or "Privateer"
+            pts = points_map(r, comp)
+            total = sum(v for v in pts.values() if v)
+            if not total:
+                continue
+            totals[team] = totals.get(team, 0) + total
+            members.setdefault(team, []).append(r["display_name"])
+        order = sorted(totals.items(), key=lambda x: (-x[1], x[0]))
+        rows = []
+        for i, (team, total) in enumerate(order, start=1):
+            who = ", ".join(sorted(members[team]))
+            medal = f" p{i}" if i <= 3 else ""
+            rows.append(f"""<tr>
+            <td class="pos{medal}">{i}</td>
+            <td class="who">{esc(team)}<span class="sub">{esc(who)}</span></td>
+            <td class="total">{total}</td>
+          </tr>""")
+        return rows, len(order)
+
+    tables = []
+    for comp in competitions:
+        events = events_for(comp)
+        head_cells = "".join(f'<th class="rd" title="{esc(ev)}">{esc(short_event(ev))}</th>' for ev in events)
+        for group, label in (("Men Elite", "Men"), ("Women Elite", "Women")):
+            rows, n = rider_rows(group, comp, events)
+            if not rows:
+                continue
+            tables.append(f"""<div class="standings-block" data-standings="{esc(group)}" data-competition="{esc(comp)}">
+        <div class="standings-scroll">
+          <table class="standings-table">
+            <thead><tr><th>#</th><th>Rider</th><th>Nat</th>{head_cells}<th class="total">Pts</th></tr></thead>
+            <tbody>
+            {"".join(rows)}
+            </tbody>
+          </table>
+        </div>
+        <div class="standings-foot">{n} riders scored · {len(events)} rounds</div>
+      </div>""")
+        rows, n = team_rows(comp, events)
+        if rows:
+            tables.append(f"""<div class="standings-block" data-standings="Teams" data-competition="{esc(comp)}">
+        <div class="standings-scroll">
+          <table class="standings-table">
+            <thead><tr><th>#</th><th>Team</th><th class="total">Pts</th></tr></thead>
+            <tbody>
+            {"".join(rows)}
+            </tbody>
+          </table>
+        </div>
+        <div class="standings-foot">{n} teams scored</div>
+      </div>""")
+
+    group_chips = "".join(
+        f'<button class="filter-btn{" active" if i == 0 else ""}" data-standings-group="{g}">{lbl}</button>'
+        for i, (g, lbl) in enumerate([("Men Elite", "Men"), ("Women Elite", "Women"), ("Teams", "Teams")]))
+    comp_chips = "".join(
+        f'<button class="filter-btn{" active" if i == 0 else ""}" data-standings-comp="{esc(c)}">{esc(c)}</button>'
+        for i, c in enumerate(competitions))
+
+    html = head(f"Standings — {SITE_NAME}",
+                "Full UCI MTB World Cup Downhill 2026 standings: every rider, every round, cumulative points.",
+                prefix)
+    html += header_html(prefix, active="standings")
+    html += f"""
+<section class="hero" style="padding-bottom:0; border-bottom:none;">
+  <div class="wrap hero-inner">
+    <div class="label">Season 2026 · Cumulative points</div>
+    <h1>Standings.</h1>
+  </div>
+</section>
+
+<section class="section" id="standings" style="padding-top:28px;">
+  <div class="wrap">
+    <div class="filters standings-comp" data-standings-comp-filters>
+      {comp_chips}
+    </div>
+    <div class="filters" data-standings-filters>
+      {group_chips}
+    </div>
+    {"".join(tables)}
+  </div>
+</section>
+"""
+    html += footer_html(prefix)
+    return html
+
+def short_event(ev):
+    """'South Korea (May)' -> 'KOR MAY'.
+
+    The month is part of the label on purpose: a season can visit the same
+    country twice (France in May and again in August), and the place alone
+    would give two identical column headers."""
+    m = re.match(r"^(.*?)\s*\(([^)]*)\)\s*$", ev)
+    place, month = (m.group(1), m.group(2)) if m else (ev, "")
+    key = place.strip().split()[-1] if place.strip() else ev
+    label = key[:3].upper()
+    return f"{label} {month[:3].upper()}".strip()
 
 def build_riders_directory(riders, women_count, men_count):
     prefix = ""
@@ -702,13 +911,15 @@ def build_best_equipment_carousel(riders):
 def results_rows(history):
     rows = []
     for h in history or []:
-        result = h.get("result") or "—"
         points = h.get("points")
         comp = h.get("category") or "Other"
+        place = placing_from_points(comp, points)
+        result = h.get("result") or ordinal(place) or "—"
+        podium = f" podium p{place}" if place and place <= 3 else ""
         rows.append(f"""<tr data-competition="{esc(comp)}">
           <td>{esc(h.get('year'))}</td>
           <td>{esc(h.get('event'))}</td>
-          <td>{esc(result)}</td>
+          <td class="result{podium}">{esc(result)}</td>
           <td class="points">{esc(points) if points is not None else '—'}</td>
         </tr>""")
     return "\n        ".join(rows)
@@ -896,6 +1107,9 @@ def main():
     riders_html = build_riders_directory(riders, len(women), len(men))
     with open(os.path.join(ROOT, "riders.html"), "w", encoding="utf-8") as f:
         f.write(riders_html)
+
+    with open(os.path.join(ROOT, "standings.html"), "w", encoding="utf-8") as f:
+        f.write(build_standings(riders))
 
     for r in riders:
         page = build_rider_page(r)

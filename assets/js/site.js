@@ -181,6 +181,45 @@
     }
   });
 
+  // Standings page: pick a group (Men / Women / Teams) and a competition.
+  // Every table is rendered; only the matching one is shown.
+  safe('standings', function(){
+    var blocks = Array.prototype.slice.call(document.querySelectorAll('[data-standings]'));
+    if(!blocks.length) return;
+    var groupBar = document.querySelector('[data-standings-filters]');
+    var compBar = document.querySelector('[data-standings-comp-filters]');
+
+    function activeOf(bar, attr){
+      if(!bar) return null;
+      var btn = bar.querySelector('.filter-btn.active') || bar.querySelector('.filter-btn');
+      return btn && btn.getAttribute(attr);
+    }
+
+    function render(){
+      var group = activeOf(groupBar, 'data-standings-group');
+      var comp = activeOf(compBar, 'data-standings-comp');
+      blocks.forEach(function(b){
+        var okGroup = !group || b.getAttribute('data-standings') === group;
+        var okComp = !comp || b.getAttribute('data-competition') === comp;
+        b.classList.toggle('is-shown', okGroup && okComp);
+      });
+    }
+
+    [[groupBar, 'data-standings-group'], [compBar, 'data-standings-comp']].forEach(function(pair){
+      var bar = pair[0];
+      if(!bar) return;
+      bar.querySelectorAll('.filter-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          bar.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+          btn.classList.add('active');
+          render();
+        });
+      });
+    });
+
+    render();
+  });
+
   // Results: narrow the table to one competition (rider pages)
   safe('competition-filters', function(){
     var bar = document.querySelector('[data-competition-filters]');

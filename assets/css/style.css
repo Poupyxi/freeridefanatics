@@ -144,8 +144,38 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
   padding:80px 0 40px;
   border-bottom:1px solid var(--line);
 }
-.hero-waves{position:absolute; inset:0; z-index:0; opacity:0.55;}
+/* bled 100px past each edge: most paths are drawn flush (0 -> 1240), so without
+   this the drift below would pull their ends into view and leave a gap. The
+   bleed must exceed the largest travel in the keyframes (80px). */
+.hero-waves{position:absolute; top:0; bottom:0; left:-100px; right:-100px; width:auto; z-index:0; opacity:0.55;}
 .hero-inner{position:relative; z-index:1;}
+
+/* ===== Drifting line-art (hero + dark CTA) =====
+   Each path drifts on its own timing so the lines slide past one another
+   instead of moving as one block. Travel and duration are set so every path
+   moves at 4-8 px/s: below roughly 3 px/s a continuous drift reads as a still
+   image, which is what a slower first attempt looked like. */
+.hero-waves path, .cta-dark .waves path{
+  animation:wave-drift 16s ease-in-out infinite alternate;
+  will-change:transform;
+}
+.hero-waves path:nth-child(3n+1), .cta-dark .waves path:nth-child(3n+1){
+  animation-duration:20s; animation-delay:-6s;
+}
+.hero-waves path:nth-child(3n+2), .cta-dark .waves path:nth-child(3n+2){
+  animation-duration:13s; animation-delay:-9s; animation-name:wave-drift-alt;
+}
+.hero-waves path:nth-child(4n), .cta-dark .waves path:nth-child(4n){
+  animation-duration:17s; animation-delay:-3s;
+}
+@keyframes wave-drift{
+  from{transform:translate(0, 0);}
+  to{transform:translate(-80px, 12px);}
+}
+@keyframes wave-drift-alt{
+  from{transform:translate(-60px, -10px);}
+  to{transform:translate(40px, 10px);}
+}
 .hero h1{
   font-family:var(--head);
   font-size:clamp(36px, 6.4vw, 84px);
@@ -467,6 +497,7 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
 .bb-replay:hover{color:var(--ink); border-color:var(--ink);}
 
 @media (prefers-reduced-motion: reduce){
+  .hero-waves path, .cta-dark .waves path{animation:none;}
   .bb-reveal .bb-sketch, .bb-reveal .bb-draw{display:none;}
   .bb-reveal .bb-photo, .bb-reveal.armed .bb-photo{opacity:1; animation:none;}
   .bb-replay{display:none;}
@@ -581,7 +612,7 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
   padding:90px 0 0;
   overflow:hidden;
 }
-.cta-dark .waves{position:absolute; inset:0; opacity:0.5;}
+.cta-dark .waves{position:absolute; top:0; bottom:0; left:-100px; right:-100px; width:auto; opacity:0.5;}
 .cta-inner{position:relative; z-index:1; padding-bottom:80px;}
 .cta-dark .label{color:#9aa0a5;}
 .cta-dark h2{

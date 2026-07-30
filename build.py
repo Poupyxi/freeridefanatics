@@ -146,7 +146,8 @@ def esc(s):
 
 # ---------------------------------------------------------------- shared partials
 
-def head(title, description, asset_prefix):
+def head(title, description, asset_prefix, body_class=""):
+    body_attr = f' class="{esc(body_class)}"' if body_class else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,7 +159,7 @@ def head(title, description, asset_prefix):
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{asset_prefix}assets/css/style.css?v={BUILD_VERSION}">
 </head>
-<body>
+<body{body_attr}>
 """
 
 def header_html(asset_prefix, active=""):
@@ -261,16 +262,17 @@ def rider_card(r):
         </div>
       </a>"""
 
-def random_rider_button(riders, asset_prefix=""):
+def random_rider_button(riders, asset_prefix="", solid=True):
     """CTA that opens a different rider each time.
 
     The href points at a real rider page so the button still works without
     JavaScript; site.js picks a random one on load and on every click. The
     fallback target is fixed rather than random so rebuilds stay reproducible."""
     slugs = [r["slug"] for r in riders]
+    button_class = "btn btn-solid" if solid else "btn"
     if not slugs:
-        return f'<a href="{asset_prefix}riders.html" class="btn btn-solid">Browse riders</a>'
-    return (f'<a href="{asset_prefix}riders/{slugs[0]}.html" class="btn btn-solid" '
+        return f'<a href="{asset_prefix}riders.html" class="{button_class}">Browse riders</a>'
+    return (f'<a href="{asset_prefix}riders/{slugs[0]}.html" class="{button_class}" '
             f'data-random-rider="{",".join(slugs)}" '
             f'data-rider-prefix="{asset_prefix}riders/">Random rider</a>')
 
@@ -279,24 +281,26 @@ def build_index(riders, women_count, men_count):
     html = head(
         f"{SITE_NAME} — Pro DH Kit, Every Setup",
         "Every UCI MTB World Cup Downhill rider's exact bike setup, gear and results — shop what they ride.",
-        prefix
+        prefix,
+        body_class="home-page"
     )
     html += header_html(prefix, active="riders")
     html += f"""
-<section class="hero" style="border-bottom:none;">
+<section class="hero home-hero">
   {hero_waves_svg()}
   <div class="wrap hero-inner">
     <div class="label">UCI MTB World Cup · Downhill · Season 2026</div>
     <h1>Their <em>exact</em> setup. Your next upgrade.</h1>
-    <p class="sub">Every part of bike run by Pro {len(riders)} this season, with race-proven ranking and shoppable in one click</p>
+    <p class="sub">Track {len(riders)} World Cup DH riders, explore their exact race setups and shop the equipment they trust.</p>
     <div class="hero-ctas">
-      {random_rider_button(riders)}
-      <a href="#faq" class="btn">How it works</a>
+      <a href="riders.html#grid" class="btn btn-solid">Explore riders</a>
+      {random_rider_button(riders, solid=False)}
+      <a href="#faq" class="home-text-link">How it works <span aria-hidden="true">↓</span></a>
     </div>
     <div class="ticker-wrap">
       <div class="ticker-track">
-        <span><b>Rider</b> Profiles</span><span class="dot">·</span><span><b>Pro</b> Setups</span><span class="dot">·</span><span><b>Follow</b> the Season</span><span class="dot">·</span><span><b>Race</b> Results</span><span class="dot">·</span><span><b>Check</b> Rankings</span><span class="dot">·</span><span><b>Equipment</b> Details</span><span class="dot">·</span><span><b>Shop</b> the Gear</span><span class="dot">·</span>
-        <span><b>Rider</b> Profiles</span><span class="dot">·</span><span><b>Pro</b> Setups</span><span class="dot">·</span><span><b>Follow</b> the Season</span><span class="dot">·</span><span><b>Race</b> Results</span><span class="dot">·</span><span><b>Check</b> Rankings</span><span class="dot">·</span><span><b>Equipment</b> Details</span><span class="dot">·</span><span><b>Shop</b> the Gear</span><span class="dot">·</span>
+        <a href="riders.html#grid"><b>Rider</b> Profiles</a><span class="dot">·</span><a href="#equipment"><b>Pro</b> Setups</a><span class="dot">·</span><a href="standings.html"><b>Follow</b> the Season</a><span class="dot">·</span><a href="standings.html"><b>Race</b> Results</a><span class="dot">·</span><a href="#rankings"><b>Check</b> Rankings</a><span class="dot">·</span><a href="#equipment"><b>Equipment</b> Details</a><span class="dot">·</span><a href="#equipment"><b>Shop</b> the Gear</a><span class="dot">·</span>
+        <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Follow</b> the Season</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Race</b> Results</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
       </div>
     </div>
   </div>
@@ -308,13 +312,13 @@ def build_index(riders, women_count, men_count):
 
 <section class="section" id="faq">
   <div class="wrap">
-    <div class="section-head reveal">
+    <div class="section-head">
       <div>
         <div class="label">Questions</div>
         <h2>FAQ</h2>
       </div>
     </div>
-    <div class="faq reveal">
+    <div class="faq">
       <div class="faq-item">
         <div class="faq-q"><h3><span class="faq-num">Q1</span>Where does this data come from?</h3><span class="plus">+</span></div>
         <div class="faq-a"><p>Every setup is tracked from official UCI MTB World Cup entry lists, team press releases and public sponsor listings, updated across the 2026 season.</p></div>
@@ -778,25 +782,25 @@ def build_rankings_section(riders):
     men_rows = "\n        ".join(rider_row(i + 1, r) for i, r in enumerate(men))
     women_rows = "\n        ".join(rider_row(i + 1, r) for i, r in enumerate(women))
 
-    return f"""<section class="section" style="padding-bottom:0;">
+    return f"""<section class="section home-rankings" id="rankings">
   <div class="wrap">
-    <div class="section-head reveal">
+    <div class="section-head">
       <div>
         <div class="label">UCI DH Season 2026 · Cumulative points</div>
         <h2>DH Rankings</h2>
       </div>
-      <span class="see-all">Top 5 shown</span>
+      <a class="see-all" href="standings.html">View full standings →</a>
     </div>
     <div class="rankings-grid">
-      <div class="ranking-col reveal">
+      <div class="ranking-col">
         <div class="ranking-col-head"><h3>Team Ranking</h3><span class="tag">Top 5</span></div>
         {team_rows}
       </div>
-      <div class="ranking-col reveal">
+      <div class="ranking-col">
         <div class="ranking-col-head"><h3>Men Ranking</h3><span class="tag">Top 5</span></div>
         {men_rows}
       </div>
-      <div class="ranking-col reveal">
+      <div class="ranking-col">
         <div class="ranking-col-head"><h3>Women Ranking</h3><span class="tag">Top 5</span></div>
         {women_rows}
       </div>
@@ -858,10 +862,13 @@ def build_best_equipment_carousel(riders):
         rows = []
         for rank, g in enumerate(top3, start=1):
             title = " ".join([g["brand"], g["model"]]).strip() or "—"
-            link = g["link"] or "#"
+            link = g["link"]
             width = max(6, round(g["points"] / max_pts * 100))
             photo = has_equip_photo(cat, g["brand"], g["model"])
             thumb = f'<span class="p-thumb"><img src="assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></span>' if photo else ""
+            shop = (f'<a class="p-shop" href="{esc(link)}" target="_blank" '
+                    f'rel="noopener sponsored">Shop</a>' if link
+                    else '<span class="p-shop is-muted">Tracked</span>')
             rows.append(f"""<div class="podium-item rank-{rank}">
               <span class="p-rank">{rank}</span>
               {thumb}
@@ -870,7 +877,7 @@ def build_best_equipment_carousel(riders):
                 <div class="p-bar"><span style="width:{width}%"></span></div>
                 <div class="p-foot">
                   <span class="p-meta">{g['points']} pts · {g['rider_count']} rider{'s' if g['rider_count'] != 1 else ''}</span>
-                  <a class="p-shop" href="{esc(link)}" target="_blank" rel="noopener sponsored">Shop</a>
+                  {shop}
                 </div>
               </div>
             </div>""")
@@ -891,17 +898,17 @@ def build_best_equipment_carousel(riders):
     # duplicated set so the marquee can loop seamlessly
     slides_dup = "".join(slide_html(i, c, hidden=True) for i, c in enumerate(cats))
 
-    return f"""<section class="section eq-carousel-section" style="padding-top:0;">
+    return f"""<section class="section eq-carousel-section" id="equipment">
   <div class="wrap">
-    <div class="section-head reveal">
+    <div class="section-head">
       <div>
-        <div class="label">Editor's Pick · Season 2026</div>
+        <div class="label">Race-proven · Season 2026</div>
         <h2>Best Equipment</h2>
       </div>
-      <span class="see-all">{total} categories · Top 3 by combined rider points</span>
+      <span class="see-all">{total} categories · Ranked by combined rider points</span>
     </div>
   </div>
-  <div class="carousel reveal" data-marquee>
+  <div class="carousel" data-marquee aria-label="Best equipment by category">
     <div class="carousel-track">
       {slides}{slides_dup}
     </div>
@@ -1103,6 +1110,10 @@ def main():
     index_html = build_index(riders, len(women), len(men))
     with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)
+
+    if "--index-only" in sys.argv:
+        print("Built index.html.")
+        return
 
     riders_html = build_riders_directory(riders, len(women), len(men))
     with open(os.path.join(ROOT, "riders.html"), "w", encoding="utf-8") as f:

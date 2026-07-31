@@ -291,11 +291,11 @@ def build_index(riders, women_count, men_count):
   <div class="wrap hero-inner">
     <div class="label">UCI MTB World Cup · Downhill · Season 2026</div>
     <h1>Their <em>exact</em> setup. Your next upgrade.</h1>
-    <p class="sub">Track {len(riders)} World Cup DH riders, explore their exact race setups and shop the equipment they trust.</p>
+    <p class="sub">Track {len(riders)} World Cup DH riders, explore their exact race setups and find the equipment they trust.</p>
     <div class="hero-ctas">
       <a href="riders.html#grid" class="btn btn-solid">Explore riders</a>
       {random_rider_button(riders, solid=False)}
-      <a href="#faq" class="home-text-link">How it works <span aria-hidden="true">↓</span></a>
+      <a href="#faq" class="home-text-link">Read the FAQ <span aria-hidden="true">↓</span></a>
     </div>
     <div class="ticker-wrap">
       <div class="ticker-track">
@@ -346,11 +346,13 @@ def build_index(riders, women_count, men_count):
     <div class="label">Stay up to speed</div>
     <h2>New kit drops every race weekend.</h2>
     <p class="sub">Get the setup sheet the morning after every World Cup round — straight to your inbox.</p>
+    <!-- Newsletter form kept ready for future activation.
     <form class="cta-form" onsubmit="return false;">
       <input type="email" placeholder="you@example.com">
       <button type="submit">Subscribe</button>
     </form>
     <div class="fineprint">No spam · Unsubscribe anytime</div>
+    -->
   </div>
 </section>
 """

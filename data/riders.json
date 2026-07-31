@@ -331,15 +331,15 @@
   "bio": "- European Champion DH 2024 - Swiss Champion DH",
   "bike": {
    "brand": "Commençal",
-   "model": "Supreme DH V5;Mullet 29/27.5"
+   "model": "Supreme DH V5.2;Mullet 29/27.5"
   },
   "equipment": [
    {
     "category": "Frame",
     "brand": "Commençal",
-    "model_detail": "Supreme DH V5;Mullet 29/27.5",
-    "brand_model": "Commençal;Supreme DH V5;Mullet 29/27.5",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5.html"
+    "model_detail": "Supreme DH V5.2;Mullet 29/27.5",
+    "brand_model": "Commençal;Supreme DH V5.2;Mullet 29/27.5",
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
    },
    {
     "category": "Fork",
@@ -464,15 +464,15 @@
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory;Orange prototype tune",
-    "brand_model": "Fox;40 Factory; Orange prototype tune",
+    "brand_model": "Fox;40 Factory;Orange prototype tune",
     "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
-    "model_detail": "",
-    "brand_model": "Fox",
-    "affiliate_link": null
+    "model_detail": "DHX2 Factory",
+    "brand_model": "Fox;DHX2 Factory",
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
    },
    {
     "category": "Handlebar",
@@ -575,9 +575,9 @@
    {
     "category": "Fork",
     "brand": "SR Suntour",
-    "model_detail": "",
-    "brand_model": "SR Suntour",
-    "affiliate_link": null
+    "model_detail": "RUX",
+    "brand_model": "SR Suntour;RUX",
+    "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm"
    },
    {
     "category": "RearShock",
@@ -933,16 +933,16 @@
    },
    {
     "category": "Fork",
-    "brand": "Ohlins",
+    "brand": "Öhlins",
     "model_detail": "DH38;Prototype electronic",
-    "brand_model": "Ohlins;DH38;Prototype electronic",
+    "brand_model": "Öhlins;DH38;Prototype electronic",
     "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/"
    },
    {
     "category": "RearShock",
-    "brand": "Ohlins",
+    "brand": "Öhlins",
     "model_detail": "Prototype coil;Bar-mounted remote",
-    "brand_model": "Ohlins;Prototype coil;Bar-mounted remote",
+    "brand_model": "Öhlins;Prototype coil;Bar-mounted remote",
     "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/"
    },
    {
@@ -2454,9 +2454,9 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis Carbon DH",
-    "brand_model": "Crankbrothers;Synthesis Carbon DH",
-    "affiliate_link": null
+    "model_detail": "Synthesis DH Carbon",
+    "brand_model": "Crankbrothers;Synthesis DH Carbon",
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
     "category": "Tires",
@@ -2660,7 +2660,7 @@
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "FatBar;770mm 30mm rise",
-    "brand_model": "Renthal;FatBar; 770mm 30mm rise",
+    "brand_model": "Renthal;FatBar;770mm 30mm rise",
     "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748"
    },
    {
@@ -3238,15 +3238,15 @@
   "bio": "- 2026 1st WC Lenzerheide - 4x World Champion (2022–2025) - 4x Overall WC (2021, 2023, 2024, 2025)",
   "bike": {
    "brand": "Commençal",
-   "model": "Supreme DH V5;Mullet 2026 (YT Tues CF 2025)"
+   "model": "Supreme DH V5.2;Mullet 2026 (YT Tues CF 2025)"
   },
   "equipment": [
    {
     "category": "Frame",
     "brand": "Commençal",
-    "model_detail": "Supreme DH V5;Mullet 2026 (YT Tues CF 2025)",
-    "brand_model": "Commençal;Supreme DH V5;Mullet 2026 (YT Tues CF 2025)",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5.html"
+    "model_detail": "Supreme DH V5.2;Mullet 2026 (YT Tues CF 2025)",
+    "brand_model": "Commençal;Supreme DH V5.2;Mullet 2026 (YT Tues CF 2025)",
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
    },
    {
     "category": "Fork",
@@ -3408,16 +3408,16 @@
    },
    {
     "category": "Fork",
-    "brand": "Ohlins",
+    "brand": "Öhlins",
     "model_detail": "DH38;Prototype electronic",
-    "brand_model": "Ohlins;DH38;Prototype electronic",
+    "brand_model": "Öhlins;DH38;Prototype electronic",
     "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/"
    },
    {
     "category": "RearShock",
-    "brand": "Ohlins",
+    "brand": "Öhlins",
     "model_detail": "Prototype coil;Electronic damping",
-    "brand_model": "Ohlins;Prototype coil;Electronic damping",
+    "brand_model": "Öhlins;Prototype coil;Electronic damping",
     "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/"
    },
    {
@@ -4013,9 +4013,9 @@
    },
    {
     "category": "Crankset",
-    "brand": "NorthShoreBillet",
+    "brand": "North Shore Billet",
     "model_detail": "Talon Crankset",
-    "brand_model": "NorthShoreBillet;Talon Crankset",
+    "brand_model": "North Shore Billet;Talon Crankset",
     "affiliate_link": "https://northshorebillet.com/products/talon-crankset"
    },
    {
@@ -4101,6 +4101,13 @@
     "model_detail": "Rallon DH;200mm GravityLink",
     "brand_model": "Orbea;Rallon DH;200mm GravityLink",
     "affiliate_link": "https://www.orbea.com/en-us/rallon-dh"
+   },
+   {
+    "category": "Fork",
+    "brand": "Fox",
+    "model_detail": "40 Factory",
+    "brand_model": "Fox;40 Factory",
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
    }
   ],
   "competition_history": [
@@ -4175,8 +4182,8 @@
    {
     "category": "Handlebar",
     "brand": "Renthal",
-    "model_detail": "FatBar 35mm;30mm rise 770mm",
-    "brand_model": "Renthal;FatBar 35mm;30mm rise 770mm",
+    "model_detail": "Fatbar 35;30mm rise 770mm",
+    "brand_model": "Renthal;Fatbar 35;30mm rise 770mm",
     "affiliate_link": null
    },
    {
@@ -4653,9 +4660,9 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis Carbon DH",
-    "brand_model": "Crankbrothers;Synthesis Carbon DH",
-    "affiliate_link": null
+    "model_detail": "Synthesis DH Carbon",
+    "brand_model": "Crankbrothers;Synthesis DH Carbon",
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
     "category": "Tires",
@@ -4751,9 +4758,9 @@
    },
    {
     "category": "Crankset",
-    "brand": "5dev",
+    "brand": "5DEV",
     "model_detail": "Titanium MTB Cranks;raw Ti",
-    "brand_model": "5dev;Titanium MTB Cranks;raw Ti",
+    "brand_model": "5DEV;Titanium MTB Cranks;raw Ti",
     "affiliate_link": null
    },
    {
@@ -4779,9 +4786,9 @@
    },
    {
     "category": "Wheels",
-    "brand": "Enve",
+    "brand": "ENVE",
     "model_detail": "M",
-    "brand_model": "Enve;M",
+    "brand_model": "ENVE;M",
     "affiliate_link": "https://enve.com/collections/m-series"
    },
    {
@@ -4851,15 +4858,15 @@
   "bio": "- 2x World Champion (2019, 2021) - Overall WC 2017 - French Champion 2016",
   "bike": {
    "brand": "Commençal",
-   "model": "Supreme DH V5;Mullet 29/27.5 220mm"
+   "model": "Supreme DH V5.2;Mullet 29/27.5 220mm"
   },
   "equipment": [
    {
     "category": "Frame",
     "brand": "Commençal",
-    "model_detail": "Supreme DH V5;Mullet 29/27.5 220mm",
-    "brand_model": "Commençal;Supreme DH V5;Mullet 29/27.5 220mm",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5.html"
+    "model_detail": "Supreme DH V5.2;Mullet 29/27.5 220mm",
+    "brand_model": "Commençal;Supreme DH V5.2;Mullet 29/27.5 220mm",
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
    },
    {
     "category": "Fork",
@@ -4877,23 +4884,23 @@
    },
    {
     "category": "Handlebar",
-    "brand": "Enve",
+    "brand": "ENVE",
     "model_detail": "",
-    "brand_model": "Enve",
+    "brand_model": "ENVE",
     "affiliate_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
-    "model_detail": "XO DH",
-    "brand_model": "SRAM;XO DH",
+    "model_detail": "X0 DH",
+    "brand_model": "SRAM;X0 DH",
     "affiliate_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
-    "model_detail": "XO DH",
-    "brand_model": "SRAM;XO DH",
+    "model_detail": "X0 DH",
+    "brand_model": "SRAM;X0 DH",
     "affiliate_link": null
    },
    {
@@ -6312,15 +6319,15 @@
    {
     "category": "Wheels",
     "brand": "DT Swiss",
-    "model_detail": "FR1500;MX mullet",
-    "brand_model": "DT Swiss;FR1500;MX mullet",
+    "model_detail": "FR 1500;MX mullet",
+    "brand_model": "DT Swiss;FR 1500;MX mullet",
     "affiliate_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
-    "model_detail": "Assegai (F) + DHR2 (R);3C DH",
-    "brand_model": "Maxxis;Assegai (F) + DHR2 (R);3C DH",
+    "model_detail": "Assegai (F) + DHR II (R);3C DH",
+    "brand_model": "Maxxis;Assegai (F) + DHR II (R);3C DH",
     "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
    },
    {
@@ -7368,8 +7375,8 @@
    {
     "category": "Handlebar",
     "brand": "Renthal",
-    "model_detail": "FatBar 35mm;30mm rise 770mm",
-    "brand_model": "Renthal;FatBar 35mm;30mm rise 770mm",
+    "model_detail": "Fatbar 35;30mm rise 770mm",
+    "brand_model": "Renthal;Fatbar 35;30mm rise 770mm",
     "affiliate_link": null
    },
    {
@@ -7529,8 +7536,8 @@
    {
     "category": "Wheels",
     "brand": "DT Swiss",
-    "model_detail": "FR1500;MX mullet",
-    "brand_model": "DT Swiss;FR1500;MX mullet",
+    "model_detail": "FR 1500;MX mullet",
+    "brand_model": "DT Swiss;FR 1500;MX mullet",
     "affiliate_link": null
    },
    {
@@ -7832,16 +7839,16 @@
    },
    {
     "category": "Fork",
-    "brand": "Ohlins",
+    "brand": "Öhlins",
     "model_detail": "DH38;Prototype electronic",
-    "brand_model": "Ohlins;DH38;Prototype electronic",
+    "brand_model": "Öhlins;DH38;Prototype electronic",
     "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/"
    },
    {
     "category": "RearShock",
-    "brand": "Ohlins",
+    "brand": "Öhlins",
     "model_detail": "Prototype coil",
-    "brand_model": "Ohlins;Prototype coil",
+    "brand_model": "Öhlins;Prototype coil",
     "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/"
    },
    {

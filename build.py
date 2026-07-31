@@ -22,6 +22,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(ROOT, "data", "riders.json")
@@ -96,6 +97,45 @@ def prettify_category(cat):
         return cat.capitalize()
     return re.sub(r'(?<!^)(?=[A-Z])', ' ', cat)
 
+def norm_product_text(value):
+    """Comparison key tolerant of accents, punctuation, casing and spacing."""
+    value = unicodedata.normalize("NFKD", value or "").encode("ascii", "ignore").decode("ascii")
+    value = value.lower().replace("™", "").replace("®", "")
+    return re.sub(r"[^a-z0-9]+", " ", value).strip()
+
+# Explicit aliases only: automatic fuzzy merging can silently combine genuinely
+# different race parts (for example SRAM X0 and X01). Add a row here when the
+# Sheet uses two wordings for one real product.
+EQUIPMENT_ALIASES = {
+    ("Frame", "commencal", "supreme dh v5"): ("Commençal", "Supreme DH V5.2"),
+    ("Frame", "commencal", "supreme dh v5 2"): ("Commençal", "Supreme DH V5.2"),
+    ("Wheels", "dt swiss", "fr1500"): ("DT Swiss", "FR 1500"),
+    ("Wheels", "dt swiss", "fr 1500"): ("DT Swiss", "FR 1500"),
+    ("Wheels", "crankbrothers", "synthesis carbon dh"): ("Crankbrothers", "Synthesis DH Carbon"),
+    ("Wheels", "crankbrothers", "synthesis dh carbon"): ("Crankbrothers", "Synthesis DH Carbon"),
+    ("Tires", "maxxis", "assegai f dhr2 r"): ("Maxxis", "Assegai (F) + DHR II (R)"),
+    ("Tires", "maxxis", "assegai f dhr ii r"): ("Maxxis", "Assegai (F) + DHR II (R)"),
+    ("Crankset", "sram", "xo dh"): ("SRAM", "X0 DH"),
+    ("Derailleur", "sram", "xo dh"): ("SRAM", "X0 DH"),
+    ("Handlebar", "renthal", "fatbar 35mm"): ("Renthal", "Fatbar 35"),
+    ("Handlebar", "renthal", "fatbar 35"): ("Renthal", "Fatbar 35"),
+}
+
+BRAND_DISPLAY = {
+    "5dev": "5DEV", "commencal": "Commençal", "enve": "ENVE",
+    "north shore billet": "North Shore Billet", "northshorebillet": "North Shore Billet",
+    "ohlins": "Öhlins", "rockshox": "RockShox", "sram": "SRAM",
+}
+
+def canonical_equipment_product(category, brand, main_model):
+    """Return one stable display identity for loose Sheet/library wording."""
+    brand_key = norm_product_text(brand)
+    model_key = norm_product_text(main_model)
+    alias = EQUIPMENT_ALIASES.get((category or "", brand_key, model_key))
+    if alias:
+        return alias
+    return BRAND_DISPLAY.get(brand_key, (brand or "").strip()), (main_model or "").strip()
+
 def bio_bullets(bio):
     if not bio:
         return []
@@ -115,7 +155,7 @@ def equip_image_slug(category, brand, main_model):
     sheet share a brand+model across different categories (Shimano Saint is a
     brake lever, a crankset, a derailleur and a pedal), so brand+model alone
     would make them collide onto one photo."""
-    import unicodedata
+    brand, main_model = canonical_equipment_product(category, brand, main_model)
     s = f"{category} {brand} {main_model}".strip()
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
@@ -726,12 +766,15 @@ def bike_build_html(equipment):
         </figure>"""
         return f'<figure class="bb-part bb-{slot}">{inner}</figure>'
 
+    parts_html = "\n        ".join(filter(None, [
+        part("shock", shock, "Rear shock"),
+        part("frame", frame, "Frame"),
+        part("fork", fork, "Fork"),
+    ]))
     return f"""<div class="bike-build reveal">
       <div class="bb-label">Race Setup</div>
       <div class="bb-stage">
-        {part("shock", shock, "Rear shock")}
-        {part("frame", frame, "Frame")}
-        {part("fork", fork, "Fork")}
+        {parts_html}
       </div>
     </div>"""
 
@@ -882,6 +925,7 @@ def build_best_equipment_carousel(riders):
             brand = item.get("brand") or ""
             detail_parts = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
             main_model = detail_parts[0] if detail_parts else ""
+            brand, main_model = canonical_equipment_product(cat, brand, main_model)
             if not brand and not main_model:
                 continue
             key = (brand, main_model)
@@ -919,12 +963,12 @@ def build_best_equipment_carousel(riders):
             width = max(6, round(g["points"] / max_pts * 100))
             photo = has_equip_photo(cat, g["brand"], g["model"])
             thumb = f'<span class="p-thumb"><img src="assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></span>' if photo else ""
+            thumb_line = f'\n              {thumb}' if thumb else ""
             shop = (f'<a class="p-shop" href="{esc(link)}" target="_blank" '
                     f'rel="noopener sponsored">Shop</a>' if link
                     else '<span class="p-shop is-muted">Tracked</span>')
             rows.append(f"""<div class="podium-item rank-{rank}">
-              <span class="p-rank">{rank}</span>
-              {thumb}
+              <span class="p-rank">{rank}</span>{thumb_line}
               <div class="p-main">
                 <h4 title="{esc(title)}">{esc(title)}</h4>
                 <div class="p-bar"><span style="width:{width}%"></span></div>

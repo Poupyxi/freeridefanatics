@@ -81,15 +81,16 @@ FOLDER_TO_CATEGORY = {
 # ---------------------------------------------------------------- helpers
 
 def norm_handle(s, is_filename=False):
-    """'@Troybrosnan .jpg' and 'troybrosnan' collapse to the same key.
+    """Collapse cosmetic handle separators so Sheet and filenames stay compatible.
 
-    Only strip an extension for filenames: many handles contain dots
-    (@andreas.kolb66), and splitext would eat the tail as an extension."""
+    Instagram dots and underscores are often swapped in the photo library
+    (`@andreas.kolb66` vs `@andreas_kolb66`), but cannot change the underlying
+    letter/number identity. Only strip an extension for actual filenames."""
     if is_filename:
         stem, ext = os.path.splitext(s)
         if ext.lower() in IMAGE_EXTS:
             s = stem
-    return re.sub(r"[^a-z0-9._]", "", s.lower().lstrip("@").strip())
+    return re.sub(r"[^a-z0-9]", "", s.lower().lstrip("@").strip())
 
 def norm_text(s):
     s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode("ascii")
@@ -191,9 +192,13 @@ def index_library_equipment():
         for f in files:
             stem = os.path.splitext(f)[0]
             parts = [p.strip() for p in stem.split(";")]
+            raw_brand = parts[0]
+            raw_model = parts[1] if len(parts) > 1 else ""
+            canonical_brand, canonical_model = build.canonical_equipment_product(
+                category, raw_brand, raw_model)
             index[category].append({
-                "brand": norm_text(parts[0]),
-                "model": norm_text(parts[1]) if len(parts) > 1 else "",
+                "brand": norm_text(canonical_brand),
+                "model": norm_text(canonical_model),
                 "full": norm_text(stem.replace(";", " ")),
                 "path": os.path.join(path, f),
                 "name": f,
@@ -242,6 +247,7 @@ def import_equipment(riders, force, dry):
             brand = item.get("brand") or ""
             detail = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
             model = detail[0] if detail else ""
+            brand, model = build.canonical_equipment_product(item.get("category"), brand, model)
             if not brand and not model:
                 continue
             cat = item.get("category")

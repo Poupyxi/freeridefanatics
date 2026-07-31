@@ -271,31 +271,49 @@ def parse_links(ws):
             continue
         if category is None:
             continue
+        detail_parts = [part.strip() for part in detail.split(";")]
+        canonical_brand, canonical_main = build.canonical_equipment_product(
+            category, brand, detail_parts[0] if detail_parts else "")
+        canonical_detail = ";".join([canonical_main] + detail_parts[1:])
         entry = {
-            "detail": norm_detail(detail),
-            "main": norm_detail(detail.split(";")[0]),
+            "detail": norm_detail(canonical_detail),
+            "main": norm_detail(canonical_main),
             "link": link or None,
             "photo": photo or None,
+            "aliased": (build.norm_product_text(brand) != build.norm_product_text(canonical_brand)
+                        or build.norm_product_text(detail_parts[0] if detail_parts else "")
+                        != build.norm_product_text(canonical_main)),
         }
-        exact[(category, brand.lower(), detail.lower())] = entry
-        index.setdefault((category, brand.lower()), []).append(entry)
+        brand_key = build.norm_product_text(canonical_brand)
+        exact[(category, brand_key, norm_detail(canonical_detail))] = entry
+        index.setdefault((category, brand_key), []).append(entry)
     return {"exact": exact, "index": index}
 
 def resolve_link(links, cat, brand, model_detail):
     """Best product entry for an equipment cell — exact detail first, then the
     main model name, then the longest normalized prefix overlap."""
-    entry = links["exact"].get((cat, brand.lower(), model_detail.lower()))
-    if entry:
-        return entry
-    candidates = links["index"].get((cat, brand.lower()))
+    parts = [part.strip() for part in model_detail.split(";")]
+    canonical_brand, canonical_main = build.canonical_equipment_product(
+        cat, brand, parts[0] if parts else "")
+    canonical_detail = ";".join([canonical_main] + parts[1:])
+    brand_key = build.norm_product_text(canonical_brand)
+    candidates = links["index"].get((cat, brand_key))
     if not candidates:
         return None
-    main = norm_detail(model_detail.split(";")[0])
+    main = norm_detail(canonical_main)
     if not main:
         return None
+    entry = links["exact"].get((cat, brand_key, norm_detail(canonical_detail)))
+    if entry:
+        # If this catalogue row used an alias (V5), prefer the canonical row's
+        # current URL/photo (V5.2) so one product cannot retain two destinations.
+        preferred = [e for e in candidates if e["main"] == main and not e.get("aliased")
+                     and (e.get("link") or e.get("photo"))]
+        return preferred[0] if entry.get("aliased") and preferred else entry
     same_main = [e for e in candidates if e["main"] == main]
     if same_main:
-        return same_main[0]
+        canonical_rows = [e for e in same_main if not e.get("aliased")]
+        return (canonical_rows or same_main)[0]
     prefix = [e for e in candidates
               if e["main"].startswith(main + " ") or main.startswith(e["main"] + " ")]
     if prefix:
@@ -324,8 +342,11 @@ def build_riders(wb):
         bike = None
         for cat, raw in equipment.get(insta, []):
             parts = [x.strip() for x in raw.split(";")]
-            brand = parts[0]
-            model_detail = ";".join(parts[1:])
+            raw_brand = parts[0]
+            raw_detail_parts = parts[1:]
+            raw_main = raw_detail_parts[0] if raw_detail_parts else ""
+            brand, canonical_main = build.canonical_equipment_product(cat, raw_brand, raw_main)
+            model_detail = ";".join([canonical_main] + raw_detail_parts[1:]) if raw_detail_parts else ""
             entry = resolve_link(links, cat, brand, model_detail) if model_detail else None
             if entry is None and model_detail:
                 unmatched_links += 1
@@ -336,7 +357,7 @@ def build_riders(wb):
                 "category": cat,
                 "brand": brand,
                 "model_detail": model_detail,
-                "brand_model": raw,
+                "brand_model": ";".join([brand, model_detail]) if model_detail else brand,
                 "affiliate_link": link,
             })
             if cat == "Frame" and bike is None:

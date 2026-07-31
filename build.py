@@ -109,6 +109,10 @@ def norm_product_text(value):
 EQUIPMENT_ALIASES = {
     ("Frame", "commencal", "supreme dh v5"): ("Commençal", "Supreme DH V5.2"),
     ("Frame", "commencal", "supreme dh v5 2"): ("Commençal", "Supreme DH V5.2"),
+    ("Fork", "ohlins", "dh38 m2 coil"): ("Öhlins", "DH38"),
+    ("Handlebar", "burgtec", "ride wide alloy dh"): ("Burgtec", "Ride Wide DH"),
+    ("Handlebar", "burgtec", "ride wide alloy downhill riser bar"): ("Burgtec", "Ride Wide DH"),
+    ("Handlebar", "burgtec", "ride wide carbondh riser bar"): ("Burgtec", "Ride Wide DH Carbon"),
     ("Wheels", "dt swiss", "fr1500"): ("DT Swiss", "FR 1500"),
     ("Wheels", "dt swiss", "fr 1500"): ("DT Swiss", "FR 1500"),
     ("Wheels", "crankbrothers", "synthesis carbon dh"): ("Crankbrothers", "Synthesis DH Carbon"),

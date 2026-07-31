@@ -100,8 +100,26 @@ def norm_text(s):
 def listdir_images(path):
     if not os.path.isdir(path):
         return []
-    return [f for f in sorted(os.listdir(path))
-            if not f.startswith(".") and f.lower().endswith(IMAGE_EXTS)]
+    images = []
+    for f in sorted(os.listdir(path)):
+        if f.startswith("."):
+            continue
+        full = os.path.join(path, f)
+        if not os.path.isfile(full):
+            continue
+        if f.lower().endswith(IMAGE_EXTS):
+            images.append(f)
+            continue
+        # Some library exports are valid JPEG/PNG files with no extension.
+        # Pillow inspects the file signature, so accept those without guessing.
+        if not os.path.splitext(f)[1]:
+            try:
+                with Image.open(full) as probe:
+                    probe.verify()
+                images.append(f)
+            except (OSError, ValueError):
+                pass
+    return images
 
 def load_image(path):
     img = Image.open(path)

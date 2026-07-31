@@ -188,6 +188,7 @@
     if(!blocks.length) return;
     var groupBar = document.querySelector('[data-standings-filters]');
     var compBar = document.querySelector('[data-standings-comp-filters]');
+    var searchInput = document.querySelector('[data-standings-search]');
 
     function activeOf(bar, attr){
       if(!bar) return null;
@@ -198,10 +199,23 @@
     function render(){
       var group = activeOf(groupBar, 'data-standings-group');
       var comp = activeOf(compBar, 'data-standings-comp');
+      var term = (searchInput && searchInput.value || '').trim().toLowerCase();
       blocks.forEach(function(b){
         var okGroup = !group || b.getAttribute('data-standings') === group;
         var okComp = !comp || b.getAttribute('data-competition') === comp;
-        b.classList.toggle('is-shown', okGroup && okComp);
+        var isShown = okGroup && okComp;
+        b.classList.toggle('is-shown', isShown);
+        var rows = Array.prototype.slice.call(b.querySelectorAll('[data-standing-row]'));
+        var shown = 0;
+        rows.forEach(function(row){
+          var match = !term || (row.getAttribute('data-search') || '').indexOf(term) !== -1;
+          row.hidden = !match;
+          if(match) shown += 1;
+        });
+        var empty = b.querySelector('.standings-empty');
+        var scroll = b.querySelector('.standings-scroll');
+        if(empty) empty.hidden = shown !== 0;
+        if(scroll) scroll.hidden = shown === 0;
       });
     }
 
@@ -210,11 +224,43 @@
       if(!bar) return;
       bar.querySelectorAll('.filter-btn').forEach(function(btn){
         btn.addEventListener('click', function(){
-          bar.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+          bar.querySelectorAll('.filter-btn').forEach(function(b){
+            b.classList.remove('active');
+            if(b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', 'false');
+          });
           btn.classList.add('active');
+          if(btn.hasAttribute('aria-selected')) btn.setAttribute('aria-selected', 'true');
           render();
         });
       });
+    });
+
+    if(searchInput) searchInput.addEventListener('input', render);
+
+    if(groupBar){
+      groupBar.addEventListener('keydown', function(e){
+        if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        var tabs = Array.prototype.slice.call(groupBar.querySelectorAll('[role="tab"]'));
+        var current = tabs.indexOf(document.activeElement);
+        if(current < 0) return;
+        e.preventDefault();
+        var direction = e.key === 'ArrowRight' ? 1 : -1;
+        var next = tabs[(current + direction + tabs.length) % tabs.length];
+        next.focus();
+        next.click();
+      });
+    }
+
+    blocks.forEach(function(block){
+      var scroller = block.querySelector('.standings-scroll');
+      var hint = block.querySelector('.standings-swipe');
+      if(!scroller || !hint) return;
+      function updateHint(){
+        hint.classList.toggle('is-complete',
+          scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 4);
+      }
+      scroller.addEventListener('scroll', updateHint, {passive:true});
+      updateHint();
     });
 
     render();

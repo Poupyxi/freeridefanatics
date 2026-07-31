@@ -424,10 +424,13 @@ def build_standings(riders):
                 cls = " scored" if p else " blank"
                 cells.append(f'<td class="rd{cls}"{title}>{p if p else "·"}</td>')
             medal = f" p{i}" if i <= 3 else ""
-            rows.append(f"""<tr>
+            search_blob = " ".join([r["display_name"], r.get("team") or "Privateer",
+                                    r.get("country") or "", r.get("country_code") or ""]).lower()
+            rows.append(f"""<tr data-standing-row data-search="{esc(search_blob)}">
             <td class="pos{medal}">{i}</td>
             <td class="who"><a href="riders/{r['slug']}.html">{esc(r['display_name'])}</a>
-              <span class="sub">{esc(r.get('team') or 'Privateer')}</span></td>
+              <span class="sub">{esc(r.get('team') or 'Privateer')}</span>
+              <span class="mobile-total">{total} pts</span></td>
             <td class="nat">{esc(r.get('country_code') or '')}</td>
             {"".join(cells)}
             <td class="total">{total}</td>
@@ -449,9 +452,11 @@ def build_standings(riders):
         for i, (team, total) in enumerate(order, start=1):
             who = ", ".join(sorted(members[team]))
             medal = f" p{i}" if i <= 3 else ""
-            rows.append(f"""<tr>
+            search_blob = f"{team} {who}".lower()
+            rows.append(f"""<tr data-standing-row data-search="{esc(search_blob)}">
             <td class="pos{medal}">{i}</td>
-            <td class="who">{esc(team)}<span class="sub">{esc(who)}</span></td>
+            <td class="who">{esc(team)}<span class="sub">{esc(who)}</span>
+              <span class="mobile-total">{total} pts</span></td>
             <td class="total">{total}</td>
           </tr>""")
         return rows, len(order)
@@ -459,64 +464,106 @@ def build_standings(riders):
     tables = []
     for comp in competitions:
         events = events_for(comp)
-        head_cells = "".join(f'<th class="rd" title="{esc(ev)}">{esc(short_event(ev))}</th>' for ev in events)
+        head_cells = "".join(
+            f'<th class="rd" title="{esc(ev)}"><abbr title="{esc(ev)}">{esc(short_event(ev))}</abbr></th>'
+            for ev in events)
         for group, label in (("Men Elite", "Men"), ("Women Elite", "Women")):
             rows, n = rider_rows(group, comp, events)
             if not rows:
                 continue
-            tables.append(f"""<div class="standings-block" data-standings="{esc(group)}" data-competition="{esc(comp)}">
+            tables.append(f"""<div class="standings-block" id="standings-{group.lower().replace(' ', '-')}" data-standings="{esc(group)}" data-competition="{esc(comp)}">
+        <div class="standings-swipe" aria-hidden="true"><span>Swipe to see every round</span><b>→</b></div>
         <div class="standings-scroll">
           <table class="standings-table">
+            <caption>{esc(label)} Elite standings for {esc(comp)} after {len(events)} rounds</caption>
             <thead><tr><th>#</th><th>Rider</th><th>Nat</th>{head_cells}<th class="total">Pts</th></tr></thead>
             <tbody>
             {"".join(rows)}
             </tbody>
           </table>
         </div>
+        <div class="standings-empty" hidden>No matching rider or team.</div>
         <div class="standings-foot">{n} riders scored · {len(events)} rounds</div>
       </div>""")
         rows, n = team_rows(comp, events)
         if rows:
-            tables.append(f"""<div class="standings-block" data-standings="Teams" data-competition="{esc(comp)}">
+            tables.append(f"""<div class="standings-block" id="standings-teams" data-standings="Teams" data-competition="{esc(comp)}">
         <div class="standings-scroll">
           <table class="standings-table">
+            <caption>Team standings for {esc(comp)}</caption>
             <thead><tr><th>#</th><th>Team</th><th class="total">Pts</th></tr></thead>
             <tbody>
             {"".join(rows)}
             </tbody>
           </table>
         </div>
+        <div class="standings-empty" hidden>No matching rider or team.</div>
         <div class="standings-foot">{n} teams scored</div>
       </div>""")
 
     group_chips = "".join(
-        f'<button class="filter-btn{" active" if i == 0 else ""}" data-standings-group="{g}">{lbl}</button>'
+        f'<button class="filter-btn{" active" if i == 0 else ""}" role="tab" '
+        f'aria-selected="{"true" if i == 0 else "false"}" aria-controls="standings-{g.lower().replace(" ", "-")}" '
+        f'data-standings-group="{g}">{lbl}</button>'
         for i, (g, lbl) in enumerate([("Men Elite", "Men"), ("Women Elite", "Women"), ("Teams", "Teams")]))
-    comp_chips = "".join(
+    comp_chips = (f'<span class="competition-badge">{esc(competitions[0])}</span>' if len(competitions) == 1 else "".join(
         f'<button class="filter-btn{" active" if i == 0 else ""}" data-standings-comp="{esc(c)}">{esc(c)}</button>'
-        for i, c in enumerate(competitions))
+        for i, c in enumerate(competitions)))
+
+    primary_comp = competitions[0] if competitions else ""
+    primary_events = events_for(primary_comp) if primary_comp else []
+    scored_riders = [r for r in riders if sum(v or 0 for v in points_map(r, primary_comp).values())]
+    def leader_for(group):
+        ranked = [(sum(v or 0 for v in points_map(r, primary_comp).values()), r)
+                  for r in riders if r.get("gender_category") == group]
+        ranked = [entry for entry in ranked if entry[0]]
+        return max(ranked, default=(0, {"display_name": "—"}), key=lambda entry: entry[0])
+    men_lead_pts, men_lead = leader_for("Men Elite")
+    women_lead_pts, women_lead = leader_for("Women Elite")
+    latest_round = primary_events[-1] if primary_events else "Season start"
 
     html = head(f"Standings — {SITE_NAME}",
                 "Full UCI MTB World Cup Downhill 2026 standings: every rider, every round, cumulative points.",
-                prefix)
+                prefix, body_class="standings-page")
     html += header_html(prefix, active="standings")
     html += f"""
-<section class="hero" style="padding-bottom:0; border-bottom:none;">
+<section class="hero standings-hero">
   <div class="wrap hero-inner">
-    <div class="label">Season 2026 · Cumulative points</div>
+    <div class="label">Season 2026 · Updated after round {len(primary_events)} · {esc(latest_round)}</div>
     <h1>Standings.</h1>
   </div>
 </section>
 
-<section class="section" id="standings" style="padding-top:28px;">
+<section class="section standings-section" id="standings">
   <div class="wrap">
+    <div class="standings-overview" aria-label="Season overview">
+      <div><strong>{len(primary_events)}</strong><span>Rounds completed</span></div>
+      <div><strong>{len(scored_riders)}</strong><span>Riders scored</span></div>
+      <div><strong>{esc(men_lead['display_name'])}</strong><span>Men leader · {men_lead_pts} pts</span></div>
+      <div><strong>{esc(women_lead['display_name'])}</strong><span>Women leader · {women_lead_pts} pts</span></div>
+    </div>
+    <div class="standings-toolbar">
+      <div>
+        <span class="toolbar-label">Competition</span>
     <div class="filters standings-comp" data-standings-comp-filters>
       {comp_chips}
     </div>
-    <div class="filters" data-standings-filters>
+      </div>
+      <div>
+        <span class="toolbar-label">Category</span>
+    <div class="filters" role="tablist" aria-label="Standings category" data-standings-filters>
       {group_chips}
     </div>
+      </div>
+      <label class="standings-search"><span>Search</span>
+        <input class="search-input" type="search" placeholder="Rider, team or country…" data-standings-search>
+      </label>
+    </div>
     {"".join(tables)}
+    <div class="standings-legend">
+      <span><b>·</b> No points recorded</span>
+      <span>Team totals combine every tracked rider's season points.</span>
+    </div>
   </div>
 </section>
 """
@@ -531,8 +578,12 @@ def short_event(ev):
     would give two identical column headers."""
     m = re.match(r"^(.*?)\s*\(([^)]*)\)\s*$", ev)
     place, month = (m.group(1), m.group(2)) if m else (ev, "")
+    event_codes = {
+        "South Korea": "KOR", "France": "FRA", "Austria": "AUT",
+        "Switzerland": "SUI", "Italy": "ITA", "Andorra": "AND",
+    }
     key = place.strip().split()[-1] if place.strip() else ev
-    label = key[:3].upper()
+    label = event_codes.get(place.strip(), key[:3].upper())
     return f"{label} {month[:3].upper()}".strip()
 
 def build_riders_directory(riders, women_count, men_count):
@@ -1108,6 +1159,12 @@ def main():
 
     women = [r for r in riders if r.get("gender_category") == "Women Elite"]
     men = [r for r in riders if r.get("gender_category") == "Men Elite"]
+
+    if "--standings-only" in sys.argv:
+        with open(os.path.join(ROOT, "standings.html"), "w", encoding="utf-8") as f:
+            f.write(build_standings(riders))
+        print("Built standings.html.")
+        return
 
     index_html = build_index(riders, len(women), len(men))
     with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:

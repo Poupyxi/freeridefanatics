@@ -84,6 +84,7 @@ FOLDER_TO_CATEGORY = {
 # component (for example alloy wheels for a carbon-wheel specification).
 PHOTO_ALIASES = {
     ("Frame", "atherton", "a 200 g"): ("atherton", "downhill200"),
+    ("Frame", "giant", "glory advanced"): ("giant", "glory 2026"),
     ("Frame", "norco", "aurum hsp"): ("norco", "torrent dh"),
     ("Frame", "norco", "prototype dh"): ("norco", "torrent dh"),
     ("Frame", "norco", "dh prototype"): ("norco", "torrent dh"),
@@ -92,11 +93,30 @@ PHOTO_ALIASES = {
     ("RearShock", "float x2 factory", ""): ("fox", "float x2 factory 2026"),
     ("Handlebar", "cast components", "20mm rise"): ("cast", "sfx"),
     ("Handlebar", "fsa", "gradient aluminum"): ("fsa", "gradient aluminium"),
+    ("Handlebar", "burgtec", "alloy 31 8mm"): ("burgtec", "ride wide alloy downhill riser bar"),
+    ("Handlebar", "renthal", "fatbar m172"): ("renthal", "fatbar carbon 20mm rise"),
+    ("Handlebar", "renthal", "fatbar carbon 31 8mm"): ("renthal", "fatbar carbon 20mm rise"),
+    ("Handlebar", "renthal", "fatbar 35"): ("renthal", "fatbar35 30mm rise"),
     ("Crankset", "north shore billet", "155mm"): ("north shore billet", "talon crankset"),
+    ("Crankset", "sram", "x0 dh"): ("sram", "x01 dh x sync crankset"),
+    ("Crankset", "sram", "x0 dh carbon"): ("sram", "x01 dh x sync crankset"),
     ("Crankset", "shimano", "saint"): ("shimano", "shimano saint fc m825 single 10 speed crankset"),
     ("BrakeLever", "brembo lever", ""): ("brembo gr pro gravity lever", ""),
+    ("BrakeLever", "brembo", "prototype"): ("brembo gr pro gravity", ""),
+    ("BrakeLever", "hope", "evo lever"): ("hope tech 4 evo red", ""),
+    ("BrakeLever", "shimano", "saint shimano"): ("shimano", "saint 820"),
+    ("BrakeLever", "shimano", "saint xtr"): ("shimano", "saint 820"),
+    ("BrakeLever", "shimano", "xtr saint"): ("shimano", "saint 820"),
     ("BrakeLever", "shimano", "xtr m9120"): ("shimano", "xtr 9120"),
+    ("Derailleur", "sram", "xx dh axs t type"): ("sram", "xx dh t type axs"),
+    ("Derailleur", "sram", "axs eagle t type"): ("sram", "xx dh t type axs"),
+    ("Derailleur", "sram", "x0 dh"): ("sram", "x01 dh"),
+    ("Wheels", "crankbrothers", ""): ("crankbrother", "synthesis dh alloy 2 0 i9"),
+    ("Wheels", "crankbrothers", "synthesis dh"): ("crankbrother", "synthesis dh alloy 2 0 i9"),
+    ("Wheels", "dt swiss", ""): ("dtswiss", "fanatik"),
     ("Wheels", "dt swiss", "ex471 + dt swiss 240"): ("dtswiss", "fanatik"),
+    ("Wheels", "reserve", "30dh carbon"): ("reserve", "30dhcarbon"),
+    ("Wheels", "reserve", "carbon dh"): ("reserve", "30dhcarbon"),
 }
 
 # ---------------------------------------------------------------- helpers

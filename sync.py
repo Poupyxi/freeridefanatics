@@ -20,6 +20,7 @@ Usage:
   python3 sync.py --offline FILE   # parse a local .xlsx instead of downloading
 """
 import json
+import io
 import os
 import re
 import ssl
@@ -29,6 +30,7 @@ import unicodedata
 import urllib.request
 
 import openpyxl
+from PIL import Image, ImageOps
 
 import build  # equip_image_slug + site generator
 
@@ -399,15 +401,29 @@ def download_photos(photos):
     for slug, url in photos.items():
         if not url.startswith("http"):
             continue
-        if any(os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{e}")) for e in ("jpg", "jpeg", "png", "webp")):
+        existing = [os.path.join(EQUIP_IMG_DIR, f"{slug}.{e}")
+                    for e in ("jpg", "jpeg", "png", "webp")
+                    if os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{e}"))]
+        valid_existing = False
+        for path in existing:
+            try:
+                with Image.open(path) as image:
+                    image.verify()
+                valid_existing = True
+            except (OSError, ValueError):
+                os.remove(path)
+                print(f"  ! removed invalid photo for {slug}")
+        if valid_existing:
             continue
-        ext = "png" if ".png" in url.lower() else "webp" if ".webp" in url.lower() else "jpg"
         try:
             data = fetch(url, timeout=20)
-            with open(os.path.join(EQUIP_IMG_DIR, f"{slug}.{ext}"), "wb") as f:
-                f.write(data)
+            with Image.open(io.BytesIO(data)) as source:
+                image = ImageOps.exif_transpose(source).convert("RGB")
+                image.thumbnail((600, 600), Image.LANCZOS)
+                image.save(os.path.join(EQUIP_IMG_DIR, f"{slug}.jpg"), "JPEG",
+                           quality=82, optimize=True, progressive=True)
             fetched += 1
-        except Exception as e:
+        except (OSError, ValueError) as e:
             print(f"  ! photo failed for {slug}: {e}")
     return fetched
 

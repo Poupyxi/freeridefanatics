@@ -84,10 +84,12 @@ FOLDER_TO_CATEGORY = {
 # component (for example alloy wheels for a carbon-wheel specification).
 PHOTO_ALIASES = {
     ("Frame", "atherton", "a 200 g"): ("atherton", "downhill200"),
+    ("Frame", "norco", "aurum hsp"): ("norco", "torrent dh"),
     ("Frame", "norco", "prototype dh"): ("norco", "torrent dh"),
     ("Frame", "norco", "dh prototype"): ("norco", "torrent dh"),
     ("Frame", "specialized", "demo"): ("s works", "demo"),
     ("RearShock", "ohlins", "prototype coil"): ("ohlins", "ttx22 m2 coil"),
+    ("RearShock", "float x2 factory", ""): ("fox", "float x2 factory 2026"),
     ("Handlebar", "cast components", "20mm rise"): ("cast", "sfx"),
     ("Handlebar", "fsa", "gradient aluminum"): ("fsa", "gradient aluminium"),
     ("Crankset", "north shore billet", "155mm"): ("north shore billet", "talon crankset"),

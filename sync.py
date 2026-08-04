@@ -46,7 +46,7 @@ HISTORY_CATEGORY = "UCI MTB World Cup DH 2026"
 TAB_EQUIP_WOMEN = "Equipment Women"
 TAB_EQUIP_MEN = "Equipment Men"
 TAB_PROFILES = "Profils"
-TAB_RESULTS = "Résultats 2026"
+TAB_RESULTS = ("Résultats 2026", "UCI World CUP 2026")
 TAB_LINKS = "equipment link"
 
 # Column headers in the equipment tabs → category keys used in riders.json
@@ -105,10 +105,12 @@ def fetch(url, timeout=60):
         return out.stdout
 
 def find_sheet(wb, name_part):
+    candidates = (name_part,) if isinstance(name_part, str) else name_part
     for ws in wb.worksheets:
-        if name_part.lower() in ws.title.lower():
+        if any(candidate.lower() in ws.title.lower() for candidate in candidates):
             return ws
-    raise SystemExit(f"Tab matching '{name_part}' not found — sheet layout changed?")
+    expected = "' or '".join(candidates)
+    raise SystemExit(f"Tab matching '{expected}' not found — sheet layout changed?")
 
 def clean(v):
     if v is None:

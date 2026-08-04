@@ -720,8 +720,6 @@ def bike_build_parts(equipment):
         return None
     fork = find_equip(equipment, "Fork")
     shock = find_equip(equipment, "RearShock")
-    if not fork and not shock:
-        return None
     return {"frame": frame, "fork": fork, "shock": shock}
 
 def bike_build_html(equipment):

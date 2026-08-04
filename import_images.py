@@ -73,9 +73,21 @@ FOLDER_TO_CATEGORY = {
     "Frame": "Frame", "Fork": "Fork", "Rear Shock": "RearShock",
     "Handle bar": "Handlebar", "Dropper Post": "DropperPost", "Seatpost": "DropperPost",
     "Saddle": "Saddle", "Crank": "Crankset", "Derailleur": "Derailleur",
-    "Brake Lever": "BrakeLever", "Grip": "GRIP", "Chain": "CHAIN", "Disk": "Disk",
+    "Brake": "BrakeLever", "Brake Lever": "BrakeLever", "Grip": "GRIP", "Chain": "CHAIN", "Disk": "Disk",
     "Wheels": "Wheels", "Tires": "Tires", "Pedals": "Pedals",
     "Shoes": "Shoes", "Helmet": "Helmet", "Protection": "Protection", "Goggles": "Goggles",
+}
+
+# Photo-library names occasionally describe a production family or use a
+# shorter trade name while the sheet keeps the exact race specification.
+# Keep these overrides explicit so a loose fuzzy match never shows the wrong
+# component (for example alloy wheels for a carbon-wheel specification).
+PHOTO_ALIASES = {
+    ("Frame", "norco", "prototype dh"): ("norco", "torrent dh"),
+    ("Frame", "norco", "dh prototype"): ("norco", "torrent dh"),
+    ("Handlebar", "cast components", "20mm rise"): ("cast", "sfx"),
+    ("Crankset", "shimano", "saint"): ("shimano", "shimano saint fc m825 single 10 speed crankset"),
+    ("BrakeLever", "shimano", "xtr m9120"): ("shimano", "xtr 9120"),
 }
 
 # ---------------------------------------------------------------- helpers
@@ -276,7 +288,11 @@ def import_equipment(riders, force, dry):
     used_files = set()
 
     for (cat, brand, model), slug in sorted(products.items()):
-        choice = pick_photo(index.get(cat, []), norm_text(brand), norm_text(model))
+        photo_brand, photo_model = PHOTO_ALIASES.get(
+            (cat, norm_text(brand), norm_text(model)),
+            (norm_text(brand), norm_text(model)),
+        )
+        choice = pick_photo(index.get(cat, []), photo_brand, photo_model)
         if not choice:
             missing.append(f"{slug}  ({cat}: {brand} {model})".strip())
             continue

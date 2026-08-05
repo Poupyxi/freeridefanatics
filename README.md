@@ -43,7 +43,7 @@ public link-share URL — no credentials needed) and maps:
 | `🔧 Equipment Women` / `🔧 Equipment Men` | each rider's parts, keyed by Instagram handle |
 | `👤 Profils` | name, country, hometown, DOB, team, sponsors, palmarès |
 | `📊 Résultats 2026` | country code + UCI points per round (drives all rankings) |
-| `equipment link` | product URL per part → the "Shop" buttons; optional `Photo` column |
+| `equipment link` | product URL, optional Amazon URL → conditional shop buttons; optional `Photo` column |
 
 Options:
 

@@ -683,18 +683,25 @@ def equip_item_html(item):
     main_model = detail_parts[0] if detail_parts else ""
     extra = " · ".join(detail_parts[1:]) if len(detail_parts) > 1 else ""
     title = " ".join([brand, main_model]).strip() or "—"
-    link = item.get("affiliate_link") or "#"
+    link = item.get("affiliate_link")
+    amazon_link = item.get("amazon_link")
     photo = has_equip_photo(item.get("category"), brand, main_model)
     photo_html = f'<span class="equip-thumb"><img src="../assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></span>' if photo else ""
+    detail_line = f'          <div class="detail">{esc(extra)}</div>\n' if extra else ""
+    actions = []
+    if link:
+        actions.append(f'<a class="shop-btn" href="{esc(link)}" target="_blank" rel="noopener sponsored">Details</a>')
+    if amazon_link:
+        actions.append(f'<a class="shop-btn amazon-btn" href="{esc(amazon_link)}" target="_blank" rel="noopener sponsored">Amazon</a>')
+    actions_html = f'<div class="equip-actions">{"".join(actions)}</div>' if actions else ""
+    actions_line = f"        {actions_html}\n" if actions_html else ""
     return f"""<div class="equip-item reveal">
         {photo_html}
         <div>
           <span class="cat">{esc(cat)}</span>
           <h4>{esc(title)}</h4>
-          {f'<div class="detail">{esc(extra)}</div>' if extra else ''}
-        </div>
-        <a class="shop-btn" href="{esc(link)}" target="_blank" rel="noopener sponsored">Details</a>
-      </div>"""
+{detail_line}        </div>
+{actions_line}      </div>"""
 
 def find_equip(equipment, category):
     """First item of a category, with its photo resolved (or None)."""
@@ -935,12 +942,14 @@ def build_best_equipment_carousel(riders):
             key = (brand, main_model)
             g = by_cat.setdefault(cat, {}).setdefault(key, {
                 "brand": brand, "model": main_model,
-                "points": 0, "rider_count": 0, "link": None,
+                "points": 0, "rider_count": 0, "link": None, "amazon_link": None,
             })
             g["points"] += pts
             g["rider_count"] += 1
             if not g["link"] and item.get("affiliate_link"):
                 g["link"] = item["affiliate_link"]
+            if not g["amazon_link"] and item.get("amazon_link"):
+                g["amazon_link"] = item["amazon_link"]
 
     # keep categories in preferred order; skip those without enough data for a
     # meaningful podium (needs 3+ distinct models and 8+ riders tracked)
@@ -963,13 +972,13 @@ def build_best_equipment_carousel(riders):
         rows = []
         for rank, g in enumerate(top3, start=1):
             title = " ".join([g["brand"], g["model"]]).strip() or "—"
-            link = g["link"]
+            amazon_link = g["amazon_link"]
             width = max(6, round(g["points"] / max_pts * 100))
             photo = has_equip_photo(cat, g["brand"], g["model"])
             thumb = f'<span class="p-thumb"><img src="assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></span>' if photo else ""
             thumb_line = f'\n              {thumb}' if thumb else ""
-            shop = (f'<a class="p-shop" href="{esc(link)}" target="_blank" '
-                    f'rel="noopener sponsored">Shop</a>' if link
+            shop = (f'<a class="p-shop" href="{esc(amazon_link)}" target="_blank" '
+                    f'rel="noopener sponsored">Amazon</a>' if amazon_link
                     else '<span class="p-shop is-muted">Tracked</span>')
             rows.append(f"""<div class="podium-item rank-{rank}">
               <span class="p-rank">{rank}</span>{thumb_line}

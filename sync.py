@@ -8,7 +8,7 @@ and regenerates data/riders.json from its tabs:
   - "🔧 Equipment Women" / "🔧 Equipment Men"  → per-rider equipment (keyed by Instagram)
   - "👤 Profils"                                → identity, team, sponsors, bio
   - "📊 Résultats 2026"                         → country code + UCI points per round
-  - "equipment link"                            → product page URL per part ("Shop" buttons)
+  - "equipment link"                            → product and Amazon URLs per part (shop buttons)
                                                   + optional Photo URL column (downloaded
                                                   into assets/img/equipment/ when filled)
 
@@ -262,10 +262,27 @@ def parse_links(ws):
     exact = {}
     index = {}
     category = None
+    headers = [norm_detail(clean(cell.value)) for cell in ws[1]]
+
+    def column_index(*names):
+        for name in names:
+            normalized = norm_detail(name)
+            if normalized in headers:
+                return headers.index(normalized)
+        return None
+
+    link_col = column_index("Link", "Product link", "Lien", "Lien produit")
+    amazon_col = column_index("Amazon", "Amazon FR COM", "Amazon link", "Lien Amazon")
+    photo_col = column_index("Photo", "Photo URL", "Image", "Image URL")
+    # Backward compatibility with the original three-column catalogue.
+    link_col = 2 if link_col is None else link_col
     for row in ws.iter_rows(min_row=2, values_only=True):
         cells = [clean(c) for c in row]
-        brand, detail, link = cells[0], cells[1], cells[2] if len(cells) > 2 else ""
-        photo = cells[3] if len(cells) > 3 else ""
+        brand = cells[0] if cells else ""
+        detail = cells[1] if len(cells) > 1 else ""
+        link = cells[link_col] if link_col < len(cells) else ""
+        amazon_link = cells[amazon_col] if amazon_col is not None and amazon_col < len(cells) else ""
+        photo = cells[photo_col] if photo_col is not None and photo_col < len(cells) else ""
         if not brand:
             continue
         if not detail and not link:  # section header row ("Frame", "Fork", …)
@@ -283,6 +300,7 @@ def parse_links(ws):
             "detail": norm_detail(canonical_detail),
             "main": norm_detail(canonical_main),
             "link": link or None,
+            "amazon_link": amazon_link or None,
             "photo": photo or None,
             "aliased": (build.norm_product_text(brand) != build.norm_product_text(canonical_brand)
                         or build.norm_product_text(detail_parts[0] if detail_parts else "")
@@ -355,6 +373,7 @@ def build_riders(wb):
             if entry is None and model_detail:
                 unmatched_links += 1
             link = entry["link"] if entry else None
+            amazon_link = entry["amazon_link"] if entry else None
             if entry and entry["photo"]:
                 photos[build.equip_image_slug(cat, brand, model_detail.split(";")[0])] = entry["photo"]
             items.append({
@@ -363,6 +382,7 @@ def build_riders(wb):
                 "model_detail": model_detail,
                 "brand_model": ";".join([brand, model_detail]) if model_detail else brand,
                 "affiliate_link": link,
+                "amazon_link": amazon_link,
             })
             if cat == "Frame" and bike is None:
                 bike = {"brand": brand, "model": model_detail}
@@ -447,6 +467,7 @@ def main():
 
     women = sum(1 for r in riders if r["gender_category"] == "Women Elite")
     linked = sum(1 for r in riders for i in r["equipment"] if i["affiliate_link"])
+    amazon_linked = sum(1 for r in riders for i in r["equipment"] if i["amazon_link"])
     total_items = sum(len(r["equipment"]) for r in riders)
 
     with open(DATA_PATH, "w", encoding="utf-8") as f:
@@ -454,7 +475,8 @@ def main():
         f.write("\n")
 
     print(f"riders.json: {len(riders)} riders ({women} women, {len(riders) - women} men)")
-    print(f"equipment:   {total_items} items, {linked} with shop link" +
+    print(f"equipment:   {total_items} items, {linked} with product link, "
+          f"{amazon_linked} with Amazon link" +
           (f", {unmatched} without a match in 'equipment link' tab" if unmatched else ""))
 
     if photos:

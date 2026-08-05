@@ -24,91 +24,104 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Fizik",
     "model_detail": "Alpaca X5",
     "brand_model": "Fizik;Alpaca X5",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH;165mm 36T",
     "brand_model": "SRAM;X01 DH;165mm 36T",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH;7-speed",
     "brand_model": "SRAM;X01 DH;7-speed",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code Ultimate",
     "brand_model": "SRAM;Code Ultimate",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Magic Mary (F) + Tacky Chan (R)",
     "brand_model": "Schwalbe;Magic Mary (F) + Tacky Chan (R)",
-    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary"
+    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary",
+    "amazon_link": "https://www.amazon.fr/dp/B071ZM21JG"
    },
    {
     "category": "Pedals",
     "brand": "HT",
     "model_detail": "X3Ti",
     "brand_model": "HT;X3Ti",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "DHaRCO",
     "model_detail": "",
     "brand_model": "DHaRCO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -181,91 +194,104 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Fizik",
     "model_detail": "Alpaca X5",
     "brand_model": "Fizik;Alpaca X5",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH;165mm 36T",
     "brand_model": "SRAM;X01 DH;165mm 36T",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH;7-speed",
     "brand_model": "SRAM;X01 DH;7-speed",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code Ultimate",
     "brand_model": "SRAM;Code Ultimate",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Magic Mary (F) + Tacky Chan (R)",
     "brand_model": "Schwalbe;Magic Mary (F) + Tacky Chan (R)",
-    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary"
+    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary",
+    "amazon_link": "https://www.amazon.fr/dp/B071ZM21JG"
    },
    {
     "category": "Pedals",
     "brand": "HT",
     "model_detail": "X3Ti",
     "brand_model": "HT;X3Ti",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "DHaRCO",
     "model_detail": "",
     "brand_model": "DHaRCO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -346,49 +372,56 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet 29/27.5",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet 29/27.5",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "GX DH",
     "brand_model": "SRAM;GX DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "",
     "brand_model": "Schwalbe",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -465,63 +498,72 @@
     "brand": "Scott",
     "model_detail": "Gambler RC;Mullet 27.5 rear custom chrome linkage",
     "brand_model": "Scott;Gambler RC;Mullet 27.5 rear custom chrome linkage",
-    "affiliate_link": "https://www.scott-sports.com/us/en/gambler"
+    "affiliate_link": "https://www.scott-sports.com/us/en/gambler",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory;Orange prototype tune",
     "brand_model": "Fox;40 Factory;Orange prototype tune",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Syncros",
     "model_detail": "",
     "brand_model": "Syncros",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "",
     "brand_model": "Shimano",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "",
     "brand_model": "Shimano",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "XTR M9120",
     "brand_model": "Shimano;XTR M9120",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "",
     "brand_model": "DT Swiss",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "",
     "brand_model": "Michelin",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -577,70 +619,80 @@
     "brand": "Pivot",
     "model_detail": "",
     "brand_model": "Pivot",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "SR Suntour",
     "model_detail": "RUX",
     "brand_model": "SR Suntour;RUX",
-    "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm"
+    "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "SR Suntour",
     "model_detail": "",
     "brand_model": "SR Suntour",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "ENVE",
     "model_detail": "",
     "brand_model": "ENVE",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Praxis Works",
     "model_detail": "",
     "brand_model": "Praxis Works",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Race Company",
     "model_detail": "",
     "brand_model": "Race Company",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "",
     "brand_model": "Michelin",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Shot Race Gear",
     "model_detail": "",
     "brand_model": "Shot Race Gear",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Delta Plus Group",
     "model_detail": "",
     "brand_model": "Delta Plus Group",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "Shot Race Gear",
     "model_detail": "",
     "brand_model": "Shot Race Gear",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -682,49 +734,56 @@
     "brand": "Santa Cruz",
     "model_detail": "V10;Carbon VPP",
     "brand_model": "Santa Cruz;V10;Carbon VPP",
-    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027"
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -789,77 +848,88 @@
     "brand": "Canyon",
     "model_detail": "Sender CFR;Large high-pivot",
     "brand_model": "Canyon;Sender CFR;Large high-pivot",
-    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html"
+    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Canyon",
     "model_detail": "G5 aluminum;38mm rise",
     "brand_model": "Canyon;G5 aluminum;38mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Ergon",
     "model_detail": "",
     "brand_model": "Ergon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X0 DH;165mm",
     "brand_model": "SRAM;X0 DH;165mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X0 DH;7-speed",
     "brand_model": "SRAM;X0 DH;7-speed",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven Ultimate",
     "brand_model": "SRAM;Maven Ultimate",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "240 hubs;MX",
     "brand_model": "DT Swiss;240 hubs;MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Shorty (F) + High Roller (R);DH casing",
     "brand_model": "Maxxis;Shorty (F) + High Roller (R);DH casing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -936,98 +1006,112 @@
     "brand": "Specialized",
     "model_detail": "Demo;Prototype pre-Demo11",
     "brand_model": "Specialized;Demo;Prototype pre-Demo11",
-    "affiliate_link": "https://www.specialized.com/us/en/s-works-demo-11/p/4293955"
+    "affiliate_link": "https://www.specialized.com/us/en/s-works-demo-11/p/4293955",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Öhlins",
     "model_detail": "DH38;Prototype electronic",
     "brand_model": "Öhlins;DH38;Prototype electronic",
-    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/"
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "Öhlins",
     "model_detail": "Prototype coil;Bar-mounted remote",
     "brand_model": "Öhlins;Prototype coil;Bar-mounted remote",
-    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/"
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/",
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Joystick",
     "model_detail": "Analog Carbon;35mm 780mm 20mm rise",
     "brand_model": "Joystick;Analog Carbon;35mm 780mm 20mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "AXS Eagle T-Type;165mm",
     "brand_model": "SRAM;AXS Eagle T-Type;165mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "AXS Eagle T-Type;Wireless",
     "brand_model": "SRAM;AXS Eagle T-Type;Wireless",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Brembo",
     "model_detail": "Prototype;2025 race season",
     "brand_model": "Brembo;Prototype;2025 race season",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "EX471 + DT Swiss 240;MX mullet",
     "brand_model": "DT Swiss;EX471 + DT Swiss 240;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Specialized",
     "model_detail": "Grid Gravity / Hillbilly;DH casing",
     "brand_model": "Specialized;Grid Gravity / Hillbilly;DH casing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Shoes",
     "brand": "Specialized",
     "model_detail": "2FO DH Clip",
     "brand_model": "Specialized;2FO DH Clip",
-    "affiliate_link": "https://www.specialized.com/us/en/2fo-dh-clip-mountain-bike-shoes/p/187385"
+    "affiliate_link": "https://www.specialized.com/us/en/2fo-dh-clip-mountain-bike-shoes/p/187385",
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Alpinestars",
     "model_detail": "",
     "brand_model": "Alpinestars",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Alpinestars",
     "model_detail": "",
     "brand_model": "Alpinestars",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "100%",
     "model_detail": "Status",
     "brand_model": "100%;Status",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -1069,56 +1153,64 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Team spec",
     "brand_model": "Commençal;Supreme DH V5.2;Team spec",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH",
     "brand_model": "SRAM;X01 DH",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH",
     "brand_model": "SRAM;X01 DH",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code",
     "brand_model": "SRAM;Code",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "",
     "brand_model": "Schwalbe",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -1174,91 +1266,104 @@
     "brand": "Canyon",
     "model_detail": "Sender CFR;Prototype high-pivot mullet 200mm",
     "brand_model": "Canyon;Sender CFR;Prototype high-pivot mullet 200mm",
-    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html"
+    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Charger 3",
     "brand_model": "RockShox;Boxxer Ultimate;Charger 3",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "DropperPost",
     "brand": "Ergon",
     "model_detail": "",
     "brand_model": "Ergon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "SRAM",
     "model_detail": "X01 DH",
     "brand_model": "SRAM;X01 DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH",
     "brand_model": "SRAM;X01 DH",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": "https://www.sram.com/en/sram/models/db-mvn-ult-a1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/db-mvn-ult-a1",
+    "amazon_link": "https://www.amazon.com/dp/B0CW9VSGP2"
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven Silver;4-piston",
     "brand_model": "SRAM;Maven Silver;4-piston",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R);DH MaxxGrip",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH MaxxGrip",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Disk",
     "brand": "DT Swiss",
     "model_detail": "FR1500",
     "brand_model": "DT Swiss;FR1500",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Shoes",
     "brand": "Troy Lee Designs",
     "model_detail": "",
     "brand_model": "Troy Lee Designs",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Troy Lee Designs",
     "model_detail": "",
     "brand_model": "Troy Lee Designs",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -1328,70 +1433,80 @@
     "brand": "Scott",
     "model_detail": "Gambler;XL progressive flip chip",
     "brand_model": "Scott;Gambler;XL progressive flip chip",
-    "affiliate_link": "https://www.scott-sports.com/us/en/gambler"
+    "affiliate_link": "https://www.scott-sports.com/us/en/gambler",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Saddle",
     "brand": "Syncros",
     "model_detail": "Kaslo",
     "brand_model": "Syncros;Kaslo",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;160mm",
     "brand_model": "Shimano;Saint;160mm",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Race Face",
     "model_detail": "ARC 30 Heavy Duty",
     "brand_model": "Race Face;ARC 30 Heavy Duty",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "",
     "brand_model": "Maxxis",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -1464,70 +1579,80 @@
     "brand": "Scott",
     "model_detail": "Gambler;XL reach 477mm",
     "brand_model": "Scott;Gambler;XL reach 477mm",
-    "affiliate_link": "https://www.scott-sports.com/us/en/gambler"
+    "affiliate_link": "https://www.scott-sports.com/us/en/gambler",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Saddle",
     "brand": "Syncros",
     "model_detail": "Kaslo",
     "brand_model": "Syncros;Kaslo",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;160mm",
     "brand_model": "Shimano;Saint;160mm",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint Shimano;Saint;TRP rotors 203/220mm",
     "brand_model": "Shimano;Saint Shimano;Saint;TRP rotors 203/220mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Race Face",
     "model_detail": "ARC 30 Heavy Duty",
     "brand_model": "Race Face;ARC 30 Heavy Duty",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "DH Mud;29\" F + 27.5\" R Rimpact insert",
     "brand_model": "Michelin;DH Mud;29\" F + 27.5\" R Rimpact insert",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -1597,84 +1722,96 @@
     "brand": "Trek",
     "model_detail": "Session;Prototype 2025",
     "brand_model": "Trek;Session;Prototype 2025",
-    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/"
+    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "",
     "brand_model": "DT Swiss",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "",
     "brand_model": "Michelin",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -1737,70 +1874,80 @@
     "brand": "Trek",
     "model_detail": "Session;Prototype 2025",
     "brand_model": "Trek;Session;Prototype 2025",
-    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/"
+    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer;BlackBox prototype",
     "brand_model": "RockShox;Boxxer;BlackBox prototype",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid;Prototype",
     "brand_model": "RockShox;Vivid;Prototype",
-    "affiliate_link": "https://j-techsuspension.co.uk/products/rockshox-rear-shock-vivid-coil-dh-ultimate-rc2-2027-without-tuning"
+    "affiliate_link": "https://j-techsuspension.co.uk/products/rockshox-rear-shock-vivid-coil-dh-ultimate-rc2-2027-without-tuning",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X0 DH",
     "brand_model": "SRAM;X0 DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Bontrager",
     "model_detail": "Prototype",
     "brand_model": "Bontrager;Prototype",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "",
     "brand_model": "Maxxis",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -1870,84 +2017,96 @@
     "brand": "Orbea",
     "model_detail": "Rallon DH;Carbon mullet 200mm",
     "brand_model": "Orbea;Rallon DH;Carbon mullet 200mm",
-    "affiliate_link": "https://www.orbea.com/en-us/rallon-dh"
+    "affiliate_link": "https://www.orbea.com/en-us/rallon-dh",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "Fatbar",
     "brand_model": "Renthal;Fatbar",
-    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748"
+    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748",
+    "amazon_link": "https://www.amazon.fr/dp/B0FHXR6Y7Q"
    },
    {
     "category": "DropperPost",
     "brand": "Fox",
     "model_detail": "Transfer Factory Live Valve Neo;Wireless",
     "brand_model": "Fox;Transfer Factory Live Valve Neo;Wireless",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Fizik",
     "model_detail": "",
     "brand_model": "Fizik",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "XTR",
     "brand_model": "Shimano;XTR",
-    "affiliate_link": "https://probikeshop.fr/products/manivelles-12v-shimano-xtr-fc-m9220"
+    "affiliate_link": "https://probikeshop.fr/products/manivelles-12v-shimano-xtr-fc-m9220",
+    "amazon_link": "https://www.amazon.fr/dp/B0FCXYVYFQ"
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "XTR;12-speed",
     "brand_model": "Shimano;XTR;12-speed",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-xtr-rd-m9100-sgs-1x12v-10-51t-chape-longue"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-xtr-rd-m9100-sgs-1x12v-10-51t-chape-longue",
+    "amazon_link": "https://www.amazon.fr/dp/B07F2KKDV2"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "XTR;4-piston",
     "brand_model": "Shimano;XTR;4-piston",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Oquo",
     "model_detail": "Mountain Control MC32 TEAM",
     "brand_model": "Oquo;Mountain Control MC32 TEAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R);DH MaxxGrip",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH MaxxGrip",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -2015,105 +2174,120 @@
     "brand": "Santa Cruz",
     "model_detail": "V10;Carbon size M",
     "brand_model": "Santa Cruz;V10;Carbon size M",
-    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027"
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "OneUp",
     "model_detail": "Carbon V2;35mm rise",
     "brand_model": "OneUp;Carbon V2;35mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Burgtec",
     "model_detail": "Cloud Boost",
     "brand_model": "Burgtec;Cloud Boost",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;160mm + Ochain 9°",
     "brand_model": "Shimano;Saint;160mm + Ochain 9°",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint;10-speed",
     "brand_model": "Shimano;Saint;10-speed",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Prototype;New Saint lever",
     "brand_model": "Shimano;Prototype;New Saint lever",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reserve",
     "model_detail": "30DH Carbon;Chris King hubs MX",
     "brand_model": "Reserve;30DH Carbon;Chris King hubs MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Prototype DH;MaxxGrip 29\"+27.5\"",
     "brand_model": "Maxxis;Prototype DH;MaxxGrip 29\"+27.5\"",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Helmet",
     "brand": "100%",
     "model_detail": "",
     "brand_model": "100%",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "100%",
     "model_detail": "Status",
     "brand_model": "100%;Status",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -2183,70 +2357,80 @@
     "brand": "Frameworks",
     "model_detail": "DH",
     "brand_model": "Frameworks;DH",
-    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame"
+    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
-    "model_detail": "Factory",
-    "brand_model": "Fox;Factory",
-    "affiliate_link": null
+    "model_detail": "Float X2 Factory",
+    "brand_model": "Fox;Float X2 Factory",
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "5DEV",
     "model_detail": "",
     "brand_model": "5DEV",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "TRP",
     "model_detail": "EVO DH",
     "brand_model": "TRP;EVO DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "TRP",
     "model_detail": "EVO PRO",
     "brand_model": "TRP;EVO PRO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "ENVE",
     "model_detail": "",
     "brand_model": "ENVE",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "",
     "brand_model": "Continental",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Shoes",
     "brand": "Bell",
     "model_detail": "",
     "brand_model": "Bell",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -2295,77 +2479,88 @@
     "brand": "Gamux",
     "model_detail": "Sego;Carbon gearbox belt-drive 6-bar",
     "brand_model": "Gamux;Sego;Carbon gearbox belt-drive 6-bar",
-    "affiliate_link": "https://shop.gamuxbikes.com/products/sego-2024-framekit"
+    "affiliate_link": "https://shop.gamuxbikes.com/products/sego-2024-framekit",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Manitou",
     "model_detail": "Dorado Pro",
     "brand_model": "Manitou;Dorado Pro",
-    "affiliate_link": "https://www.manitoumtb.com/dorado-pro"
+    "affiliate_link": "https://www.manitoumtb.com/dorado-pro",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "Manitou",
     "model_detail": "Mara Pro",
     "brand_model": "Manitou;Mara Pro",
-    "affiliate_link": "https://manitou.hayesbicycle.com/en-us/product-collections/mara-pro/"
+    "affiliate_link": "https://manitou.hayesbicycle.com/en-us/product-collections/mara-pro/",
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Protaper",
     "model_detail": "A38 Medium",
     "brand_model": "Protaper;A38 Medium",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Hope",
     "model_detail": "Carbon",
     "brand_model": "Hope;Carbon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Fizik",
     "model_detail": "",
     "brand_model": "Fizik",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Pinion",
     "model_detail": "C1.6i;155mm SmartShift electronic",
     "brand_model": "Pinion;C1.6i;155mm SmartShift electronic",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Hayes",
     "model_detail": "Dominion A4",
     "brand_model": "Hayes;Dominion A4",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reynolds",
     "model_detail": "Blacklabel 309/307;Carbon + Sun Ringle hubs",
     "brand_model": "Reynolds;Blacklabel 309/307;Carbon + Sun Ringle hubs",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Albert Gravity Pro",
     "brand_model": "Schwalbe;Albert Gravity Pro",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -2421,98 +2616,112 @@
     "brand": "Norco",
     "model_detail": "DH Prototype",
     "brand_model": "Norco;DH Prototype",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Coil",
     "brand_model": "Fox;DHX2 Coil",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Race Face",
     "model_detail": "",
     "brand_model": "Race Face",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Minion DHR II",
     "brand_model": "Maxxis;Minion DHR II",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Shoes",
     "brand": "Adidas",
     "model_detail": "Five Ten",
     "brand_model": "Adidas;Five Ten",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "POC",
     "model_detail": "",
     "brand_model": "POC",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "POC",
     "model_detail": "",
     "brand_model": "POC",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "POC",
     "model_detail": "",
     "brand_model": "POC",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [],
@@ -2546,49 +2755,56 @@
     "brand": "Pivot",
     "model_detail": "Phoenix;Carbon mullet DW6 dual-chain",
     "brand_model": "Pivot;Phoenix;Carbon mullet DW6 dual-chain",
-    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix"
+    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "GX DH",
     "brand_model": "SRAM;GX DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Kryptotal (F) + Argotal (R)",
     "brand_model": "Continental;Kryptotal (F) + Argotal (R)",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -2654,91 +2870,104 @@
     "brand": "Pivot",
     "model_detail": "Phoenix DH",
     "brand_model": "Pivot;Phoenix DH",
-    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix"
+    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid",
     "brand_model": "RockShox;Vivid",
-    "affiliate_link": "https://j-techsuspension.co.uk/products/rockshox-rear-shock-vivid-coil-dh-ultimate-rc2-2027-without-tuning"
+    "affiliate_link": "https://j-techsuspension.co.uk/products/rockshox-rear-shock-vivid-coil-dh-ultimate-rc2-2027-without-tuning",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "FatBar;770mm 30mm rise",
     "brand_model": "Renthal;FatBar;770mm 30mm rise",
-    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748"
+    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748",
+    "amazon_link": "https://www.amazon.fr/dp/B0FHXR6Y7Q"
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "XX",
     "brand_model": "SRAM;XX",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-xx-dhe-a1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-xx-dhe-a1",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "",
     "brand_model": "Continental",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet",
     "brand_model": "Crankbrothers;Mallet",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Helmet",
     "brand": "Troy Lee Designs",
     "model_detail": "",
     "brand_model": "Troy Lee Designs",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Troy Lee Designs",
     "model_detail": "",
     "brand_model": "Troy Lee Designs",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "Oakley",
     "model_detail": "",
     "brand_model": "Oakley",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -2780,56 +3009,64 @@
     "brand": "Atherton",
     "model_detail": "A.200.G;Prototype belt gearbox Ti-lug DW6",
     "brand_model": "Atherton;A.200.G;Prototype belt gearbox Ti-lug DW6",
-    "affiliate_link": "https://www.athertonbikes.com/a200-frame.html"
+    "affiliate_link": "https://www.athertonbikes.com/a200-frame.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "FSA",
     "model_detail": "Gradient aluminum;770mm 25mm rise",
     "brand_model": "FSA;Gradient aluminum;770mm 25mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "North Shore Billet",
     "model_detail": "155mm;Pinion 9-speed gearbox",
     "brand_model": "North Shore Billet;155mm;Pinion 9-speed gearbox",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Hayes",
     "model_detail": "Dominion A4",
     "brand_model": "Hayes;Dominion A4",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Mavic",
     "model_detail": "",
     "brand_model": "Mavic",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Kryptotal;Front SuperSoft 24 PSI + rear 28 PSI",
     "brand_model": "Continental;Kryptotal;Front SuperSoft 24 PSI + rear 28 PSI",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -2885,70 +3122,80 @@
     "brand": "Norco",
     "model_detail": "Prototype DH;Carbon rear triangle MX",
     "brand_model": "Norco;Prototype DH;Carbon rear triangle MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Cast Components",
     "model_detail": "20mm rise;760mm",
     "brand_model": "Cast Components;20mm rise;760mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "XTR M9120",
     "brand_model": "Shimano;XTR M9120",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Carbon;Chris King hubs MX",
     "brand_model": "Crankbrothers;Synthesis DH Carbon;Chris King hubs MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R);DH casing",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH casing",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    },
    {
     "category": "Shoes",
     "brand": "Five Ten",
     "model_detail": "Hellcat Pro clipless",
     "brand_model": "Five Ten;Hellcat Pro clipless",
-    "affiliate_link": "https://www.adidas.com/us/men-five_ten-hellcat-shoes"
+    "affiliate_link": "https://www.adidas.com/us/men-five_ten-hellcat-shoes",
+    "amazon_link": "https://www.amazon.fr/dp/B08XQSFBQM"
    }
   ],
   "competition_history": [
@@ -3018,63 +3265,72 @@
     "brand": "Santa Cruz",
     "model_detail": "V10;Carbon 208mm VPP",
     "brand_model": "Santa Cruz;V10;Carbon 208mm VPP",
-    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027"
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint;Prototype caliper",
     "brand_model": "Shimano;Saint;Prototype caliper",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reserve",
     "model_detail": "Carbon DH;Chris King hubs",
     "brand_model": "Reserve;Carbon DH;Chris King hubs",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R);DH MaxxGrip",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH MaxxGrip",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    }
   ],
   "competition_history": [
@@ -3137,63 +3393,72 @@
     "brand": "Santa Cruz",
     "model_detail": "V10;Carbon 208mm VPP",
     "brand_model": "Santa Cruz;V10;Carbon 208mm VPP",
-    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027"
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reserve",
     "model_detail": "Carbon DH;Chris King hubs",
     "brand_model": "Reserve;Carbon DH;Chris King hubs",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai;DH MaxxGrip",
     "brand_model": "Maxxis;Assegai;DH MaxxGrip",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    }
   ],
   "competition_history": [
@@ -3260,84 +3525,96 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet 2026 (YT Tues CF 2025)",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet 2026 (YT Tues CF 2025)",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;BlackBox Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;BlackBox Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Super Deluxe Coil;425lb spring",
     "brand_model": "RockShox;Super Deluxe Coil;425lb spring",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-sdlx-ufa-c2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-sdlx-ufa-c2",
+    "amazon_link": "https://www.amazon.fr/dp/B0D772H1GW"
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "Fatbar 35;760mm 20mm rise",
     "brand_model": "Renthal;Fatbar 35;760mm 20mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH;34T chainring",
     "brand_model": "SRAM;X01 DH;34T chainring",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH",
     "brand_model": "SRAM;X01 DH",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven Ultimate;200mm rotor",
     "brand_model": "SRAM;Maven Ultimate;200mm rotor",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "FR 1500;29\" front",
     "brand_model": "DT Swiss;FR 1500;29\" front",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Kryptotal;29\"x2.4 front + rear",
     "brand_model": "Continental;Kryptotal;29\"x2.4 front + rear",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Shoes",
     "brand": "Five Ten",
     "model_detail": "",
     "brand_model": "Five Ten",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "Oakley",
     "model_detail": "",
     "brand_model": "Oakley",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -3418,98 +3695,112 @@
     "brand": "Specialized",
     "model_detail": "Demo;Prototype pre-Demo11",
     "brand_model": "Specialized;Demo;Prototype pre-Demo11",
-    "affiliate_link": "https://www.specialized.com/us/en/s-works-demo-11/p/4293955"
+    "affiliate_link": "https://www.specialized.com/us/en/s-works-demo-11/p/4293955",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Öhlins",
     "model_detail": "DH38;Prototype electronic",
     "brand_model": "Öhlins;DH38;Prototype electronic",
-    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/"
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "Öhlins",
     "model_detail": "Prototype coil;Electronic damping",
     "brand_model": "Öhlins;Prototype coil;Electronic damping",
-    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/"
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/",
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Rental",
     "model_detail": "Fatbar M172;Carbon",
     "brand_model": "Rental;Fatbar M172;Carbon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH;165mm",
     "brand_model": "SRAM;X01 DH;165mm",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH;7-speed",
     "brand_model": "SRAM;X01 DH;7-speed",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Brembo lever",
     "model_detail": "",
     "brand_model": "Brembo lever",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "EX471 + DT Swiss 240;MX mullet",
     "brand_model": "DT Swiss;EX471 + DT Swiss 240;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Specialized",
     "model_detail": "Butcher 2.5",
     "brand_model": "Specialized;Butcher 2.5",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Shoes",
     "brand": "Specialized",
     "model_detail": "2FO DH Clip",
     "brand_model": "Specialized;2FO DH Clip",
-    "affiliate_link": "https://www.specialized.com/us/en/2fo-dh-clip-mountain-bike-shoes/p/187385"
+    "affiliate_link": "https://www.specialized.com/us/en/2fo-dh-clip-mountain-bike-shoes/p/187385",
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Alpinestars",
     "model_detail": "",
     "brand_model": "Alpinestars",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Alpinestars",
     "model_detail": "",
     "brand_model": "Alpinestars",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "100%",
     "model_detail": "",
     "brand_model": "100%",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -3579,8 +3870,52 @@
    "ridewill.it"
   ],
   "bio": "- Italy champion junior DH 2017",
-  "bike": null,
-  "equipment": [],
+  "bike": {
+   "brand": "Santa Cruz",
+   "model": "V10;MX mullet"
+  },
+  "equipment": [
+   {
+    "category": "Frame",
+    "brand": "Santa Cruz",
+    "model_detail": "V10;MX mullet",
+    "brand_model": "Santa Cruz;V10;MX mullet",
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
+   },
+   {
+    "category": "Fork",
+    "brand": "Öhlins",
+    "model_detail": "DH38;Prototype electronic",
+    "brand_model": "Öhlins;DH38;Prototype electronic",
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/",
+    "amazon_link": null
+   },
+   {
+    "category": "RearShock",
+    "brand": "Öhlins",
+    "model_detail": "Prototype coil",
+    "brand_model": "Öhlins;Prototype coil",
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/",
+    "amazon_link": null
+   },
+   {
+    "category": "Handlebar",
+    "brand": "Renthal",
+    "model_detail": "FatBar",
+    "brand_model": "Renthal;FatBar",
+    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748",
+    "amazon_link": "https://www.amazon.fr/dp/B0FHXR6Y7Q"
+   },
+   {
+    "category": "BrakeLever",
+    "brand": "Brembo lever",
+    "model_detail": "",
+    "brand_model": "Brembo lever",
+    "affiliate_link": null,
+    "amazon_link": null
+   }
+  ],
   "competition_history": [
    {
     "year": 2026,
@@ -3636,70 +3971,80 @@
     "brand": "Canyon",
     "model_detail": "Sender CFR",
     "brand_model": "Canyon;Sender CFR",
-    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html"
+    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Canyon",
     "model_detail": "G5",
     "brand_model": "Canyon;G5",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X0 DH",
     "brand_model": "SRAM;X0 DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X0 DH;7-speed",
     "brand_model": "SRAM;X0 DH;7-speed",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "",
     "brand_model": "DT Swiss",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "",
     "brand_model": "Maxxis",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -3762,84 +4107,96 @@
     "brand": "Santa Cruz",
     "model_detail": "V10;Carbon XL MX",
     "brand_model": "Santa Cruz;V10;Carbon XL MX",
-    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027"
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "OneUp",
     "model_detail": "Carbon V2",
     "brand_model": "OneUp;Carbon V2",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Burgtec",
     "model_detail": "Cloud Boost",
     "brand_model": "Burgtec;Cloud Boost",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;+ Ochain",
     "brand_model": "Shimano;Saint;+ Ochain",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Prototype",
     "brand_model": "Shimano;Prototype",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reserve",
     "model_detail": "30DH Carbon;Chris King hubs MX",
     "brand_model": "Reserve;30DH Carbon;Chris King hubs MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Prototype DH;MaxxGrip 29\"+27.5\"",
     "brand_model": "Maxxis;Prototype DH;MaxxGrip 29\"+27.5\"",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -3897,49 +4254,56 @@
     "brand": "Norco",
     "model_detail": "Aurum HSP",
     "brand_model": "Norco;Aurum HSP",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Float X2 Factory",
     "model_detail": "",
     "brand_model": "Float X2 Factory",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Shoes",
     "brand": "Five Ten",
     "model_detail": "",
     "brand_model": "Five Ten",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "POC",
     "model_detail": "",
     "brand_model": "POC",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "POC",
     "model_detail": "",
     "brand_model": "POC",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "POC",
     "model_detail": "",
     "brand_model": "POC",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -4002,56 +4366,64 @@
     "brand": "Atherton",
     "model_detail": "A.200.G;Prototype",
     "brand_model": "Atherton;A.200.G;Prototype",
-    "affiliate_link": "https://www.athertonbikes.com/a200-frame.html"
+    "affiliate_link": "https://www.athertonbikes.com/a200-frame.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "FSA",
     "model_detail": "Gradient;770mm 25mm rise",
     "brand_model": "FSA;Gradient;770mm 25mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "North Shore Billet",
     "model_detail": "Talon Crankset",
     "brand_model": "North Shore Billet;Talon Crankset",
-    "affiliate_link": "https://northshorebillet.com/products/talon-crankset"
+    "affiliate_link": "https://northshorebillet.com/products/talon-crankset",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Hayes",
     "model_detail": "Dominion A4;Galfer rotors",
     "brand_model": "Hayes;Dominion A4;Galfer rotors",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Mavic",
     "model_detail": "",
     "brand_model": "Mavic",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Kryptotal;Downhill SuperSoft",
     "brand_model": "Continental;Kryptotal;Downhill SuperSoft",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -4114,49 +4486,56 @@
     "brand": "Orbea",
     "model_detail": "Rallon DH;200mm GravityLink",
     "brand_model": "Orbea;Rallon DH;200mm GravityLink",
-    "affiliate_link": "https://www.orbea.com/en-us/rallon-dh"
+    "affiliate_link": "https://www.orbea.com/en-us/rallon-dh",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "FatBar",
     "brand_model": "Renthal;FatBar",
-    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748"
+    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748",
+    "amazon_link": "https://www.amazon.fr/dp/B0FHXR6Y7Q"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "XTR",
     "brand_model": "Shimano;XTR",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -4212,77 +4591,88 @@
     "brand": "Pivot",
     "model_detail": "Phoenix;2026",
     "brand_model": "Pivot;Phoenix;2026",
-    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix"
+    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "Fatbar 35;30mm rise 770mm",
     "brand_model": "Renthal;Fatbar 35;30mm rise 770mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "WTB",
     "model_detail": "Solano",
     "brand_model": "WTB;Solano",
-    "affiliate_link": "https://www.wtb.com/products/solano-bike-saddle"
+    "affiliate_link": "https://www.wtb.com/products/solano-bike-saddle",
+    "amazon_link": "https://www.amazon.fr/dp/B0DVDYWP66"
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;165mm dual-chain",
     "brand_model": "Shimano;Saint;165mm dual-chain",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint;10-speed",
     "brand_model": "Shimano;Saint;10-speed",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint / XTR",
     "brand_model": "Shimano;Saint / XTR",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reynolds",
     "model_detail": "Blacklabel DH 287r;MX",
     "brand_model": "Reynolds;Blacklabel DH 287r;MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Argotal DH",
     "brand_model": "Continental;Argotal DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -4345,63 +4735,72 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH",
     "brand_model": "SRAM;X01 DH",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH;7-speed",
     "brand_model": "SRAM;X01 DH;7-speed",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code",
     "brand_model": "SRAM;Code",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Magic Mary (F) + Tacky Chan (R)",
     "brand_model": "Schwalbe;Magic Mary (F) + Tacky Chan (R)",
-    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary"
+    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary",
+    "amazon_link": "https://www.amazon.fr/dp/B071ZM21JG"
    }
   ],
   "competition_history": [
@@ -4443,77 +4842,88 @@
     "brand": "Giant",
     "model_detail": "Glory Advanced;Size M/L",
     "brand_model": "Giant;Glory Advanced;Size M/L",
-    "affiliate_link": "https://www.giant-bicycles.com/us/showcase/glory-advanced-frameset"
+    "affiliate_link": "https://www.giant-bicycles.com/us/showcase/glory-advanced-frameset",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "alloy 31.8mm;30mm rise",
     "brand_model": "Burgtec;alloy 31.8mm;30mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Burgtec",
     "model_detail": "The Cloud",
     "brand_model": "Burgtec;The Cloud",
-    "affiliate_link": "https://burgtec-usa.com/products/burgtec-the-cloud-boost-saddle"
+    "affiliate_link": "https://burgtec-usa.com/products/burgtec-the-cloud-boost-saddle",
+    "amazon_link": "https://www.amazon.fr/dp/B08HR4D2J3"
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;165mm + Ochain 9°",
     "brand_model": "Shimano;Saint;165mm + Ochain 9°",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint;Finned metallic pads",
     "brand_model": "Shimano;Saint;Finned metallic pads",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Giant",
     "model_detail": "Custom team spec;MX 447mm CS",
     "brand_model": "Giant;Custom team spec;MX 447mm CS",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai 29\"x2.5 (F) + DHR II 27.5\"x2.4 (R);CushCore Pro",
     "brand_model": "Maxxis;Assegai 29\"x2.5 (F) + DHR II 27.5\"x2.4 (R);CushCore Pro",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    },
    {
     "category": "Pedals",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -4590,21 +5000,24 @@
     "brand": "Yeti",
     "model_detail": "Special Projects DH;Prototype",
     "brand_model": "Yeti;Special Projects DH;Prototype",
-    "affiliate_link": "https://yeticycles.com/en-us/bikes/lte"
+    "affiliate_link": "https://yeticycles.com/en-us/bikes/lte",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    }
   ],
   "competition_history": [
@@ -4648,91 +5061,104 @@
     "brand": "Nukeproof",
     "model_detail": "Dissent;proto proteam",
     "brand_model": "Nukeproof;Dissent;proto proteam",
-    "affiliate_link": "https://us.nukeproof.com/products/2022-dissent-275-frame"
+    "affiliate_link": "https://us.nukeproof.com/products/2022-dissent-275-frame",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "XX DH AXS T-Type",
     "brand_model": "SRAM;XX DH AXS T-Type",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code",
     "brand_model": "SRAM;Code",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "CHAIN",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Magic Mary (F) + Tacky Chan (R)",
     "brand_model": "Schwalbe;Magic Mary (F) + Tacky Chan (R)",
-    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary"
+    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary",
+    "amazon_link": "https://www.amazon.fr/dp/B071ZM21JG"
    },
    {
     "category": "Shoes",
     "brand": "Leatt",
     "model_detail": "",
     "brand_model": "Leatt",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Leatt",
     "model_detail": "",
     "brand_model": "Leatt",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Leatt",
     "model_detail": "",
     "brand_model": "Leatt",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "Leatt",
     "model_detail": "",
     "brand_model": "Leatt",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [],
@@ -4768,77 +5194,88 @@
     "brand": "Frameworks",
     "model_detail": "DH",
     "brand_model": "Frameworks;DH",
-    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame"
+    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Spank",
     "model_detail": "Spike 35 Vibrocore;750mm 25mm rise",
     "brand_model": "Spank;Spike 35 Vibrocore;750mm 25mm rise",
-    "affiliate_link": "https://thegravitycartel.com/collections/handlebars/products/spike-35-vibrocore"
+    "affiliate_link": "https://thegravitycartel.com/collections/handlebars/products/spike-35-vibrocore",
+    "amazon_link": "https://www.amazon.com/dp/B079F3DPDQ"
    },
    {
     "category": "Crankset",
     "brand": "5DEV",
     "model_detail": "Titanium MTB Cranks;raw Ti",
     "brand_model": "5DEV;Titanium MTB Cranks;raw Ti",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "TRP",
     "model_detail": "DH-R Evo",
     "brand_model": "TRP;DH-R Evo",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "GRIP",
     "brand": "ODI",
     "model_detail": "RUFFIAN V2.1;black",
     "brand_model": "ODI;RUFFIAN V2.1;black",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "CHAIN",
     "brand": "KMC",
     "model_detail": "X.gold",
     "brand_model": "KMC;X.gold",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "ENVE",
     "model_detail": "M",
     "brand_model": "ENVE;M",
-    "affiliate_link": "https://enve.com/collections/m-series"
+    "affiliate_link": "https://enve.com/collections/m-series",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Kryptotal DH;SuperSoft",
     "brand_model": "Continental;Kryptotal DH;SuperSoft",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -4908,70 +5345,80 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet 29/27.5 220mm",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet 29/27.5 220mm",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;BlackBox custom",
     "brand_model": "RockShox;Boxxer Ultimate;BlackBox custom",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Super Deluxe / Vivid",
     "brand_model": "RockShox;Super Deluxe / Vivid",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-sdlx-ufa-c2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-sdlx-ufa-c2",
+    "amazon_link": "https://www.amazon.fr/dp/B0D772H1GW"
    },
    {
     "category": "Handlebar",
     "brand": "ENVE",
     "model_detail": "",
     "brand_model": "ENVE",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X0 DH",
     "brand_model": "SRAM;X0 DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X0 DH",
     "brand_model": "SRAM;X0 DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code RSC",
     "brand_model": "SRAM;Code RSC",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "prototype tires",
     "brand_model": "Schwalbe;prototype tires",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -5041,70 +5488,80 @@
     "brand": "Scott",
     "model_detail": "Gambler;XL team race spec",
     "brand_model": "Scott;Gambler;XL team race spec",
-    "affiliate_link": "https://www.scott-sports.com/us/en/gambler"
+    "affiliate_link": "https://www.scott-sports.com/us/en/gambler",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Saddle",
     "brand": "Syncros",
     "model_detail": "Kaslo",
     "brand_model": "Syncros;Kaslo",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;160mm",
     "brand_model": "Shimano;Saint;160mm",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint;TRP rotors",
     "brand_model": "Shimano;Saint;TRP rotors",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Race Face",
     "model_detail": "ARC 30 Heavy Duty",
     "brand_model": "Race Face;ARC 30 Heavy Duty",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "DH",
     "brand_model": "Michelin;DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -5160,112 +5617,128 @@
     "brand": "Trek",
     "model_detail": "Session;Prototype 2025",
     "brand_model": "Trek;Session;Prototype 2025",
-    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/"
+    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code",
     "brand_model": "SRAM;Code",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "GRIP",
     "brand": "ODI",
     "model_detail": "",
     "brand_model": "ODI",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "CHAIN",
     "brand": "SRAM",
     "model_detail": "XX DH",
     "brand_model": "SRAM;XX DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Bontrager",
     "model_detail": "Line DH 30",
     "brand_model": "Bontrager;Line DH 30",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R)",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R)",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Shoes",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [],
@@ -5299,42 +5772,48 @@
     "brand": "Zerode",
     "model_detail": "G3;Gearbox belt-drive",
     "brand_model": "Zerode;G3;Gearbox belt-drive",
-    "affiliate_link": "https://zerode.eu/products/g3"
+    "affiliate_link": "https://zerode.eu/products/g3",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "SR Suntour",
     "model_detail": "RUX 38",
     "brand_model": "SR Suntour;RUX 38",
-    "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm"
+    "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "SR Suntour",
     "model_detail": "Voro Coil;Custom Styrian Flow",
     "brand_model": "SR Suntour;Voro Coil;Custom Styrian Flow",
-    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil"
+    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil",
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Hope",
     "model_detail": "pinion",
     "brand_model": "Hope;pinion",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Hope",
     "model_detail": "EVO V6Ti;6-piston",
     "brand_model": "Hope;EVO V6Ti;6-piston",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "DH",
     "brand_model": "Michelin;DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -5383,105 +5862,120 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet Large",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet Large",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH;31.8mm 30mm rise",
     "brand_model": "Burgtec;Ride Wide DH;31.8mm 30mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress Alloy",
     "brand_model": "Burgtec;Xpress Alloy",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Fizik",
     "model_detail": "Alpaca X5",
     "brand_model": "Fizik;Alpaca X5",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH;165mm 36T",
     "brand_model": "SRAM;X01 DH;165mm 36T",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH;7-speed",
     "brand_model": "SRAM;X01 DH;7-speed",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code Ultimate Stealth",
     "brand_model": "SRAM;Code Ultimate Stealth",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Magic Mary (F) + Tacky Chan (R);First Ride 29\"+27.5\"",
     "brand_model": "Schwalbe;Magic Mary (F) + Tacky Chan (R);First Ride 29\"+27.5\"",
-    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary"
+    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary",
+    "amazon_link": "https://www.amazon.fr/dp/B071ZM21JG"
    },
    {
     "category": "Pedals",
     "brand": "HT",
     "model_detail": "X3Ti",
     "brand_model": "HT;X3Ti",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Bluegrass",
     "model_detail": "Legit Carbon",
     "brand_model": "Bluegrass;Legit Carbon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "DHaRCO",
     "model_detail": "",
     "brand_model": "DHaRCO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "100%",
     "model_detail": "",
     "brand_model": "100%",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -5558,63 +6052,72 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH",
     "brand_model": "SRAM;X01 DH",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH;7-speed",
     "brand_model": "SRAM;X01 DH;7-speed",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code",
     "brand_model": "SRAM;Code",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Magic Mary (F) + Tacky Chan (R)",
     "brand_model": "Schwalbe;Magic Mary (F) + Tacky Chan (R)",
-    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary"
+    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary",
+    "amazon_link": "https://www.amazon.fr/dp/B071ZM21JG"
    }
   ],
   "competition_history": [
@@ -5689,84 +6192,96 @@
     "brand": "Mondraker",
     "model_detail": "Summum;2025 Zero Suspension System",
     "brand_model": "Mondraker;Summum;2025 Zero Suspension System",
-    "affiliate_link": "https://mondraker.com/us/en/2026-summum-rr-mullet-frameset"
+    "affiliate_link": "https://mondraker.com/us/en/2026-summum-rr-mullet-frameset",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "XX DH AXS T-Type;7-speed",
     "brand_model": "SRAM;XX DH AXS T-Type;7-speed",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "XX DH AXS T-Type",
     "brand_model": "SRAM;XX DH AXS T-Type",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven Ultimate",
     "brand_model": "SRAM;Maven Ultimate",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "EX1700",
     "brand_model": "DT Swiss;EX1700",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Shoes",
     "brand": "100%",
     "model_detail": "",
     "brand_model": "100%",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "100%",
     "model_detail": "Status",
     "brand_model": "100%;Status",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "100%",
     "model_detail": "",
     "brand_model": "100%",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "100%",
     "model_detail": "Armega",
     "brand_model": "100%;Armega",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -5845,56 +6360,64 @@
     "brand": "Santa Cruz",
     "model_detail": "V10;MX mullet",
     "brand_model": "Santa Cruz;V10;MX mullet",
-    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027"
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Burgtec",
     "model_detail": "Cloud",
     "brand_model": "Burgtec;Cloud",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -5957,77 +6480,88 @@
     "brand": "Zerode",
     "model_detail": "G3;Aluminium gearbox high-pivot DH",
     "brand_model": "Zerode;G3;Aluminium gearbox high-pivot DH",
-    "affiliate_link": "https://zerode.eu/products/g3"
+    "affiliate_link": "https://zerode.eu/products/g3",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "SR Suntour",
     "model_detail": "RUX 29;Custom damper tune",
     "brand_model": "SR Suntour;RUX 29;Custom damper tune",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "SR Suntour",
     "model_detail": "Voro Coil;Custom Styrian Flow",
     "brand_model": "SR Suntour;Voro Coil;Custom Styrian Flow",
-    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil"
+    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil",
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "FatBar Carbon 31.8mm;20mm rise",
     "brand_model": "Renthal;FatBar Carbon 31.8mm;20mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "SDG",
     "model_detail": "Carbon I-Fly",
     "brand_model": "SDG;Carbon I-Fly",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "SDG",
     "model_detail": "Carbon I-Fly",
     "brand_model": "SDG;Carbon I-Fly",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Pinion",
     "model_detail": "Ci6 SmartShift;155mm cranks",
     "brand_model": "Pinion;Ci6 SmartShift;155mm cranks",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Hope",
     "model_detail": "Evo lever",
     "brand_model": "Hope;Evo lever",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Hope",
     "model_detail": "Pro 5 hubs + Fortus 25/30;MX",
     "brand_model": "Hope;Pro 5 hubs + Fortus 25/30;MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "DH22 Racing Line;2.4\"",
     "brand_model": "Michelin;DH22 Racing Line;2.4\"",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -6097,63 +6631,72 @@
     "brand": "Santa Cruz",
     "model_detail": "V10;Carbon",
     "brand_model": "Santa Cruz;V10;Carbon",
-    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027"
+    "affiliate_link": "https://www.santacruzbicycles.com/products/v10-frame-2027",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "SR Suntour",
     "model_detail": "RUX 38",
     "brand_model": "SR Suntour;RUX 38",
-    "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm"
+    "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "SR Suntour",
     "model_detail": "Voro Coil;Custom Styrian Flow",
     "brand_model": "SR Suntour;Voro Coil;Custom Styrian Flow",
-    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil"
+    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil",
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Deity",
     "model_detail": "",
     "brand_model": "Deity",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "TRP",
     "model_detail": "",
     "brand_model": "TRP",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "TRP",
     "model_detail": "EVO DH",
     "brand_model": "TRP;EVO DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "TRP",
     "model_detail": "EVO PRO",
     "brand_model": "TRP;EVO PRO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "GRIP",
     "brand": "Deity",
     "model_detail": "",
     "brand_model": "Deity",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "",
     "brand_model": "DT Swiss",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -6202,91 +6745,104 @@
     "brand": "Crestline",
     "model_detail": "",
     "brand_model": "Crestline",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Öhlins",
     "model_detail": "",
     "brand_model": "Öhlins",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "Öhlins",
     "model_detail": "",
     "brand_model": "Öhlins",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "FSA",
     "model_detail": "",
     "brand_model": "FSA",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "OneUp",
     "model_detail": "",
     "brand_model": "OneUp",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Fizik",
     "model_detail": "",
     "brand_model": "Fizik",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "FSA",
     "model_detail": "",
     "brand_model": "FSA",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reserve",
     "model_detail": "",
     "brand_model": "Reserve",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Kryptotal",
     "brand_model": "Continental;Kryptotal",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -6328,70 +6884,80 @@
     "brand": "Yeti",
     "model_detail": "Special Projects DH;High-pivot 6-bar prototype",
     "brand_model": "Yeti;Special Projects DH;High-pivot 6-bar prototype",
-    "affiliate_link": "https://yeticycles.com/en-us/bikes/lte"
+    "affiliate_link": "https://yeticycles.com/en-us/bikes/lte",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH Carbon",
     "brand_model": "Burgtec;Ride Wide DH Carbon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "FR 1500;MX mullet",
     "brand_model": "DT Swiss;FR 1500;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R);3C DH",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R);3C DH",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -6449,77 +7015,88 @@
     "brand": "Zerode",
     "model_detail": "G3;Cream Custom",
     "brand_model": "Zerode;G3;Cream Custom",
-    "affiliate_link": "https://zerode.eu/products/g3"
+    "affiliate_link": "https://zerode.eu/products/g3",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "SR Suntour",
     "model_detail": "RUX 29;Custom damper tune",
     "brand_model": "SR Suntour;RUX 29;Custom damper tune",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "SR Suntour",
     "model_detail": "Voro Coil;400lb custom tune",
     "brand_model": "SR Suntour;Voro Coil;400lb custom tune",
-    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil"
+    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil",
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "Fatbar M172;Carbon",
     "brand_model": "Renthal;Fatbar M172;Carbon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Pinion",
     "model_detail": "C1.9;9-speed gearbox + Gates belt",
     "brand_model": "Pinion;C1.9;9-speed gearbox + Gates belt",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Pinion",
     "model_detail": "C1.9 gearbox",
     "brand_model": "Pinion;C1.9 gearbox",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Hope",
     "model_detail": "GR4",
     "brand_model": "Hope;GR4",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Hope",
     "model_detail": "Pro 5 hubs + Fortus 30 rims",
     "brand_model": "Hope;Pro 5 hubs + Fortus 30 rims",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Disk",
     "brand": "Hope Floating Disc Brake - HBSP330",
     "model_detail": "",
     "brand_model": "Hope Floating Disc Brake - HBSP330",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Michelin",
     "model_detail": "",
     "brand_model": "Michelin",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -6589,84 +7166,96 @@
     "brand": "Orbea",
     "model_detail": "Rallon DH;Carbon mullet 200mm",
     "brand_model": "Orbea;Rallon DH;Carbon mullet 200mm",
-    "affiliate_link": "https://www.orbea.com/en-us/rallon-dh"
+    "affiliate_link": "https://www.orbea.com/en-us/rallon-dh",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Oquo",
     "model_detail": "Mountain Control MC20 Alu SL;800mm",
     "brand_model": "Oquo;Mountain Control MC20 Alu SL;800mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "XTR M9120",
     "brand_model": "Shimano;XTR M9120",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Oquo",
     "model_detail": "MC32 TEAM;29\" F + 27.5\" R",
     "brand_model": "Oquo;MC32 TEAM;29\" F + 27.5\" R",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R);DH MaxxGrip",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH MaxxGrip",
-    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/"
+    "affiliate_link": "https://www.maxxis.com/us/tire/assegai/",
+    "amazon_link": "https://www.amazon.fr/dp/B08NDJDKD3"
    },
    {
     "category": "Helmet",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Goggles",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -6717,70 +7306,80 @@
     "brand": "Canyon",
     "model_detail": "Sender CFR;Large reach 492mm",
     "brand_model": "Canyon;Sender CFR;Large reach 492mm",
-    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html"
+    "affiliate_link": "https://www.canyon.com/en-us/mountain-bikes/downhill-bikes/sender/sender-cfr-team/3655.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Canyon",
     "model_detail": "G5 aluminum;40mm rise 790mm",
     "brand_model": "Canyon;G5 aluminum;40mm rise 790mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X0 DH carbon;165mm + Ochain 9°",
     "brand_model": "SRAM;X0 DH carbon;165mm + Ochain 9°",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X0 DH;7-speed",
     "brand_model": "SRAM;X0 DH;7-speed",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven Ultimate",
     "brand_model": "SRAM;Maven Ultimate",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "FR1500 + DT Swiss 240;MX mullet",
     "brand_model": "DT Swiss;FR1500 + DT Swiss 240;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "High Roller;29\" F + 27.5\" R DH",
     "brand_model": "Maxxis;High Roller;29\" F + 27.5\" R DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -6850,84 +7449,96 @@
     "brand": "Trek",
     "model_detail": "Session;Prototype 2025",
     "brand_model": "Trek;Session;Prototype 2025",
-    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/"
+    "affiliate_link": "https://www.trekbikes.com/us/en_US/session/",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "RockShox",
     "model_detail": "Boxxer Ultimate;Flight Attendant",
     "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2",
+    "amazon_link": "https://www.amazon.fr/dp/B0CDH3TFTJ"
    },
    {
     "category": "RearShock",
     "brand": "RockShox",
     "model_detail": "Vivid Coil Ultimate",
     "brand_model": "RockShox;Vivid Coil Ultimate",
-    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1",
+    "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH",
     "brand_model": "Burgtec;Ride Wide DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "",
     "brand_model": "DT Swiss",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "",
     "brand_model": "Maxxis",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Helmet",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "Fox Racing",
     "model_detail": "",
     "brand_model": "Fox Racing",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -6985,70 +7596,80 @@
     "brand": "Frameworks",
     "model_detail": "DH",
     "brand_model": "Frameworks;DH",
-    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame"
+    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Spank",
     "model_detail": "Spike 35 Vibrocore",
     "brand_model": "Spank;Spike 35 Vibrocore",
-    "affiliate_link": "https://thegravitycartel.com/collections/handlebars/products/spike-35-vibrocore"
+    "affiliate_link": "https://thegravitycartel.com/collections/handlebars/products/spike-35-vibrocore",
+    "amazon_link": "https://www.amazon.com/dp/B079F3DPDQ"
    },
    {
     "category": "Crankset",
     "brand": "5DEV",
     "model_detail": "R-SPEC;165mm + Ochain",
     "brand_model": "5DEV;R-SPEC;165mm + Ochain",
-    "affiliate_link": "https://ride5dev.com/products/titanium-mtb-cranks-copy"
+    "affiliate_link": "https://ride5dev.com/products/titanium-mtb-cranks-copy",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X0 DH",
     "brand_model": "SRAM;X0 DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "TRP",
     "model_detail": "EVO PRO",
     "brand_model": "TRP;EVO PRO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "ENVE",
     "model_detail": "Dark6;Mullet MX",
     "brand_model": "ENVE;Dark6;Mullet MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Argotal (F) + Kryptotal (R);DH SuperSoft",
     "brand_model": "Continental;Argotal (F) + Kryptotal (R);DH SuperSoft",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -7115,91 +7736,104 @@
     "brand": "Commençal",
     "model_detail": "Supreme DH V5.2;Mullet",
     "brand_model": "Commençal;Supreme DH V5.2;Mullet",
-    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html"
+    "affiliate_link": "https://www.commencal.com/us/en/landing-supreme-dh-v5-2.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH;31.8mm 30mm rise",
     "brand_model": "Burgtec;Ride Wide DH;31.8mm 30mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "DropperPost",
     "brand": "Burgtec",
     "model_detail": "Xpress",
     "brand_model": "Burgtec;Xpress",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "Fizik",
     "model_detail": "Alpaca X5",
     "brand_model": "Fizik;Alpaca X5",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "X01 DH;165mm 36T",
     "brand_model": "SRAM;X01 DH;165mm 36T",
-    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1"
+    "affiliate_link": "https://www.sram.com/en/sram/models/fc-x0-1dh-b1",
+    "amazon_link": "https://www.amazon.fr/dp/B08B2PDV19"
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X01 DH;7-speed",
     "brand_model": "SRAM;X01 DH;7-speed",
-    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3"
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-x0-1dh-a3",
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Code Ultimate Stealth",
     "brand_model": "SRAM;Code Ultimate Stealth",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
     "model_detail": "Synthesis DH Alloy 2.0 i9;black",
     "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
-    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels",
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Schwalbe",
     "model_detail": "Magic Mary (F) + Tacky Chan (R);First Ride",
     "brand_model": "Schwalbe;Magic Mary (F) + Tacky Chan (R);First Ride",
-    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary"
+    "affiliate_link": "https://www.schwalbe.com/en/Magic-Mary",
+    "amazon_link": "https://www.amazon.fr/dp/B071ZM21JG"
    },
    {
     "category": "Pedals",
     "brand": "HT",
     "model_detail": "X3Ti",
     "brand_model": "HT;X3Ti",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Protection",
     "brand": "DHaRCO",
     "model_detail": "",
     "brand_model": "DHaRCO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -7279,70 +7913,80 @@
     "brand": "Frameworks",
     "model_detail": "DH;Size Large",
     "brand_model": "Frameworks;DH;Size Large",
-    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame"
+    "affiliate_link": "https://rideframeworks.com/products/2026-dh-frame",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Spank",
     "model_detail": "Spike 35 Vibrocore;780mm 40mm rise",
     "brand_model": "Spank;Spike 35 Vibrocore;780mm 40mm rise",
-    "affiliate_link": "https://thegravitycartel.com/collections/handlebars/products/spike-35-vibrocore"
+    "affiliate_link": "https://thegravitycartel.com/collections/handlebars/products/spike-35-vibrocore",
+    "amazon_link": "https://www.amazon.com/dp/B079F3DPDQ"
    },
    {
     "category": "Crankset",
     "brand": "5DEV",
     "model_detail": "R-SPEC;165mm + Ochain 9°",
     "brand_model": "5DEV;R-SPEC;165mm + Ochain 9°",
-    "affiliate_link": "https://ride5dev.com/products/titanium-mtb-cranks-copy"
+    "affiliate_link": "https://ride5dev.com/products/titanium-mtb-cranks-copy",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "X0 DH;7-speed",
     "brand_model": "SRAM;X0 DH;7-speed",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "TRP",
     "model_detail": "EVO PRO",
     "brand_model": "TRP;EVO PRO",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "ENVE",
     "model_detail": "Dark6;Mullet MX",
     "brand_model": "ENVE;Dark6;Mullet MX",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Argotal (F) + Kryptotal (R);DH SuperSoft",
     "brand_model": "Continental;Argotal (F) + Kryptotal (R);DH SuperSoft",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -7412,77 +8056,88 @@
     "brand": "Pivot",
     "model_detail": "Phoenix;S1 +6mm reach headset",
     "brand_model": "Pivot;Phoenix;S1 +6mm reach headset",
-    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix"
+    "affiliate_link": "https://www.pivotcycles.com/en-us/bikes/phoenix",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "Float X2 Factory",
     "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FQJDXPTN"
    },
    {
     "category": "Handlebar",
     "brand": "Renthal",
     "model_detail": "Fatbar 35;30mm rise 770mm",
     "brand_model": "Renthal;Fatbar 35;30mm rise 770mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Saddle",
     "brand": "WTB",
     "model_detail": "Solano",
     "brand_model": "WTB;Solano",
-    "affiliate_link": "https://www.wtb.com/products/solano-bike-saddle"
+    "affiliate_link": "https://www.wtb.com/products/solano-bike-saddle",
+    "amazon_link": "https://www.amazon.fr/dp/B0DVDYWP66"
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint;165mm dual-chain",
     "brand_model": "Shimano;Saint;165mm dual-chain",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint;10-speed",
     "brand_model": "Shimano;Saint;10-speed",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "XTR + Saint;203mm rotors",
     "brand_model": "Shimano;XTR + Saint;203mm rotors",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Reynolds",
     "model_detail": "Blacklabel DH 287r;MX mullet",
     "brand_model": "Reynolds;Blacklabel DH 287r;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Argotal DH SuperSoft;22 PSI F + 26 PSI R",
     "brand_model": "Continental;Argotal DH SuperSoft;22 PSI F + 26 PSI R",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -7545,70 +8200,80 @@
     "brand": "Yeti",
     "model_detail": "Special Projects DH;High-pivot 6-bar prototype",
     "brand_model": "Yeti;Special Projects DH;High-pivot 6-bar prototype",
-    "affiliate_link": "https://yeticycles.com/en-us/bikes/lte"
+    "affiliate_link": "https://yeticycles.com/en-us/bikes/lte",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "Burgtec",
     "model_detail": "Ride Wide DH Carbon",
     "brand_model": "Burgtec;Ride Wide DH Carbon",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html"
+    "affiliate_link": "https://bike.shimano.com/en-US/product/component/saint-m820/FC-M825.html",
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "Shimano",
     "model_detail": "Saint",
     "brand_model": "Shimano;Saint",
-    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte"
+    "affiliate_link": "https://probikeshop.fr/products/derailleur-arriere-shimano-saint-shadow-plus-rd-m820-ss-10v-chape-courte",
+    "amazon_link": "https://www.amazon.fr/dp/B008M4CFAO"
    },
    {
     "category": "BrakeLever",
     "brand": "Shimano",
     "model_detail": "Saint;",
     "brand_model": "Shimano;Saint;",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "FR 1500;MX mullet",
     "brand_model": "DT Swiss;FR 1500;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Maxxis",
     "model_detail": "",
     "brand_model": "Maxxis",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    }
   ],
   "competition_history": [
@@ -7678,56 +8343,64 @@
     "brand": "Atherton",
     "model_detail": "A.200.G;Prototype belt gearbox Ti-lug",
     "brand_model": "Atherton;A.200.G;Prototype belt gearbox Ti-lug",
-    "affiliate_link": "https://www.athertonbikes.com/a200-frame.html"
+    "affiliate_link": "https://www.athertonbikes.com/a200-frame.html",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2;500lb spring",
     "brand_model": "Fox;DHX2;500lb spring",
-    "affiliate_link": "https://j-techsuspension.co.uk/products/fox-dhx2-2025"
+    "affiliate_link": "https://j-techsuspension.co.uk/products/fox-dhx2-2025",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Handlebar",
     "brand": "FSA",
     "model_detail": "Gradient;770mm 25mm rise",
     "brand_model": "FSA;Gradient;770mm 25mm rise",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "North Shore Billet",
     "model_detail": "155mm;Pinion 9-speed",
     "brand_model": "North Shore Billet;155mm;Pinion 9-speed",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "Hayes",
     "model_detail": "Dominion A4",
     "brand_model": "Hayes;Dominion A4",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "Mavic",
     "model_detail": "MX mullet",
     "brand_model": "Mavic;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Continental",
     "model_detail": "Argotal;24 PSI F + 27 PSI R",
     "brand_model": "Continental;Argotal;24 PSI F + 27 PSI R",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -7783,49 +8456,56 @@
     "brand": "Mondraker",
     "model_detail": "Summum;Mullet Zero Suspension System",
     "brand_model": "Mondraker;Summum;Mullet Zero Suspension System",
-    "affiliate_link": "https://mondraker.com/us/en/2026-summum-rr-mullet-frameset"
+    "affiliate_link": "https://mondraker.com/us/en/2026-summum-rr-mullet-frameset",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Fox",
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0DJ3KTRH4"
    },
    {
     "category": "RearShock",
     "brand": "Fox",
     "model_detail": "DHX2 Factory",
     "brand_model": "Fox;DHX2 Factory",
-    "affiliate_link": "https://ridefox.com/products/dhx2-factory"
+    "affiliate_link": "https://ridefox.com/products/dhx2-factory",
+    "amazon_link": "https://www.amazon.fr/dp/B0FNWH7VHB"
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "",
     "brand_model": "SRAM",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "GX DH",
     "brand_model": "SRAM;GX DH",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
     "model_detail": "Maven",
     "brand_model": "SRAM;Maven",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "e*thirteen",
     "model_detail": "Grappler Flux",
     "brand_model": "e*thirteen;Grappler Flux",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -7884,70 +8564,80 @@
     "brand": "Specialized",
     "model_detail": "Demo;Prototype pre-Demo11",
     "brand_model": "Specialized;Demo;Prototype pre-Demo11",
-    "affiliate_link": "https://www.specialized.com/us/en/s-works-demo-11/p/4293955"
+    "affiliate_link": "https://www.specialized.com/us/en/s-works-demo-11/p/4293955",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Öhlins",
     "model_detail": "DH38;Prototype electronic",
     "brand_model": "Öhlins;DH38;Prototype electronic",
-    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/"
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/dh38-m2-air-coil-downhill--7747/",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "Öhlins",
     "model_detail": "Prototype coil",
     "brand_model": "Öhlins;Prototype coil",
-    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/"
+    "affiliate_link": "https://www.ohlins.eu/en/products/mountainbike/ttx2air-m2-universal--7750/",
+    "amazon_link": null
    },
    {
     "category": "Handlebar",
     "brand": "Joystick",
     "model_detail": "Analog Carbon;35mm",
     "brand_model": "Joystick;Analog Carbon;35mm",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "SRAM",
     "model_detail": "AXS Eagle T-Type;7-speed",
     "brand_model": "SRAM;AXS Eagle T-Type;7-speed",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Derailleur",
     "brand": "SRAM",
     "model_detail": "AXS Eagle T-Type",
     "brand_model": "SRAM;AXS Eagle T-Type",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Wheels",
     "brand": "DT Swiss",
     "model_detail": "MX mullet",
     "brand_model": "DT Swiss;MX mullet",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Tires",
     "brand": "Specialized",
     "model_detail": "Team spec",
     "brand_model": "Specialized;Team spec",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "Mallet DH",
     "brand_model": "Crankbrothers;Mallet DH",
-    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/"
+    "affiliate_link": "https://www.bike-components.de/en/crankbrothers/Mallet-DH-Clipless-Pedals-p57342/",
+    "amazon_link": "https://www.amazon.fr/dp/B072B6VKZ8"
    },
    {
     "category": "Shoes",
     "brand": "Specialized",
     "model_detail": "2FO DH",
     "brand_model": "Specialized;2FO DH",
-    "affiliate_link": "https://www.specialized.com/us/en/2fo-dh-clip-mountain-bike-shoes/p/187385"
+    "affiliate_link": "https://www.specialized.com/us/en/2fo-dh-clip-mountain-bike-shoes/p/187385",
+    "amazon_link": null
    }
   ],
   "competition_history": [
@@ -8024,28 +8714,32 @@
     "brand": "Gamux",
     "model_detail": "Sego;Prototype gearbox belt-drive",
     "brand_model": "Gamux;Sego;Prototype gearbox belt-drive",
-    "affiliate_link": "https://shop.gamuxbikes.com/products/sego-2024-framekit"
+    "affiliate_link": "https://shop.gamuxbikes.com/products/sego-2024-framekit",
+    "amazon_link": null
    },
    {
     "category": "Fork",
     "brand": "Manitou",
     "model_detail": "Dorado Pro",
     "brand_model": "Manitou;Dorado Pro",
-    "affiliate_link": "https://www.manitoumtb.com/dorado-pro"
+    "affiliate_link": "https://www.manitoumtb.com/dorado-pro",
+    "amazon_link": null
    },
    {
     "category": "RearShock",
     "brand": "Manitou",
     "model_detail": "Mara Pro DH",
     "brand_model": "Manitou;Mara Pro DH",
-    "affiliate_link": "https://manitou.hayesbicycle.com/en-us/product-collections/mara-pro/"
+    "affiliate_link": "https://manitou.hayesbicycle.com/en-us/product-collections/mara-pro/",
+    "amazon_link": null
    },
    {
     "category": "Crankset",
     "brand": "Pinion",
     "model_detail": "gearbox",
     "brand_model": "Pinion;gearbox",
-    "affiliate_link": null
+    "affiliate_link": null,
+    "amazon_link": null
    }
   ],
   "competition_history": [

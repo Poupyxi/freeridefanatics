@@ -31,7 +31,9 @@ Usage:
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import unicodedata
 from collections import defaultdict
 
@@ -169,8 +171,34 @@ def listdir_images(path):
                 pass
     return images
 
+def open_library_image(path):
+    """Open a library image, including AVIF exports carrying a .jpg suffix."""
+    try:
+        img = Image.open(path)
+        img.load()
+        return img
+    except (OSError, ValueError) as pillow_error:
+        # macOS can decode AVIF through ImageIO even when the installed Pillow
+        # build cannot. Convert only a temporary copy; never touch the library.
+        with tempfile.TemporaryDirectory(prefix="freeride-image-") as temp_dir:
+            converted = os.path.join(temp_dir, "converted.png")
+            result = subprocess.run(
+                ["/usr/bin/sips", "-s", "format", "png", path, "--out", converted],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+            if result.returncode != 0:
+                raise pillow_error
+            try:
+                with Image.open(converted) as decoded:
+                    decoded.load()
+                    return decoded.copy()
+            except (OSError, ValueError):
+                raise pillow_error
+
 def load_image(path):
-    img = Image.open(path)
+    img = open_library_image(path)
     img = ImageOps.exif_transpose(img)  # honour phone/camera orientation
     if img.mode in ("RGBA", "LA", "P"):
         img = img.convert("RGBA")
@@ -258,8 +286,7 @@ def index_library_equipment():
         for f in files:
             source_path = os.path.join(path, f)
             try:
-                with Image.open(source_path) as probe:
-                    probe.verify()
+                open_library_image(source_path)
             except (OSError, ValueError):
                 continue
             stem = os.path.splitext(f)[0]

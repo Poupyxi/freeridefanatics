@@ -287,7 +287,8 @@ def cta_waves_svg():
 def rider_card(r):
     photo = has_photo(r["slug"])
     if photo:
-        photo_html = f'<img src="assets/img/riders/{photo}" alt="{esc(r["display_name"])}" loading="lazy">'
+        photo_html = (f'<img src="assets/img/riders/{photo}?v={BUILD_VERSION}" '
+                      f'alt="{esc(r["display_name"])}" loading="lazy">')
     else:
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
     cat = esc(r.get("gender_category") or "")

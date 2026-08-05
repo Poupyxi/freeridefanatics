@@ -85,8 +85,8 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis DH",
-    "brand_model": "Crankbrothers;Synthesis DH",
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
     "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
@@ -242,8 +242,8 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis DH",
-    "brand_model": "Crankbrothers;Synthesis DH",
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
     "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
@@ -1226,17 +1226,17 @@
     "affiliate_link": null
    },
    {
-    "category": "Disk",
-    "brand": "DT Swiss",
-    "model_detail": "FR1500",
-    "brand_model": "DT Swiss;FR1500",
-    "affiliate_link": null
-   },
-   {
     "category": "Wheels",
     "brand": "Maxxis",
     "model_detail": "Assegai (F) + DHR II (R);DH MaxxGrip",
     "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH MaxxGrip",
+    "affiliate_link": null
+   },
+   {
+    "category": "Disk",
+    "brand": "DT Swiss",
+    "model_detail": "FR1500",
+    "brand_model": "DT Swiss;FR1500",
     "affiliate_link": null
    },
    {
@@ -2468,9 +2468,9 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis DH Carbon",
-    "brand_model": "Crankbrothers;Synthesis DH Carbon",
-    "affiliate_link": null
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
     "category": "Tires",
@@ -2666,9 +2666,9 @@
    {
     "category": "RearShock",
     "brand": "RockShox",
-    "model_detail": "",
-    "brand_model": "RockShox",
-    "affiliate_link": null
+    "model_detail": "Vivid",
+    "brand_model": "RockShox;Vivid",
+    "affiliate_link": "https://j-techsuspension.co.uk/products/rockshox-rear-shock-vivid-coil-dh-ultimate-rc2-2027-without-tuning"
    },
    {
     "category": "Handlebar",
@@ -2687,23 +2687,23 @@
    {
     "category": "Derailleur",
     "brand": "SRAM",
-    "model_detail": "",
-    "brand_model": "SRAM",
-    "affiliate_link": null
+    "model_detail": "XX",
+    "brand_model": "SRAM;XX",
+    "affiliate_link": "https://www.sram.com/en/sram/models/rd-xx-dhe-a1"
    },
    {
     "category": "BrakeLever",
     "brand": "SRAM",
-    "model_detail": "",
-    "brand_model": "SRAM",
+    "model_detail": "Maven",
+    "brand_model": "SRAM;Maven",
     "affiliate_link": null
    },
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "",
-    "brand_model": "Crankbrothers",
-    "affiliate_link": null
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
     "category": "Tires",
@@ -4604,30 +4604,30 @@
   ],
   "bio": "- Top qualifier Q1/Q2 Andorra WC 2025; - Racing UCI DH World Cup circuit since 2023",
   "bike": {
-   "brand": "Intense",
-   "model": "M29"
+   "brand": "Nukeproof",
+   "model": "Dissent;proto proteam"
   },
   "equipment": [
    {
     "category": "Frame",
-    "brand": "Intense",
-    "model_detail": "M29",
-    "brand_model": "Intense;M29",
-    "affiliate_link": null
+    "brand": "Nukeproof",
+    "model_detail": "Dissent;proto proteam",
+    "brand_model": "Nukeproof;Dissent;proto proteam",
+    "affiliate_link": "https://us.nukeproof.com/products/2022-dissent-275-frame"
    },
    {
     "category": "Fork",
-    "brand": "Fox",
-    "model_detail": "40 Factory",
-    "brand_model": "Fox;40 Factory",
-    "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+    "brand": "RockShox",
+    "model_detail": "Boxxer Ultimate;Flight Attendant",
+    "brand_model": "RockShox;Boxxer Ultimate;Flight Attendant",
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/fs-bxr-ult-d2"
    },
    {
     "category": "RearShock",
-    "brand": "Fox",
-    "model_detail": "Float X2 Factory",
-    "brand_model": "Fox;Float X2 Factory",
-    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+    "brand": "RockShox",
+    "model_detail": "Vivid Coil Ultimate",
+    "brand_model": "RockShox;Vivid Coil Ultimate",
+    "affiliate_link": "https://www.sram.com/en/rockshox/models/rs-vivc-udh-c1"
    },
    {
     "category": "Crankset",
@@ -4639,8 +4639,8 @@
    {
     "category": "Derailleur",
     "brand": "SRAM",
-    "model_detail": "",
-    "brand_model": "SRAM",
+    "model_detail": "XX DH AXS T-Type",
+    "brand_model": "SRAM;XX DH AXS T-Type",
     "affiliate_link": null
    },
    {
@@ -4660,9 +4660,9 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis DH Carbon",
-    "brand_model": "Crankbrothers;Synthesis DH Carbon",
-    "affiliate_link": null
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
     "category": "Tires",
@@ -4920,9 +4920,9 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis DH Carbon",
-    "brand_model": "Crankbrothers;Synthesis DH Carbon",
-    "affiliate_link": null
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
     "category": "Tires",
@@ -5395,8 +5395,8 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis DH",
-    "brand_model": "Crankbrothers;Synthesis DH",
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
     "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {
@@ -6445,17 +6445,17 @@
     "affiliate_link": null
    },
    {
-    "category": "Disk",
-    "brand": "Hope Floating Disc Brake - HBSP330",
-    "model_detail": "",
-    "brand_model": "Hope Floating Disc Brake - HBSP330",
-    "affiliate_link": null
-   },
-   {
     "category": "Wheels",
     "brand": "Hope",
     "model_detail": "Pro 5 hubs + Fortus 30 rims",
     "brand_model": "Hope;Pro 5 hubs + Fortus 30 rims",
+    "affiliate_link": null
+   },
+   {
+    "category": "Disk",
+    "brand": "Hope Floating Disc Brake - HBSP330",
+    "model_detail": "",
+    "brand_model": "Hope Floating Disc Brake - HBSP330",
     "affiliate_link": null
    },
    {
@@ -7127,8 +7127,8 @@
    {
     "category": "Wheels",
     "brand": "Crankbrothers",
-    "model_detail": "Synthesis DH",
-    "brand_model": "Crankbrothers;Synthesis DH",
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
     "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
    },
    {

@@ -4122,6 +4122,41 @@
     "model_detail": "40 Factory",
     "brand_model": "Fox;40 Factory",
     "affiliate_link": "https://ridefox.com/products/my27-fox-40-factory"
+   },
+   {
+    "category": "RearShock",
+    "brand": "Fox",
+    "model_detail": "Float X2 Factory",
+    "brand_model": "Fox;Float X2 Factory",
+    "affiliate_link": "https://ridefox.com/products/float-x2-factory"
+   },
+   {
+    "category": "Handlebar",
+    "brand": "Renthal",
+    "model_detail": "FatBar",
+    "brand_model": "Renthal;FatBar",
+    "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748"
+   },
+   {
+    "category": "BrakeLever",
+    "brand": "Shimano",
+    "model_detail": "XTR",
+    "brand_model": "Shimano;XTR",
+    "affiliate_link": null
+   },
+   {
+    "category": "Wheels",
+    "brand": "Crankbrothers",
+    "model_detail": "Synthesis DH Alloy 2.0 i9;black",
+    "brand_model": "Crankbrothers;Synthesis DH Alloy 2.0 i9;black",
+    "affiliate_link": "https://www.crankbrothers.com/collections/downhill-wheels"
+   },
+   {
+    "category": "Helmet",
+    "brand": "Fox Racing",
+    "model_detail": "",
+    "brand_model": "Fox Racing",
+    "affiliate_link": null
    }
   ],
   "competition_history": [
@@ -5274,10 +5309,17 @@
     "affiliate_link": "https://www.srsuntour.us/products/copy-of-rux-r2c2-200mm"
    },
    {
+    "category": "RearShock",
+    "brand": "SR Suntour",
+    "model_detail": "Voro Coil;Custom Styrian Flow",
+    "brand_model": "SR Suntour;Voro Coil;Custom Styrian Flow",
+    "affiliate_link": "https://www.srsuntour.us/collections/rear-shock/products/voro-coil"
+   },
+   {
     "category": "Crankset",
-    "brand": "Pinion",
-    "model_detail": "gearbox",
-    "brand_model": "Pinion;gearbox",
+    "brand": "Hope",
+    "model_detail": "pinion",
+    "brand_model": "Hope;pinion",
     "affiliate_link": null
    },
    {
@@ -5285,6 +5327,13 @@
     "brand": "Hope",
     "model_detail": "EVO V6Ti;6-piston",
     "brand_model": "Hope;EVO V6Ti;6-piston",
+    "affiliate_link": null
+   },
+   {
+    "category": "Tires",
+    "brand": "Michelin",
+    "model_detail": "DH",
+    "brand_model": "Michelin;DH",
     "affiliate_link": null
    }
   ],

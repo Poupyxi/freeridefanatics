@@ -4908,6 +4908,20 @@ HTML = r"""<!DOCTYPE html>
     <table id="eq-audit-table" style="display:none;border-collapse:collapse;min-width:100%;font-size:11px"></table>
   </div>
 
+  <!-- Popup détail d'une photo manquante -->
+  <div id="audit-photo-popup" onclick="if(event.target===this)auditClosePhotoPopup()" style="display:none;position:fixed;inset:0;z-index:1200;background:#000a;align-items:center;justify-content:center;padding:20px">
+    <div role="dialog" aria-modal="true" aria-labelledby="audit-photo-popup-title" style="width:min(440px,100%);background:#111;border:1px solid #d89216;border-radius:10px;box-shadow:0 20px 60px #000;padding:18px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
+        <div>
+          <div id="audit-photo-popup-title" style="color:#f0b23c;font-size:13px;font-weight:800;letter-spacing:.6px">📷 PHOTO MANQUANTE</div>
+          <div style="color:#555;font-size:10px;margin-top:3px">Information trouvée dans le Google Sheet</div>
+        </div>
+        <button onclick="auditClosePhotoPopup()" aria-label="Fermer" style="background:none;border:0;color:#777;font-size:20px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div id="audit-photo-popup-content"></div>
+    </div>
+  </div>
+
   <!-- ── Inventaire Google Sheet / photos ── -->
   <div style="margin-top:44px;border-top:1px solid #1e1e1e;padding-top:32px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
@@ -9061,7 +9075,8 @@ function renderAuditRiderTable(cols, rows, filterMissing) {
       } else if (st === 'no_photo') {
         const eqItem = riderEq.find(i => i.category === c);
         const tip = eqItem ? `${eqItem.brand}${eqItem.reference ? ' · ' + eqItem.reference : ''}` : c;
-        html += `<td class="audit-nophoto" title="${tip.replace(/"/g,'&quot;')} — photo manquante" style="cursor:help"><span class="audit-status audit-status-photo">PHOTO</span></td>`;
+        const popupArgs = [c, eqItem?.brand || '', eqItem?.reference || ''].map(value => JSON.stringify(encodeURIComponent(String(value))));
+        html += `<td class="audit-nophoto" title="${tip.replace(/"/g,'&quot;')} — cliquer pour le détail" style="cursor:pointer" onclick='auditOpenMissingPhoto(${popupArgs.join(',')})'><span class="audit-status audit-status-photo">PHOTO</span></td>`;
         totNp++;
       } else {
         html += `<td class="audit-empty" title="${c} : aucune information dans le Google Sheet" style="cursor:help"><span class="audit-status audit-status-sheet">SHEET</span></td>`;
@@ -9131,6 +9146,48 @@ function _auditToggleDetail(id) {
   if (!el) return;
   el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
 }
+
+function auditOpenMissingPhoto(categoryEncoded, brandEncoded, referenceEncoded) {
+  const popup = document.getElementById('audit-photo-popup');
+  const content = document.getElementById('audit-photo-popup-content');
+  if (!popup || !content) return;
+  const category = decodeURIComponent(categoryEncoded);
+  const brand = decodeURIComponent(brandEncoded);
+  const reference = decodeURIComponent(referenceEncoded);
+  const item = { category, brand, reference };
+  const expected = _qualityExpectedFilename(item);
+  const expectedEncoded = encodeURIComponent(expected);
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:90px 1fr;gap:8px 12px;font-size:11px;margin-bottom:14px">
+      <span style="color:#555">Type</span><strong style="color:#bbb">${_catalogAuditEscape(category)}</strong>
+      <span style="color:#555">Marque</span><strong style="color:#bbb">${_catalogAuditEscape(brand || '—')}</strong>
+      <span style="color:#555">Référence</span><strong style="color:#bbb">${_catalogAuditEscape(reference || '—')}</strong>
+    </div>
+    <div style="color:#666;font-size:10px;margin-bottom:5px">Fichier attendu dans la base</div>
+    <div style="display:flex;align-items:center;gap:7px;background:#090909;border:1px solid #292929;border-radius:6px;padding:9px">
+      <code style="color:#ddd;font-size:10px;overflow-wrap:anywhere;flex:1">${_catalogAuditEscape(expected)}</code>
+      <button onclick="auditCopyMissingPhotoPath(decodeURIComponent('${expectedEncoded}'),this)" style="flex-shrink:0;padding:5px 8px;background:#222;border:1px solid #444;border-radius:4px;color:#aaa;font-size:9px;cursor:pointer">COPIER</button>
+    </div>`;
+  popup.style.display = 'flex';
+}
+
+function auditClosePhotoPopup() {
+  const popup = document.getElementById('audit-photo-popup');
+  if (popup) popup.style.display = 'none';
+}
+
+async function auditCopyMissingPhotoPath(path, button) {
+  try {
+    await navigator.clipboard.writeText(path);
+    if (button) button.textContent = 'COPIÉ';
+  } catch (_) {
+    if (button) button.textContent = path;
+  }
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') auditClosePhotoPopup();
+});
 
 function auditToggleFilter() {
   _auditFilterMissing = !_auditFilterMissing;

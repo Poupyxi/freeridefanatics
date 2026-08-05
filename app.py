@@ -4895,7 +4895,7 @@ HTML = r"""<!DOCTYPE html>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
     <span style="font-size:11px;font-weight:700;color:#888;letter-spacing:.8px">PAR RIDER</span>
     <button id="audit-filter-btn" onclick="auditToggleFilter()" style="padding:3px 10px;background:#1a1a1a;border:1px solid #333;border-radius:5px;color:#aaa;font-size:11px;cursor:pointer">Afficher tout</button>
-    <span style="font-size:11px;color:#333;margin-left:auto">🟢 photo ok &nbsp;·&nbsp; 🟡 photo manquante <span style="color:#2a2a2a">(hover = produit, clic rider = détails)</span> &nbsp;·&nbsp; · aucune donnée</span>
+    <span style="font-size:11px;color:#555;margin-left:auto">🟢 info Sheet + photo &nbsp;·&nbsp; 🟡 info Sheet, photo manquante &nbsp;·&nbsp; 🔴 aucune info dans le Sheet <span style="color:#333">(clic rider = détails)</span></span>
   </div>
   <div id="eq-audit-wrap" style="overflow-x:auto">
     <div id="eq-audit-placeholder" style="color:#444;font-size:13px;padding:20px 0">Chargement…</div>
@@ -8989,7 +8989,7 @@ function renderAuditCatCards(cols, rows) {
       html += `<div style="background:${color};width:${pct}%;height:100%;border-radius:2px;transition:width .4s"></div></div>`;
       html += `<div style="font-size:10px;color:#555">`;
       html += `<span style="color:#888">${withPhoto}</span>/${withData} avec photo`;
-      if (withData < rows.length) html += ` · <span style="color:#333">${rows.length - withData} sans data</span>`;
+      if (withData < rows.length) html += ` · <span style="color:#f55">${rows.length - withData} sans info Sheet</span>`;
       html += `</div>`;
     } else {
       html += `<div style="font-size:10px;color:#2a2a2a">Aucun rider renseigné</div>`;
@@ -9006,7 +9006,9 @@ function renderAuditCatCards(cols, rows) {
     <span style="color:#888">${totalOk}</span><span style="color:#444">/${totalData}</span>
     <span style="color:#333;margin-left:4px">entrées sheet avec photo détectée</span>
     <span style="color:#444;margin:0 6px">·</span>
-    <span style="color:#f55">${totalData - totalOk}</span><span style="color:#333"> sans photo</span>`;
+    <span style="color:#f90">${totalData - totalOk}</span><span style="color:#333"> sans photo</span>
+    <span style="color:#444;margin:0 6px">·</span>
+    <span style="color:#f55">${rows.length * cols.length - totalData}</span><span style="color:#333"> sans info Sheet</span>`;
 }
 
 // Rend la table riders (avec filtre optionnel)
@@ -9020,10 +9022,10 @@ function renderAuditRiderTable(cols, rows, filterMissing) {
                  'Brake Lever':'BLever','Brake Caliper':'BCalip' };
 
   const visibleRows = filterMissing
-    ? rows.filter(r => Object.values(r.cats).some(v => v === 'no_photo'))
+    ? rows.filter(r => Object.values(r.cats).some(v => v !== 'ok'))
     : rows;
 
-  if (btn) btn.textContent = filterMissing ? '🟡 Photos manquantes' : 'Afficher tout';
+  if (btn) btn.textContent = filterMissing ? '🟡🔴 Afficher les manques' : 'Afficher tout';
 
   let html = '<thead><tr><th>Rider</th>';
   cols.forEach(c => { html += `<th title="${c}">${abbr[c] || c}</th>`; });
@@ -9040,7 +9042,7 @@ function renderAuditRiderTable(cols, rows, filterMissing) {
     const withOk   = vals.filter(v => v === 'ok').length;
     const scorePct = withData ? Math.round(withOk / withData * 100) : 0;
     const scoreCol = withData ? _auditColor(scorePct) : '#333';
-    const hasMissing = vals.some(v => v === 'no_photo');
+    const hasMissing = vals.some(v => v !== 'ok');
     const detailId = `audit-detail-${idx}`;
 
     html += `<tr>`;
@@ -9056,31 +9058,41 @@ function renderAuditRiderTable(cols, rows, filterMissing) {
         html += `<td class="audit-nophoto" title="${tip.replace(/"/g,'&quot;')}" style="cursor:help">🟡</td>`;
         totNp++;
       } else {
-        html += '<td class="audit-empty">·</td>';
+        html += `<td class="audit-empty" title="${c} : aucune information dans le Google Sheet" style="cursor:help">🔴</td>`;
         totEmpty++;
       }
     });
     html += `<td style="border-left:1px solid #1a1a1a;font-size:10px;color:${scoreCol};white-space:nowrap;font-weight:${withData?'600':'normal'}">${withData ? withOk+'/'+withData : '—'}</td>`;
     html += `</tr>`;
 
-    // Ligne dépliable avec le détail des photos manquantes
+    // Ligne dépliable avec les informations Sheet et photos manquantes
     if (hasMissing) {
-      const missing = cols.filter(c => r.cats[c] === 'no_photo').map(c => {
+      const missingPhotos = cols.filter(c => r.cats[c] === 'no_photo').map(c => {
         const it = riderEq.find(i => i.category === c);
         return { cat: c, brand: it?.brand || '', ref: it?.reference || '' };
       });
+      const missingSheet = cols.filter(c => r.cats[c] === 'empty');
       html += `<tr id="${detailId}" style="display:none;background:#0c0c0c">`;
       html += `<td colspan="${cols.length + 2}" style="padding:8px 14px">`;
-      html += `<div style="font-size:10px;color:#666;margin-bottom:6px">📸 Photos manquantes pour <strong style="color:#aaa">${r.prenom} ${r.nom}</strong> :</div>`;
-      html += `<div style="display:flex;flex-wrap:wrap;gap:5px">`;
-      missing.forEach(m => {
-        html += `<span style="background:#151515;border:1px solid #f903;border-radius:4px;padding:3px 9px;font-size:10px">`;
-        html += `<span style="color:#666">${m.cat}</span>`;
-        if (m.brand) html += ` <span style="color:#999">${m.brand}</span>`;
-        if (m.ref)   html += ` <span style="color:#666">${m.ref}</span>`;
-        html += `</span>`;
-      });
-      html += `</div></td></tr>`;
+      html += `<div style="font-size:10px;color:#666;margin-bottom:7px">Détails pour <strong style="color:#aaa">${r.prenom} ${r.nom}</strong></div>`;
+      if (missingPhotos.length) {
+        html += `<div style="font-size:10px;color:#f90;margin:5px 0">🟡 Information Sheet présente, photo manquante :</div><div style="display:flex;flex-wrap:wrap;gap:5px">`;
+        missingPhotos.forEach(m => {
+          html += `<span style="background:#151515;border:1px solid #f903;border-radius:4px;padding:3px 9px;font-size:10px"><span style="color:#888">${m.cat}</span>`;
+          if (m.brand) html += ` <span style="color:#aaa">${m.brand}</span>`;
+          if (m.ref) html += ` <span style="color:#777">${m.ref}</span>`;
+          html += `</span>`;
+        });
+        html += `</div>`;
+      }
+      if (missingSheet.length) {
+        html += `<div style="font-size:10px;color:#f55;margin:8px 0 5px">🔴 Aucune information dans le Sheet :</div><div style="display:flex;flex-wrap:wrap;gap:5px">`;
+        missingSheet.forEach(cat => {
+          html += `<span style="background:#151515;border:1px solid #f553;border-radius:4px;padding:3px 9px;font-size:10px;color:#999">${cat}</span>`;
+        });
+        html += `</div>`;
+      }
+      html += `</td></tr>`;
     }
   });
 
@@ -9102,8 +9114,8 @@ function renderAuditRiderTable(cols, rows, filterMissing) {
   tbl.innerHTML = html;
   tbl.style.display = visibleRows.length ? 'table' : 'none';
   ph.textContent = filterMissing
-    ? `🟡 ${visibleRows.length} riders avec photo(s) manquante(s) · ${rows.length - visibleRows.length} complets masqués`
-    : `✅ ${rows.length} riders · 🟢 ${totOk} avec photo · 🟡 ${totNp} sans photo · ${totEmpty} sans data`;
+    ? `🟡🔴 ${visibleRows.length} riders avec information ou photo manquante · ${rows.length - visibleRows.length} complets masqués`
+    : `✅ ${rows.length} riders · 🟢 ${totOk} info + photo · 🟡 ${totNp} info sans photo · 🔴 ${totEmpty} sans info Sheet`;
   ph.style.color = '#777';
   ph.style.display = 'block';
 }

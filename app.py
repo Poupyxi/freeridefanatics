@@ -2691,9 +2691,15 @@ HTML = r"""<!DOCTYPE html>
   }
   #eq-audit-table tr:hover td { background: #141414; }
   #eq-audit-table tr:hover td:first-child { background: #141414; }
-  .audit-ok      { font-size: 14px; }
-  .audit-nophoto { font-size: 14px; filter: grayscale(1) opacity(.6); }
-  .audit-empty   { color: #2a2a2a; font-size: 12px; }
+  .audit-status {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 42px; padding: 3px 6px; border-radius: 4px;
+    font-size: 8px; line-height: 1; font-weight: 800; letter-spacing: .4px;
+  }
+  .audit-status-ok { color: #dfffe1; background: #1d6128; border: 1px solid #43b654; }
+  .audit-status-photo { color: #fff0c7; background: #704600; border: 1px solid #d89216; }
+  .audit-status-sheet { color: #ffdada; background: #681f24; border: 1px solid #d65059; }
+  .audit-ok, .audit-nophoto, .audit-empty { text-align: center; }
   /* ── Grille photos équipement ── */
   .eq-photo-thumb {
     width: 72px; height: 72px; border-radius: 6px; overflow: hidden;
@@ -4895,7 +4901,7 @@ HTML = r"""<!DOCTYPE html>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
     <span style="font-size:11px;font-weight:700;color:#888;letter-spacing:.8px">PAR RIDER</span>
     <button id="audit-filter-btn" onclick="auditToggleFilter()" style="padding:3px 10px;background:#1a1a1a;border:1px solid #333;border-radius:5px;color:#aaa;font-size:11px;cursor:pointer">Afficher tout</button>
-    <span style="font-size:11px;color:#555;margin-left:auto">🟢 info Sheet + photo &nbsp;·&nbsp; 🟡 info Sheet, photo manquante &nbsp;·&nbsp; 🔴 aucune info dans le Sheet <span style="color:#333">(clic rider = détails)</span></span>
+    <span style="font-size:11px;color:#555;margin-left:auto"><span class="audit-status audit-status-ok">OK</span> info + photo &nbsp;·&nbsp; <span class="audit-status audit-status-photo">PHOTO</span> photo manquante &nbsp;·&nbsp; <span class="audit-status audit-status-sheet">SHEET</span> info Sheet manquante <span style="color:#333">(clic rider = détails)</span></span>
   </div>
   <div id="eq-audit-wrap" style="overflow-x:auto">
     <div id="eq-audit-placeholder" style="color:#444;font-size:13px;padding:20px 0">Chargement…</div>
@@ -9050,15 +9056,15 @@ function renderAuditRiderTable(cols, rows, filterMissing) {
     cols.forEach(c => {
       const st = r.cats[c];
       if (st === 'ok') {
-        html += '<td class="audit-ok">🟢</td>';
+        html += '<td class="audit-ok" title="Information Sheet et photo présentes"><span class="audit-status audit-status-ok">OK</span></td>';
         totOk++;
       } else if (st === 'no_photo') {
         const eqItem = riderEq.find(i => i.category === c);
         const tip = eqItem ? `${eqItem.brand}${eqItem.reference ? ' · ' + eqItem.reference : ''}` : c;
-        html += `<td class="audit-nophoto" title="${tip.replace(/"/g,'&quot;')}" style="cursor:help">🟡</td>`;
+        html += `<td class="audit-nophoto" title="${tip.replace(/"/g,'&quot;')} — photo manquante" style="cursor:help"><span class="audit-status audit-status-photo">PHOTO</span></td>`;
         totNp++;
       } else {
-        html += `<td class="audit-empty" title="${c} : aucune information dans le Google Sheet" style="cursor:help">🔴</td>`;
+        html += `<td class="audit-empty" title="${c} : aucune information dans le Google Sheet" style="cursor:help"><span class="audit-status audit-status-sheet">SHEET</span></td>`;
         totEmpty++;
       }
     });

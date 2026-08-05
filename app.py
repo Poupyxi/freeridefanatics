@@ -4902,12 +4902,23 @@ HTML = r"""<!DOCTYPE html>
     <table id="eq-audit-table" style="display:none;border-collapse:collapse;min-width:100%;font-size:11px"></table>
   </div>
 
-  <!-- ── Catalogue Photo Audit ── -->
+  <!-- ── Inventaire Google Sheet / photos ── -->
   <div style="margin-top:44px;border-top:1px solid #1e1e1e;padding-top:32px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-      <h3 style="color:#C8D400;font-size:0.95rem;letter-spacing:1px;margin:0">📷 CATALOGUE — PHOTOS MANQUANTES</h3>
+      <h3 style="color:#C8D400;font-size:0.95rem;letter-spacing:1px;margin:0">📋 INVENTAIRE DU GOOGLE SHEET</h3>
       <button onclick="loadCatalogAudit()" style="padding:5px 14px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer">↺ Actualiser</button>
       <div id="catalog-audit-summary" style="font-size:11px;color:#555;margin-left:auto"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <input id="catalog-audit-search" type="search" placeholder="Rechercher une marque ou un équipement…" oninput="renderCatalogAudit()" style="min-width:260px;flex:1;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#ccc;font-size:12px">
+      <select id="catalog-audit-status" onchange="renderCatalogAudit()" style="padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#aaa;font-size:12px">
+        <option value="all">Toutes les photos</option>
+        <option value="missing">Photos manquantes</option>
+        <option value="found">Photos présentes</option>
+      </select>
+      <select id="catalog-audit-category" onchange="renderCatalogAudit()" style="padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#aaa;font-size:12px">
+        <option value="all">Tous les types</option>
+      </select>
     </div>
     <div id="catalog-audit-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px">
       <div style="color:#333;font-size:13px">–</div>
@@ -9156,52 +9167,84 @@ async function loadEqAudit() {
   }
 }
 
-async function loadCatalogAudit() {
+let _catalogAuditData = null;
+
+function _catalogAuditEscape(value) {
+  return String(value || '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
+function renderCatalogAudit() {
   const grid    = document.getElementById('catalog-audit-grid');
+  const summary = document.getElementById('catalog-audit-summary');
+  const d = _catalogAuditData;
+  if (!grid || !d) return;
+
+  const query = String(document.getElementById('catalog-audit-search')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('catalog-audit-status')?.value || 'all';
+  const category = document.getElementById('catalog-audit-category')?.value || 'all';
+  const categories = d.categories.filter(cat => category === 'all' || cat.name === category);
+
+  let visibleProducts = 0;
+  let html = '';
+  for (const cat of categories) {
+    const products = (cat.products || []).filter(product => {
+      if (status === 'missing' && product.has_photo) return false;
+      if (status === 'found' && !product.has_photo) return false;
+      return !query || `${product.brand} ${product.detail}`.toLowerCase().includes(query);
+    });
+    if (!products.length) continue;
+    visibleProducts += products.length;
+
+    const found = products.filter(product => product.has_photo).length;
+    const pct = products.length ? Math.round(found / products.length * 100) : 100;
+    const color = pct === 100 ? '#4CAF50' : pct > 75 ? '#C8D400' : pct > 40 ? '#f90' : '#f55';
+
+    html += `<div style="background:#111;border:1px solid #222;border-radius:8px;padding:12px;min-width:0">`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px">`;
+    html += `<span style="font-size:11px;font-weight:700;color:#ccc;letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis" title="${_catalogAuditEscape(cat.name)}">${_catalogAuditEscape(cat.name).toUpperCase()}</span>`;
+    html += `<span style="font-size:10px;color:${color};font-weight:700;white-space:nowrap">${found}/${products.length} photos</span></div>`;
+    html += `<div style="background:#1a1a1a;border-radius:3px;height:3px;margin-bottom:10px"><div style="background:${color};width:${pct}%;height:100%;border-radius:3px"></div></div>`;
+
+    products.forEach(product => {
+      const icon = product.has_photo ? '🟢' : '🟡';
+      const label = [product.brand, product.detail].filter(Boolean).join(' · ') || 'Équipement sans nom';
+      html += `<div style="display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #1a1a1a;font-size:10px" title="${_catalogAuditEscape(label)}">`;
+      html += `<span style="flex-shrink:0">${icon}</span><span style="color:${product.has_photo ? '#888' : '#bbb'};min-width:0;overflow-wrap:anywhere">${_catalogAuditEscape(label)}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  grid.innerHTML = html || '<div style="color:#555;font-size:12px;grid-column:1/-1">Aucun équipement ne correspond aux filtres.</div>';
+  if (summary) {
+    const pctGlobal = d.total_products ? Math.round(d.total_found / d.total_products * 100) : 100;
+    summary.textContent = `${d.categories.length} types · ${d.total_products} équipements connus · ${d.total_found} avec photo (${pctGlobal}%) · ${d.total_missing} sans photo${visibleProducts !== d.total_products ? ` · ${visibleProducts} affichés` : ''}`;
+  }
+}
+
+async function loadCatalogAudit() {
+  const grid = document.getElementById('catalog-audit-grid');
   const summary = document.getElementById('catalog-audit-summary');
   if (!grid) return;
   grid.innerHTML = '<div style="color:#444;font-size:13px">⏳ Analyse catalogue…</div>';
-  summary.textContent = '';
+  if (summary) summary.textContent = '';
   try {
     const d = await fetch('/api/catalog-photo-audit').then(r => r.json());
-    if (d.error) { grid.innerHTML = `<div style="color:#f55">${d.error}</div>`; return; }
+    if (d.error) { grid.innerHTML = `<div style="color:#f55">${_catalogAuditEscape(d.error)}</div>`; return; }
+    _catalogAuditData = d;
 
-    const pctGlobal = d.total_products ? Math.round(d.total_found / d.total_products * 100) : 100;
-    summary.textContent = `${d.total_found}/${d.total_products} produits couverts (${pctGlobal}%) · ${d.total_missing} manquants`;
-
-    let html = '';
-    for (const cat of d.categories) {
-      const pct   = cat.total ? Math.round(cat.found / cat.total * 100) : 100;
-      const ok    = cat.missing.length === 0;
-      const color = ok ? '#4CAF50' : pct > 75 ? '#C8D400' : pct > 40 ? '#f90' : '#f55';
-      const uid   = 'cml-' + cat.name.replace(/\s+/g, '-');
-
-      html += `<div style="background:#111;border:1px solid ${ok ? '#1e3a1a' : '#222'};border-radius:8px;padding:12px">`;
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">`;
-      html += `<span style="font-size:11px;font-weight:700;color:#ccc;letter-spacing:.5px">${cat.name.toUpperCase()}</span>`;
-      html += `<span style="font-size:11px;color:${color};font-weight:700">${ok ? '✅' : cat.found + '/' + cat.total}</span>`;
-      html += `</div>`;
-      html += `<div style="background:#1a1a1a;border-radius:3px;height:3px;margin-bottom:10px">`;
-      html += `<div style="background:${color};width:${pct}%;height:100%;border-radius:3px"></div></div>`;
-      if (cat.missing.length > 0) {
-        html += `<div style="font-size:10px;color:#f90;margin-bottom:6px;cursor:pointer" onclick="document.getElementById('${uid}').style.display=document.getElementById('${uid}').style.display==='none'?'block':'none'">`;
-        html += `▾ ${cat.missing.length} manquant${cat.missing.length > 1 ? 's' : ''}</div>`;
-        html += `<div id="${uid}" style="display:none">`;
-        for (const p of cat.missing) {
-          html += `<div style="font-size:10px;color:#777;padding:2px 0;border-bottom:1px solid #1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.brand} ${p.detail}">`;
-          html += `<span style="color:#999">${p.brand}</span>`;
-          if (p.detail) html += ` <span style="color:#555">${p.detail}</span>`;
-          html += `</div>`;
-        }
-        html += `</div>`;
-      } else {
-        html += `<div style="font-size:10px;color:#2a5a2a">Toutes les photos sont présentes</div>`;
-      }
-      html += `</div>`;
+    const categorySelect = document.getElementById('catalog-audit-category');
+    if (categorySelect) {
+      const selected = categorySelect.value;
+      categorySelect.innerHTML = '<option value="all">Tous les types</option>' + d.categories.map(cat =>
+        `<option value="${_catalogAuditEscape(cat.name)}">${_catalogAuditEscape(cat.name)} (${cat.total})</option>`
+      ).join('');
+      categorySelect.value = d.categories.some(cat => cat.name === selected) ? selected : 'all';
     }
-    grid.innerHTML = html;
+    renderCatalogAudit();
   } catch(e) {
-    grid.innerHTML = `<div style="color:#f55">Erreur : ${e.message}</div>`;
+    grid.innerHTML = `<div style="color:#f55">Erreur : ${_catalogAuditEscape(e.message)}</div>`;
   }
 }
 
@@ -12516,7 +12559,7 @@ def api_catalog_photo_audit():
     CATALOG_GID = 1819885465  # onglet "equipment link" du tracker UCI
     PHOTO_EXT   = _re.compile(r'\.(jpg|jpeg|png|webp|gif|svg)', _re.I)
 
-    rows = _fetch_gsheet_csv_by_gid(CATALOG_GID)
+    rows = _fetch_gsheet_rows_for_id(_active_gsheet_id(), gid=CATALOG_GID)
     if not rows:
         return jsonify({"error": "Impossible de charger le catalogue", "categories": []})
 
@@ -12544,12 +12587,19 @@ def api_catalog_photo_audit():
     result = []
     for cat_info in categories_raw:
         cat     = cat_info["name"]
-        missing = []
-        found   = 0
+        missing  = []
+        products = []
+        found    = 0
         for prod in cat_info["products"]:
             brand  = prod["brand"]
             detail = prod["detail"]
-            if _gec.find_eq_photo_variants(brand, detail, cat):
+            has_photo = bool(_gec.find_eq_photo_variants(brand, detail, cat))
+            products.append({
+                "brand": brand,
+                "detail": detail,
+                "has_photo": has_photo,
+            })
+            if has_photo:
                 found += 1
             else:
                 missing.append({"brand": brand, "detail": detail})
@@ -12558,6 +12608,7 @@ def api_catalog_photo_audit():
             "total":   len(cat_info["products"]),
             "found":   found,
             "missing": missing,
+            "products": products,
         })
 
     total_products = sum(c["total"] for c in result)

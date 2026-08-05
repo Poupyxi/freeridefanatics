@@ -141,6 +141,10 @@ def norm_text(s):
     s = s.lower().replace("™", "").replace("®", "")
     return re.sub(r"[^a-z0-9+]+", " ", s).strip()
 
+def compact_text(s):
+    """Comparison key for cosmetic separators only: `RUX 38` == `RUX38`."""
+    return re.sub(r"[^a-z0-9]+", "", norm_text(s))
+
 def listdir_images(path):
     if not os.path.isdir(path):
         return []
@@ -252,6 +256,12 @@ def index_library_equipment():
                 skipped_folders.append((folder, len(files)))
             continue
         for f in files:
+            source_path = os.path.join(path, f)
+            try:
+                with Image.open(source_path) as probe:
+                    probe.verify()
+            except (OSError, ValueError):
+                continue
             stem = os.path.splitext(f)[0]
             parts = [p.strip() for p in stem.split(";")]
             raw_brand = parts[0]
@@ -262,7 +272,7 @@ def index_library_equipment():
                 "brand": norm_text(canonical_brand),
                 "model": norm_text(canonical_model),
                 "full": norm_text(stem.replace(";", " ")),
-                "path": os.path.join(path, f),
+                "path": source_path,
                 "name": f,
             })
     return index, skipped_folders
@@ -272,6 +282,9 @@ def pick_photo(candidates, brand, model):
     if not candidates:
         return None
     target_full = f"{brand} {model}".strip()
+    compact_brand = compact_text(brand)
+    compact_model = compact_text(model)
+    compact_full = compact_text(target_full)
 
     # 1. brand and model both match exactly
     for c in candidates:
@@ -281,8 +294,36 @@ def pick_photo(candidates, brand, model):
     for c in candidates:
         if c["full"] == target_full:
             return c
-    # 3. same brand, model is a prefix either way ("Boxxer" vs "Boxxer Ultimate")
-    same_brand = [c for c in candidates if c["brand"] == brand]
+    # 3. Cosmetic separators are ignored globally. This covers spaces, dashes
+    # and underscores without fuzzy-merging distinct identities such as X0/X01.
+    same_brand = [c for c in candidates if compact_text(c["brand"]) == compact_brand]
+    if compact_model:
+        compact_exact = [c for c in same_brand
+                         if c["model"] and compact_text(c["model"]) == compact_model]
+        if compact_exact:
+            return min(compact_exact, key=lambda c: len(c["full"]))
+
+        # A library filename may append a tune, generation or colour after the
+        # actual sheet model (`RUX38-EVO...`). Require a substantial shared
+        # identity and a true compact prefix, never a similarity percentage.
+        compact_prefixed = []
+        if len(compact_model) >= 5:
+            for c in same_brand:
+                candidate_model = compact_text(c["model"])
+                if candidate_model and (candidate_model.startswith(compact_model)
+                                        or compact_model.startswith(candidate_model)):
+                    compact_prefixed.append(c)
+        if compact_prefixed:
+            return min(compact_prefixed, key=lambda c: len(compact_text(c["model"])))
+
+        compact_filename = [c for c in candidates
+                            if len(compact_full) >= 8
+                            and compact_text(c["full"]).startswith(compact_full)]
+        if compact_filename:
+            return min(compact_filename, key=lambda c: len(compact_text(c["full"])))
+
+    # 4. same brand, model is a word-boundary prefix either way
+    # ("Boxxer" vs "Boxxer Ultimate").
     if model:
         prefixed = [c for c in same_brand if c["model"] and
                     (c["model"].startswith(model + " ") or model.startswith(c["model"] + " "))]
@@ -291,7 +332,7 @@ def pick_photo(candidates, brand, model):
         loose = [c for c in same_brand if c["full"].startswith(target_full)]
         if loose:
             return min(loose, key=lambda c: len(c["full"]))
-    # 4. brand-only photo, when the sheet gives no model at all
+    # 5. brand-only photo, when the sheet gives no model at all
     if not model and same_brand:
         return min(same_brand, key=lambda c: len(c["full"]))
     return None

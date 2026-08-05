@@ -2691,9 +2691,15 @@ HTML = r"""<!DOCTYPE html>
   }
   #eq-audit-table tr:hover td { background: #141414; }
   #eq-audit-table tr:hover td:first-child { background: #141414; }
-  .audit-ok      { font-size: 14px; }
-  .audit-nophoto { font-size: 14px; filter: grayscale(1) opacity(.6); }
-  .audit-empty   { color: #2a2a2a; font-size: 12px; }
+  .audit-status {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 42px; padding: 3px 6px; border-radius: 4px;
+    font-size: 8px; line-height: 1; font-weight: 800; letter-spacing: .4px;
+  }
+  .audit-status-ok { color: #dfffe1; background: #1d6128; border: 1px solid #43b654; }
+  .audit-status-photo { color: #fff0c7; background: #704600; border: 1px solid #d89216; }
+  .audit-status-sheet { color: #ffdada; background: #681f24; border: 1px solid #d65059; }
+  .audit-ok, .audit-nophoto, .audit-empty { text-align: center; }
   /* ── Grille photos équipement ── */
   .eq-photo-thumb {
     width: 72px; height: 72px; border-radius: 6px; overflow: hidden;
@@ -4869,20 +4875,74 @@ HTML = r"""<!DOCTYPE html>
 
 <!-- ══════════════════ PAGE AUDIT ══════════════════ -->
 <div id="page-audit" style="display:none;padding:28px 24px 48px;max-width:1400px;margin:0 auto">
-  <h2 style="color:#C8D400;margin-bottom:4px;font-size:1.1rem;letter-spacing:1px">📋 AUDIT ÉQUIPEMENTS</h2>
-  <p style="color:#555;font-size:12px;margin-bottom:20px">Vue d'ensemble — présence des photos par rider × catégorie</p>
-
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-    <button onclick="loadEqAudit()" style="padding:5px 14px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer">↺ Actualiser</button>
-    <button onclick="rescanEqPhotos().then(loadEqAudit)" style="padding:5px 14px;background:#1a1a1a;border:1px solid #C8D400;border-radius:6px;color:#C8D400;font-size:12px;cursor:pointer">📸 Rescan photos</button>
-    <span style="font-size:11px;color:#444;margin-left:auto">🟢 données + photo &nbsp;·&nbsp; 🟡 données, photo manquante &nbsp;·&nbsp; ⬜ aucune donnée</span>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+    <div>
+      <h2 style="color:#C8D400;margin:0 0 4px;font-size:1.1rem;letter-spacing:1px">📋 AUDIT ÉQUIPEMENTS</h2>
+      <p style="color:#555;font-size:12px;margin:0">Couverture Sheet + photos, par catégorie et par rider</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span id="audit-last-update" style="font-size:10px;color:#333"></span>
+      <button onclick="auditFullRefresh()" style="padding:5px 14px;background:#1a1a1a;border:1px solid #C8D400;border-radius:6px;color:#C8D400;font-size:12px;cursor:pointer">📸 Rescan &amp; Actualiser</button>
+    </div>
   </div>
 
-  <div id="eq-audit-wrap" style="overflow-x:auto">
-    <div id="eq-audit-placeholder" style="color:#444;font-size:13px;padding:20px 0">
-      Chargement…
+  <!-- ── KPI par catégorie (temps réel) ── -->
+  <div style="margin:20px 0 28px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:700;color:#888;letter-spacing:.8px">PAR CATÉGORIE</span>
+      <div id="audit-cat-global" style="font-size:11px;color:#555;padding:4px 12px;background:#111;border:1px solid #222;border-radius:20px"></div>
     </div>
+    <div id="audit-cat-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px">
+      <div style="color:#333;font-size:12px;grid-column:1/-1">Chargement…</div>
+    </div>
+  </div>
+
+  <!-- ── Table riders ── -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;color:#888;letter-spacing:.8px">PAR RIDER</span>
+    <button id="audit-filter-btn" onclick="auditToggleFilter()" style="padding:3px 10px;background:#1a1a1a;border:1px solid #333;border-radius:5px;color:#aaa;font-size:11px;cursor:pointer">Afficher tout</button>
+    <span style="font-size:11px;color:#555;margin-left:auto"><span class="audit-status audit-status-ok">OK</span> info + photo &nbsp;·&nbsp; <span class="audit-status audit-status-photo">PHOTO</span> photo manquante &nbsp;·&nbsp; <span class="audit-status audit-status-sheet">SHEET</span> info Sheet manquante <span style="color:#333">(clic rider = détails)</span></span>
+  </div>
+  <div id="eq-audit-wrap" style="overflow-x:auto">
+    <div id="eq-audit-placeholder" style="color:#444;font-size:13px;padding:20px 0">Chargement…</div>
     <table id="eq-audit-table" style="display:none;border-collapse:collapse;min-width:100%;font-size:11px"></table>
+  </div>
+
+  <!-- Popup détail d'une photo manquante -->
+  <div id="audit-photo-popup" onclick="if(event.target===this)auditClosePhotoPopup()" style="display:none;position:fixed;inset:0;z-index:1200;background:#000a;align-items:center;justify-content:center;padding:20px">
+    <div role="dialog" aria-modal="true" aria-labelledby="audit-photo-popup-title" style="width:min(440px,100%);background:#111;border:1px solid #d89216;border-radius:10px;box-shadow:0 20px 60px #000;padding:18px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
+        <div>
+          <div id="audit-photo-popup-title" style="color:#f0b23c;font-size:13px;font-weight:800;letter-spacing:.6px">📷 PHOTO MANQUANTE</div>
+          <div style="color:#555;font-size:10px;margin-top:3px">Information trouvée dans le Google Sheet</div>
+        </div>
+        <button onclick="auditClosePhotoPopup()" aria-label="Fermer" style="background:none;border:0;color:#777;font-size:20px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div id="audit-photo-popup-content"></div>
+    </div>
+  </div>
+
+  <!-- ── Inventaire Google Sheet / photos ── -->
+  <div style="margin-top:44px;border-top:1px solid #1e1e1e;padding-top:32px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <h3 style="color:#C8D400;font-size:0.95rem;letter-spacing:1px;margin:0">📋 INVENTAIRE DU GOOGLE SHEET</h3>
+      <button onclick="loadCatalogAudit()" style="padding:5px 14px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer">↺ Actualiser</button>
+      <div id="catalog-audit-summary" style="font-size:11px;color:#555;margin-left:auto"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <input id="catalog-audit-search" type="search" placeholder="Rechercher une marque ou un équipement…" oninput="renderCatalogAudit()" style="min-width:260px;flex:1;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#ccc;font-size:12px">
+      <select id="catalog-audit-status" onchange="renderCatalogAudit()" style="padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#aaa;font-size:12px">
+        <option value="all">Toutes les photos</option>
+        <option value="missing">Photos manquantes</option>
+        <option value="found">Photos présentes</option>
+      </select>
+      <select id="catalog-audit-category" onchange="renderCatalogAudit()" style="padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#aaa;font-size:12px">
+        <option value="all">Tous les types</option>
+      </select>
+    </div>
+    <div id="catalog-audit-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px">
+      <div style="color:#333;font-size:13px">–</div>
+    </div>
   </div>
 </div><!-- fin #page-audit -->
 
@@ -5862,33 +5922,57 @@ function _perfSelectedRiders() {
 
 function _perfItemLabel(item, groupMode) {
   const brand = (item?.brand || '').trim();
-  const ref = _perfModelReference(item?.reference || '');
+  const ref = _perfModelReference(item?.reference || '', item);
   if (groupMode === 'brand') return brand || 'Unknown brand';
   return [brand, ref].filter(Boolean).join(' · ') || brand || ref || 'Unknown product';
 }
 
-function _perfModelReference(reference) {
+function _equipmentGroupBrandKey(value) {
+  const key = _ffFold(value);
+  const groups = {
+    specialized: ['specialized', 'sworks'],
+    northshorebillet: ['northshorebillet', 'nsb'],
+    srsuntour: ['srsuntour', 'suntour'],
+    ohlins: ['ohlins'],
+    ethirteen: ['ethirteen', 'e13'],
+    commencal: ['commencal', 'comencal'],
+    dtswiss: ['dtswiss'],
+  };
+  for (const [canonical, aliases] of Object.entries(groups)) {
+    if (aliases.includes(key)) return canonical;
+  }
+  return _brandKey(value || '') || key;
+}
+
+function _perfModelReference(reference, item = {}) {
   let ref = String(reference || '').trim();
   if (!ref) return '';
+  const brand = _equipmentGroupBrandKey(item?.brand || '');
+  const category = String(item?.category || '').trim();
 
   // Sheet/reference values can include visual variants. Performance rankings
   // should group the model, while Equipment cards still keep exact colorways.
   ref = ref
     .replace(/[;|].*$/g, '')
-    .replace(/\s*\((?:black|white|red|blue|green|yellow|gold|silver|grey|gray|raw|matte|gloss|satin|clear|cream|mint|camo|team|color|colour|front|rear|f|r)[^)]*\)\s*$/i, '')
+    .replace(/\s*\((?:black|white|red|blue|green|yellow|gold|silver|grey|gray|raw|matte|gloss|satin|clear|cream|mint|camo|team|color|colour)[^)]*\)\s*$/i, '')
     .replace(/\b(?:electric red|gloss black|void black|pure white|pure black|white gold|black gold|red mint|blue|cream|pewter)\b/gi, ' ')
-    .replace(/\b(?:gloss|matte|satin|raw|clear|metallic|factory|team|proteam|pro rider|camo|electric)\b/gi, ' ')
+    .replace(/\b(?:gloss|matte|satin|raw|clear|metallic|camo|electric)\b/gi, ' ')
     .replace(/\b(?:black|white|red|blue|green|yellow|gold|silver|grey|gray|orange|purple|pink|brown|cream|mint|turquoise|teal|bronze|pewter|chrome|graphite)\b/gi, ' ')
     .replace(/\b(?:29(?:er)?|27[.,]?5|mullet)\b(?=\s*$)/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  if (category === 'Fork' && brand === 'srsuntour' && /^rux\b/i.test(ref)) return 'RUX';
+  if (brand === 'rockshox') ref = ref.replace(/\bboxxer\b/i, 'BoXXer');
+  if (brand === 'dtswiss') ref = ref.replace(/\bFR\s+1500\b/i, 'FR1500');
+
   return ref;
 }
 
 function _perfItemKey(item, groupMode) {
-  const brand = _brandKey(item?.brand || '');
+  const brand = _equipmentGroupBrandKey(item?.brand || '');
   if (groupMode === 'brand') return brand || 'unknownbrand';
-  const ref = _ffFold(_perfModelReference(item?.reference || ''));
+  const ref = _ffFold(_perfModelReference(item?.reference || '', item));
   return [brand, ref].filter(Boolean).join('::') || _perfKey(_perfItemLabel(item, groupMode));
 }
 
@@ -6045,7 +6129,7 @@ function _perfStatsFor({ category = 'all', gender = 'F', topVal = '10', groupMod
           category: item.category,
           label,
           brand: item.brand || '',
-          reference: _perfModelReference(item.reference || ''),
+          reference: _perfModelReference(item.reference || '', item),
           count: 0,
           points: 0,
           bestRank: 999,
@@ -6990,7 +7074,14 @@ function switchTab(tab) {
   if (tab === 'settings') settingsLoadGoogleSheet();
   if (tab === 'connections') connRefreshGoogle();
   if (tab === 'quality') renderQualityCenter();
-  if (tab === 'audit') loadEqAudit();
+  if (tab === 'audit') {
+    loadEqAudit();
+    loadCatalogAudit();
+    clearInterval(_auditAutoTimer);
+    _auditAutoTimer = setInterval(() => { if (_activeTab === 'audit') loadEqAudit(); }, 60000);
+  } else {
+    clearInterval(_auditAutoTimer);
+  }
   if (tab === 'brandtags') renderBrandTagsPage();
 }
 
@@ -8880,72 +8971,355 @@ async function initEqPage() {
   rescanEqPhotos(true);   // rescan photos au premier chargement
 }
 
+// ── Audit state ──────────────────────────────────────────────────────────
+let _auditData = null;          // { columns, rows } — dernière réponse API
+let _auditFilterMissing = false; // true = afficher seulement les riders 🟡
+let _auditAutoTimer = null;
+
+function _auditColor(pct) {
+  return pct === 100 ? '#4CAF50' : pct >= 70 ? '#C8D400' : pct >= 40 ? '#f90' : '#f55';
+}
+
+// Rend les cards « PAR CATÉGORIE »
+function renderAuditCatCards(cols, rows) {
+  const cards   = document.getElementById('audit-cat-cards');
+  const global  = document.getElementById('audit-cat-global');
+  if (!cards) return;
+
+  const abbr = { 'Rear Shock':'Rear Shock','Handlebar':'Handlebar','Dropper Post':'Dropper',
+                 'Brake Lever':'Brake Lever','Brake Caliper':'Brake Caliper' };
+
+  let totalOk = 0, totalData = 0;
+  let html = '';
+  for (const col of cols) {
+    const withData  = rows.filter(r => r.cats[col] !== 'empty').length;
+    const withPhoto = rows.filter(r => r.cats[col] === 'ok').length;
+    const pct = withData ? Math.round(withPhoto / withData * 100) : 0;
+    const color = withData ? _auditColor(pct) : '#333';
+    totalOk += withPhoto; totalData += withData;
+
+    const label = abbr[col] || col;
+    html += `<div style="background:#111;border:1px solid #1e1e1e;border-left:3px solid ${color};border-radius:6px;padding:10px 12px">`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">`;
+    html += `<span style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px" title="${col}">${label}</span>`;
+    html += `<span style="font-size:12px;font-weight:700;color:${color};flex-shrink:0;margin-left:6px">${withData ? pct+'%' : '—'}</span>`;
+    html += `</div>`;
+    if (withData) {
+      html += `<div style="background:#1a1a1a;border-radius:2px;height:3px;margin-bottom:7px">`;
+      html += `<div style="background:${color};width:${pct}%;height:100%;border-radius:2px;transition:width .4s"></div></div>`;
+      html += `<div style="font-size:10px;color:#555">`;
+      html += `<span style="color:#888">${withPhoto}</span>/${withData} avec photo`;
+      if (withData < rows.length) html += ` · <span style="color:#f55">${rows.length - withData} sans info Sheet</span>`;
+      html += `</div>`;
+    } else {
+      html += `<div style="font-size:10px;color:#2a2a2a">Aucun rider renseigné</div>`;
+    }
+    html += `</div>`;
+  }
+  cards.innerHTML = html;
+
+  const pctGlobal = totalData ? Math.round(totalOk / totalData * 100) : 0;
+  const colGlobal = _auditColor(pctGlobal);
+  if (global) global.innerHTML = `
+    <span style="font-size:13px;font-weight:700;color:${colGlobal}">${pctGlobal}%</span>
+    <span style="color:#444;margin:0 6px">·</span>
+    <span style="color:#888">${totalOk}</span><span style="color:#444">/${totalData}</span>
+    <span style="color:#333;margin-left:4px">entrées sheet avec photo détectée</span>
+    <span style="color:#444;margin:0 6px">·</span>
+    <span style="color:#f90">${totalData - totalOk}</span><span style="color:#333"> sans photo</span>
+    <span style="color:#444;margin:0 6px">·</span>
+    <span style="color:#f55">${rows.length * cols.length - totalData}</span><span style="color:#333"> sans info Sheet</span>`;
+}
+
+// Rend la table riders (avec filtre optionnel)
+function renderAuditRiderTable(cols, rows, filterMissing) {
+  const ph  = document.getElementById('eq-audit-placeholder');
+  const tbl = document.getElementById('eq-audit-table');
+  const btn = document.getElementById('audit-filter-btn');
+  if (!tbl) return;
+
+  const abbr = { 'Rear Shock':'RShock','Handlebar':'Hbar','Dropper Post':'Dropper',
+                 'Brake Lever':'BLever','Brake Caliper':'BCalip' };
+
+  const visibleRows = filterMissing
+    ? rows.filter(r => Object.values(r.cats).some(v => v !== 'ok'))
+    : rows;
+
+  if (btn) btn.textContent = filterMissing ? '🟡🔴 Afficher les manques' : 'Afficher tout';
+
+  let html = '<thead><tr><th>Rider</th>';
+  cols.forEach(c => { html += `<th title="${c}">${abbr[c] || c}</th>`; });
+  html += '<th title="Photos détectées / Entrées avec data" style="border-left:1px solid #2a2a2a;white-space:nowrap">Score</th>';
+  html += '</tr></thead><tbody>';
+
+  let totOk = 0, totNp = 0, totEmpty = 0;
+  visibleRows.forEach((r, idx) => {
+    const name = `${r.genre === 'F' ? '♀' : '♂'} ${r.prenom} ${r.nom}`;
+    const handle = (r.instagram || '').replace('@','').toLowerCase();
+    const riderEq = _app.equipment?.[handle] || [];
+    const vals = Object.values(r.cats);
+    const withData = vals.filter(v => v !== 'empty').length;
+    const withOk   = vals.filter(v => v === 'ok').length;
+    const scorePct = withData ? Math.round(withOk / withData * 100) : 0;
+    const scoreCol = withData ? _auditColor(scorePct) : '#333';
+    const hasMissing = vals.some(v => v !== 'ok');
+    const detailId = `audit-detail-${idx}`;
+
+    html += `<tr>`;
+    html += `<td style="cursor:${hasMissing ? 'pointer' : 'default'}" onclick="${hasMissing ? `_auditToggleDetail('${detailId}')` : ''}" title="${hasMissing ? 'Cliquer pour détails' : ''}">${name}${hasMissing ? ' <span style="font-size:9px;color:#f90">▾</span>' : ''}</td>`;
+    cols.forEach(c => {
+      const st = r.cats[c];
+      if (st === 'ok') {
+        html += '<td class="audit-ok" title="Information Sheet et photo présentes"><span class="audit-status audit-status-ok">OK</span></td>';
+        totOk++;
+      } else if (st === 'no_photo') {
+        const eqItem = riderEq.find(i => i.category === c);
+        const tip = eqItem ? `${eqItem.brand}${eqItem.reference ? ' · ' + eqItem.reference : ''}` : c;
+        const popupArgs = [c, eqItem?.brand || '', eqItem?.reference || ''].map(value => JSON.stringify(encodeURIComponent(String(value))));
+        html += `<td class="audit-nophoto" title="${tip.replace(/"/g,'&quot;')} — cliquer pour le détail" style="cursor:pointer" onclick='auditOpenMissingPhoto(${popupArgs.join(',')})'><span class="audit-status audit-status-photo">PHOTO</span></td>`;
+        totNp++;
+      } else {
+        html += `<td class="audit-empty" title="${c} : aucune information dans le Google Sheet" style="cursor:help"><span class="audit-status audit-status-sheet">SHEET</span></td>`;
+        totEmpty++;
+      }
+    });
+    html += `<td style="border-left:1px solid #1a1a1a;font-size:10px;color:${scoreCol};white-space:nowrap;font-weight:${withData?'600':'normal'}">${withData ? withOk+'/'+withData : '—'}</td>`;
+    html += `</tr>`;
+
+    // Ligne dépliable avec les informations Sheet et photos manquantes
+    if (hasMissing) {
+      const missingPhotos = cols.filter(c => r.cats[c] === 'no_photo').map(c => {
+        const it = riderEq.find(i => i.category === c);
+        return { cat: c, brand: it?.brand || '', ref: it?.reference || '' };
+      });
+      const missingSheet = cols.filter(c => r.cats[c] === 'empty');
+      html += `<tr id="${detailId}" style="display:none;background:#0c0c0c">`;
+      html += `<td colspan="${cols.length + 2}" style="padding:8px 14px">`;
+      html += `<div style="font-size:10px;color:#666;margin-bottom:7px">Détails pour <strong style="color:#aaa">${r.prenom} ${r.nom}</strong></div>`;
+      if (missingPhotos.length) {
+        html += `<div style="font-size:10px;color:#f90;margin:5px 0">🟡 Information Sheet présente, photo manquante :</div><div style="display:flex;flex-wrap:wrap;gap:5px">`;
+        missingPhotos.forEach(m => {
+          html += `<span style="background:#151515;border:1px solid #f903;border-radius:4px;padding:3px 9px;font-size:10px"><span style="color:#888">${m.cat}</span>`;
+          if (m.brand) html += ` <span style="color:#aaa">${m.brand}</span>`;
+          if (m.ref) html += ` <span style="color:#777">${m.ref}</span>`;
+          html += `</span>`;
+        });
+        html += `</div>`;
+      }
+      if (missingSheet.length) {
+        html += `<div style="font-size:10px;color:#f55;margin:8px 0 5px">🔴 Aucune information dans le Sheet :</div><div style="display:flex;flex-wrap:wrap;gap:5px">`;
+        missingSheet.forEach(cat => {
+          html += `<span style="background:#151515;border:1px solid #f553;border-radius:4px;padding:3px 9px;font-size:10px;color:#999">${cat}</span>`;
+        });
+        html += `</div>`;
+      }
+      html += `</td></tr>`;
+    }
+  });
+
+  // Ligne totaux
+  html += `<tr style="border-top:2px solid #333"><td style="color:#888;font-size:10px">${visibleRows.length} riders</td>`;
+  cols.forEach(c => {
+    const colOk = visibleRows.filter(r => r.cats[c] === 'ok').length;
+    const total  = visibleRows.filter(r => r.cats[c] !== 'empty').length;
+    const pct    = total ? Math.round(colOk / total * 100) : 0;
+    const col    = total ? _auditColor(pct) : '#333';
+    html += `<td style="font-size:9px;color:${col}">${total ? pct+'%' : '·'}</td>`;
+  });
+  const gOk   = visibleRows.reduce((a,r) => a + Object.values(r.cats).filter(v=>v==='ok').length, 0);
+  const gData = visibleRows.reduce((a,r) => a + Object.values(r.cats).filter(v=>v!=='empty').length, 0);
+  const gPct  = gData ? Math.round(gOk / gData * 100) : 0;
+  html += `<td style="border-left:1px solid #1a1a1a;font-size:10px;color:${_auditColor(gPct)};font-weight:700">${gOk}/${gData}</td>`;
+  html += '</tr></tbody>';
+
+  tbl.innerHTML = html;
+  tbl.style.display = visibleRows.length ? 'table' : 'none';
+  ph.textContent = filterMissing
+    ? `🟡🔴 ${visibleRows.length} riders avec information ou photo manquante · ${rows.length - visibleRows.length} complets masqués`
+    : `✅ ${rows.length} riders · 🟢 ${totOk} info + photo · 🟡 ${totNp} info sans photo · 🔴 ${totEmpty} sans info Sheet`;
+  ph.style.color = '#777';
+  ph.style.display = 'block';
+}
+
+function _auditToggleDetail(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+}
+
+function auditOpenMissingPhoto(categoryEncoded, brandEncoded, referenceEncoded) {
+  const popup = document.getElementById('audit-photo-popup');
+  const content = document.getElementById('audit-photo-popup-content');
+  if (!popup || !content) return;
+  const category = decodeURIComponent(categoryEncoded);
+  const brand = decodeURIComponent(brandEncoded);
+  const reference = decodeURIComponent(referenceEncoded);
+  const item = { category, brand, reference };
+  const expected = _qualityExpectedFilename(item);
+  const expectedEncoded = encodeURIComponent(expected);
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:90px 1fr;gap:8px 12px;font-size:11px;margin-bottom:14px">
+      <span style="color:#555">Type</span><strong style="color:#bbb">${_catalogAuditEscape(category)}</strong>
+      <span style="color:#555">Marque</span><strong style="color:#bbb">${_catalogAuditEscape(brand || '—')}</strong>
+      <span style="color:#555">Référence</span><strong style="color:#bbb">${_catalogAuditEscape(reference || '—')}</strong>
+    </div>
+    <div style="color:#666;font-size:10px;margin-bottom:5px">Fichier attendu dans la base</div>
+    <div style="display:flex;align-items:center;gap:7px;background:#090909;border:1px solid #292929;border-radius:6px;padding:9px">
+      <code style="color:#ddd;font-size:10px;overflow-wrap:anywhere;flex:1">${_catalogAuditEscape(expected)}</code>
+      <button onclick="auditCopyMissingPhotoPath(decodeURIComponent('${expectedEncoded}'),this)" style="flex-shrink:0;padding:5px 8px;background:#222;border:1px solid #444;border-radius:4px;color:#aaa;font-size:9px;cursor:pointer">COPIER</button>
+    </div>`;
+  popup.style.display = 'flex';
+}
+
+function auditClosePhotoPopup() {
+  const popup = document.getElementById('audit-photo-popup');
+  if (popup) popup.style.display = 'none';
+}
+
+async function auditCopyMissingPhotoPath(path, button) {
+  try {
+    await navigator.clipboard.writeText(path);
+    if (button) button.textContent = 'COPIÉ';
+  } catch (_) {
+    if (button) button.textContent = path;
+  }
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') auditClosePhotoPopup();
+});
+
+function auditToggleFilter() {
+  _auditFilterMissing = !_auditFilterMissing;
+  if (_auditData) renderAuditRiderTable(_auditData.columns, _auditData.rows, _auditFilterMissing);
+}
+
+async function auditFullRefresh() {
+  await rescanEqPhotos(true);
+  await loadEqAudit();
+}
+
+function _auditSetLastUpdate() {
+  const el = document.getElementById('audit-last-update');
+  if (el) {
+    const now = new Date();
+    el.textContent = `Mis à jour à ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  }
+}
+
 async function loadEqAudit() {
   const ph  = document.getElementById('eq-audit-placeholder');
   const tbl = document.getElementById('eq-audit-table');
-  ph.textContent = '⏳ Analyse en cours…';
-  ph.style.display = 'block';
-  tbl.style.display = 'none';
+  const cards = document.getElementById('audit-cat-cards');
+  if (ph) { ph.textContent = '⏳ Analyse en cours…'; ph.style.display = 'block'; }
+  if (tbl) tbl.style.display = 'none';
+  if (cards) cards.innerHTML = '<div style="color:#333;font-size:12px;grid-column:1/-1">⏳</div>';
   try {
     const d = await fetch('/api/equipment-audit').then(r => r.json());
+    _auditData = d;
     const cols = d.columns;
     const rows = d.rows;
 
-    // Abréviations colonnes
-    const abbr = { 'Rear Shock':'RShock','Handlebar':'Hbar','Dropper Post':'Dropper',
-                   'Brake Lever':'BLever','Brake Caliper':'BCalip' };
-
-    // En-tête
-    let html = '<thead><tr><th>Rider</th>';
-    cols.forEach(c => { html += `<th title="${c}">${abbr[c] || c}</th>`; });
-    html += '</tr></thead><tbody>';
-
-    let totOk = 0, totNp = 0, totEmpty = 0;
-
-    // Calcul du statut global par rider → dot dans la liste
+    // Statut global par rider → dot dans la liste latérale
     _eqAuditBySlug = {};
     rows.forEach(r => {
       const slug = _app.profiles.find(p =>
         p.prenom === r.prenom && p.nom === r.nom)?.slug || '';
       const vals = Object.values(r.cats);
-      const hasData  = vals.some(v => v !== 'empty');
-      const allOk    = vals.filter(v => v !== 'empty').every(v => v === 'ok');
-      if (!hasData)       _eqAuditBySlug[slug] = 'empty';
-      else if (allOk)     _eqAuditBySlug[slug] = 'ok';
-      else                _eqAuditBySlug[slug] = 'partial';
+      const hasData = vals.some(v => v !== 'empty');
+      const allOk   = vals.filter(v => v !== 'empty').every(v => v === 'ok');
+      if (!hasData)   _eqAuditBySlug[slug] = 'empty';
+      else if (allOk) _eqAuditBySlug[slug] = 'ok';
+      else            _eqAuditBySlug[slug] = 'partial';
     });
-    renderEqRiderList();  // re-render avec les dots
+    renderEqRiderList();
 
-    rows.forEach(r => {
-      const name = `${r.genre === 'F' ? '♀' : '♂'} ${r.prenom} ${r.nom}`;
-      html += `<tr><td>${name}</td>`;
-      cols.forEach(c => {
-        const st = r.cats[c];
-        if (st === 'ok')            { html += '<td class="audit-ok">🟢</td>';      totOk++;    }
-        else if (st === 'no_photo') { html += '<td class="audit-nophoto">🟡</td>'; totNp++;    }
-        else                        { html += '<td class="audit-empty">·</td>';     totEmpty++; }
-      });
-      html += '</tr>';
-    });
-
-    const total = totOk + totNp + totEmpty;
-    html += `<tr style="border-top:2px solid #333">
-      <td style="color:#888;font-size:10px">TOTAL</td>`;
-    cols.forEach(c => {
-      const colOk = rows.filter(r => r.cats[c] === 'ok').length;
-      const colNp = rows.filter(r => r.cats[c] === 'no_photo').length;
-      const pct   = Math.round(colOk / rows.length * 100);
-      html += `<td style="font-size:9px;color:${pct===100?'#4CAF50':pct>50?'#C8D400':'#f90'}">${pct}%</td>`;
-    });
-    html += '</tr></tbody>';
-
-    tbl.innerHTML = html;
-    tbl.style.display = 'table';
-    ph.textContent = `✅ ${rows.length} riders · 🟢 ${totOk} · 🟡 ${totNp} · ⬜ ${totEmpty}`;
-    ph.style.color = '#888';
+    renderAuditCatCards(cols, rows);
+    renderAuditRiderTable(cols, rows, _auditFilterMissing);
+    _auditSetLastUpdate();
   } catch(e) {
-    ph.textContent = '❌ Erreur : ' + e.message;
-    ph.style.color = '#e55';
+    if (ph) { ph.textContent = '❌ Erreur : ' + e.message; ph.style.color = '#e55'; }
+  }
+}
+
+let _catalogAuditData = null;
+
+function _catalogAuditEscape(value) {
+  return String(value || '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
+function renderCatalogAudit() {
+  const grid    = document.getElementById('catalog-audit-grid');
+  const summary = document.getElementById('catalog-audit-summary');
+  const d = _catalogAuditData;
+  if (!grid || !d) return;
+
+  const query = String(document.getElementById('catalog-audit-search')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('catalog-audit-status')?.value || 'all';
+  const category = document.getElementById('catalog-audit-category')?.value || 'all';
+  const categories = d.categories.filter(cat => category === 'all' || cat.name === category);
+
+  let visibleProducts = 0;
+  let html = '';
+  for (const cat of categories) {
+    const products = (cat.products || []).filter(product => {
+      if (status === 'missing' && product.has_photo) return false;
+      if (status === 'found' && !product.has_photo) return false;
+      return !query || `${product.brand} ${product.detail}`.toLowerCase().includes(query);
+    });
+    if (!products.length) continue;
+    visibleProducts += products.length;
+
+    const found = products.filter(product => product.has_photo).length;
+    const pct = products.length ? Math.round(found / products.length * 100) : 100;
+    const color = pct === 100 ? '#4CAF50' : pct > 75 ? '#C8D400' : pct > 40 ? '#f90' : '#f55';
+
+    html += `<div style="background:#111;border:1px solid #222;border-radius:8px;padding:12px;min-width:0">`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px">`;
+    html += `<span style="font-size:11px;font-weight:700;color:#ccc;letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis" title="${_catalogAuditEscape(cat.name)}">${_catalogAuditEscape(cat.name).toUpperCase()}</span>`;
+    html += `<span style="font-size:10px;color:${color};font-weight:700;white-space:nowrap">${found}/${products.length} photos</span></div>`;
+    html += `<div style="background:#1a1a1a;border-radius:3px;height:3px;margin-bottom:10px"><div style="background:${color};width:${pct}%;height:100%;border-radius:3px"></div></div>`;
+
+    products.forEach(product => {
+      const icon = product.has_photo ? '🟢' : '🟡';
+      const label = [product.brand, product.detail].filter(Boolean).join(' · ') || 'Équipement sans nom';
+      html += `<div style="display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #1a1a1a;font-size:10px" title="${_catalogAuditEscape(label)}">`;
+      html += `<span style="flex-shrink:0">${icon}</span><span style="color:${product.has_photo ? '#888' : '#bbb'};min-width:0;overflow-wrap:anywhere">${_catalogAuditEscape(label)}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  grid.innerHTML = html || '<div style="color:#555;font-size:12px;grid-column:1/-1">Aucun équipement ne correspond aux filtres.</div>';
+  if (summary) {
+    const pctGlobal = d.total_products ? Math.round(d.total_found / d.total_products * 100) : 100;
+    summary.textContent = `${d.categories.length} types · ${d.total_products} équipements connus · ${d.total_found} avec photo (${pctGlobal}%) · ${d.total_missing} sans photo${visibleProducts !== d.total_products ? ` · ${visibleProducts} affichés` : ''}`;
+  }
+}
+
+async function loadCatalogAudit() {
+  const grid = document.getElementById('catalog-audit-grid');
+  const summary = document.getElementById('catalog-audit-summary');
+  if (!grid) return;
+  grid.innerHTML = '<div style="color:#444;font-size:13px">⏳ Analyse catalogue…</div>';
+  if (summary) summary.textContent = '';
+  try {
+    const d = await fetch('/api/catalog-photo-audit').then(r => r.json());
+    if (d.error) { grid.innerHTML = `<div style="color:#f55">${_catalogAuditEscape(d.error)}</div>`; return; }
+    _catalogAuditData = d;
+
+    const categorySelect = document.getElementById('catalog-audit-category');
+    if (categorySelect) {
+      const selected = categorySelect.value;
+      categorySelect.innerHTML = '<option value="all">Tous les types</option>' + d.categories.map(cat =>
+        `<option value="${_catalogAuditEscape(cat.name)}">${_catalogAuditEscape(cat.name)} (${cat.total})</option>`
+      ).join('');
+      categorySelect.value = d.categories.some(cat => cat.name === selected) ? selected : 'all';
+    }
+    renderCatalogAudit();
+  } catch(e) {
+    grid.innerHTML = `<div style="color:#f55">Erreur : ${_catalogAuditEscape(e.message)}</div>`;
   }
 }
 
@@ -9028,9 +9402,11 @@ function _eqFreeItemsForCategory(category) {
   _eqAllSheetItems()
     .filter(it => it.category === category)
     .forEach(it => {
-      const key = [it.category, it.brand, it.reference, it.details].map(v => String(v || '').trim()).join('|');
+      const brandKey = _equipmentGroupBrandKey(it.brand || '');
+      const modelRef = _perfModelReference(it.reference || '', it);
+      const key = [it.category, brandKey, _ffFold(modelRef)].map(v => String(v || '').trim()).join('|');
       if (!map.has(key)) {
-        map.set(key, { ...it, count: 0, riders: [] });
+        map.set(key, { ...it, reference: modelRef || it.reference || '', details: '', count: 0, riders: [] });
       }
       const entry = map.get(key);
       entry.count += 1;
@@ -12246,6 +12622,78 @@ def api_equipment_audit():
     return jsonify({
         "columns": gc.EQUIPMENT_COLUMNS,
         "rows":    rows,
+    })
+
+
+@app.route("/api/catalog-photo-audit")
+def api_catalog_photo_audit():
+    """Audit catalogue : produits de l'onglet 'equipment link' sans photo par catégorie."""
+    import generate_equipment_card as _gec
+    import re as _re
+
+    CATALOG_GID = 1819885465  # onglet "equipment link" du tracker UCI
+    PHOTO_EXT   = _re.compile(r'\.(jpg|jpeg|png|webp|gif|svg)', _re.I)
+
+    rows = _fetch_gsheet_rows_for_id(_active_gsheet_id(), gid=CATALOG_GID)
+    if not rows:
+        return jsonify({"error": "Impossible de charger le catalogue", "categories": []})
+
+    # Parsing : ligne catégorie = col A non vide, col B vide
+    #           ligne produit   = col A = marque, col B = détail (pas une URL image)
+    categories_raw = []
+    current_cat     = None
+    current_items   = []
+
+    for row in rows:
+        a = row[0].strip() if len(row) > 0 else ""
+        b = row[1].strip() if len(row) > 1 else ""
+        if a and not b:                              # en-tête catégorie
+            if current_cat is not None:
+                categories_raw.append({"name": current_cat, "products": current_items})
+            current_cat   = a
+            current_items = []
+        elif current_cat and not PHOTO_EXT.search(b):  # ligne produit
+            if a or b:
+                current_items.append({"brand": a, "detail": b})
+
+    if current_cat is not None:
+        categories_raw.append({"name": current_cat, "products": current_items})
+
+    result = []
+    for cat_info in categories_raw:
+        cat     = cat_info["name"]
+        missing  = []
+        products = []
+        found    = 0
+        for prod in cat_info["products"]:
+            brand  = prod["brand"]
+            detail = prod["detail"]
+            has_photo = bool(_gec.find_eq_photo_variants(brand, detail, cat))
+            products.append({
+                "brand": brand,
+                "detail": detail,
+                "has_photo": has_photo,
+            })
+            if has_photo:
+                found += 1
+            else:
+                missing.append({"brand": brand, "detail": detail})
+        result.append({
+            "name":    cat,
+            "total":   len(cat_info["products"]),
+            "found":   found,
+            "missing": missing,
+            "products": products,
+        })
+
+    total_products = sum(c["total"] for c in result)
+    total_found    = sum(c["found"]  for c in result)
+
+    return jsonify({
+        "categories":     result,
+        "total_products": total_products,
+        "total_found":    total_found,
+        "total_missing":  total_products - total_found,
     })
 
 

@@ -946,3 +946,36 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
   .home-page .ticker-track,
   .home-page .cta-dark .waves path{animation:none;}
 }
+
+/* ---------------------------------------------------------------- newsletter */
+/* The label and the honeypot have to stay reachable by assistive tech and by
+   bots respectively, so neither can use display:none. */
+.visually-hidden{
+  position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+.nl-trap{position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;}
+
+.cta-form{position:relative;}
+.cta-form input:focus-visible, .cta-form button:focus-visible{
+  outline:2px solid var(--orange); outline-offset:2px;
+}
+.cta-form button[disabled]{opacity:0.6; cursor:progress;}
+.cta-form[hidden]{display:none;}
+
+.cta-status{
+  font-family:var(--mono); font-size:12px; letter-spacing:0.02em;
+  color:#c7cbce; margin:0 0 10px; min-height:1.2em; max-width:460px;
+}
+.cta-status:empty{margin-bottom:0;}
+.cta-status.is-done{color:#7fd6a2;}
+.cta-status.is-error{color:#ff9b7a;}
+
+.cta-dark .fineprint a{color:#c7cbce; text-decoration:underline; text-underline-offset:2px;}
+.cta-dark .fineprint a:hover{color:#fff;}
+
+@media (max-width:560px){
+  .cta-form{flex-wrap:wrap;}
+  .cta-form input{flex:1 1 100%; min-width:0;}
+  .cta-form button{flex:1 1 100%; margin-top:8px;}
+}

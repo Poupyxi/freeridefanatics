@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FreerideFanatics — Google Sheet sync.
+RidersFanatics — Google Sheet sync.
 
 Downloads the UCI_DH_2026_Tracker_v3 Google Sheet (public link-share export)
 and regenerates data/riders.json from its tabs:

@@ -1,4 +1,4 @@
-# FreerideFanatics — UCI MTB World Cup DH kit tracker
+# RidersFanatics — UCI MTB World Cup DH kit tracker
 
 Static site: one directory page + one detail page per rider, listing their
 full race setup with "Shop" buttons for affiliate links. Design language is
@@ -60,6 +60,32 @@ python3 sync.py --offline file.xlsx # parse a local export instead of downloadin
 python3 build.py                    # rebuild everything from existing riders.json (no network)
 python3 build_seo_guides.py         # rebuild only localized guides, sitemap and robots.txt
 ```
+
+### Newsletter signup
+
+The box on the home page is off until it has somewhere to deliver. Set one
+constant in `build.py` and rebuild:
+
+```python
+NEWSLETTER_ENDPOINT = "https://…"   # anything accepting a JSON POST
+```
+
+It posts `{email, source, submitted_at}` over `fetch`, so the reader stays on
+the page. Left empty the section is **not rendered at all**, and the build says
+so — this form previously shipped with `onsubmit="return false"`, which looked
+like it worked and dropped every signup in silence. A section that cannot
+deliver is absent, not decorative.
+
+Spam is handled by an off-screen honeypot input, not a CAPTCHA. Submissions
+that fill it are accepted visually and sent nowhere.
+
+```bash
+npm install jsdom && node tests/newsletter.test.js
+```
+
+21 checks over the markup, the success path, and — the point of the rewrite —
+that a network failure or an HTTP error never shows a success message. Build
+with `NEWSLETTER_ENDPOINT` set before running them.
 
 ### Data checks
 

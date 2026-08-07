@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FreerideFanatics — image import.
+RidersFanatics — image import.
 
 Bridges the photo library on the Desktop into the site's assets, resizing and
 renaming along the way. The library keeps its own conventions (files named by

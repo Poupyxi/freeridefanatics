@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://freeridefanatics.hotcut.xyz/sitemap.xml
+Sitemap: https://ridersfanatics.com/sitemap.xml

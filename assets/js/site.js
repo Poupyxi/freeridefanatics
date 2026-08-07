@@ -351,6 +351,63 @@
     });
   });
 
+  // Newsletter signup. The form posts over fetch so the reader never leaves the
+  // page, and every outcome lands in the status line. Without JS the form still
+  // submits natively to the same endpoint, so nothing is lost.
+  document.querySelectorAll('form[data-newsletter]').forEach(function(form){
+    var status = form.parentNode.querySelector('[data-newsletter-status]');
+    var button = form.querySelector('button[type="submit"]');
+    var email  = form.querySelector('input[type="email"]');
+    var trap   = form.querySelector('.nl-trap input');
+    var idle   = button ? button.textContent : 'Subscribe';
+
+    function say(message, state){
+      if (!status) return;
+      status.textContent = message;
+      status.className = 'cta-status' + (state ? ' is-' + state : '');
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (trap && trap.value) return;            // bot: accept silently, send nothing
+      if (!email || !email.value.trim()) { say('Enter your email address.', 'error'); email && email.focus(); return; }
+      if (!email.checkValidity())        { say('That email address looks off.', 'error'); email.focus(); return; }
+      if (form.dataset.sending === '1') return;  // double click, double signup
+
+      form.dataset.sending = '1';
+      button.disabled = true;
+      button.textContent = 'Sending…';
+      say('Signing you up…');
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: email.value.trim(),
+          source: window.location.pathname,
+          submitted_at: new Date().toISOString()
+        })
+      }).then(function(res){
+        if (!res.ok) throw new Error(res.status);
+        form.reset();
+        form.hidden = true;
+        say('You are in. The next setup sheet lands the morning after the round.', 'done');
+      }).catch(function(){
+        // Never pretend it worked — that is the whole point of this rewrite.
+        say('That did not go through. Try again in a moment.', 'error');
+      }).then(function(){
+        form.dataset.sending = '';
+        button.disabled = false;
+        button.textContent = idle;
+      });
+    });
+
+    // Clear a stale error as soon as the reader starts fixing it
+    email && email.addEventListener('input', function(){
+      if (status && status.classList.contains('is-error')) say('');
+    });
+  });
+
   // "Random rider" CTA — the markup ships with a working href so the button
   // still goes somewhere without JS; here we make it land on a random rider,
   // and on a *different* one each time it is used.

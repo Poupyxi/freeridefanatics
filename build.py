@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FreerideFanatics static site generator.
+RidersFanatics static site generator.
 
 Reads data/riders.json and generates:
   - index.html               (rider directory, filterable grid)
@@ -34,10 +34,19 @@ ACTION_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-action")
 EQUIP_IMG_DIR = os.path.join(ROOT, "assets", "img", "equipment")
 REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
 
-SITE_NAME = "FreerideFanatics"
-SITE_URL = "https://freeridefanatics.hotcut.xyz"
+SITE_NAME = "RidersFanatics"
+SITE_URL = "https://ridersfanatics.com"
 SITE_UPDATED = "2026-08-07"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
+
+# Where the newsletter form posts. One line to switch provider — a Make webhook,
+# an endpoint on the VPS, Buttondown, anything that accepts a JSON POST.
+#
+# Left empty, the form is NOT rendered and the build says so. That is
+# deliberate: this box previously shipped with onsubmit="return false", so it
+# looked like it worked and dropped every signup in silence. A section that
+# cannot work should be absent, not decorative.
+NEWSLETTER_ENDPOINT = ""
 
 # ---------------------------------------------------------------- equipment groups
 
@@ -281,8 +290,8 @@ def header_html(asset_prefix, active=""):
 <header>
   <div class="wrap nav-row">
     <a class="logo" href="{asset_prefix}index.html">
-      <span class="mark">F</span>
-      FREERIDEFANATICS
+      <span class="mark">R</span>
+      RIDERSFANATICS
     </a>
     <nav class="links">
       <div class="nav-item has-dropdown">
@@ -309,7 +318,7 @@ def header_html(asset_prefix, active=""):
 def footer_html(asset_prefix):
     return f"""<footer>
   <div class="wrap footer-row">
-    <a class="footer-logo" href="{asset_prefix}index.html"><span class="mark">F</span>FREERIDEFANATICS</a>
+    <a class="footer-logo" href="{asset_prefix}index.html"><span class="mark">R</span>RIDERSFANATICS</a>
     <nav class="footer-links">
       <a href="{asset_prefix}riders.html#grid">Riders</a>
       <a href="{asset_prefix}equipment.html">Equipment</a>
@@ -320,7 +329,7 @@ def footer_html(asset_prefix):
       <a href="{asset_prefix}affiliate-disclosure.html">Affiliates</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
-    <span class="footer-copy">&copy; 2026 FreerideFanatics</span>
+    <span class="footer-copy">&copy; 2026 RidersFanatics</span>
   </div>
   <div class="wrap footer-updated">Last updated <time datetime="2026-08-07">07 Aug 2026</time></div>
 </footer>
@@ -343,6 +352,35 @@ def hero_waves_svg():
     <path d="M0,460 C170,430 330,490 500,470 C660,450 780,410 960,430 C1100,445 1170,420 1240,435" fill="none" stroke="#15161a" stroke-opacity="0.08" stroke-width="1.5"/>
     <path d="M-50,500 C140,470 300,510 480,485 C650,460 780,495 950,475 C1080,460 1170,480 1240,470" fill="none" stroke="#15161a" stroke-opacity="0.06" stroke-width="1.3"/>
   </svg>"""
+
+def newsletter_form_html(prefix=""):
+    """The signup box, rendered only when there is somewhere to post to.
+
+    Nothing here is decorative: the email is the one thing a visitor gives back,
+    and the previous version of this form threw every address away without a
+    word. It submits over fetch so the reader stays on the page, and every
+    outcome — sending, done, failed — is announced through the status line,
+    which is a live region so screen readers hear it too.
+
+    The honeypot is a real input kept off-screen: bots fill every field they
+    find, a human never sees it, and site.js drops any submission that has it
+    filled. No CAPTCHA, no third-party script."""
+    if not NEWSLETTER_ENDPOINT:
+        return ("<!-- Newsletter box hidden: NEWSLETTER_ENDPOINT is empty in build.py.\n"
+                "     A form that cannot deliver is worse than no form. -->")
+    return f"""<form class="cta-form" data-newsletter action="{esc(NEWSLETTER_ENDPOINT)}" method="post">
+      <label class="visually-hidden" for="newsletter-email">Your email address</label>
+      <input id="newsletter-email" type="email" name="email" required
+             autocomplete="email" spellcheck="false" placeholder="you@example.com">
+      <button type="submit">Subscribe</button>
+      <div class="nl-trap" aria-hidden="true">
+        <label>Leave this field empty
+          <input type="text" name="company" tabindex="-1" autocomplete="off"></label>
+      </div>
+    </form>
+    <p class="cta-status" data-newsletter-status role="status" aria-live="polite"></p>
+    <div class="fineprint">No spam · Unsubscribe anytime ·
+      <a href="{prefix}privacy.html">What we do with your email</a></div>"""
 
 def cta_waves_svg():
     return """<svg class="waves" viewBox="0 0 1240 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -386,20 +424,20 @@ def build_editorial_page(slug, title, description, label, lead, sections):
 def build_trust_pages():
     return {
         "about.html": build_editorial_page(
-            "about", "About FreerideFanatics",
-            "Learn what FreerideFanatics tracks, why the independent World Cup downhill database exists and how to interpret its rider, equipment and results pages.",
+            "about", "About RidersFanatics",
+            "Learn what RidersFanatics tracks, why the independent World Cup downhill database exists and how to interpret its rider, equipment and results pages.",
             "Independent World Cup DH database",
-            "FreerideFanatics documents the riders, race equipment and results that shape the UCI Mountain Bike World Cup downhill season.",
+            "RidersFanatics documents the riders, race equipment and results that shape the UCI Mountain Bike World Cup downhill season.",
             [
-                ("Our purpose", ["FreerideFanatics was created to make professional downhill equipment easier to explore. Rider information, race results and identifiable bike components are connected in one structured database, so fans can move from a rider to a setup, from a component to the riders using it, and from equipment trends to sporting results.", "The site is designed for riders, fans, mechanics and journalists who want a clearer view of the equipment used at the highest level of downhill racing."]),
-                ("Independent and unofficial", ["FreerideFanatics is an independent editorial project. It is not an official UCI website and is not operated by, endorsed by or affiliated with the riders, teams, race organisers or manufacturers referenced on its pages.", "Brand names, rider names and product names remain the property of their respective owners and are used for identification and editorial reporting."]),
-                ("What the database covers", ["The 2026 database currently connects 64 elite riders with teams, public career information, race results and identified equipment across frames, suspension, cockpit, drivetrain, wheels, tires and protection.", "The scope will grow when reliable information adds genuine value. FreerideFanatics does not publish speculative specifications simply to fill an empty field."]),
+                ("Our purpose", ["RidersFanatics was created to make professional downhill equipment easier to explore. Rider information, race results and identifiable bike components are connected in one structured database, so fans can move from a rider to a setup, from a component to the riders using it, and from equipment trends to sporting results.", "The site is designed for riders, fans, mechanics and journalists who want a clearer view of the equipment used at the highest level of downhill racing."]),
+                ("Independent and unofficial", ["RidersFanatics is an independent editorial project. It is not an official UCI website and is not operated by, endorsed by or affiliated with the riders, teams, race organisers or manufacturers referenced on its pages.", "Brand names, rider names and product names remain the property of their respective owners and are used for identification and editorial reporting."]),
+                ("What the database covers", ["The 2026 database currently connects 64 elite riders with teams, public career information, race results and identified equipment across frames, suspension, cockpit, drivetrain, wheels, tires and protection.", "The scope will grow when reliable information adds genuine value. RidersFanatics does not publish speculative specifications simply to fill an empty field."]),
                 ("Transparency", ["Equipment can change between practice, qualifying and race runs. Prototypes can also differ from products sold to the public. Every setup should therefore be understood as a documented snapshot based on the best public information available at the time.", "The full collection and ranking principles are explained on the methodology page."]),
             ],
         ),
         "methodology.html": build_editorial_page(
             "methodology", "Data methodology",
-            "How FreerideFanatics collects, verifies, updates and ranks World Cup downhill rider, result and equipment data.",
+            "How RidersFanatics collects, verifies, updates and ranks World Cup downhill rider, result and equipment data.",
             "Sources, verification and limitations",
             "A transparent explanation of how rider profiles, equipment records and season rankings are assembled and how uncertainty is handled.",
             [
@@ -412,24 +450,24 @@ def build_trust_pages():
         ),
         "affiliate-disclosure.html": build_editorial_page(
             "affiliate-disclosure", "Affiliate disclosure",
-            "How affiliate product links support FreerideFanatics and how commercial links are separated from independent equipment data.",
+            "How affiliate product links support RidersFanatics and how commercial links are separated from independent equipment data.",
             "Commercial transparency",
             "Some product links may generate a commission, but affiliate availability does not determine which riders, components or results appear in the database.",
             [
-                ("How affiliate links work", ["Some external product links are affiliate links. If a visitor follows one of these links and completes a qualifying purchase, FreerideFanatics may receive a commission without increasing the visitor's purchase price."]),
+                ("How affiliate links work", ["Some external product links are affiliate links. If a visitor follows one of these links and completes a qualifying purchase, RidersFanatics may receive a commission without increasing the visitor's purchase price."]),
                 ("Editorial independence", ["Equipment is recorded because it is publicly associated with a tracked rider, not because a retailer offers a commission. A product without an affiliate link can rank above a monetised product, and many tracked components have no commercial link at all."]),
                 ("Buying decisions", ["Race equipment may be a prototype, a team-specific tune or a configuration that differs from a retail product. Visitors should verify compatibility, sizing, specification, warranty and local availability with the manufacturer or retailer before buying."]),
             ],
         ),
         "privacy.html": build_editorial_page(
             "privacy", "Privacy policy",
-            "Privacy information for visitors to FreerideFanatics, including server logs, external links, affiliate links and future service changes.",
+            "Privacy information for visitors to RidersFanatics, including server logs, external links, affiliate links and future service changes.",
             "Visitor information",
-            "FreerideFanatics is currently a primarily static editorial website and does not operate an active newsletter form or user account system.",
+            "RidersFanatics is currently a primarily static editorial website and does not operate an active newsletter form or user account system.",
             [
                 ("Information processed", ["The website itself does not currently ask visitors to create an account or submit personal information. Standard hosting infrastructure may process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
                 ("External services", ["Pages may link to manufacturers, retailers, Amazon and social platforms. Those websites operate under their own privacy and cookie policies. Following an external link transfers the visitor to the third party's service."]),
-                ("Affiliate links", ["Some outbound links are marked as sponsored affiliate links. The destination retailer may use its own identifiers or cookies to attribute a qualifying purchase. FreerideFanatics does not receive the visitor's payment details from the retailer."]),
+                ("Affiliate links", ["Some outbound links are marked as sponsored affiliate links. The destination retailer may use its own identifiers or cookies to attribute a qualifying purchase. RidersFanatics does not receive the visitor's payment details from the retailer."]),
                 ("Future changes", ["If analytics, a newsletter, contact form or user accounts are activated later, this policy should be updated before the new processing begins, with appropriate consent and retention information where required."]),
             ],
         ),
@@ -480,20 +518,21 @@ def build_index(riders, women_count, men_count):
         "@context": "https://schema.org", "@type": "FAQPage",
         "mainEntity": [
             {"@type": "Question", "name": "Where does this data come from?", "acceptedAnswer": {"@type": "Answer", "text": "Setups are tracked from official UCI MTB World Cup information, team communications, manufacturer material and public sponsor listings."}},
-            {"@type": "Question", "name": "Are the shop links affiliate links?", "acceptedAnswer": {"@type": "Answer", "text": "Some product links are affiliate links. FreerideFanatics may earn a commission on qualifying purchases at no extra cost to the visitor."}},
+            {"@type": "Question", "name": "Are the shop links affiliate links?", "acceptedAnswer": {"@type": "Answer", "text": "Some product links are affiliate links. RidersFanatics may earn a commission on qualifying purchases at no extra cost to the visitor."}},
             {"@type": "Question", "name": "How often is the equipment data updated?", "acceptedAnswer": {"@type": "Answer", "text": "Results are updated during the season and equipment is updated when a verifiable change is identified."}},
             {"@type": "Question", "name": "How are corrections handled?", "acceptedAnswer": {"@type": "Answer", "text": "Corrections are checked against a public source before publication. The methodology page explains the evidence required and current submission status."}},
+            {"@type": "Question", "name": "Is Rider Fanatic the same as RidersFanatics?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common searches for RidersFanatics, the independent downhill rider, bike setup and race-results database at ridersfanatics.com."}},
         ],
     }
     html = head(
-        f"{SITE_NAME} — Pro DH Kit, Every Setup",
-        "Every UCI MTB World Cup Downhill rider's exact bike setup, gear and results — shop what they ride.",
+        f"{SITE_NAME} | World Cup DH Riders, Bikes & Results",
+        "RidersFanatics — also searched as Rider Fanatic or RiderFanatic — tracks UCI MTB World Cup downhill riders, bike setups, equipment and race results.",
         prefix,
         body_class="home-page",
         canonical_path="/",
         schemas=[
-            {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "url": SITE_URL + "/", "description": "World Cup downhill rider setups, equipment and results."},
-            {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "url": SITE_URL + "/", "logo": absolute_url("/assets/img/favicon.svg")},
+            {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "description": "World Cup downhill rider setups, equipment and results."},
+            {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "logo": absolute_url("/assets/img/favicon.svg")},
             faq_schema,
         ],
     )
@@ -532,7 +571,6 @@ def build_index(riders, women_count, men_count):
       </div>
     </div>
     <div class="faq">
-      <div class="faq-item">
         <div class="faq-q"><h3><span class="faq-num">Q1</span>Where does this data come from?</h3><span class="plus">+</span></div>
         <div class="faq-a"><p>Every setup is tracked from official UCI MTB World Cup entry lists, team press releases and public sponsor listings, updated across the 2026 season.</p></div>
       </div>
@@ -548,6 +586,10 @@ def build_index(riders, women_count, men_count):
         <div class="faq-q"><h3><span class="faq-num">Q4</span>How are corrections handled?</h3><span class="plus">+</span></div>
         <div class="faq-a"><p>Corrections are checked against a public source before publication. See our <a href="methodology.html">data methodology</a> for the evidence required and current submission status.</p></div>
       </div>
+      <div class="faq-item">
+        <div class="faq-q"><h3><span class="faq-num">Q5</span>Is Rider Fanatic the same as RidersFanatics?</h3><span class="plus">+</span></div>
+        <div class="faq-a"><p>Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common ways people search for <strong>RidersFanatics</strong>, our independent World Cup downhill rider, bike setup and race-results database.</p></div>
+      </div>
     </div>
   </div>
 </section>
@@ -559,13 +601,7 @@ def build_index(riders, women_count, men_count):
     <div class="label">Stay up to speed</div>
     <h2>New kit drops every race weekend.</h2>
     <p class="sub">Get the setup sheet the morning after every World Cup round — straight to your inbox.</p>
-    <!-- Newsletter form kept ready for future activation.
-    <form class="cta-form" onsubmit="return false;">
-      <input type="email" placeholder="you@example.com">
-      <button type="submit">Subscribe</button>
-    </form>
-    <div class="fineprint">No spam · Unsubscribe anytime</div>
-    -->
+    {newsletter_form_html()}
   </div>
 </section>
 """
@@ -1235,7 +1271,7 @@ def build_equipment_category_page(category, products):
     html += f'''<main><section class="hero equipment-hero"><div class="wrap hero-inner"><div class="label">World Cup DH · Season 2026</div><h1>{esc(label)} used by professional downhill riders.</h1><p class="sub">{esc(description)} The current points leader in this category is {esc(leader)}.</p></div></section>
 <div class="wrap">{breadcrumb_html([("Home", "../index.html"), ("Equipment", "../equipment.html"), (label, equip_image_slug(category, '', '') + ".html")])}</div>
 <section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Ranked by combined rider points</div><h2>{esc(label)} leaderboard</h2></div><a class="see-all" href="../methodology.html">Read the methodology →</a></div><div class="equipment-ranking-list">{"".join(rows)}</div>
-<div class="guide-callout"><strong>Editorial context</strong><p>This table records competitive usage within the FreerideFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications.</p></div></div></section></main>'''
+<div class="guide-callout"><strong>Editorial context</strong><p>This table records competitive usage within the RidersFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications.</p></div></div></section></main>'''
     html += footer_html("../")
     return html
 
@@ -1440,7 +1476,7 @@ def build_rider_page(r):
     identity = f"a {r.get('country')} downhill rider" if r.get("country") else "a World Cup downhill rider"
     if r.get("team"):
         identity += f" competing for {r['team']}"
-    rider_summary = f"{r['display_name']} is {identity}. FreerideFanatics currently tracks {len(equipment)} equipment items for this 2026 race setup"
+    rider_summary = f"{r['display_name']} is {identity}. RidersFanatics currently tracks {len(equipment)} equipment items for this 2026 race setup"
     if highlight_parts:
         rider_summary += ", including " + ", ".join(highlight_parts)
     rider_summary += f". The season record below contains {len(history)} tracked result{'s' if len(history) != 1 else ''} and {rider_total_points(r)} cumulative points."
@@ -1623,6 +1659,9 @@ def main():
         subprocess.run([sys.executable, seo_builder], check=True)
 
     print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men).")
+    if not NEWSLETTER_ENDPOINT:
+        print("newsletter:  box NOT rendered — NEWSLETTER_ENDPOINT is empty in build.py.\n"
+              "             Set it to the URL that collects signups to switch the section on.")
 
 if __name__ == "__main__":
     main()

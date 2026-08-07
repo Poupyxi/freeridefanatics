@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FreerideFanatics — data checks run against the sheet before every build.
+RidersFanatics — data checks run against the sheet before every build.
 
 Why this exists: for months the standings were inverted because the placing
 column was summed as if it were points. Nothing caught it. The numbers were

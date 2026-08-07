@@ -226,26 +226,49 @@ def parse_equipment_tab(ws):
         out[insta] = items
     return out
 
+# Non-finishing statuses the sheet writes in the Classement cell.
+DNX_STATUSES = {"DNS", "DNF", "DSQ", "DQ", "DNQ", "OTL"}
+
 def parse_results(ws):
-    """(first, LAST) lowercase -> {'country_code': str, 'history': [...]}."""
+    """(first, LAST) lowercase -> {'country_code': str, 'history': [...]}.
+
+    Each round occupies TWO columns under one merged title:
+
+        | 🇦🇹 Autriche-Leogang (june) |          <- row 2, merged across both
+        | Classement    | Points      |          <- row 3
+
+    openpyxl exposes a merged range's value on its top-left cell only, so the
+    column index recovered from the title row is the *Classement* (finishing
+    position) column and the points sit one column to its right. Reading the
+    title column as points is what inverted the whole standings: positions were
+    summed as if they were points, so the slowest riders ranked highest.
+    Positions are kept as-is from the sheet and stored separately."""
     out = {}
     events = None
     for row in ws.iter_rows(values_only=True):
         cells = [clean(c) for c in row]
         if events is None:
             if cells[0] == "G":
-                events = [(i, normalize_event(h)) for i, h in enumerate(cells[5:], start=5) if strip_emoji(h)]
+                events = [(i, i + 1, normalize_event(h))
+                          for i, h in enumerate(cells[5:], start=5) if strip_emoji(h)]
             continue
         if not cells[1] or not cells[2] or "ELITE" in cells[0].upper():
             continue
         history = []
-        for col, event in events:
-            pts = as_int(cells[col]) if col < len(cells) else None
-            if pts is not None:
-                history.append({
-                    "year": SEASON, "event": event, "category": HISTORY_CATEGORY,
-                    "result": None, "points": pts,
-                })
+        for rank_col, points_col, event in events:
+            rank_raw = cells[rank_col] if rank_col < len(cells) else ""
+            points_raw = cells[points_col] if points_col < len(cells) else ""
+            pts = as_int(points_raw)
+            place = as_int(rank_raw)
+            status = rank_raw.upper() if rank_raw.upper() in DNX_STATUSES else None
+            if pts is None and place is None and status is None:
+                continue  # rider did not contest this round
+            history.append({
+                "year": SEASON, "event": event, "category": HISTORY_CATEGORY,
+                "result": status or build.ordinal(place),
+                "place": None if status else place,
+                "points": pts,
+            })
         out[(slugify(cells[1]), slugify(cells[2]))] = {
             "country_code": cells[3] or None,
             "history": history,

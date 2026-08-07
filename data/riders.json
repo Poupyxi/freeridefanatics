@@ -129,36 +129,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 85
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 65
    }
   ],
   "photo_url": null,
@@ -299,43 +304,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 22
+    "result": "22nd",
+    "place": 22,
+    "points": 39
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 75
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 19
+    "result": "19th",
+    "place": 19,
+    "points": 42
    }
   ],
   "photo_url": null,
@@ -429,43 +440,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "10th",
+    "place": 10,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 40
    }
   ],
   "photo_url": null,
@@ -569,24 +586,35 @@
   "competition_history": [
    {
     "year": 2026,
+    "event": "France-Loudenvielle (May)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "DNS",
+    "place": null,
+    "points": null
+   },
+   {
+    "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 80
    }
   ],
   "photo_url": null,
@@ -700,8 +728,9 @@
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "14th",
+    "place": 14,
+    "points": 35
    }
   ],
   "photo_url": null,
@@ -791,29 +820,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "7th",
+    "place": 7,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "10th",
+    "place": 10,
+    "points": 55
    }
   ],
   "photo_url": null,
@@ -937,43 +970,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 85
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 90
    }
   ],
   "photo_url": null,
@@ -1119,8 +1158,9 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    }
   ],
   "photo_url": null,
@@ -1218,22 +1258,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 28
+    "result": "28th",
+    "place": 28,
+    "points": 33
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 28
+    "result": "28th",
+    "place": 28,
+    "points": 33
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 25
+    "result": "25th",
+    "place": 25,
+    "points": 36
+   },
+   {
+    "year": 2026,
+    "event": "Andorra (July)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "DNF",
+    "place": null,
+    "points": null
    }
   ],
   "photo_url": null,
@@ -1371,36 +1422,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 14
+    "result": "14th",
+    "place": 14,
+    "points": 35
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "8th",
+    "place": 8,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 50
    }
   ],
   "photo_url": null,
@@ -1514,36 +1570,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 85
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 29
+    "result": "29th",
+    "place": 29,
+    "points": 32
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 17
+    "result": "17th",
+    "place": 17,
+    "points": 44
    }
   ],
   "photo_url": null,
@@ -1660,36 +1721,41 @@
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 26
+    "result": "26th",
+    "place": 26,
+    "points": 35
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 29
+    "result": "29th",
+    "place": 29,
+    "points": 32
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 29
+    "result": "29th",
+    "place": 29,
+    "points": 32
    }
   ],
   "photo_url": null,
@@ -1819,29 +1885,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 30
+    "result": "30th",
+    "place": 30,
+    "points": 31
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 24
+    "result": "24th",
+    "place": 24,
+    "points": 37
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 27
+    "result": "27th",
+    "place": 27,
+    "points": 34
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 19
+    "result": "20th",
+    "place": 20,
+    "points": 41
    }
   ],
   "photo_url": null,
@@ -1955,36 +2025,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "11th",
+    "place": 11,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    }
   ],
   "photo_url": null,
@@ -2114,29 +2189,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "12th",
+    "place": 12,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 30
    }
   ],
   "photo_url": null,
@@ -2295,36 +2374,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 26
+    "result": "26th",
+    "place": 26,
+    "points": 35
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    }
   ],
   "photo_url": null,
@@ -2438,15 +2522,17 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 17
+    "result": "17th",
+    "place": 17,
+    "points": 44
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 17
+    "result": "17th",
+    "place": 17,
+    "points": 44
    }
   ],
   "photo_url": null,
@@ -2568,22 +2654,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
+   },
+   {
+    "year": 2026,
+    "event": "France-Loudenvielle (May)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "6th",
+    "place": 6,
+    "points": 95
+   },
+   {
+    "year": 2026,
+    "event": "Autriche-Leogang (June)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "7th",
+    "place": 7,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
+   },
+   {
+    "year": 2026,
+    "event": "Italie- La thuile (July)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "9th",
+    "place": 9,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 60
    }
   ],
   "photo_url": null,
@@ -2598,7 +2711,7 @@
   "gender_category": "Men Elite",
   "discipline": "UCI MTB World Cup Downhill (DH)",
   "country": "Great Britain",
-  "country_code": null,
+  "country_code": "GBR",
   "hometown": "Redcar, England",
   "date_of_birth": "20 Sep 1991",
   "age": 34,
@@ -2724,7 +2837,16 @@
     "amazon_link": null
    }
   ],
-  "competition_history": [],
+  "competition_history": [
+   {
+    "year": 2026,
+    "event": "Autriche-Leogang (June)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "23rd",
+    "place": 23,
+    "points": 38
+   }
+  ],
   "photo_url": null,
   "season": 2026,
   "slug": "danny-hart",
@@ -2812,29 +2934,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 30
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "9th",
+    "place": 9,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    }
   ],
   "photo_url": null,
@@ -2975,8 +3101,9 @@
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 70
    }
   ],
   "photo_url": null,
@@ -3074,22 +3201,25 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 23
+    "result": "23rd",
+    "place": 23,
+    "points": 38
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 17
+    "result": "17th",
+    "place": 17,
+    "points": 44
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 21
+    "result": "22nd",
+    "place": 22,
+    "points": 39
    }
   ],
   "photo_url": null,
@@ -3203,36 +3333,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    }
   ],
   "photo_url": null,
@@ -3338,29 +3473,33 @@
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "10th",
+    "place": 10,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 45
    }
   ],
   "photo_url": null,
@@ -3466,22 +3605,33 @@
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "13th",
+    "place": 13,
+    "points": 40
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 60
+   },
+   {
+    "year": 2026,
+    "event": "Italie- La thuile (July)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "12th",
+    "place": 12,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 14
+    "result": "14th",
+    "place": 14,
+    "points": 35
    }
   ],
   "photo_url": null,
@@ -3622,43 +3772,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    }
   ],
   "photo_url": null,
@@ -3808,43 +3964,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 29
+    "result": "29th",
+    "place": 29,
+    "points": 32
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 20
+    "result": "20th",
+    "place": 20,
+    "points": 41
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    }
   ],
   "photo_url": null,
@@ -3921,22 +4083,25 @@
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 19
+    "result": "19th",
+    "place": 19,
+    "points": 42
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 14
+    "result": "14th",
+    "place": 14,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 24
+    "result": "24th",
+    "place": 24,
+    "points": 37
    }
   ],
   "photo_url": null,
@@ -4052,29 +4217,33 @@
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 30
+    "result": "30th",
+    "place": 30,
+    "points": 31
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 50
    }
   ],
   "photo_url": null,
@@ -4204,22 +4373,25 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 75
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 90
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 50
    }
   ],
   "photo_url": null,
@@ -4311,29 +4483,33 @@
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 27
+    "result": "27th",
+    "place": 27,
+    "points": 34
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 14
+    "result": "14th",
+    "place": 14,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 65
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 80
    }
   ],
   "photo_url": null,
@@ -4431,29 +4607,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 25
+    "result": "25th",
+    "place": 25,
+    "points": 36
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 16
+    "result": "16th",
+    "place": 16,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 22
+    "result": "22nd",
+    "place": 22,
+    "points": 39
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 22
+    "result": "22nd",
+    "place": 22,
+    "points": 39
    }
   ],
   "photo_url": null,
@@ -4543,22 +4723,25 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 90
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 26
+    "result": "26th",
+    "place": 26,
+    "points": 35
    }
   ],
   "photo_url": null,
@@ -4680,29 +4863,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 14
+    "result": "14th",
+    "place": 14,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 65
+   },
+   {
+    "year": 2026,
+    "event": "Switzerland (June)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "17th",
+    "place": 17,
+    "points": 44
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 25
+    "result": "25th",
+    "place": 25,
+    "points": 36
    }
   ],
   "photo_url": null,
@@ -4808,8 +5003,9 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 60
    }
   ],
   "photo_url": null,
@@ -4931,43 +5127,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 19
+    "result": "19th",
+    "place": 19,
+    "points": 42
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 20
+    "result": "21st",
+    "place": 21,
+    "points": 40
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 16
+    "result": "16th",
+    "place": 16,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 23
+    "result": "23rd",
+    "place": 23,
+    "points": 38
    }
   ],
   "photo_url": null,
@@ -5025,8 +5227,17 @@
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 40
+   },
+   {
+    "year": 2026,
+    "event": "Italie- La thuile (July)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "14th",
+    "place": 14,
+    "points": 35
    }
   ],
   "photo_url": null,
@@ -5283,36 +5494,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 40
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "9th",
+    "place": 9,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    }
   ],
   "photo_url": null,
@@ -5426,36 +5642,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "8th",
+    "place": 8,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 14
+    "result": "14th",
+    "place": 14,
+    "points": 35
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 80
    }
   ],
   "photo_url": null,
@@ -5569,22 +5790,25 @@
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 23
+    "result": "24th",
+    "place": 24,
+    "points": 37
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 19
+    "result": "19th",
+    "place": 19,
+    "points": 42
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 70
    }
   ],
   "photo_url": null,
@@ -5821,15 +6045,17 @@
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 25
+    "result": "25th",
+    "place": 25,
+    "points": 36
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 22
+    "result": "23rd",
+    "place": 23,
+    "points": 38
    }
   ],
   "photo_url": null,
@@ -5983,43 +6209,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 20
+    "result": "20th",
+    "place": 20,
+    "points": 41
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 90
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 27
+    "result": "27th",
+    "place": 27,
+    "points": 34
    }
   ],
   "photo_url": null,
@@ -6125,36 +6357,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 65
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 28
+    "result": "28th",
+    "place": 28,
+    "points": 33
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 17
+    "result": "18th",
+    "place": 18,
+    "points": 43
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 75
    }
   ],
   "photo_url": null,
@@ -6289,43 +6526,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 85
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 75
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 75
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    }
   ],
   "photo_url": null,
@@ -6425,29 +6668,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 25
+    "result": "25th",
+    "place": 25,
+    "points": 36
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    }
   ],
   "photo_url": null,
@@ -6569,36 +6816,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "11th",
+    "place": 11,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "11th",
+    "place": 11,
+    "points": 50
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    }
   ],
   "photo_url": null,
@@ -6704,15 +6956,17 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 18
+    "result": "18th",
+    "place": 18,
+    "points": 43
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 18
+    "result": "19th",
+    "place": 19,
+    "points": 42
    }
   ],
   "photo_url": null,
@@ -6745,22 +6999,6 @@
     "brand": "Crestline",
     "model_detail": "",
     "brand_model": "Crestline",
-    "affiliate_link": null,
-    "amazon_link": null
-   },
-   {
-    "category": "Fork",
-    "brand": "Öhlins",
-    "model_detail": "",
-    "brand_model": "Öhlins",
-    "affiliate_link": null,
-    "amazon_link": null
-   },
-   {
-    "category": "RearShock",
-    "brand": "Öhlins",
-    "model_detail": "",
-    "brand_model": "Öhlins",
     "affiliate_link": null,
     "amazon_link": null
    },
@@ -6850,8 +7088,17 @@
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "12th",
+    "place": 12,
+    "points": 45
+   },
+   {
+    "year": 2026,
+    "event": "Italie- La thuile (July)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "15th",
+    "place": 15,
+    "points": 30
    }
   ],
   "photo_url": null,
@@ -6965,22 +7212,25 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 22
+    "result": "22nd",
+    "place": 22,
+    "points": 39
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 65
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 90
    }
   ],
   "photo_url": null,
@@ -7104,36 +7354,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 55
    }
   ],
   "photo_url": null,
@@ -7263,15 +7518,17 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 60
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "13th",
+    "place": 13,
+    "points": 40
    }
   ],
   "photo_url": null,
@@ -7387,36 +7644,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 16
+    "result": "16th",
+    "place": 16,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 80
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 28
+    "result": "28th",
+    "place": 28,
+    "points": 33
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 85
    }
   ],
   "photo_url": null,
@@ -7546,22 +7808,25 @@
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
+    "result": "30th",
+    "place": 30,
     "points": 31
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 11
+    "result": "11th",
+    "place": 11,
+    "points": 70
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 28
+    "result": "28th",
+    "place": 28,
+    "points": 33
    }
   ],
   "photo_url": null,
@@ -7677,29 +7942,33 @@
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 16
+    "result": "16th",
+    "place": 16,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 16
+    "result": "16th",
+    "place": 16,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 26
+    "result": "26th",
+    "place": 26,
+    "points": 35
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 9
+    "result": "9th",
+    "place": 9,
+    "points": 80
    }
   ],
   "photo_url": null,
@@ -7841,43 +8110,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 23
+    "result": "23rd",
+    "place": 23,
+    "points": 38
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 17
+    "result": "17th",
+    "place": 17,
+    "points": 44
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 7
+    "result": "7th",
+    "place": 7,
+    "points": 90
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 8
+    "result": "8th",
+    "place": 8,
+    "points": 85
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 16
+    "result": "16th",
+    "place": 16,
+    "points": 45
    }
   ],
   "photo_url": null,
@@ -7994,36 +8269,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
+   },
+   {
+    "year": 2026,
+    "event": "France-Loudenvielle (May)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "DSQ",
+    "place": null,
+    "points": null
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 30
+    "result": "30th",
+    "place": 30,
+    "points": 31
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 4
+    "result": "4th",
+    "place": 4,
+    "points": 125
    }
   ],
   "photo_url": null,
@@ -8145,29 +8433,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 21
+    "result": "21st",
+    "place": 21,
+    "points": 40
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 18
+    "result": "18th",
+    "place": 18,
+    "points": 43
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 27
+    "result": "27th",
+    "place": 27,
+    "points": 34
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "13th",
+    "place": 13,
+    "points": 60
    }
   ],
   "photo_url": null,
@@ -8281,36 +8573,41 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 24
+    "result": "24th",
+    "place": 24,
+    "points": 37
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 5
+    "result": "5th",
+    "place": 5,
+    "points": 110
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 27
+    "result": "27th",
+    "place": 27,
+    "points": 34
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 18
+    "result": "18th",
+    "place": 18,
+    "points": 43
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 10
+    "result": "10th",
+    "place": 10,
+    "points": 75
    }
   ],
   "photo_url": null,
@@ -8408,22 +8705,25 @@
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 26
+    "result": "26th",
+    "place": 26,
+    "points": 35
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 14
+    "result": "14th",
+    "place": 14,
+    "points": 55
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 24
+    "result": "24th",
+    "place": 24,
+    "points": 37
    }
   ],
   "photo_url": null,
@@ -8513,22 +8813,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 12
+    "result": "12th",
+    "place": 12,
+    "points": 45
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 13
+    "result": "15th",
+    "place": 15,
+    "points": 30
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 15
+    "result": "15th",
+    "place": 15,
+    "points": 30
+   },
+   {
+    "year": 2026,
+    "event": "Italie- La thuile (July)",
+    "category": "UCI MTB World Cup DH 2026",
+    "result": "13th",
+    "place": 13,
+    "points": 40
    }
   ],
   "photo_url": null,
@@ -8645,43 +8956,49 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 27
+    "result": "27th",
+    "place": 27,
+    "points": 34
    },
    {
     "year": 2026,
     "event": "France-Loudenvielle (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 3
+    "result": "3rd",
+    "place": 3,
+    "points": 140
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 22
+    "result": "22nd",
+    "place": 22,
+    "points": 39
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 6
+    "result": "6th",
+    "place": 6,
+    "points": 95
    },
    {
     "year": 2026,
     "event": "Italie- La thuile (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 1
+    "result": "1st",
+    "place": 1,
+    "points": 200
    }
   ],
   "photo_url": null,
@@ -8747,29 +9064,33 @@
     "year": 2026,
     "event": "South Korea-Mona Yongpyong (May)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 20
+    "result": "20th",
+    "place": 20,
+    "points": 41
    },
    {
     "year": 2026,
     "event": "Autriche-Leogang (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 18
+    "result": "18th",
+    "place": 18,
+    "points": 43
    },
    {
     "year": 2026,
     "event": "Switzerland (June)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 25
+    "result": "25th",
+    "place": 25,
+    "points": 36
    },
    {
     "year": 2026,
     "event": "Andorra (July)",
     "category": "UCI MTB World Cup DH 2026",
-    "result": null,
-    "points": 2
+    "result": "2nd",
+    "place": 2,
+    "points": 160
    }
   ],
   "photo_url": null,

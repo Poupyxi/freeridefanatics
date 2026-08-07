@@ -20,6 +20,7 @@ instead of "#".
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 import unicodedata
@@ -27,12 +28,15 @@ import unicodedata
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(ROOT, "data", "riders.json")
 RIDERS_DIR = os.path.join(ROOT, "riders")
+EQUIPMENT_DIR = os.path.join(ROOT, "equipment")
 IMG_DIR = os.path.join(ROOT, "assets", "img", "riders")
 ACTION_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-action")
 EQUIP_IMG_DIR = os.path.join(ROOT, "assets", "img", "equipment")
 REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
 
 SITE_NAME = "FreerideFanatics"
+SITE_URL = "https://freeridefanatics.hotcut.xyz"
+SITE_UPDATED = "2026-08-07"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
 
 # ---------------------------------------------------------------- equipment groups
@@ -57,9 +61,11 @@ EQUIP_GROUP_ICONS = {
 
 # ---------------------------------------------------------------- points scales
 
-# Position -> points, keyed by competition. The source sheet only records points,
-# but the scale is a strict ladder, so the finishing position is recoverable
-# without any extra data entry. Add an entry here when a new series is tracked;
+# Position -> points, keyed by competition. Only a fallback: the sheet records
+# the finishing position next to the points, and sync.py stores it as `place`.
+# This ladder is the men's scale; the women's field is shorter and diverges from
+# 7th place down, so deriving a position from points alone is only safe when the
+# sheet left the position blank. Add an entry here when a new series is tracked;
 # a competition with no scale simply shows no position.
 POINTS_SCALES = {
     "UCI MTB World Cup DH 2026": [
@@ -77,6 +83,16 @@ def placing_from_points(competition, points):
         return scale.index(points) + 1
     except ValueError:
         return None
+
+def history_place(h):
+    """Finishing position for one result row — the sheet's own Classement when
+    present, the points ladder only as a fallback."""
+    place = h.get("place")
+    if place is not None:
+        return place
+    if h.get("result"):
+        return None  # DNS / DNF / DSQ — no position to show
+    return placing_from_points(h.get("category") or "Other", h.get("points"))
 
 def ordinal(n):
     if n is None:
@@ -191,8 +207,39 @@ def esc(s):
 
 # ---------------------------------------------------------------- shared partials
 
-def head(title, description, asset_prefix, body_class=""):
+def absolute_url(path):
+    path = path or "/"
+    return SITE_URL + (path if path.startswith("/") else "/" + path)
+
+def json_ld(data):
+    return f'<script type="application/ld+json">{json.dumps(data, ensure_ascii=False)}</script>'
+
+def breadcrumb_schema(items):
+    return {
+        "@context": "https://schema.org", "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": i, "name": name, "item": absolute_url(path)}
+            for i, (name, path) in enumerate(items, 1)
+        ],
+    }
+
+def breadcrumb_html(items):
+    parts = []
+    for i, (name, href) in enumerate(items):
+        if i == len(items) - 1:
+            parts.append(f'<span aria-current="page">{esc(name)}</span>')
+        else:
+            parts.append(f'<a href="{href}">{esc(name)}</a><span aria-hidden="true">/</span>')
+    return f'<nav class="breadcrumbs" aria-label="Breadcrumb">{"".join(parts)}</nav>'
+
+def head(title, description, asset_prefix, body_class="", canonical_path="/",
+         schemas=None, image_path=None, page_type="website"):
     body_attr = f' class="{esc(body_class)}"' if body_class else ""
+    canonical = absolute_url(canonical_path)
+    image = absolute_url(image_path) if image_path else absolute_url("/assets/img/og-default.png")
+    image_dimensions = "" if image_path else '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'
+    image_preload = f'<link rel="preload" as="image" href="{image}">' if image_path else ""
+    schema_html = "\n".join(json_ld(s) for s in (schemas or []))
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -200,9 +247,26 @@ def head(title, description, asset_prefix, body_class=""):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(description)}">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+<link rel="canonical" href="{canonical}">
+<meta property="og:type" content="{page_type}">
+<meta property="og:site_name" content="{SITE_NAME}">
+<meta property="og:title" content="{esc(title)}">
+<meta property="og:description" content="{esc(description)}">
+<meta property="og:url" content="{canonical}">
+<meta property="og:image" content="{image}">
+{image_dimensions}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{esc(title)}">
+<meta name="twitter:description" content="{esc(description)}">
+<meta name="twitter:image" content="{image}">
+<meta name="theme-color" content="#15161a">
+<link rel="icon" href="{asset_prefix}assets/img/favicon.svg" type="image/svg+xml">
+{image_preload}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{asset_prefix}assets/css/style.css?v={BUILD_VERSION}">
+{schema_html}
 </head>
 <body{body_attr}>
 """
@@ -228,6 +292,7 @@ def header_html(asset_prefix, active=""):
           </div>
         </div>
       </div>
+      <a href="{asset_prefix}equipment.html"{cls('equipment')}>Equipment</a>
       <a href="{asset_prefix}standings.html"{cls('standings')}>Standings</a>
       <a href="{asset_prefix}index.html#faq">FAQ</a>
     </nav>
@@ -245,12 +310,17 @@ def footer_html(asset_prefix):
     <a class="footer-logo" href="{asset_prefix}index.html"><span class="mark">F</span>FREERIDEFANATICS</a>
     <nav class="footer-links">
       <a href="{asset_prefix}riders.html#grid">Riders</a>
+      <a href="{asset_prefix}equipment.html">Equipment</a>
+      <a href="{asset_prefix}guides/en/">DH Guide</a>
       <a href="{asset_prefix}index.html#faq">FAQ</a>
-      <a href="#">About</a>
-      <a href="#">Contact</a>
+      <a href="{asset_prefix}methodology.html">Methodology</a>
+      <a href="{asset_prefix}about.html">About</a>
+      <a href="{asset_prefix}affiliate-disclosure.html">Affiliates</a>
+      <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
     <span class="footer-copy">&copy; 2026 FreerideFanatics</span>
   </div>
+  <div class="wrap footer-updated">Last updated <time datetime="2026-08-07">07 Aug 2026</time></div>
 </footer>
 
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
@@ -283,13 +353,93 @@ def cta_waves_svg():
     <path d="M-50,410 C160,385 310,420 490,400 C660,380 790,405 960,390 C1090,378 1180,395 1240,388" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1.3"/>
   </svg>"""
 
+def build_editorial_page(slug, title, description, label, lead, sections):
+    path = f"/{slug}.html"
+    body = []
+    for heading, paragraphs in sections:
+        body.append(f'<section><h2>{esc(heading)}</h2>')
+        body.extend(f'<p>{esc(paragraph)}</p>' for paragraph in paragraphs)
+        body.append('</section>')
+    html = head(
+        f"{title} | {SITE_NAME}", description, "", body_class="guide-page",
+        canonical_path=path, page_type="article",
+        schemas=[
+            {"@context": "https://schema.org", "@type": "Article", "headline": title,
+             "description": description, "dateModified": SITE_UPDATED,
+             "author": {"@type": "Organization", "name": SITE_NAME},
+             "publisher": {"@type": "Organization", "name": SITE_NAME},
+             "mainEntityOfPage": absolute_url(path)},
+            breadcrumb_schema([("Home", "/"), (title, path)]),
+        ],
+    )
+    html += header_html("")
+    html += f'''<main><article>
+<header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated 7 August 2026</time></div></div></header>
+<div class="wrap">{breadcrumb_html([("Home", "index.html"), (title, path.lstrip('/'))])}</div><div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>
+<aside class="guide-sidebar"><div class="guide-card"><h2>Explore</h2><a href="riders.html#grid">Rider directory</a><a href="equipment.html">Equipment database</a><a href="standings.html">2026 standings</a><a href="guides/en/">Downhill setup guide</a></div></aside></div>
+</article></main>'''
+    html += footer_html("")
+    return html
+
+def build_trust_pages():
+    return {
+        "about.html": build_editorial_page(
+            "about", "About FreerideFanatics",
+            "Learn what FreerideFanatics tracks, why the independent World Cup downhill database exists and how to interpret its rider, equipment and results pages.",
+            "Independent World Cup DH database",
+            "FreerideFanatics documents the riders, race equipment and results that shape the UCI Mountain Bike World Cup downhill season.",
+            [
+                ("Our purpose", ["FreerideFanatics was created to make professional downhill equipment easier to explore. Rider information, race results and identifiable bike components are connected in one structured database, so fans can move from a rider to a setup, from a component to the riders using it, and from equipment trends to sporting results.", "The site is designed for riders, fans, mechanics and journalists who want a clearer view of the equipment used at the highest level of downhill racing."]),
+                ("Independent and unofficial", ["FreerideFanatics is an independent editorial project. It is not an official UCI website and is not operated by, endorsed by or affiliated with the riders, teams, race organisers or manufacturers referenced on its pages.", "Brand names, rider names and product names remain the property of their respective owners and are used for identification and editorial reporting."]),
+                ("What the database covers", ["The 2026 database currently connects 64 elite riders with teams, public career information, race results and identified equipment across frames, suspension, cockpit, drivetrain, wheels, tires and protection.", "The scope will grow when reliable information adds genuine value. FreerideFanatics does not publish speculative specifications simply to fill an empty field."]),
+                ("Transparency", ["Equipment can change between practice, qualifying and race runs. Prototypes can also differ from products sold to the public. Every setup should therefore be understood as a documented snapshot based on the best public information available at the time.", "The full collection and ranking principles are explained on the methodology page."]),
+            ],
+        ),
+        "methodology.html": build_editorial_page(
+            "methodology", "Data methodology",
+            "How FreerideFanatics collects, verifies, updates and ranks World Cup downhill rider, result and equipment data.",
+            "Sources, verification and limitations",
+            "A transparent explanation of how rider profiles, equipment records and season rankings are assembled and how uncertainty is handled.",
+            [
+                ("Sources used", ["The database is assembled from publicly available material including official event information, team and rider communications, manufacturer product pages, public sponsor listings, race photography and reputable event coverage.", "A manufacturer link identifies the product family but does not by itself prove every internal tune, prototype part or race-day setting."]),
+                ("Equipment identification", ["A component is recorded when its brand or model can be identified with reasonable confidence. Model names are normalised so small differences in punctuation, accents or naming do not fragment the statistics.", "When only a brand is known, the database avoids inventing a model. When a component remains uncertain, it may be omitted until stronger evidence is available."]),
+                ("Updates", ["Race results and standings are updated as new season data is imported. Equipment records are updated when a verifiable change is identified; the absence of a new entry does not mean that every component was physically rechecked after every run or every race.", "The global update date describes the most recent database publication, not a guarantee that all 64 setups were independently reconfirmed on that day."]),
+                ("Equipment rankings", ["Equipment rankings combine the current season points of tracked riders associated with a product. They describe competitive presence within this dataset; they are not laboratory tests and do not prove that one product is objectively better than another.", "The number and performance of sponsored riders strongly influence these totals. Rankings should be read alongside rider count, category and season context."]),
+                ("Corrections", ["Corrections should include the rider, component or result concerned, the proposed change, the relevant race or date and a public source that supports the correction.", "A public contact channel will be added once it can be monitored reliably. Until then, unverified submissions are intentionally not collected through an inactive form."]),
+            ],
+        ),
+        "affiliate-disclosure.html": build_editorial_page(
+            "affiliate-disclosure", "Affiliate disclosure",
+            "How affiliate product links support FreerideFanatics and how commercial links are separated from independent equipment data.",
+            "Commercial transparency",
+            "Some product links may generate a commission, but affiliate availability does not determine which riders, components or results appear in the database.",
+            [
+                ("How affiliate links work", ["Some external product links are affiliate links. If a visitor follows one of these links and completes a qualifying purchase, FreerideFanatics may receive a commission without increasing the visitor's purchase price."]),
+                ("Editorial independence", ["Equipment is recorded because it is publicly associated with a tracked rider, not because a retailer offers a commission. A product without an affiliate link can rank above a monetised product, and many tracked components have no commercial link at all."]),
+                ("Buying decisions", ["Race equipment may be a prototype, a team-specific tune or a configuration that differs from a retail product. Visitors should verify compatibility, sizing, specification, warranty and local availability with the manufacturer or retailer before buying."]),
+            ],
+        ),
+        "privacy.html": build_editorial_page(
+            "privacy", "Privacy policy",
+            "Privacy information for visitors to FreerideFanatics, including server logs, external links, affiliate links and future service changes.",
+            "Visitor information",
+            "FreerideFanatics is currently a primarily static editorial website and does not operate an active newsletter form or user account system.",
+            [
+                ("Information processed", ["The website itself does not currently ask visitors to create an account or submit personal information. Standard hosting infrastructure may process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
+                ("External services", ["Pages may link to manufacturers, retailers, Amazon and social platforms. Those websites operate under their own privacy and cookie policies. Following an external link transfers the visitor to the third party's service."]),
+                ("Affiliate links", ["Some outbound links are marked as sponsored affiliate links. The destination retailer may use its own identifiers or cookies to attribute a qualifying purchase. FreerideFanatics does not receive the visitor's payment details from the retailer."]),
+                ("Future changes", ["If analytics, a newsletter, contact form or user accounts are activated later, this policy should be updated before the new processing begins, with appropriate consent and retention information where required."]),
+            ],
+        ),
+    }
+
 # ---------------------------------------------------------------- index page
 
 def rider_card(r):
     photo = has_photo(r["slug"])
     if photo:
         photo_html = (f'<img src="assets/img/riders/{photo}?v={BUILD_VERSION}" '
-                      f'alt="{esc(r["display_name"])}" loading="lazy">')
+                      f'alt="{esc(r["display_name"])}" loading="lazy" decoding="async" width="400" height="400">')
     else:
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
     cat = esc(r.get("gender_category") or "")
@@ -324,11 +474,26 @@ def random_rider_button(riders, asset_prefix="", solid=True):
 
 def build_index(riders, women_count, men_count):
     prefix = ""
+    faq_schema = {
+        "@context": "https://schema.org", "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": "Where does this data come from?", "acceptedAnswer": {"@type": "Answer", "text": "Setups are tracked from official UCI MTB World Cup information, team communications, manufacturer material and public sponsor listings."}},
+            {"@type": "Question", "name": "Are the shop links affiliate links?", "acceptedAnswer": {"@type": "Answer", "text": "Some product links are affiliate links. FreerideFanatics may earn a commission on qualifying purchases at no extra cost to the visitor."}},
+            {"@type": "Question", "name": "How often is the equipment data updated?", "acceptedAnswer": {"@type": "Answer", "text": "Results are updated during the season and equipment is updated when a verifiable change is identified."}},
+            {"@type": "Question", "name": "How are corrections handled?", "acceptedAnswer": {"@type": "Answer", "text": "Corrections are checked against a public source before publication. The methodology page explains the evidence required and current submission status."}},
+        ],
+    }
     html = head(
         f"{SITE_NAME} — Pro DH Kit, Every Setup",
         "Every UCI MTB World Cup Downhill rider's exact bike setup, gear and results — shop what they ride.",
         prefix,
-        body_class="home-page"
+        body_class="home-page",
+        canonical_path="/",
+        schemas=[
+            {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "url": SITE_URL + "/", "description": "World Cup downhill rider setups, equipment and results."},
+            {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "url": SITE_URL + "/", "logo": absolute_url("/assets/img/favicon.svg")},
+            faq_schema,
+        ],
     )
     html += header_html(prefix, active="riders")
     html += f"""
@@ -375,11 +540,11 @@ def build_index(riders, women_count, men_count):
       </div>
       <div class="faq-item">
         <div class="faq-q"><h3><span class="faq-num">Q3</span>How often is the kit list updated?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Setups change race to race — we update frames, suspension tunes and component swaps as riders confirm them through the season.</p></div>
+        <div class="faq-a"><p>Results are updated during the season. Equipment is updated when a verifiable change is identified; the global update date does not mean every setup was independently rescanned after every race.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q4</span>Can I suggest a correction?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Absolutely — reach out via the Contact link and we'll verify and update the rider's page.</p></div>
+        <div class="faq-q"><h3><span class="faq-num">Q4</span>How are corrections handled?</h3><span class="plus">+</span></div>
+        <div class="faq-a"><p>Corrections are checked against a public source before publication. See our <a href="methodology.html">data methodology</a> for the evidence required and current submission status.</p></div>
       </div>
     </div>
   </div>
@@ -448,6 +613,15 @@ def build_standings(riders):
         return {h["event"]: h.get("points")
                 for h in r.get("competition_history") or [] if h.get("category") == comp}
 
+    def result_map(r, comp):
+        """event -> label shown in the cell tooltip ('3rd', 'DNF', …)."""
+        out = {}
+        for h in r.get("competition_history") or []:
+            if h.get("category") != comp:
+                continue
+            out[h["event"]] = h.get("result") or ordinal(history_place(h))
+        return out
+
     def rider_rows(group, comp, events):
         entries = []
         for r in riders:
@@ -457,16 +631,16 @@ def build_standings(riders):
             total = sum(v for v in pts.values() if v)
             if not total:
                 continue
-            entries.append((total, r, pts))
-        entries.sort(key=lambda e: (-e[0], e[1]["display_name"]))
+            entries.append((total, r, pts, result_map(r, comp)))
+        entries.sort(key=lambda e: season_rank_key(e[1]))
 
         rows = []
-        for i, (total, r, pts) in enumerate(entries, start=1):
+        for i, (total, r, pts, res) in enumerate(entries, start=1):
             cells = []
             for ev in events:
                 p = pts.get(ev)
-                place = placing_from_points(comp, p)
-                title = f' title="{esc(ordinal(place))}"' if place else ""
+                label = res.get(ev)
+                title = f' title="{esc(label)}"' if label else ""
                 cls = " scored" if p else " blank"
                 cells.append(f'<td class="rd{cls}"{title}>{p if p else "·"}</td>')
             medal = f" p{i}" if i <= 3 else ""
@@ -560,17 +734,25 @@ def build_standings(riders):
     primary_events = events_for(primary_comp) if primary_comp else []
     scored_riders = [r for r in riders if sum(v or 0 for v in points_map(r, primary_comp).values())]
     def leader_for(group):
+        """Same ordering as the table below — on equal points the alphabetical
+        winner is not the leader."""
         ranked = [(sum(v or 0 for v in points_map(r, primary_comp).values()), r)
                   for r in riders if r.get("gender_category") == group]
         ranked = [entry for entry in ranked if entry[0]]
-        return max(ranked, default=(0, {"display_name": "—"}), key=lambda entry: entry[0])
+        if not ranked:
+            return (0, {"display_name": "—"})
+        return min(ranked, key=lambda entry: season_rank_key(entry[1]))
     men_lead_pts, men_lead = leader_for("Men Elite")
     women_lead_pts, women_lead = leader_for("Women Elite")
     latest_round = primary_events[-1] if primary_events else "Season start"
 
     html = head(f"Standings — {SITE_NAME}",
                 "Full UCI MTB World Cup Downhill 2026 standings: every rider, every round, cumulative points.",
-                prefix, body_class="standings-page")
+                prefix, body_class="standings-page", canonical_path="/standings.html",
+                schemas=[
+                    {"@context": "https://schema.org", "@type": "CollectionPage", "name": "UCI MTB World Cup Downhill 2026 standings", "url": absolute_url("/standings.html"), "description": "Round-by-round World Cup downhill standings for men, women and teams.", "dateModified": SITE_UPDATED},
+                    breadcrumb_schema([("Home", "/"), ("Standings", "/standings.html")]),
+                ])
     html += header_html(prefix, active="standings")
     html += f"""
 <section class="hero standings-hero">
@@ -638,7 +820,15 @@ def build_riders_directory(riders, women_count, men_count):
     html = head(
         f"All Riders — {SITE_NAME}",
         "Browse every UCI MTB World Cup Downhill rider's bike setup, team and season results.",
-        prefix
+        prefix, canonical_path="/riders.html",
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": "UCI MTB World Cup Downhill riders", "url": absolute_url("/riders.html"), "dateModified": SITE_UPDATED,
+             "mainEntity": {"@type": "ItemList", "numberOfItems": len(riders), "itemListElement": [
+                 {"@type": "ListItem", "position": i, "url": absolute_url(f"/riders/{r['slug']}.html"), "name": r["display_name"]}
+                 for i, r in enumerate(riders, 1)
+             ]}},
+            breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html")]),
+        ]
     )
     html += header_html(prefix, active="riders")
     html += f"""
@@ -677,7 +867,8 @@ def build_riders_directory(riders, women_count, men_count):
 # ---------------------------------------------------------------- rider page
 
 def equip_item_html(item):
-    cat = prettify_category(item.get("category"))
+    raw_cat = item.get("category")
+    cat = prettify_category(raw_cat)
     brand = item.get("brand") or ""
     detail_parts = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
     main_model = detail_parts[0] if detail_parts else ""
@@ -690,7 +881,7 @@ def equip_item_html(item):
     detail_line = f'          <div class="detail">{esc(extra)}</div>\n' if extra else ""
     actions = []
     if link:
-        actions.append(f'<a class="shop-btn" href="{esc(link)}" target="_blank" rel="noopener sponsored">Details</a>')
+        actions.append(f'<a class="shop-btn" href="{esc(link)}" target="_blank" rel="noopener">Details</a>')
     if amazon_link:
         actions.append(f'<a class="shop-btn amazon-btn" href="{esc(amazon_link)}" target="_blank" rel="noopener sponsored">Amazon</a>')
     actions_html = f'<div class="equip-actions">{"".join(actions)}</div>' if actions else ""
@@ -698,7 +889,7 @@ def equip_item_html(item):
     return f"""<div class="equip-item reveal">
         {photo_html}
         <div>
-          <span class="cat">{esc(cat)}</span>
+          <a class="cat" href="../equipment/{equip_image_slug(raw_cat, '', '')}.html">{esc(cat)}</a>
           <h4>{esc(title)}</h4>
 {detail_line}        </div>
 {actions_line}      </div>"""
@@ -773,7 +964,7 @@ def bike_build_html(equipment):
           </figcaption>"""
         if data["link"]:
             return f"""<figure class="bb-part bb-{slot}">
-          <a href="{esc(data['link'])}" target="_blank" rel="noopener sponsored">{inner}</a>
+          <a href="{esc(data['link'])}" target="_blank" rel="noopener">{inner}</a>
         </figure>"""
         return f'<figure class="bb-part bb-{slot}">{inner}</figure>'
 
@@ -847,11 +1038,21 @@ def equipment_groups_html(equipment, hide_items=()):
 def rider_total_points(r):
     return sum((h.get("points") or 0) for h in (r.get("competition_history") or []))
 
+def season_rank_key(r):
+    """Sort key for a season standing: points first, then the UCI tie-break —
+    countback on best finishing positions, then the most recent round. Without
+    it two riders on equal points are separated alphabetically, which puts the
+    wrong name in the 'leader' slot."""
+    history = r.get("competition_history") or []
+    places = sorted(h["place"] for h in history if h.get("place"))
+    last = next((h.get("points") or 0 for h in reversed(history) if h.get("points")), 0)
+    return (-rider_total_points(r), places, -last, r.get("display_name") or "")
+
 def build_rankings_section(riders):
     men = sorted([r for r in riders if r.get("gender_category") == "Men Elite"],
-                 key=rider_total_points, reverse=True)[:5]
+                 key=season_rank_key)[:5]
     women = sorted([r for r in riders if r.get("gender_category") == "Women Elite"],
-                    key=rider_total_points, reverse=True)[:5]
+                    key=season_rank_key)[:5]
 
     team_points = {}
     team_riders = {}
@@ -915,6 +1116,123 @@ def build_rankings_section(riders):
   </div>
 </section>"""
 
+def collect_equipment(riders):
+    """Category/product facts used by SEO equipment pages."""
+    by_cat = {}
+    for rider in riders:
+        seen = set()
+        for item in rider.get("equipment") or []:
+            cat = item.get("category")
+            parts = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
+            brand, model = canonical_equipment_product(cat, item.get("brand") or "", parts[0] if parts else "")
+            if not cat or not (brand or model):
+                continue
+            key = (cat, norm_product_text(brand), norm_product_text(model))
+            if key in seen:
+                continue
+            seen.add(key)
+            product = by_cat.setdefault(cat, {}).setdefault((brand, model), {
+                "brand": brand, "model": model, "riders": [], "points": 0,
+                "link": None, "amazon_link": None,
+            })
+            product["riders"].append(rider)
+            product["points"] += rider_total_points(rider)
+            product["link"] = product["link"] or item.get("affiliate_link")
+            product["amazon_link"] = product["amazon_link"] or item.get("amazon_link")
+    return by_cat
+
+def equipment_category_path(category):
+    return f"/equipment/{equip_image_slug(category, '', '')}.html"
+
+EQUIPMENT_CATEGORY_PLURALS = {
+    "Frame": "Frames", "Fork": "Forks", "RearShock": "Rear Shocks",
+    "Handlebar": "Handlebars", "Wheels": "Wheels", "Tires": "Tires",
+    "BrakeLever": "Brake Levers", "Crankset": "Cranksets",
+    "Derailleur": "Derailleurs", "Pedals": "Pedals", "Saddle": "Saddles",
+    "DropperPost": "Dropper Posts", "Helmet": "Helmets", "Goggles": "Goggles",
+    "Protection": "Body Protection", "Shoes": "Shoes", "CHAIN": "Chains",
+    "Disk": "Brake Rotors", "GRIP": "Grips",
+}
+
+def equipment_category_plural(category):
+    return EQUIPMENT_CATEGORY_PLURALS.get(category, prettify_category(category) + "s")
+
+def equipment_category_card(category, products):
+    label = equipment_category_plural(category)
+    ranked = sorted(products.values(), key=lambda p: (-p["points"], -len(p["riders"]), p["brand"], p["model"]))
+    riders = {r["slug"] for p in ranked for r in p["riders"]}
+    leader = ranked[0] if ranked else {"brand": "", "model": "", "points": 0}
+    leader_name = " ".join([leader["brand"], leader["model"]]).strip()
+    return f'''<a class="equipment-category-card" href="equipment/{equip_image_slug(category, '', '')}.html">
+      <span class="label">{esc(label)}</span><h2>{esc(leader_name)}</h2>
+      <p>Leading {esc(label.lower())} · {leader['points']} combined points</p>
+      <div><strong>{len(ranked)}</strong> products <strong>{len(riders)}</strong> riders</div>
+    </a>'''
+
+def build_equipment_directory(riders):
+    by_cat = collect_equipment(riders)
+    categories = [c for c in CAROUSEL_CATEGORY_ORDER if c in by_cat]
+    categories += sorted(c for c in by_cat if c not in categories)
+    cards = "".join(equipment_category_card(c, by_cat[c]) for c in categories)
+    path = "/equipment.html"
+    schema_items = [
+        {"@type": "ListItem", "position": i, "name": equipment_category_plural(cat), "url": absolute_url(equipment_category_path(cat))}
+        for i, cat in enumerate(categories, 1)
+    ]
+    html = head(
+        f"World Cup Downhill Equipment Database 2026 | {SITE_NAME}",
+        "Explore the frames, forks, shocks, brakes, wheels, tires and protection used by 64 UCI World Cup downhill riders in the 2026 season.",
+        "", body_class="equipment-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": "World Cup downhill equipment database", "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
+            breadcrumb_schema([("Home", "/"), ("Equipment", path)]),
+        ],
+    )
+    html += header_html("", active="equipment")
+    html += f'''<main><section class="hero equipment-hero"><div class="wrap hero-inner"><div class="label">64 riders · 2026 World Cup season</div><h1>Downhill equipment database.</h1><p class="sub">See which frames, suspension, controls, wheels, tires and protection are used across the tracked World Cup field. Rankings combine the season points of riders associated with each product.</p></div></section>
+<div class="wrap">{breadcrumb_html([("Home", "index.html"), ("Equipment", "equipment.html")])}</div>
+<section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Equipment categories</div><h2>Explore the paddock</h2></div><a class="see-all" href="methodology.html">How rankings work →</a></div><div class="equipment-category-grid">{cards}</div>
+<div class="guide-callout"><strong>How to read these rankings</strong><p>Combined rider points describe competitive presence in the tracked field. They are not a laboratory comparison: sponsorship, rider count and team selection influence every total.</p></div></div></section></main>'''
+    html += footer_html("")
+    return html
+
+def build_equipment_category_page(category, products):
+    label = equipment_category_plural(category)
+    ranked = sorted(products.values(), key=lambda p: (-p["points"], -len(p["riders"]), p["brand"], p["model"]))
+    tracked_riders = {r["slug"] for p in ranked for r in p["riders"]}
+    path = equipment_category_path(category)
+    rows = []
+    schema_items = []
+    for position, p in enumerate(ranked, 1):
+        title = " ".join([p["brand"], p["model"]]).strip()
+        rider_links = "".join(f'<a href="../riders/{r["slug"]}.html">{esc(r["display_name"])}</a>' for r in sorted(p["riders"], key=lambda x: season_rank_key(x)))
+        photo = has_equip_photo(category, p["brand"], p["model"])
+        photo_html = f'<img src="../assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy" width="160" height="120">' if photo else '<span class="equipment-placeholder" aria-hidden="true">FF</span>'
+        external = ""
+        if p["link"]:
+            external += f'<a class="shop-btn" href="{esc(p["link"])}" rel="noopener" target="_blank">Product details</a>'
+        if p["amazon_link"]:
+            external += f'<a class="shop-btn amazon-btn" href="{esc(p["amazon_link"])}" rel="noopener sponsored" target="_blank">Amazon</a>'
+        rows.append(f'''<article class="equipment-rank-card"><span class="equipment-rank">{position:02d}</span>{photo_html}<div class="equipment-rank-main"><div class="label">{esc(label)}</div><h2>{esc(title)}</h2><p><strong>{p['points']} pts</strong> · {len(p['riders'])} tracked rider{'s' if len(p['riders']) != 1 else ''}</p><div class="equipment-riders">{rider_links}</div><div class="equip-actions">{external}</div></div></article>''')
+        schema_items.append({"@type": "ListItem", "position": position, "name": title})
+    leader = " ".join([ranked[0]["brand"], ranked[0]["model"]]).strip() if ranked else "—"
+    description = f"Compare {len(ranked)} {label.lower()} used by {len(tracked_riders)} tracked UCI World Cup downhill riders in 2026. See rider count, combined points and associated profiles."
+    html = head(
+        f"World Cup DH {label} 2026 | {SITE_NAME}", description,
+        "../", body_class="equipment-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "Dataset", "name": f"2026 World Cup downhill {label.lower()} usage", "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED, "creator": {"@type": "Organization", "name": SITE_NAME}, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
+            breadcrumb_schema([("Home", "/"), ("Equipment", "/equipment.html"), (label, path)]),
+        ],
+    )
+    html += header_html("../", active="equipment")
+    html += f'''<main><section class="hero equipment-hero"><div class="wrap hero-inner"><div class="label">World Cup DH · Season 2026</div><h1>{esc(label)} used by professional downhill riders.</h1><p class="sub">{esc(description)} The current points leader in this category is {esc(leader)}.</p></div></section>
+<div class="wrap">{breadcrumb_html([("Home", "../index.html"), ("Equipment", "../equipment.html"), (label, equip_image_slug(category, '', '') + ".html")])}</div>
+<section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Ranked by combined rider points</div><h2>{esc(label)} leaderboard</h2></div><a class="see-all" href="../methodology.html">Read the methodology →</a></div><div class="equipment-ranking-list">{"".join(rows)}</div>
+<div class="guide-callout"><strong>Editorial context</strong><p>This table records competitive usage within the FreerideFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications.</p></div></div></section></main>'''
+    html += footer_html("../")
+    return html
+
 # ---------------------------------------------------------------- best equipment carousel
 
 CAROUSEL_CATEGORY_ORDER = [
@@ -966,6 +1284,7 @@ def build_best_equipment_carousel(riders):
 
     def slide_html(idx, cat, hidden=False):
         cat_label = prettify_category(cat)
+        hidden_tab = ' tabindex="-1"' if hidden else ""
         top3 = sorted(by_cat[cat].values(), key=lambda g: g["points"], reverse=True)[:3]
         max_pts = top3[0]["points"] or 1
 
@@ -996,7 +1315,7 @@ def build_best_equipment_carousel(riders):
         return f"""<div class="carousel-slide"{aria}>
           <div class="slide-head">
             <span class="idx">{idx + 1:02d} / {total:02d}</span>
-            <h3>{esc(cat_label)}</h3>
+            <h3><a href="equipment/{equip_image_slug(cat, '', '')}.html"{hidden_tab}>{esc(cat_label)}</a></h3>
             <span class="cat-sub">Top 3 · combined UCI points</span>
           </div>
           <div class="podium">
@@ -1015,7 +1334,7 @@ def build_best_equipment_carousel(riders):
         <div class="label">Race-proven · Season 2026</div>
         <h2>Best Equipment</h2>
       </div>
-      <span class="see-all">{total} categories · Ranked by combined rider points</span>
+      <a class="see-all" href="equipment.html">Explore all {total} categories →</a>
     </div>
   </div>
   <div class="carousel" data-marquee aria-label="Best equipment by category">
@@ -1030,7 +1349,7 @@ def results_rows(history):
     for h in history or []:
         points = h.get("points")
         comp = h.get("category") or "Other"
-        place = placing_from_points(comp, points)
+        place = history_place(h)
         result = h.get("result") or ordinal(place) or "—"
         podium = f" podium p{place}" if place and place <= 3 else ""
         rows.append(f"""<tr data-competition="{esc(comp)}">
@@ -1066,9 +1385,9 @@ def build_rider_page(r):
     action = has_action_photo(r["slug"])
     photo = has_photo(r["slug"])
     if action:
-        photo_html = f'<img src="../assets/img/riders-action/{action}" alt="{esc(r["display_name"])}">'
+        photo_html = f'<img src="../assets/img/riders-action/{action}" alt="{esc(r["display_name"])}" fetchpriority="high">'
     elif photo:
-        photo_html = f'<img src="../assets/img/riders/{photo}" alt="{esc(r["display_name"])}">'
+        photo_html = f'<img src="../assets/img/riders/{photo}" alt="{esc(r["display_name"])}" width="400" height="400" fetchpriority="high">'
     else:
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
 
@@ -1103,6 +1422,22 @@ def build_rider_page(r):
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'
 
     history = r.get("competition_history") or []
+    highlight_parts = []
+    for wanted in ("Frame", "Fork", "RearShock"):
+        item = next((e for e in equipment if e.get("category") == wanted), None)
+        if not item:
+            continue
+        details = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
+        product = " ".join([item.get("brand") or "", details[0] if details else ""]).strip()
+        if product:
+            highlight_parts.append(product)
+    identity = f"a {r.get('country')} downhill rider" if r.get("country") else "a World Cup downhill rider"
+    if r.get("team"):
+        identity += f" competing for {r['team']}"
+    rider_summary = f"{r['display_name']} is {identity}. FreerideFanatics currently tracks {len(equipment)} equipment items for this 2026 race setup"
+    if highlight_parts:
+        rider_summary += ", including " + ", ".join(highlight_parts)
+    rider_summary += f". The season record below contains {len(history)} tracked result{'s' if len(history) != 1 else ''} and {rider_total_points(r)} cumulative points."
     if history:
         results_html = f"""{competition_filters(history)}
       <table class="results-table" data-results-table>
@@ -1137,15 +1472,34 @@ def build_rider_page(r):
         f'<div class="item"><span>{k}</span>{v}</div>' for k, v in meta_items
     )
 
+    rider_url = f"/riders/{r['slug']}.html"
+    rider_image = f"/assets/img/riders-action/{action}" if action else (f"/assets/img/riders/{photo}" if photo else None)
+    person_schema = {
+        "@context": "https://schema.org", "@type": "Person", "name": r["display_name"],
+        "url": absolute_url(rider_url), "nationality": r.get("country") or None,
+        "description": rider_summary,
+    }
+    if rider_image:
+        person_schema["image"] = absolute_url(rider_image)
+    if r.get("team"):
+        person_schema["affiliation"] = {"@type": "SportsTeam", "name": r["team"]}
+    if r.get("instagram"):
+        person_schema["sameAs"] = [f"https://instagram.com/{r['instagram'].strip().lstrip('@')}"]
     html = head(
         f"{r['display_name']} — Bike Setup & Kit | {SITE_NAME}",
         f"{r['display_name']}'s full {r.get('team') or 'World Cup'} DH bike setup, sponsors and 2026 season results.",
-        prefix
+        prefix, canonical_path=rider_url, page_type="article", image_path=rider_image,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "WebPage", "name": f"{r['display_name']} bike setup and results", "url": absolute_url(rider_url), "dateModified": SITE_UPDATED, "mainEntity": {"@id": absolute_url(rider_url) + "#rider"}},
+            {**person_schema, "@id": absolute_url(rider_url) + "#rider"},
+            breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html"), (r["display_name"], rider_url)]),
+        ]
     )
     html += header_html(prefix, active="riders")
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
+    {breadcrumb_html([("Home", "../index.html"), ("Riders", "../riders.html"), (r["display_name"], rider_url.split('/')[-1])])}
     <div class="rider-hero">
       <div class="photo">{photo_html}</div>
       <div>
@@ -1155,6 +1509,7 @@ def build_rider_page(r):
         </div>
         {bio_html}
         {sponsor_html}
+        <p class="rider-summary">{esc(rider_summary)}</p>
       </div>
     </div>
 
@@ -1207,6 +1562,7 @@ def main():
         riders = json.load(f)
 
     os.makedirs(RIDERS_DIR, exist_ok=True)
+    os.makedirs(EQUIPMENT_DIR, exist_ok=True)
     os.makedirs(IMG_DIR, exist_ok=True)
     os.makedirs(EQUIP_IMG_DIR, exist_ok=True)
 
@@ -1238,12 +1594,29 @@ def main():
     with open(os.path.join(ROOT, "standings.html"), "w", encoding="utf-8") as f:
         f.write(build_standings(riders))
 
+    with open(os.path.join(ROOT, "equipment.html"), "w", encoding="utf-8") as f:
+        f.write(build_equipment_directory(riders))
+
+    equipment_data = collect_equipment(riders)
+    for category, products in equipment_data.items():
+        filename = f"{equip_image_slug(category, '', '')}.html"
+        with open(os.path.join(EQUIPMENT_DIR, filename), "w", encoding="utf-8") as f:
+            f.write(build_equipment_category_page(category, products))
+
+    for filename, content in build_trust_pages().items():
+        with open(os.path.join(ROOT, filename), "w", encoding="utf-8") as f:
+            f.write(content)
+
     for r in riders:
         page = build_rider_page(r)
         with open(os.path.join(RIDERS_DIR, f"{r['slug']}.html"), "w", encoding="utf-8") as f:
             f.write(page)
 
-    print(f"Built index.html + riders.html + {len(riders)} rider pages ({len(women)} women, {len(men)} men).")
+    seo_builder = os.path.join(ROOT, "build_seo_guides.py")
+    if os.path.exists(seo_builder):
+        subprocess.run([sys.executable, seo_builder], check=True)
+
+    print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men).")
 
 if __name__ == "__main__":
     main()

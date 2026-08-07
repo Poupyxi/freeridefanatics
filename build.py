@@ -966,13 +966,145 @@ def competition_stats(riders, competition):
     leaders = {}
     for category in ("Men Elite", "Women Elite"):
         category_riders = [rider for rider, _ in scored if rider.get("gender_category") == category]
-        leaders[category] = min(category_riders, key=season_rank_key) if category_riders else None
+        leaders[category] = min(category_riders, key=lambda rider: competition_rank_key(rider, name)) if category_riders else None
     return {
         "events": competition_events(riders, name),
         "scored": scored,
         "teams": {rider.get("team") or "Privateer" for rider, _ in scored},
         "leaders": leaders,
     }
+
+def competition_rider_points(rider, competition_name):
+    return sum((result.get("points") or 0) for result in rider.get("competition_history") or []
+               if result.get("category") == competition_name)
+
+def competition_rank_key(rider, competition_name):
+    """Rank a rider using results from one competition only."""
+    history = [result for result in rider.get("competition_history") or []
+               if result.get("category") == competition_name]
+    places = sorted(result["place"] for result in history if result.get("place"))
+    last = next((result.get("points") or 0 for result in reversed(history)
+                 if result.get("points")), 0)
+    return (-competition_rider_points(rider, competition_name), places, -last,
+            rider.get("display_name") or "")
+
+def competition_subnav(competition, active):
+    cid = competition["id"]
+    if active == "standings":
+        links = [
+            ("Overview", f"../{cid}.html", "overview"),
+            ("Standings", "standings.html", "standings"),
+            ("Rounds", f"../{cid}.html#rounds", "rounds"),
+            ("Riders", "../../riders.html#grid", "riders"),
+            ("Equipment", "../../equipment.html", "equipment"),
+        ]
+    else:
+        links = [
+            ("Overview", f"{cid}.html", "overview"),
+            ("Standings", f"{cid}/standings.html", "standings"),
+            ("Rounds", f"{cid}.html#rounds", "rounds"),
+            ("Riders", "../riders.html#grid", "riders"),
+            ("Equipment", "../equipment.html", "equipment"),
+        ]
+    items = "".join(
+        f'<a href="{href}"{(" aria-current=\"page\"" if key == active else "")}>{label}</a>'
+        for label, href, key in links
+    )
+    return f'<nav class="competition-subnav" aria-label="Competition navigation"><div class="wrap">{items}</div></nav>'
+
+def build_competition_standings(riders, competition):
+    name = competition["name"]
+    cid = competition["id"]
+    stats = competition_stats(riders, competition)
+    path = f"/competitions/{cid}/standings.html"
+    categories = {}
+    for category in ("Men Elite", "Women Elite"):
+        categories[category] = sorted(
+            [rider for rider in riders
+             if rider.get("gender_category") == category
+             and competition_rider_points(rider, name) > 0],
+            key=lambda rider: competition_rank_key(rider, name),
+        )
+
+    team_points, team_riders = {}, {}
+    for rider in categories["Men Elite"] + categories["Women Elite"]:
+        team = rider.get("team") or "Privateer"
+        team_points[team] = team_points.get(team, 0) + competition_rider_points(rider, name)
+        team_riders.setdefault(team, []).append(rider)
+    teams = sorted(team_points, key=lambda team: (-team_points[team], team.lower()))
+
+    def podium_card(rank, rider):
+        points = competition_rider_points(rider, name)
+        return f'''<a class="clean-podium-card podium-{rank}" href="../../riders/{rider['slug']}.html">
+          <span class="clean-podium-rank">{rank:02d}</span><div><strong>{esc(rider['display_name'])}</strong><small>{esc(rider.get('team') or 'Privateer')} · {esc(rider.get('nationality') or '')}</small></div><b>{points}<small>pts</small></b>
+        </a>'''
+
+    def rider_panel(category, label):
+        ranked = categories[category]
+        podium = "".join(podium_card(rank, rider) for rank, rider in enumerate(ranked[:3], 1))
+        rows = []
+        for rank, rider in enumerate(ranked, 1):
+            team = rider.get("team") or "Privateer"
+            nation = rider.get("country_code") or rider.get("country") or "—"
+            points = competition_rider_points(rider, name)
+            search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
+            rows.append(f'''<a class="clean-standing-row" href="../../riders/{rider['slug']}.html" data-standing-row data-search="{search}">
+              <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span><b>{points}<small>pts</small></b>
+            </a>''')
+        return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(name)}">
+          <div class="clean-podium">{podium}</div>
+          <div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{"".join(rows)}</div>
+          <p class="standings-empty" hidden>No {label.lower()} rider matches your search.</p>
+        </section>'''
+
+    team_podium = "".join(
+        f'''<div class="clean-podium-card podium-{rank}"><span class="clean-podium-rank">{rank:02d}</span><div><strong>{esc(team)}</strong><small>{len(team_riders[team])} tracked riders</small></div><b>{team_points[team]}<small>pts</small></b></div>'''
+        for rank, team in enumerate(teams[:3], 1)
+    )
+    team_rows = []
+    for rank, team in enumerate(teams, 1):
+        names = ", ".join(rider["display_name"] for rider in team_riders[team])
+        search = esc_attr(f"{team} {names}".lower())
+        team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}">
+          <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b>
+        </div>''')
+    team_panel = f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}">
+      <div class="clean-podium">{team_podium}</div><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{"".join(team_rows)}</div><p class="standings-empty" hidden>No team matches your search.</p>
+    </section>'''
+
+    leaders = categories["Men Elite"][:1] + categories["Women Elite"][:1]
+    leader_summary = " · ".join(rider["display_name"] for rider in leaders)
+    item_list = [
+        {"@type": "ListItem", "position": position,
+         "name": rider["display_name"], "url": absolute_url(f"/riders/{rider['slug']}.html")}
+        for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
+    ]
+    description = f"Current {name} standings for elite men, elite women and teams, with rider profiles and round-by-round points."
+    html = head(
+        f"{name} Standings — Men, Women & Teams | {SITE_NAME}", description, "../../",
+        body_class="competition-standings-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage",
+             "name": f"{name} standings", "description": description,
+             "url": absolute_url(path), "dateModified": SITE_UPDATED,
+             "mainEntity": {"@type": "ItemList", "numberOfItems": len(item_list),
+                            "itemListElement": item_list}},
+            breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"),
+                               (name, f"/competitions/{cid}.html"), ("Standings", path)]),
+        ],
+    )
+    html += header_html("../../", active="competitions")
+    html += f'''<main>
+<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>Season standings.</h1><p>{esc(name)} — the current championship order, designed for a quick read on any screen.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div></div></section>
+{competition_subnav(competition, "standings")}
+<div class="wrap">{breadcrumb_html([("Home", "../../index.html"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
+<section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
+<div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span><div class="filters" role="tablist" aria-label="Standings category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div><label class="standings-search"><span>Search</span><input class="search-input" type="search" placeholder="Rider, team or country…" data-standings-search></label></div>
+{rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}
+<div class="clean-standings-note"><strong>How to read this ranking</strong><p>Points are attached to this competition only. The detailed view keeps every recorded round visible, while this page focuses on the championship order.</p><a href="../../methodology.html">Read the methodology →</a></div>
+</div></section></main>'''
+    html += footer_html("../../")
+    return html
 
 def build_competitions_hub(riders):
     cards = []
@@ -1046,14 +1178,15 @@ def build_competition_detail(riders, competition):
     )
     html += header_html("../", active="competitions")
     html += f'''<main>
-<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>One season hub for the riders, round-by-round standings and equipment records currently connected in the RidersFanatics database.</p><div class="hero-ctas"><a class="btn btn-solid" href="../standings.html">View full standings</a><a class="btn" href="../riders.html#grid">Explore riders</a></div></div></section>
+<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>One season hub for the riders, championship standings and equipment records currently connected in the RidersFanatics database.</p><div class="hero-ctas"><a class="btn btn-solid" href="{competition['id']}/standings.html">View standings</a><a class="btn" href="../riders.html#grid">Explore riders</a></div></div></section>
+{competition_subnav(competition, "overview")}
 <div class="wrap">{breadcrumb_html([("Home", "../index.html"), ("Competitions", "../competitions.html"), (name, competition['id'] + ".html")])}</div>
-<section class="section competition-overview"><div class="wrap"><div class="competition-overview-grid">
+<section class="section competition-overview" id="overview"><div class="wrap"><div class="competition-overview-grid">
   <div class="competition-summary"><div class="label">Dataset status</div><h2>Season at a glance.</h2><p>The standings currently connect {len(stats['scored'])} riders from {len(stats['teams'])} teams across {len(events)} completed rounds. Results and equipment are kept distinct: a race result can update without implying that every rider setup was rescanned that weekend.</p><dl><div><dt>Rounds recorded</dt><dd>{len(events)}</dd></div><div><dt>Riders scored</dt><dd>{len(stats['scored'])}</dd></div><div><dt>Categories</dt><dd>Men &amp; Women Elite</dd></div></dl></div>
   <div class="competition-leaders"><div class="label">Current leaders</div>{"".join(leader_blocks)}</div>
 </div></div></section>
-<section class="section competition-rounds"><div class="wrap"><div class="section-head"><div><div class="label">Round index</div><h2>Recorded events</h2></div><a class="see-all" href="../standings.html">See points by round →</a></div><ol>{"".join(event_rows)}</ol></div></section>
-<section class="section competition-links"><div class="wrap"><div class="competition-link-grid"><a href="../standings.html"><span>01</span><strong>Standings</strong><small>Men, women and teams</small></a><a href="../riders.html#grid"><span>02</span><strong>Riders</strong><small>Profiles, results and setups</small></a><a href="../equipment.html"><span>03</span><strong>Equipment</strong><small>Products ranked in context</small></a><a href="../methodology.html"><span>04</span><strong>Methodology</strong><small>Sources and limitations</small></a></div></div></section>
+<section class="section competition-rounds" id="rounds"><div class="wrap"><div class="section-head"><div><div class="label">Round index</div><h2>Recorded events</h2></div><a class="see-all" href="../standings.html">See points by round →</a></div><ol>{"".join(event_rows)}</ol></div></section>
+<section class="section competition-links"><div class="wrap"><div class="competition-link-grid"><a href="{competition['id']}/standings.html"><span>01</span><strong>Standings</strong><small>Men, women and teams</small></a><a href="../riders.html#grid"><span>02</span><strong>Riders</strong><small>Profiles, results and setups</small></a><a href="../equipment.html"><span>03</span><strong>Equipment</strong><small>Products ranked in context</small></a><a href="../methodology.html"><span>04</span><strong>Methodology</strong><small>Sources and limitations</small></a></div></div></section>
 </main>'''
     html += footer_html("../")
     return html
@@ -1965,6 +2098,10 @@ def main():
     for competition in COMPETITIONS:
         with open(os.path.join(COMPETITIONS_DIR, f"{competition['id']}.html"), "w", encoding="utf-8") as f:
             f.write(build_competition_detail(riders, competition))
+        standings_dir = os.path.join(COMPETITIONS_DIR, competition["id"])
+        os.makedirs(standings_dir, exist_ok=True)
+        with open(os.path.join(standings_dir, "standings.html"), "w", encoding="utf-8") as f:
+            f.write(build_competition_standings(riders, competition))
 
     equipment_data = collect_equipment(riders)
     for category, products in equipment_data.items():

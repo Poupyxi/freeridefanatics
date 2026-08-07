@@ -6,6 +6,7 @@ RewriteCond %{HTTPS} !=on [OR]
 RewriteCond %{HTTP_HOST} ^www\.ridersfanatics\.com$ [NC]
 RewriteRule ^ https://ridersfanatics.com%{REQUEST_URI} [R=301,L,NE]
 RewriteRule ^index\.html$ https://ridersfanatics.com/ [R=301,L,NE]
+RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
 
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"

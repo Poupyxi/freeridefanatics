@@ -408,6 +408,72 @@
     });
   });
 
+  // Contact form progressive enhancement. Native POST remains available when
+  // JavaScript is disabled; with JavaScript the visitor stays on the page and
+  // receives an honest success or failure message from the server.
+  safe('contact-form', function(){
+    document.querySelectorAll('form[data-contact]').forEach(function(form){
+      var status = form.querySelector('[data-contact-status]');
+      var button = form.querySelector('button[type="submit"]');
+      var started = form.querySelector('input[name="form_started"]');
+      var idle = button ? button.textContent : 'Send message';
+
+      if(started) started.value = String(Math.floor(Date.now() / 1000));
+
+      function say(message, state){
+        if(!status) return;
+        status.textContent = message;
+        status.className = 'contact-status' + (state ? ' is-' + state : '');
+      }
+
+      var params = new URLSearchParams(window.location.search);
+      if(params.get('sent') === '1') say('Message sent. Thank you — we will review it as soon as possible.', 'done');
+      if(params.get('error') === '1') say('The message could not be sent. Please email contact@ridersfanatics.com instead.', 'error');
+
+      form.addEventListener('submit', function(e){
+        if(!window.fetch || !window.FormData) return;
+        e.preventDefault();
+        if(!form.checkValidity()){
+          form.reportValidity();
+          say('Please complete the required fields.', 'error');
+          return;
+        }
+        if(form.dataset.sending === '1') return;
+
+        form.dataset.sending = '1';
+        button.disabled = true;
+        button.textContent = 'Sending…';
+        say('Sending your message…');
+
+        fetch(form.action, {
+          method: 'POST',
+          headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+          body: new FormData(form),
+          credentials: 'same-origin'
+        }).then(function(res){
+          return res.json().catch(function(){ return {}; }).then(function(data){
+            if(!res.ok || !data.ok) throw new Error(data.message || String(res.status));
+            return data;
+          });
+        }).then(function(){
+          form.reset();
+          if(started) started.value = String(Math.floor(Date.now() / 1000));
+          say('Message sent. Thank you — we will review it as soon as possible.', 'done');
+        }).catch(function(){
+          say('The message could not be sent. Please try again or email contact@ridersfanatics.com.', 'error');
+        }).then(function(){
+          form.dataset.sending = '';
+          button.disabled = false;
+          button.textContent = idle;
+        });
+      });
+
+      form.addEventListener('input', function(){
+        if(status && status.classList.contains('is-error')) say('');
+      });
+    });
+  });
+
   // "Random rider" CTA — the markup ships with a working href so the button
   // still goes somewhere without JS; here we make it land on a random rider,
   // and on a *different* one each time it is used.

@@ -29,6 +29,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(ROOT, "data", "riders.json")
 RIDERS_DIR = os.path.join(ROOT, "riders")
 EQUIPMENT_DIR = os.path.join(ROOT, "equipment")
+COMPETITIONS_DIR = os.path.join(ROOT, "competitions")
 IMG_DIR = os.path.join(ROOT, "assets", "img", "riders")
 ACTION_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-action")
 EQUIP_IMG_DIR = os.path.join(ROOT, "assets", "img", "equipment")
@@ -37,6 +38,7 @@ REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
 SITE_NAME = "RidersFanatics"
 SITE_URL = "https://ridersfanatics.com"
 SITE_UPDATED = "2026-08-07"
+CONTACT_EMAIL = "contact@ridersfanatics.com"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
 
 # Competitions are deliberately separate from the RidersFanatics brand.  The
@@ -316,10 +318,10 @@ def header_html(asset_prefix, active=""):
     </a>
     <nav class="links">
       <div class="nav-item has-dropdown competition-nav">
-        <a href="{asset_prefix}standings.html"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
+        <a href="{asset_prefix}competitions.html"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
-            <a href="{asset_prefix}standings.html"><strong>{CURRENT_COMPETITION['short_name']}</strong><small>{CURRENT_COMPETITION['discipline']} · {CURRENT_COMPETITION['season']}</small></a>
+            <a href="{asset_prefix}competitions/{CURRENT_COMPETITION['id']}.html"><strong>{CURRENT_COMPETITION['short_name']}</strong><small>{CURRENT_COMPETITION['discipline']} · {CURRENT_COMPETITION['season']}</small></a>
             <span class="dropdown-note">More competitions coming</span>
           </div>
         </div>
@@ -350,11 +352,13 @@ def footer_html(asset_prefix):
     <a class="footer-logo" href="{asset_prefix}index.html"><span class="mark">R</span>RIDERSFANATICS</a>
     <nav class="footer-links">
       <a href="{asset_prefix}riders.html#grid">Riders</a>
+      <a href="{asset_prefix}competitions.html">Competitions</a>
       <a href="{asset_prefix}equipment.html">Equipment</a>
       <a href="{asset_prefix}guides/en/">DH Guide</a>
       <a href="{asset_prefix}index.html#faq">FAQ</a>
       <a href="{asset_prefix}methodology.html">Methodology</a>
       <a href="{asset_prefix}about.html">About</a>
+      <a href="{asset_prefix}contact.html">Contact</a>
       <a href="{asset_prefix}affiliate-disclosure.html">Affiliates</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
@@ -450,6 +454,64 @@ def build_editorial_page(slug, title, description, label, lead, sections):
     html += footer_html("")
     return html
 
+def build_contact_page():
+    path = "/contact.html"
+    description = "Contact RidersFanatics to report a correction, share a reliable source, discuss equipment data or ask a partnership question."
+    html = head(
+        f"Contact {SITE_NAME} | Rider & Equipment Database", description, "",
+        body_class="guide-page contact-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "ContactPage",
+             "name": f"Contact {SITE_NAME}", "description": description,
+             "url": absolute_url(path), "dateModified": SITE_UPDATED,
+             "mainEntity": {"@type": "Organization", "name": SITE_NAME,
+                            "url": SITE_URL,
+                            "email": f"mailto:{CONTACT_EMAIL}",
+                            "contactPoint": {"@type": "ContactPoint",
+                                             "contactType": "customer support",
+                                             "email": CONTACT_EMAIL,
+                                             "availableLanguage": ["English", "French"]}}},
+            breadcrumb_schema([("Home", "/"), ("Contact", path)]),
+        ],
+    )
+    html += header_html("")
+    html += f'''<main><article>
+<header class="guide-hero"><div class="wrap"><div class="label">Corrections · Sources · Partnerships</div><h1>Contact RidersFanatics</h1><p class="lead">Found an outdated result or a component we should recheck? Send the source and context that will help us verify it.</p><div class="guide-meta"><span>English or French</span><span>Direct email available</span></div></div></header>
+<div class="wrap">{breadcrumb_html([("Home", "index.html"), ("Contact", "contact.html")])}</div>
+<div class="wrap contact-layout">
+  <section class="contact-intro" aria-labelledby="contact-intro-title">
+    <div class="label">A useful message includes</div>
+    <h2 id="contact-intro-title">Enough detail to verify.</h2>
+    <ul class="contact-checklist">
+      <li><strong>Correction</strong><span>The rider, result or component concerned.</span></li>
+      <li><strong>Context</strong><span>The race, run, date or setup involved.</span></li>
+      <li><strong>Evidence</strong><span>A public team, rider, brand or event source when possible.</span></li>
+    </ul>
+    <div class="contact-direct"><span>Prefer your email app?</span><a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a></div>
+  </section>
+  <section class="contact-panel" aria-labelledby="contact-form-title">
+    <div class="label">Send a message</div>
+    <h2 id="contact-form-title">What should we look at?</h2>
+    <form class="contact-form" data-contact action="contact-submit.php" method="post">
+      <div class="contact-field-row">
+        <div class="contact-field"><label for="contact-name">Name <span aria-hidden="true">*</span></label><input id="contact-name" name="name" type="text" autocomplete="name" maxlength="100" required></div>
+        <div class="contact-field"><label for="contact-email">Email <span aria-hidden="true">*</span></label><input id="contact-email" name="email" type="email" autocomplete="email" maxlength="254" required></div>
+      </div>
+      <div class="contact-field"><label for="contact-reason">Reason <span aria-hidden="true">*</span></label><select id="contact-reason" name="reason" required><option value="">Choose one</option><option value="correction">Data correction</option><option value="source">New source or equipment update</option><option value="partnership">Partnership or media</option><option value="technical">Website issue</option><option value="other">Other</option></select></div>
+      <div class="contact-field"><label for="contact-page">Relevant page <span>optional</span></label><input id="contact-page" name="page_url" type="url" inputmode="url" maxlength="500" placeholder="https://ridersfanatics.com/..."></div>
+      <div class="contact-field"><label for="contact-message">Message <span aria-hidden="true">*</span></label><textarea id="contact-message" name="message" rows="8" minlength="10" maxlength="5000" required></textarea><small>Do not include sensitive personal information.</small></div>
+      <label class="contact-consent"><input name="consent" type="checkbox" value="yes" required><span>I agree that RidersFanatics uses these details to answer my request. See the <a href="privacy.html">privacy policy</a>. <span aria-hidden="true">*</span></span></label>
+      <div class="contact-trap" aria-hidden="true"><label>Company<input type="text" name="company" tabindex="-1" autocomplete="off"></label></div>
+      <input type="hidden" name="form_started" value="">
+      <button class="btn btn-solid contact-submit" type="submit">Send message</button>
+      <p class="contact-status" data-contact-status role="status" aria-live="polite"></p>
+      <p class="contact-required"><span aria-hidden="true">*</span> Required fields</p>
+    </form>
+  </section>
+</div></article></main>'''
+    html += footer_html("")
+    return html
+
 def build_trust_pages():
     return {
         "about.html": build_editorial_page(
@@ -474,7 +536,7 @@ def build_trust_pages():
                 ("Equipment identification", ["A component is recorded when its brand or model can be identified with reasonable confidence. Model names are normalised so small differences in punctuation, accents or naming do not fragment the statistics.", "When only a brand is known, the database avoids inventing a model. When a component remains uncertain, it may be omitted until stronger evidence is available."]),
                 ("Updates", ["Race results and standings are updated as new season data is imported. Equipment records are updated when a verifiable change is identified; the absence of a new entry does not mean that every component was physically rechecked after every run or every race.", "The global update date describes the most recent database publication, not a guarantee that all 64 setups were independently reconfirmed on that day."]),
                 ("Equipment rankings", ["Equipment rankings combine the current season points of tracked riders associated with a product. They describe competitive presence within this dataset; they are not laboratory tests and do not prove that one product is objectively better than another.", "The number and performance of sponsored riders strongly influence these totals. Rankings should be read alongside rider count, category and season context."]),
-                ("Corrections", ["Corrections should include the rider, component or result concerned, the proposed change, the relevant race or date and a public source that supports the correction.", "A public contact channel will be added once it can be monitored reliably. Until then, unverified submissions are intentionally not collected through an inactive form."]),
+                ("Corrections", ["Corrections should include the rider, component or result concerned, the proposed change, the relevant race or date and a public source that supports the correction.", f"Send a correction through the contact page or email {CONTACT_EMAIL}. Every proposed change is checked against a reliable public source before publication."]),
             ],
         ),
         "affiliate-disclosure.html": build_editorial_page(
@@ -492,12 +554,15 @@ def build_trust_pages():
             "privacy", "Privacy policy",
             "Privacy information for visitors to RidersFanatics, including server logs, external links, affiliate links and future service changes.",
             "Visitor information",
-            "RidersFanatics is currently a primarily static editorial website and does not operate an active newsletter form or user account system.",
+            "RidersFanatics is primarily a static editorial website. It operates a contact form but no active newsletter or user account system.",
             [
-                ("Information processed", ["The website itself does not currently ask visitors to create an account or submit personal information. Standard hosting infrastructure may process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
+                ("Information processed", ["When you use the contact form, RidersFanatics receives your name, email address, chosen message category, message and any relevant page URL you provide. Required fields are marked on the form. Standard hosting infrastructure may also process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
+                ("Purpose and legal basis", ["Contact details are used only to read, verify and answer your request, including a correction, source, technical report or partnership enquiry. Processing is based on your request and consent given when you submit the form. Do not send sensitive personal information."]),
+                ("Recipients and retention", [f"Messages are delivered to the RidersFanatics mailbox at {CONTACT_EMAIL} and are not sold. They are kept only while the request and any necessary follow-up are handled, then deleted when they are no longer useful, subject to any overriding legal obligation."]),
+                ("Your rights", [f"You can ask to access, correct or delete your contact information, or withdraw your consent, by emailing {CONTACT_EMAIL}. You may also contact the data protection authority applicable to you, such as the CNIL in France."]),
                 ("External services", ["Pages may link to manufacturers, retailers, Amazon and social platforms. Those websites operate under their own privacy and cookie policies. Following an external link transfers the visitor to the third party's service."]),
                 ("Affiliate links", ["Some outbound links are marked as sponsored affiliate links. The destination retailer may use its own identifiers or cookies to attribute a qualifying purchase. RidersFanatics does not receive the visitor's payment details from the retailer."]),
-                ("Future changes", ["If analytics, a newsletter, contact form or user accounts are activated later, this policy should be updated before the new processing begins, with appropriate consent and retention information where required."]),
+                ("Future changes", ["If analytics, a newsletter or user accounts are activated later, this policy will be updated before the new processing begins, with appropriate consent and retention information where required."]),
             ],
         ),
     }
@@ -863,6 +928,134 @@ def build_standings(riders):
 </section>
 """
     html += footer_html(prefix)
+    return html
+
+def competition_events(riders, competition_name):
+    """Recover round order from every rider's ordered history."""
+    successors, indegree, seen = {}, {}, []
+    for rider in riders:
+        sequence = [h["event"] for h in rider.get("competition_history") or []
+                    if h.get("category") == competition_name]
+        for event in sequence:
+            if event not in indegree:
+                indegree[event], successors[event] = 0, set()
+                seen.append(event)
+        for before, after in zip(sequence, sequence[1:]):
+            if after not in successors[before]:
+                successors[before].add(after)
+                indegree[after] += 1
+    order, ready = [], [event for event in seen if indegree[event] == 0]
+    while ready:
+        ready.sort(key=seen.index)
+        event = ready.pop(0)
+        order.append(event)
+        for following in successors[event]:
+            indegree[following] -= 1
+            if indegree[following] == 0:
+                ready.append(following)
+    return order if len(order) == len(seen) else seen
+
+def competition_stats(riders, competition):
+    name = competition["name"]
+    scored = []
+    for rider in riders:
+        points = sum((h.get("points") or 0) for h in rider.get("competition_history") or []
+                     if h.get("category") == name)
+        if points:
+            scored.append((rider, points))
+    leaders = {}
+    for category in ("Men Elite", "Women Elite"):
+        category_riders = [rider for rider, _ in scored if rider.get("gender_category") == category]
+        leaders[category] = min(category_riders, key=season_rank_key) if category_riders else None
+    return {
+        "events": competition_events(riders, name),
+        "scored": scored,
+        "teams": {rider.get("team") or "Privateer" for rider, _ in scored},
+        "leaders": leaders,
+    }
+
+def build_competitions_hub(riders):
+    cards = []
+    item_list = []
+    for position, competition in enumerate(COMPETITIONS, 1):
+        stats = competition_stats(riders, competition)
+        detail_path = f"/competitions/{competition['id']}.html"
+        cards.append(f'''<article class="competition-card">
+          <div class="competition-card-top"><span class="competition-status">Tracking now</span><span>{competition['season']}</span></div>
+          <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
+          <h2>{esc(competition['name'])}</h2>
+          <p>Explore the season context, completed rounds, tracked riders and links to the live standings and equipment database.</p>
+          <div class="competition-card-stats"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{len(stats['teams'])}</strong> teams</span></div>
+          <a class="btn btn-solid" href="competitions/{competition['id']}.html">Open competition</a>
+        </article>''')
+        item_list.append({"@type": "ListItem", "position": position,
+                          "name": competition["name"], "url": absolute_url(detail_path)})
+    description = "Choose a competition tracked by RidersFanatics and explore its riders, standings, results and race equipment."
+    html = head(
+        f"Competitions | Riders, Standings & Equipment | {SITE_NAME}", description, "",
+        body_class="competitions-page", canonical_path="/competitions.html",
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage",
+             "name": "Competitions tracked by RidersFanatics", "description": description,
+             "url": absolute_url("/competitions.html"), "dateModified": SITE_UPDATED,
+             "mainEntity": {"@type": "ItemList", "numberOfItems": len(item_list),
+                            "itemListElement": item_list}},
+            breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html")]),
+        ],
+    )
+    html += header_html("", active="competitions")
+    html += f'''<main>
+<section class="competition-hero"><div class="wrap"><div class="label">Series · Seasons · Disciplines</div><h1>Choose a competition.</h1><p>RidersFanatics is built to follow more than one championship. Select the series you want, then move between riders, results and equipment without mixing seasons.</p></div></section>
+<div class="wrap">{breadcrumb_html([("Home", "index.html"), ("Competitions", "competitions.html")])}</div>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Currently tracked</div><h2>Competition database</h2></div><span class="see-all">{len(COMPETITIONS)} active series</span></div><div class="competition-grid">{"".join(cards)}</div>
+<div class="competition-note"><strong>Built for expansion</strong><p>New winter, bike and action-sport competitions can be added as separate datasets. The RidersFanatics brand, rider directory and equipment catalogue remain shared.</p></div></div></section>
+</main>'''
+    html += footer_html("")
+    return html
+
+def build_competition_detail(riders, competition):
+    stats = competition_stats(riders, competition)
+    events = stats["events"]
+    name = competition["name"]
+    path = f"/competitions/{competition['id']}.html"
+    leader_blocks = []
+    for category, label in (("Men Elite", "Men leader"), ("Women Elite", "Women leader")):
+        leader = stats["leaders"][category]
+        if not leader:
+            continue
+        points = sum((h.get("points") or 0) for h in leader.get("competition_history") or []
+                     if h.get("category") == name)
+        leader_blocks.append(f'<a href="../riders/{leader["slug"]}.html"><span>{label}</span><strong>{esc(leader["display_name"])}</strong><small>{points} points</small></a>')
+    event_rows = []
+    for number, event in enumerate(events, 1):
+        starters = sum(1 for rider in riders if any(
+            h.get("category") == name and h.get("event") == event
+            for h in rider.get("competition_history") or []))
+        event_rows.append(f'<li><span>{number:02d}</span><div><strong>{esc(event)}</strong><small>{starters} tracked results</small></div></li>')
+    description = f"{name}: season overview, completed rounds, rider leaders, standings and professional downhill equipment tracked by RidersFanatics."
+    html = head(
+        f"{name} — Standings, Riders & Equipment | {SITE_NAME}", description, "../",
+        body_class="competition-detail-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": name,
+             "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
+             "about": {"@type": "SportsEvent", "name": name,
+                       "sport": f"{competition['sport']} {competition['discipline']}"}},
+            breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"), (name, path)]),
+        ],
+    )
+    html += header_html("../", active="competitions")
+    html += f'''<main>
+<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>One season hub for the riders, round-by-round standings and equipment records currently connected in the RidersFanatics database.</p><div class="hero-ctas"><a class="btn btn-solid" href="../standings.html">View full standings</a><a class="btn" href="../riders.html#grid">Explore riders</a></div></div></section>
+<div class="wrap">{breadcrumb_html([("Home", "../index.html"), ("Competitions", "../competitions.html"), (name, competition['id'] + ".html")])}</div>
+<section class="section competition-overview"><div class="wrap"><div class="competition-overview-grid">
+  <div class="competition-summary"><div class="label">Dataset status</div><h2>Season at a glance.</h2><p>The standings currently connect {len(stats['scored'])} riders from {len(stats['teams'])} teams across {len(events)} completed rounds. Results and equipment are kept distinct: a race result can update without implying that every rider setup was rescanned that weekend.</p><dl><div><dt>Rounds recorded</dt><dd>{len(events)}</dd></div><div><dt>Riders scored</dt><dd>{len(stats['scored'])}</dd></div><div><dt>Categories</dt><dd>Men &amp; Women Elite</dd></div></dl></div>
+  <div class="competition-leaders"><div class="label">Current leaders</div>{"".join(leader_blocks)}</div>
+</div></div></section>
+<section class="section competition-rounds"><div class="wrap"><div class="section-head"><div><div class="label">Round index</div><h2>Recorded events</h2></div><a class="see-all" href="../standings.html">See points by round →</a></div><ol>{"".join(event_rows)}</ol></div></section>
+<section class="section competition-links"><div class="wrap"><div class="competition-link-grid"><a href="../standings.html"><span>01</span><strong>Standings</strong><small>Men, women and teams</small></a><a href="../riders.html#grid"><span>02</span><strong>Riders</strong><small>Profiles, results and setups</small></a><a href="../equipment.html"><span>03</span><strong>Equipment</strong><small>Products ranked in context</small></a><a href="../methodology.html"><span>04</span><strong>Methodology</strong><small>Sources and limitations</small></a></div></div></section>
+</main>'''
+    html += footer_html("../")
     return html
 
 def short_event(ev):
@@ -1726,6 +1919,7 @@ def main():
 
     os.makedirs(RIDERS_DIR, exist_ok=True)
     os.makedirs(EQUIPMENT_DIR, exist_ok=True)
+    os.makedirs(COMPETITIONS_DIR, exist_ok=True)
     os.makedirs(IMG_DIR, exist_ok=True)
     os.makedirs(EQUIP_IMG_DIR, exist_ok=True)
 
@@ -1762,6 +1956,15 @@ def main():
 
     with open(os.path.join(ROOT, "compare.html"), "w", encoding="utf-8") as f:
         f.write(build_compare_page())
+
+    with open(os.path.join(ROOT, "contact.html"), "w", encoding="utf-8") as f:
+        f.write(build_contact_page())
+
+    with open(os.path.join(ROOT, "competitions.html"), "w", encoding="utf-8") as f:
+        f.write(build_competitions_hub(riders))
+    for competition in COMPETITIONS:
+        with open(os.path.join(COMPETITIONS_DIR, f"{competition['id']}.html"), "w", encoding="utf-8") as f:
+            f.write(build_competition_detail(riders, competition))
 
     equipment_data = collect_equipment(riders)
     for category, products in equipment_data.items():

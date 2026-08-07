@@ -439,4 +439,209 @@
       });
     });
   });
+
+  // Simple equipment comparator. Products are selected on category pages and
+  // stored locally in the visitor's browser; no account or server is required.
+  safe('equipment-compare', function(){
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-compare-product]'));
+    var page = document.querySelector('[data-compare-page]');
+    if(!buttons.length && !page) return;
+
+    var STORAGE_KEY = 'rf_equipment_compare_v1';
+    var MAX_ITEMS = 4;
+
+    function readSelection(){
+      try {
+        var value = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '[]');
+        if(!Array.isArray(value)) return [];
+        return value.filter(function(item){
+          return item && typeof item.id === 'string' && typeof item.category === 'string' && typeof item.title === 'string';
+        }).slice(0, MAX_ITEMS);
+      } catch(err) { return []; }
+    }
+
+    function saveSelection(items){
+      selection = items.slice(0, MAX_ITEMS);
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selection)); } catch(err) {}
+      updateButtons();
+      updateTray();
+      renderPage();
+    }
+
+    function make(tag, className, text){
+      var node = document.createElement(tag);
+      if(className) node.className = className;
+      if(text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    var selection = readSelection();
+    var tray = null;
+    var trayCount = null;
+    var trayStatus = null;
+    var trayLink = null;
+
+    function ensureTray(){
+      if(!buttons.length || tray) return;
+      tray = make('aside', 'compare-tray');
+      tray.setAttribute('aria-live', 'polite');
+      var copy = make('div', 'compare-tray-copy');
+      trayCount = make('strong', '', '0 products selected');
+      trayStatus = make('span', '', 'Select 2 to 4 products from this category.');
+      copy.appendChild(trayCount);
+      copy.appendChild(trayStatus);
+      var actions = make('div', 'compare-tray-actions');
+      var clear = make('button', 'compare-clear', 'Clear');
+      clear.type = 'button';
+      clear.addEventListener('click', function(){ saveSelection([]); });
+      trayLink = make('a', 'btn btn-solid compare-open', 'Compare');
+      trayLink.href = '/compare.html';
+      trayLink.addEventListener('click', function(e){
+        if(selection.length < 2) e.preventDefault();
+      });
+      actions.appendChild(clear);
+      actions.appendChild(trayLink);
+      tray.appendChild(copy);
+      tray.appendChild(actions);
+      document.body.appendChild(tray);
+    }
+
+    function updateButtons(){
+      buttons.forEach(function(button){
+        var product;
+        try { product = JSON.parse(button.getAttribute('data-compare-product') || '{}'); } catch(err) { return; }
+        var selected = selection.some(function(item){ return item.id === product.id; });
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        button.textContent = selected ? 'Selected' : 'Compare';
+      });
+    }
+
+    function updateTray(message){
+      ensureTray();
+      if(!tray) return;
+      tray.classList.toggle('is-visible', selection.length > 0);
+      trayCount.textContent = selection.length + ' product' + (selection.length === 1 ? '' : 's') + ' selected';
+      var categoryName = selection.length ? (selection[0].categoryLabel || selection[0].category || 'products') : 'products';
+      trayStatus.textContent = message || (selection.length < 2 ? 'Select at least one more product.' : 'Ready to compare ' + categoryName.toLowerCase() + '.');
+      var ready = selection.length >= 2;
+      trayLink.classList.toggle('is-disabled', !ready);
+      trayLink.setAttribute('aria-disabled', ready ? 'false' : 'true');
+    }
+
+    buttons.forEach(function(button){
+      button.addEventListener('click', function(){
+        var product;
+        try { product = JSON.parse(button.getAttribute('data-compare-product') || '{}'); } catch(err) { return; }
+        var index = selection.findIndex(function(item){ return item.id === product.id; });
+        if(index !== -1){
+          selection.splice(index, 1);
+          saveSelection(selection);
+          return;
+        }
+        if(selection.length && selection[0].category !== product.category){
+          selection = [product];
+          saveSelection(selection);
+          updateTray('New category started. Select another ' + product.categoryLabel.toLowerCase() + '.');
+          return;
+        }
+        if(selection.length >= MAX_ITEMS){
+          updateTray('Maximum reached: remove one product before adding another.');
+          return;
+        }
+        selection.push(product);
+        saveSelection(selection);
+      });
+    });
+
+    function addFact(card, label, value){
+      var row = make('div', 'compare-fact');
+      row.appendChild(make('span', '', label));
+      row.appendChild(make('strong', '', value));
+      card.appendChild(row);
+    }
+
+    function renderPage(){
+      if(!page) return;
+      while(page.firstChild) page.removeChild(page.firstChild);
+      if(!selection.length){
+        var empty = make('div', 'compare-empty');
+        empty.appendChild(make('h2', '', 'No products selected yet.'));
+        empty.appendChild(make('p', '', 'Open an equipment category and select between two and four products marked “Compare”.'));
+        var browse = make('a', 'btn btn-solid', 'Browse equipment');
+        browse.href = 'equipment.html';
+        empty.appendChild(browse);
+        page.appendChild(empty);
+        return;
+      }
+
+      var heading = make('div', 'compare-page-head');
+      var titleWrap = make('div');
+      titleWrap.appendChild(make('div', 'label', selection[0].competition || 'Current competition'));
+      titleWrap.appendChild(make('h2', '', (selection[0].categoryLabel || selection[0].category) + ' comparison'));
+      heading.appendChild(titleWrap);
+      var clearAll = make('button', 'compare-clear', 'Clear comparison');
+      clearAll.type = 'button';
+      clearAll.addEventListener('click', function(){ saveSelection([]); });
+      heading.appendChild(clearAll);
+      page.appendChild(heading);
+
+      if(selection.length < 2){
+        page.appendChild(make('p', 'compare-hint', 'Select at least one more product from the same category to complete the comparison.'));
+      }
+
+      var grid = make('div', 'compare-grid');
+      selection.forEach(function(product){
+        var card = make('article', 'compare-card');
+        var remove = make('button', 'compare-remove', 'Remove');
+        remove.type = 'button';
+        remove.setAttribute('aria-label', 'Remove ' + product.title + ' from comparison');
+        remove.addEventListener('click', function(){
+          saveSelection(selection.filter(function(item){ return item.id !== product.id; }));
+        });
+        card.appendChild(remove);
+        if(product.image && product.image.indexOf('/assets/img/equipment/') === 0){
+          var image = document.createElement('img');
+          image.src = product.image;
+          image.alt = product.title;
+          image.loading = 'lazy';
+          card.appendChild(image);
+        } else {
+          card.appendChild(make('div', 'compare-placeholder', 'RF'));
+        }
+        card.appendChild(make('div', 'label', product.brand || product.categoryLabel));
+        card.appendChild(make('h3', '', product.title));
+        addFact(card, 'Tracked riders', String(product.riderCount || 0));
+        addFact(card, 'Competition points', String(product.points || 0));
+        addFact(card, 'Teams', (product.teams || []).join(', ') || '—');
+
+        var riders = make('div', 'compare-riders');
+        riders.appendChild(make('span', '', 'Riders'));
+        var riderLinks = make('div');
+        (product.riders || []).forEach(function(rider){
+          if(!rider || typeof rider.url !== 'string' || rider.url.indexOf('/riders/') !== 0) return;
+          var link = make('a', '', rider.name || 'Rider');
+          link.href = rider.url;
+          riderLinks.appendChild(link);
+        });
+        if(!riderLinks.childNodes.length) riderLinks.appendChild(make('em', '', 'No rider linked'));
+        riders.appendChild(riderLinks);
+        card.appendChild(riders);
+
+        if(product.productUrl && /^https?:\/\//.test(product.productUrl)){
+          var source = make('a', 'shop-btn compare-source', 'Product details');
+          source.href = product.productUrl;
+          source.target = '_blank';
+          source.rel = 'noopener sponsored';
+          card.appendChild(source);
+        }
+        grid.appendChild(card);
+      });
+      page.appendChild(grid);
+    }
+
+    updateButtons();
+    updateTray();
+    renderPage();
+  });
 })();

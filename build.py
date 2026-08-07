@@ -806,12 +806,16 @@ def short_event(ev):
     would give two identical column headers."""
     m = re.match(r"^(.*?)\s*\(([^)]*)\)\s*$", ev)
     place, month = (m.group(1), m.group(2)) if m else (ev, "")
+    place = place.strip()
+    # Events read 'Venue, Country'; the country carries the code. A round the
+    # sheet lists by country alone has no comma and is its own key.
+    country = place.rsplit(",", 1)[-1].strip() if "," in place else place
     event_codes = {
         "South Korea": "KOR", "France": "FRA", "Austria": "AUT",
         "Switzerland": "SUI", "Italy": "ITA", "Andorra": "AND",
     }
-    key = place.strip().split()[-1] if place.strip() else ev
-    label = event_codes.get(place.strip(), key[:3].upper())
+    fallback = (country.split()[-1] if country.split() else ev)[:3].upper()
+    label = event_codes.get(country, fallback)
     return f"{label} {month[:3].upper()}".strip()
 
 def build_riders_directory(riders, women_count, men_count):

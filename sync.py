@@ -134,16 +134,31 @@ def as_int(v):
     except (TypeError, ValueError):
         return None
 
+def titlecase_place(s):
+    """'La thuile' -> 'La Thuile', without flattening 'YongPyong'."""
+    return " ".join(w[:1].upper() + w[1:] if w else w for w in s.split())
+
 def normalize_event(header):
-    """'🇦🇹 Autriche\\n(june)' -> 'Austria (June)'"""
+    """'🇦🇹 Autriche-Leogang\\n(june)' -> 'Leogang, Austria (June)'
+
+    The sheet writes a round as 'Country-City' with French country names,
+    lowercase months and stray spacing ('Italie- La thuile'). Only the bare
+    country name was translated before, so anything hyphenated fell through
+    untouched. These strings surface in the standings headers, every rider's
+    results table and the JSON-LD, so they are normalized once, here."""
     s = strip_emoji(clean(header)).replace("\n", " ")
     s = re.sub(r"\s+", " ", s).strip()
     m = re.match(r"^(.*?)\s*\(([^)]+)\)\s*$", s)
     if not m:
         return s
     place, month = m.group(1).strip(), m.group(2).strip()
-    place = EVENT_TRANSLATIONS.get(place.lower(), place)
     month = MONTH_TRANSLATIONS.get(month.lower(), month.capitalize())
+    parts = [EVENT_TRANSLATIONS.get(p.strip().lower(), p.strip())
+             for p in place.split("-") if p.strip()]
+    if len(parts) >= 2:  # country first, venue after the hyphen
+        place = f"{titlecase_place(' '.join(parts[1:]))}, {parts[0]}"
+    elif parts:  # a round the sheet lists by country alone
+        place = parts[0]
     return f"{place} ({month})"
 
 def normalize_bio(s):

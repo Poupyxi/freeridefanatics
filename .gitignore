@@ -1,60 +1,15 @@
-# ── Credentials — NE JAMAIS PUSHER ──
-*.json
-freeride-automation-*.json
+# Sheet export cache (re-downloaded by sync.py)
+.sheet-cache.xlsx
 
-# ── Config locale (IDs / URLs privées) ──
-config.py
-config.local.py
-settings.local.*
+# macOS
+.DS_Store
 
-# ── Photos riders (données personnelles) ──
-PPRIDERS/
-PPRiders/
-PictureRiders/
-
-# ── Fichiers de test temporaires ──
-test_*.png
-eq_card_preview.*
-
-# ── Données / fichiers générés ──
-output/
-flags/
-*.xlsx
-*.xls
-
-# ── Publish / connexions locales (préparations, tokens, exports) ──
-publish/
-Publish/
-prepared_posts/
-prepared-posts/
-connections/
-connexions/
-freeride_publish_*
-freeride_connection_*
-google_client_secret*
-google_token*
-meta_token*
-instagram_token*
-
-# ── Cache Python ──
+# Python
 __pycache__/
 *.pyc
-*.pyo
 
-# ── macOS ──
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# ── Logs / divers ──
-*.log
-venv/
-.env
-env/
-
-# ── Scripts helper temporaires ──
-*.command
-rebuild_riders.py
-
-# ── Photos produits locales (images, droits/licences) ──
-Equipment/
+# Working files (research exports, scratch)
+tmp/
+.results-latest.csv
+.profiles-latest.csv
+node_modules/

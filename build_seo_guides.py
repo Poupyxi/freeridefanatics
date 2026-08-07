@@ -91,7 +91,7 @@ for code in ORDER:
 pages = sorted(ROOT.glob("*.html"))
 pages += sorted((ROOT / "riders").glob("*.html"))
 pages += sorted((ROOT / "equipment").glob("*.html"))
-pages += sorted((ROOT / "competitions").glob("*.html"))
+pages += sorted((ROOT / "competitions").rglob("*.html"))
 pages += [ROOT / "guides" / code / "index.html" for code in ORDER]
 xml_rows = []
 for item in pages:

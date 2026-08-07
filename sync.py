@@ -15,9 +15,14 @@ and regenerates data/riders.json from its tabs:
 Then rebuilds the whole site (same as running build.py).
 
 Usage:
-  python3 sync.py                  # sync + rebuild
-  python3 sync.py --no-build       # only refresh data/riders.json
-  python3 sync.py --offline FILE   # parse a local .xlsx instead of downloading
+  python3 sync.py                  # check, sync + rebuild
+  python3 sync.py --check           # run the data checks and stop
+  python3 sync.py --force           # rebuild even if the checks fail
+  python3 sync.py --no-build        # only refresh data/riders.json
+  python3 sync.py --offline FILE    # parse a local .xlsx instead of downloading
+
+The checks live in validate.py and are blocking: a sheet with errors leaves
+data/riders.json untouched rather than publishing wrong numbers.
 """
 import json
 import io
@@ -33,6 +38,8 @@ import openpyxl
 from PIL import Image, ImageOps
 
 import build  # equip_image_slug + site generator
+import validate  # data checks, run before anything is written
+from normalization import normalize_riders, normalize_sponsors, normalize_team
 
 SHEET_ID = "1xyD72CIBG4TQLFmvhNRVKfyz2ZsKn3HUFA9aXWZH9Lc"
 EXPORT_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=xlsx"
@@ -172,8 +179,8 @@ def normalize_country(s):
 # team called "N/A" in the standings instead of falling back to Privateer.
 NO_VALUE = {"n/a", "na", "n.a.", "-", "--", "—", "?", "none", "tbd", "n/c"}
 
-def normalize_team(s):
-    return None if not s or s.strip().lower() in NO_VALUE else s.strip()
+def normalize_source_team(s):
+    return None if not s or s.strip().lower() in NO_VALUE else normalize_team(s)
 
 def section_gender(cells, current):
     """Track the 'WOMEN ELITE' / 'MEN ELITE' section header rows.
@@ -216,8 +223,10 @@ def parse_profiles(ws):
             "age": as_int(cells[7]),
             "instagram": insta or None,
             "bio": normalize_bio(cells[9]),
-            "team": normalize_team(cells[10]),
-            "sponsors": [p.strip() for p in cells[11].split(";") if p.strip()] if cells[11] else [],
+            "team": normalize_source_team(cells[10]),
+            "sponsors": normalize_sponsors(
+                [p.strip() for p in cells[11].split(";") if p.strip()] if cells[11] else []
+            ),
         }
     return profiles
 
@@ -449,8 +458,12 @@ def build_riders(wb):
             "display_name": f"{first} {last.title()}",
         })
 
+    normalize_riders(riders)
     riders.sort(key=lambda r: (r["last_name"].lower(), r["first_name"].lower()))
-    return riders, photos, unmatched_links
+    # result_keys carries every row of the results tab, matched or not, so the
+    # checks can spot riders who score points but have no profile — they are
+    # otherwise dropped here without a trace.
+    return riders, photos, unmatched_links, set(results)
 
 def download_photos(photos):
     """Fetch equipment photo URLs from the sheet into assets/img/equipment/."""
@@ -489,7 +502,8 @@ def download_photos(photos):
 
 def main():
     args = sys.argv[1:]
-    do_build = "--no-build" not in args
+    check_only = "--check" in args
+    do_build = "--no-build" not in args and not check_only
 
     if "--offline" in args:
         path = args[args.index("--offline") + 1]
@@ -501,7 +515,21 @@ def main():
             f.write(data)
 
     wb = openpyxl.load_workbook(path, data_only=True)
-    riders, photos, unmatched = build_riders(wb)
+    riders, photos, unmatched, result_keys = build_riders(wb)
+
+    # Nothing caught the inverted standings for months. Bad data now stops the
+    # build instead of shipping.
+    report = validate.run(riders, result_keys, HISTORY_CATEGORY)
+    if report.errors or report.warnings:
+        print(f"checks:      {len(report.errors)} error(s), {len(report.warnings)} warning(s)")
+        print(report.render())
+    else:
+        print("checks:      clean")
+    if check_only:
+        sys.exit(0 if report.ok else 1)
+    if not report.ok and "--force" not in args:
+        sys.exit("\nAborted: the sheet has errors, so riders.json was left untouched.\n"
+                 "Fix them, or rebuild anyway with --force.")
 
     women = sum(1 for r in riders if r["gender_category"] == "Women Elite")
     linked = sum(1 for r in riders for i in r["equipment"] if i["affiliate_link"])

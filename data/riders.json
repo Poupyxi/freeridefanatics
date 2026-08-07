@@ -11,7 +11,7 @@
   "date_of_birth": "23 Mar 2007",
   "age": 19,
   "instagram": "@max_alran_5",
-  "team": "Commencal/Muc-Off by Riding Addiction",
+  "team": "Commençal/Muc-Off by Riding Addiction",
   "sponsors": [],
   "bio": "- Junior World Champion 2025 - French & Euro U17 DH Champion 2023",
   "bike": {
@@ -185,8 +185,8 @@
   "instagram": "@alran_till_mtb",
   "team": "Commençal/Muc-Off by Riding Addiction",
   "sponsors": [
-   "commencal",
-   "mucoff"
+   "Commençal",
+   "Muc-Off"
   ],
   "bio": "- Twin brother of Max Alran - 1st season World Cup full 2026",
   "bike": {
@@ -368,9 +368,9 @@
   "instagram": "@_lisa.baumann._",
   "team": "Commençal Schwalbe by Les Orres",
   "sponsors": [
-   "Commencal",
-   "Lesorres",
-   "Schable"
+   "Commençal",
+   "Les Orres",
+   "Schwalbe"
   ],
   "bio": "- European Champion DH 2024 - Swiss Champion DH",
   "bike": {
@@ -868,7 +868,7 @@
   "instagram": "@troybrosnan",
   "team": "Canyon DH Racing",
   "sponsors": [
-   "canyon_mtb"
+   "Canyon"
   ],
   "bio": "- 2x Champion Junior WC (2010, 2011) - 8x Australian Champion - 6 wins World Cup",
   "bike": {
@@ -1337,18 +1337,10 @@
     "amazon_link": "https://www.amazon.fr/dp/B0D886G8TX"
    },
    {
-    "category": "DropperPost",
+    "category": "Saddle",
     "brand": "Ergon",
     "model_detail": "",
     "brand_model": "Ergon",
-    "affiliate_link": null,
-    "amazon_link": null
-   },
-   {
-    "category": "Saddle",
-    "brand": "SRAM",
-    "model_detail": "X01 DH",
-    "brand_model": "SRAM;X01 DH",
     "affiliate_link": null,
     "amazon_link": null
    },
@@ -1363,10 +1355,10 @@
    {
     "category": "Derailleur",
     "brand": "SRAM",
-    "model_detail": "Maven",
-    "brand_model": "SRAM;Maven",
-    "affiliate_link": "https://www.sram.com/en/sram/models/db-mvn-ult-a1",
-    "amazon_link": "https://www.amazon.com/dp/B0CW9VSGP2"
+    "model_detail": "X01 DH",
+    "brand_model": "SRAM;X01 DH",
+    "affiliate_link": null,
+    "amazon_link": null
    },
    {
     "category": "BrakeLever",
@@ -1378,14 +1370,6 @@
    },
    {
     "category": "Wheels",
-    "brand": "Maxxis",
-    "model_detail": "Assegai (F) + DHR II (R);DH MaxxGrip",
-    "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH MaxxGrip",
-    "affiliate_link": null,
-    "amazon_link": null
-   },
-   {
-    "category": "Disk",
     "brand": "DT Swiss",
     "model_detail": "FR1500",
     "brand_model": "DT Swiss;FR1500",
@@ -1394,6 +1378,14 @@
    },
    {
     "category": "Tires",
+    "brand": "Maxxis",
+    "model_detail": "Assegai (F) + DHR II (R);DH MaxxGrip",
+    "brand_model": "Maxxis;Assegai (F) + DHR II (R);DH MaxxGrip",
+    "affiliate_link": null,
+    "amazon_link": null
+   },
+   {
+    "category": "Pedals",
     "brand": "Crankbrothers",
     "model_detail": "",
     "brand_model": "Crankbrothers",
@@ -1626,8 +1618,8 @@
   "instagram": "@ethancraik",
   "team": "Scott DH Factory Racing",
   "sponsors": [
-   "scottdhfactory",
-   "netperformance"
+   "Scott DH Factory Racing",
+   "Net Performance"
   ],
   "bio": "N/A",
   "bike": {
@@ -2237,10 +2229,10 @@
   "instagram": "@jacksongoldstone",
   "team": "Santa Cruz Syndicate",
   "sponsors": [
-   "santacruzsyndicate",
-   "foxmtb",
-   "redbullcanada",
-   "gopro"
+   "Santa Cruz Syndicate",
+   "Fox Racing",
+   "Red Bull",
+   "GoPro"
   ],
   "bio": "- 7x WC winner 🏆 - Overall WC 2025 - Champion Junior WC 2021 - Red Bull Hardline 2022",
   "bike": {
@@ -2509,7 +2501,7 @@
     "amazon_link": null
    },
    {
-    "category": "Shoes",
+    "category": "Helmet",
     "brand": "Bell",
     "model_detail": "",
     "brand_model": "Bell",
@@ -3653,9 +3645,9 @@
   "instagram": "@valentinahoell_",
   "team": "Commençal Schwalbe by Les Orres",
   "sponsors": [
-   "Commencal",
-   "Redbull",
-   "Sram",
+   "Commençal",
+   "Red Bull",
+   "SRAM",
    "RockShox",
    "Saalbach",
    "Adidas Five Ten",
@@ -3836,9 +3828,9 @@
   "instagram": "@finniles",
   "team": "Specialized Gravity",
   "sponsors": [
-   "specializedgravity",
-   "redbullcanada",
-   "alpinestars"
+   "Specialized Gravity",
+   "Red Bull",
+   "Alpinestars"
   ],
   "bio": "- World Champion Junior 2016 - WC win Leogang 2021 - Winner Lenzerheide 2026",
   "bike": {
@@ -3872,9 +3864,9 @@
    },
    {
     "category": "Handlebar",
-    "brand": "Rental",
+    "brand": "Renthal",
     "model_detail": "Fatbar M172;Carbon",
-    "brand_model": "Rental;Fatbar M172;Carbon",
+    "brand_model": "Renthal;Fatbar M172;Carbon",
     "affiliate_link": null,
     "amazon_link": null
    },
@@ -3896,9 +3888,9 @@
    },
    {
     "category": "BrakeLever",
-    "brand": "Brembo lever",
+    "brand": "Brembo",
     "model_detail": "",
-    "brand_model": "Brembo lever",
+    "brand_model": "Brembo",
     "affiliate_link": null,
     "amazon_link": null
    },
@@ -4028,8 +4020,8 @@
   "instagram": "@stefano_introzzi",
   "team": null,
   "sponsors": [
-   "bike_center_cimone",
-   "ridewill.it"
+   "Bike Center Cimone",
+   "Ridewill"
   ],
   "bio": "- Italy champion junior DH 2017",
   "bike": {
@@ -4064,16 +4056,16 @@
    {
     "category": "Handlebar",
     "brand": "Renthal",
-    "model_detail": "FatBar",
-    "brand_model": "Renthal;FatBar",
+    "model_detail": "Fatbar",
+    "brand_model": "Renthal;Fatbar",
     "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748",
     "amazon_link": "https://www.amazon.fr/dp/B0FHXR6Y7Q"
    },
    {
     "category": "BrakeLever",
-    "brand": "Brembo lever",
+    "brand": "Brembo",
     "model_detail": "",
-    "brand_model": "Brembo lever",
+    "brand_model": "Brembo",
     "affiliate_link": null,
     "amazon_link": null
    }
@@ -4411,9 +4403,9 @@
   "date_of_birth": "3 May 2005",
   "age": 20,
   "instagram": "@bodhi_kuhn",
-  "team": "norcoadidasracedivision",
+  "team": "Norco Race Division",
   "sponsors": [
-   "norco"
+   "Norco"
   ],
   "bio": "N/A",
   "bike": {
@@ -4439,9 +4431,9 @@
    },
    {
     "category": "RearShock",
-    "brand": "Float X2 Factory",
-    "model_detail": "",
-    "brand_model": "Float X2 Factory",
+    "brand": "Fox",
+    "model_detail": "Float X2 Factory",
+    "brand_model": "Fox;Float X2 Factory",
     "affiliate_link": null,
     "amazon_link": null
    },
@@ -4688,8 +4680,8 @@
    {
     "category": "Handlebar",
     "brand": "Renthal",
-    "model_detail": "FatBar",
-    "brand_model": "Renthal;FatBar",
+    "model_detail": "Fatbar",
+    "brand_model": "Renthal;Fatbar",
     "affiliate_link": "https://www.renthal.com/cycle/handlebars?product_id=4748",
     "amazon_link": "https://www.amazon.fr/dp/B0FHXR6Y7Q"
    },
@@ -4917,7 +4909,7 @@
   "date_of_birth": "01 Jun 2005",
   "age": 21,
   "instagram": "@evanmedcalf",
-  "team": "Commencal Schwalbe by Les Orres",
+  "team": "Commençal Schwalbe by Les Orres",
   "sponsors": [],
   "bio": "- Vice US Champion 2025 - 1er Top 15 WC",
   "bike": {
@@ -6413,10 +6405,10 @@
   "instagram": "@pinkerton.ryan",
   "team": "Mondraker Factory Racing DH",
   "sponsors": [
-   "mondraker",
-   "monsterenergy",
-   "100percentbike",
-   "crankbrothers"
+   "Mondraker",
+   "Monster Energy",
+   "100%",
+   "Crankbrothers"
   ],
   "bio": "- 2025 dh national champion",
   "bike": {
@@ -6588,7 +6580,7 @@
   "date_of_birth": "14 Aug 1999",
   "age": 26,
   "instagram": "@nathan.pontvianne",
-  "team": "Santa Cruz Burgtec by Goodman",
+  "team": "Santa Cruz / Burgtec by Goodman",
   "sponsors": [
    "Santa Cruz"
   ],
@@ -7118,7 +7110,7 @@
   "date_of_birth": "06 Feb 1995",
   "age": 31,
   "instagram": "@richie_rude1",
-  "team": "Yeti / Fox Factory Race Team",
+  "team": "Yeti / FOX Factory Race Team",
   "sponsors": [],
   "bio": "- Junior DH World Champ 2013 - 3x EWS Champion (2015, 2016, 2018)",
   "bike": {
@@ -7250,7 +7242,7 @@
   "date_of_birth": "30 Sept 2000",
   "age": 26,
   "instagram": "@gloria_scarsi",
-  "team": "MS-Racing",
+  "team": "MS Racing",
   "sponsors": [
    "Zerode"
   ],
@@ -7317,18 +7309,18 @@
     "amazon_link": null
    },
    {
-    "category": "Wheels",
+    "category": "Disk",
     "brand": "Hope",
-    "model_detail": "Pro 5 hubs + Fortus 30 rims",
-    "brand_model": "Hope;Pro 5 hubs + Fortus 30 rims",
+    "model_detail": "Floating Disc Brake HBSP330",
+    "brand_model": "Hope;Floating Disc Brake HBSP330",
     "affiliate_link": null,
     "amazon_link": null
    },
    {
-    "category": "Disk",
-    "brand": "Hope Floating Disc Brake - HBSP330",
-    "model_detail": "",
-    "brand_model": "Hope Floating Disc Brake - HBSP330",
+    "category": "Wheels",
+    "brand": "Hope",
+    "model_detail": "Pro 5 hubs + Fortus 30 rims",
+    "brand_model": "Hope;Pro 5 hubs + Fortus 30 rims",
     "affiliate_link": null,
     "amazon_link": null
    },
@@ -7550,7 +7542,7 @@
   "instagram": "@luca_shaw",
   "team": "Canyon DH Racing",
   "sponsors": [
-   "canyon_mtb"
+   "Canyon"
   ],
   "bio": "- 1st win WC Loudenvielle 2026 - Multiple top 5 WC",
   "bike": {
@@ -7848,7 +7840,11 @@
   "instagram": "@angelsuarezdh",
   "team": "Free agent",
   "sponsors": [
-   "@aventon @foxracingeurope @deitycomponents @galferbike @ethirteencomponents"
+   "Aventon",
+   "Fox Racing",
+   "Deity",
+   "Galfer",
+   "e*thirteen"
   ],
   "bio": "- WC podiums - Multiple top 10 WC",
   "bike": {
@@ -7990,9 +7986,9 @@
   "instagram": "@lorisvergier",
   "team": "Commençal/Muc-Off by Riding Addiction",
   "sponsors": [
-   "commencal",
-   "mucoff",
-   "monsterenergy"
+   "Commençal",
+   "Muc-Off",
+   "Monster Energy"
   ],
   "bio": "- World Champion 2024 - Champion Junior WC 2014 - 3 wins World Cup",
   "bike": {
@@ -8174,8 +8170,8 @@
   "instagram": "@asavermette",
   "team": "Frameworks Racing / TRP",
   "sponsors": [
-   "Framework",
-   "Redbull"
+   "Frameworks",
+   "Red Bull"
   ],
   "bio": "- 3rd Lenzerheide Switzerland 2026 - Red Bull Hardline UK victory,",
   "bike": {
@@ -8538,8 +8534,8 @@
    {
     "category": "BrakeLever",
     "brand": "Shimano",
-    "model_detail": "Saint;",
-    "brand_model": "Shimano;Saint;",
+    "model_detail": "Saint",
+    "brand_model": "Shimano;Saint",
     "affiliate_link": null,
     "amazon_link": null
    },
@@ -8861,8 +8857,8 @@
   "instagram": "@jordanwilliams17",
   "team": "Specialized Gravity",
   "sponsors": [
-   "specializedgravity",
-   "monsterenergy"
+   "Specialized Gravity",
+   "Monster Energy"
   ],
   "bio": "- Champion Junior WC 2022 - 1st win elite WC Lenzerheide 2023",
   "bike": {

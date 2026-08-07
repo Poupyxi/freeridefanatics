@@ -109,6 +109,8 @@ def prettify_category(cat):
     """RearShock -> Rear Shock, GRIP -> Grip, BrakeLever -> Brake Lever"""
     if not cat:
         return ""
+    if cat == "Disk":
+        return "Brake Rotor"
     if cat.isupper():
         return cat.capitalize()
     return re.sub(r'(?<!^)(?=[A-Z])', ' ', cat)

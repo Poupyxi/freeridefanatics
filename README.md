@@ -53,11 +53,36 @@ public link-share URL — no credentials needed) and maps:
 Options:
 
 ```bash
+python3 sync.py --check             # run the data checks and stop
+python3 sync.py --force             # rebuild even if the checks fail
 python3 sync.py --no-build          # refresh data/riders.json only
 python3 sync.py --offline file.xlsx # parse a local export instead of downloading
 python3 build.py                    # rebuild everything from existing riders.json (no network)
 python3 build_seo_guides.py         # rebuild only localized guides, sitemap and robots.txt
 ```
+
+### Data checks
+
+`sync.py` validates the sheet before writing anything and **stops on error** —
+`data/riders.json` is left untouched rather than publishing wrong numbers. The
+rules live in `validate.py`, and every one of them comes from a defect that
+actually shipped:
+
+| Check | What it would have caught |
+| --- | --- |
+| placing contradicts points · points off the ladder | the standings summed the placing column as if it were points, inverting the whole table for months |
+| results with no profile | 9 riders scored points with no row in `Profils`, so they had no page and shifted everyone behind them |
+| no / duplicate Instagram handle | the equipment tabs are keyed on the handle, so a missing one means a rider page with an empty setup |
+| team spelled several ways | one accent split a team's total across two rows of the standings |
+| same placing twice | two riders were both credited 8th at Loudenvielle |
+
+Warnings don't block: a round label still in French, or a brand used both bare
+and with a model — the latter makes the equipment leaderboards rank a brand
+against its own models, so the category leader shown can be wrong.
+
+Men and women score on **different ladders**, diverging below 6th place. Both
+live in `validate.py`; deriving a position with the wrong one is how the
+placings and the points drifted apart in the first place.
 
 The full build automatically runs the SEO guide generator last, after every
 rider, equipment and editorial page exists, so the sitemap stays complete.

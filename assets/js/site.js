@@ -408,6 +408,62 @@
     });
   });
 
+  // The public Brevo form endpoint accepts a regular HTML POST. Targeting a
+  // hidden iframe keeps the reader on RidersFanatics and keeps the API key on
+  // Brevo's side. Brevo then handles double opt-in and the welcome automation.
+  safe('brevo-newsletter', function(){
+    document.querySelectorAll('form[data-brevo-newsletter]').forEach(function(form){
+      var status = form.parentNode.querySelector('[data-brevo-newsletter-status]');
+      var responseFrame = form.parentNode.querySelector('iframe[name="brevo-newsletter-response"]');
+      var button = form.querySelector('button[type="submit"]');
+      var email = form.querySelector('input[type="email"]');
+      var trap = form.querySelector('.nl-trap input');
+      var idle = button ? button.textContent : 'Join the newsletter';
+      var waiting = false;
+
+      function say(message, state){
+        if (!status) return;
+        status.textContent = message;
+        status.className = 'cta-status' + (state ? ' is-' + state : '');
+      }
+
+      form.addEventListener('submit', function(event){
+        if (trap && trap.value) {
+          event.preventDefault();
+          form.reset();
+          return;
+        }
+        if (!email || !email.checkValidity()) {
+          event.preventDefault();
+          say('Enter a valid email address.', 'error');
+          email && email.focus();
+          return;
+        }
+        if (waiting) {
+          event.preventDefault();
+          return;
+        }
+        waiting = true;
+        button.disabled = true;
+        button.textContent = 'Sending…';
+        say('Securely sending your request to Brevo…');
+      });
+
+      responseFrame && responseFrame.addEventListener('load', function(){
+        if (!waiting) return;
+        waiting = false;
+        form.reset();
+        button.disabled = false;
+        button.textContent = idle;
+        say('Check your inbox and confirm your subscription.', 'done');
+      });
+
+      email && email.addEventListener('input', function(){
+        if (status && status.classList.contains('is-error')) say('');
+      });
+    });
+  });
+
   // Contact form progressive enhancement. Native POST remains available when
   // JavaScript is disabled; with JavaScript the visitor stays on the page and
   // receives an honest success or failure message from the server.

@@ -385,13 +385,21 @@ def hero_waves_svg():
   </svg>"""
 
 def newsletter_form_html(prefix=""):
-    """Brevo-hosted signup with double opt-in and no client-side secret."""
-    return f"""<div class="newsletter-embed">
-      <iframe title="Subscribe to the RidersFanatics newsletter"
-              src="{esc(NEWSLETTER_FORM_URL)}"
-              width="540" height="470" frameborder="0" scrolling="auto"
-              loading="lazy" allowfullscreen></iframe>
-    </div>
+    """Native-looking signup posted to Brevo without exposing an API key."""
+    return f"""<form class="cta-form" action="{esc_attr(NEWSLETTER_FORM_URL)}" method="post"
+          target="brevo-newsletter-response" accept-charset="UTF-8" data-brevo-newsletter>
+      <label class="visually-hidden" for="newsletter-email">Email address</label>
+      <input id="newsletter-email" name="EMAIL" type="email" autocomplete="email"
+             inputmode="email" placeholder="Your email address" required>
+      <span class="nl-trap" aria-hidden="true"><label>Leave this empty
+        <input name="email_address_check" type="text" tabindex="-1" autocomplete="off">
+      </label></span>
+      <input name="locale" type="hidden" value="fr">
+      <button type="submit">Join the newsletter</button>
+    </form>
+    <p class="cta-status" data-brevo-newsletter-status aria-live="polite"></p>
+    <iframe class="newsletter-response" name="brevo-newsletter-response"
+            title="Newsletter subscription response" tabindex="-1" aria-hidden="true"></iframe>
     <div class="fineprint">Double opt-in · No spam · Unsubscribe anytime ·
       <a href="{prefix}privacy.html">What we do with your email</a></div>"""
 

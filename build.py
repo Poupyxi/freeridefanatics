@@ -57,14 +57,12 @@ COMPETITIONS = [
 ]
 CURRENT_COMPETITION = COMPETITIONS[0]
 
-# Where the newsletter form posts. One line to switch provider — a Make webhook,
-# an endpoint on the VPS, Buttondown, anything that accepts a JSON POST.
-#
-# Left empty, the form is NOT rendered and the build says so. That is
-# deliberate: this box previously shipped with onsubmit="return false", so it
-# looked like it worked and dropped every signup in silence. A section that
-# cannot work should be absent, not decorative.
-NEWSLETTER_ENDPOINT = ""
+# Brevo-hosted subscription form. Brevo handles double opt-in, unsubscribe
+# records and abuse protection; no API key is exposed in this static site.
+NEWSLETTER_FORM_URL = (
+    "https://10eaaef6.sibforms.com/v2/serve/"
+    "MUIFAIsUlY8fObVL8vrzPGoBLdJ3a4LHKjjbIj6wiB9CecDkd2ERnrjCMrM3IwA9bJh7KPLV3s_b_iB0eKAQa9UnK0_0O7Bz53jlmVnqApR0vKBC9YR2YaZso54oK1CodhG7fcbQL89iGN4capGJoIrxGuEKH-4BQoeTkfEXmN2pG4Qh1K34nhC4x4LFylNox2vFvJnBJwGWfqPhsQ=="
+)
 
 # ---------------------------------------------------------------- equipment groups
 
@@ -387,32 +385,14 @@ def hero_waves_svg():
   </svg>"""
 
 def newsletter_form_html(prefix=""):
-    """The signup box, rendered only when there is somewhere to post to.
-
-    Nothing here is decorative: the email is the one thing a visitor gives back,
-    and the previous version of this form threw every address away without a
-    word. It submits over fetch so the reader stays on the page, and every
-    outcome — sending, done, failed — is announced through the status line,
-    which is a live region so screen readers hear it too.
-
-    The honeypot is a real input kept off-screen: bots fill every field they
-    find, a human never sees it, and site.js drops any submission that has it
-    filled. No CAPTCHA, no third-party script."""
-    if not NEWSLETTER_ENDPOINT:
-        return ("<!-- Newsletter box hidden: NEWSLETTER_ENDPOINT is empty in build.py.\n"
-                "     A form that cannot deliver is worse than no form. -->")
-    return f"""<form class="cta-form" data-newsletter action="{esc(NEWSLETTER_ENDPOINT)}" method="post">
-      <label class="visually-hidden" for="newsletter-email">Your email address</label>
-      <input id="newsletter-email" type="email" name="email" required
-             autocomplete="email" spellcheck="false" placeholder="you@example.com">
-      <button type="submit">Subscribe</button>
-      <div class="nl-trap" aria-hidden="true">
-        <label>Leave this field empty
-          <input type="text" name="company" tabindex="-1" autocomplete="off"></label>
-      </div>
-    </form>
-    <p class="cta-status" data-newsletter-status role="status" aria-live="polite"></p>
-    <div class="fineprint">No spam · Unsubscribe anytime ·
+    """Brevo-hosted signup with double opt-in and no client-side secret."""
+    return f"""<div class="newsletter-embed">
+      <iframe title="Subscribe to the RidersFanatics newsletter"
+              src="{esc(NEWSLETTER_FORM_URL)}"
+              width="540" height="470" frameborder="0" scrolling="auto"
+              loading="lazy" allowfullscreen></iframe>
+    </div>
+    <div class="fineprint">Double opt-in · No spam · Unsubscribe anytime ·
       <a href="{prefix}privacy.html">What we do with your email</a></div>"""
 
 def cta_waves_svg():
@@ -554,15 +534,15 @@ def build_trust_pages():
             "privacy", "Privacy policy",
             "Privacy information for visitors to RidersFanatics, including server logs, external links, affiliate links and future service changes.",
             "Visitor information",
-            "RidersFanatics is primarily a static editorial website. It operates a contact form but no active newsletter or user account system.",
+            "RidersFanatics is primarily a static editorial website. It operates a contact form and an optional double-opt-in newsletter provided by Brevo; it has no user account system.",
             [
-                ("Information processed", ["When you use the contact form, RidersFanatics receives your name, email address, chosen message category, message and any relevant page URL you provide. Required fields are marked on the form. Standard hosting infrastructure may also process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
-                ("Purpose and legal basis", ["Contact details are used only to read, verify and answer your request, including a correction, source, technical report or partnership enquiry. Processing is based on your request and consent given when you submit the form. Do not send sensitive personal information."]),
-                ("Recipients and retention", [f"Messages are delivered to the RidersFanatics mailbox at {CONTACT_EMAIL} and are not sold. They are kept only while the request and any necessary follow-up are handled, then deleted when they are no longer useful, subject to any overriding legal obligation."]),
+                ("Information processed", ["When you use the contact form, RidersFanatics receives your name, email address, chosen message category, message and any relevant page URL you provide. When you subscribe to the newsletter, Brevo processes your email address, confirmation status and the technical evidence needed to record your consent. Required fields are marked on each form. Standard hosting infrastructure may also process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
+                ("Purpose and legal basis", ["Contact details are used to read, verify and answer your request. Newsletter details are used only to send RidersFanatics updates after you confirm the subscription link sent by email. Newsletter processing is based on consent, which you may withdraw at any time using the unsubscribe link in every message. Do not send sensitive personal information."]),
+                ("Recipients and retention", [f"Contact messages are delivered to the RidersFanatics mailbox at {CONTACT_EMAIL}. Newsletter subscriptions are managed by Brevo as an email service provider. Details are not sold. Contact messages are kept only while the request is handled. Newsletter data is retained while the subscription remains active; limited suppression data may be retained after unsubscribe to ensure no further messages are sent, subject to legal obligations."]),
                 ("Your rights", [f"You can ask to access, correct or delete your contact information, or withdraw your consent, by emailing {CONTACT_EMAIL}. You may also contact the data protection authority applicable to you, such as the CNIL in France."]),
-                ("External services", ["Pages may link to manufacturers, retailers, Amazon and social platforms. Those websites operate under their own privacy and cookie policies. Following an external link transfers the visitor to the third party's service."]),
+                ("External services", ["The newsletter form and subscription emails are provided by Brevo. Pages may also link to manufacturers, retailers, Amazon and social platforms. Those services operate under their own privacy and cookie policies. Following an external link transfers the visitor to the third party's service."]),
                 ("Affiliate links", ["Some outbound links are marked as sponsored affiliate links. The destination retailer may use its own identifiers or cookies to attribute a qualifying purchase. RidersFanatics does not receive the visitor's payment details from the retailer."]),
-                ("Future changes", ["If analytics, a newsletter or user accounts are activated later, this policy will be updated before the new processing begins, with appropriate consent and retention information where required."]),
+                ("Future changes", ["If analytics or user accounts are activated later, this policy will be updated before the new processing begins, with appropriate consent and retention information where required."]),
             ],
         ),
     }
@@ -1007,8 +987,9 @@ def competition_subnav(competition, active):
             ("Equipment", "../equipment.html", "equipment"),
         ]
     items = "".join(
-        f'<a href="{href}"{(" aria-current=\"page\"" if key == active else "")}>{label}</a>'
+        f'<a href="{href}"{current}>{label}</a>'
         for label, href, key in links
+        for current in [' aria-current="page"' if key == active else ""]
     )
     return f'<nav class="competition-subnav" aria-label="Competition navigation"><div class="wrap">{items}</div></nav>'
 
@@ -2123,9 +2104,7 @@ def main():
         subprocess.run([sys.executable, seo_builder], check=True)
 
     print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men).")
-    if not NEWSLETTER_ENDPOINT:
-        print("newsletter:  box NOT rendered — NEWSLETTER_ENDPOINT is empty in build.py.\n"
-              "             Set it to the URL that collects signups to switch the section on.")
+    print("newsletter:  Brevo double-opt-in form embedded.")
 
 if __name__ == "__main__":
     main()

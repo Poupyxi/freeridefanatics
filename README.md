@@ -63,29 +63,16 @@ python3 build_seo_guides.py         # rebuild only localized guides, sitemap and
 
 ### Newsletter signup
 
-The box on the home page is off until it has somewhere to deliver. Set one
-constant in `build.py` and rebuild:
+The home page embeds Brevo's hosted subscription form. Its URL lives in one
+constant in `build.py`:
 
 ```python
-NEWSLETTER_ENDPOINT = "https://…"   # anything accepting a JSON POST
+NEWSLETTER_FORM_URL = "https://….sibforms.com/v2/serve/…"
 ```
 
-It posts `{email, source, submitted_at}` over `fetch`, so the reader stays on
-the page. Left empty the section is **not rendered at all**, and the build says
-so — this form previously shipped with `onsubmit="return false"`, which looked
-like it worked and dropped every signup in silence. A section that cannot
-deliver is absent, not decorative.
-
-Spam is handled by an off-screen honeypot input, not a CAPTCHA. Submissions
-that fill it are accepted visually and sent nowhere.
-
-```bash
-npm install jsdom && node tests/newsletter.test.js
-```
-
-21 checks over the markup, the success path, and — the point of the rewrite —
-that a network failure or an HTTP error never shows a success message. Build
-with `NEWSLETTER_ENDPOINT` set before running them.
+Brevo handles double opt-in, unsubscribe records and abuse protection. The
+static site contains no Brevo API key. Update the form in Brevo, replace the
+hosted URL only if Brevo issues a new one, then run `python3 build.py`.
 
 ### Data checks
 

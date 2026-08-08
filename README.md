@@ -70,7 +70,7 @@ constant in `build.py`:
 NEWSLETTER_FORM_URL = "https://….sibforms.com/v2/serve/…"
 ```
 
-Brevo handles double opt-in, unsubscribe records and abuse protection. The
+Brevo handles single opt-in, the automatic confirmation email, unsubscribe records and abuse protection. The
 static site contains no Brevo API key. Update the form in Brevo, replace the
 hosted URL only if Brevo issues a new one, then run `python3 build.py`.
 

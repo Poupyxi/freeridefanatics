@@ -410,7 +410,7 @@
 
   // The public Brevo form endpoint accepts a regular HTML POST. Targeting a
   // hidden iframe keeps the reader on RidersFanatics and keeps the API key on
-  // Brevo's side. Brevo then handles double opt-in and the welcome automation.
+  // Brevo's side. Brevo then handles the signup and confirmation email.
   safe('brevo-newsletter', function(){
     document.querySelectorAll('form[data-brevo-newsletter]').forEach(function(form){
       var status = form.parentNode.querySelector('[data-brevo-newsletter-status]');
@@ -455,7 +455,7 @@
         form.reset();
         button.disabled = false;
         button.textContent = idle;
-        say('Check your inbox and confirm your subscription.', 'done');
+        say('You are subscribed. Check your inbox for our welcome email.', 'done');
       });
 
       email && email.addEventListener('input', function(){

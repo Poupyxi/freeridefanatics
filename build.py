@@ -400,7 +400,7 @@ def newsletter_form_html(prefix=""):
     <p class="cta-status" data-brevo-newsletter-status aria-live="polite"></p>
     <iframe class="newsletter-response" name="brevo-newsletter-response"
             title="Newsletter subscription response" tabindex="-1" aria-hidden="true"></iframe>
-    <div class="fineprint">Double opt-in · No spam · Unsubscribe anytime ·
+    <div class="fineprint">Instant signup · No spam · Unsubscribe anytime ·
       <a href="{prefix}privacy.html">What we do with your email</a></div>"""
 
 def cta_waves_svg():
@@ -542,10 +542,10 @@ def build_trust_pages():
             "privacy", "Privacy policy",
             "Privacy information for visitors to RidersFanatics, including server logs, external links, affiliate links and future service changes.",
             "Visitor information",
-            "RidersFanatics is primarily a static editorial website. It operates a contact form and an optional double-opt-in newsletter provided by Brevo; it has no user account system.",
+            "RidersFanatics is primarily a static editorial website. It operates a contact form and an optional newsletter provided by Brevo; it has no user account system.",
             [
-                ("Information processed", ["When you use the contact form, RidersFanatics receives your name, email address, chosen message category, message and any relevant page URL you provide. When you subscribe to the newsletter, Brevo processes your email address, confirmation status and the technical evidence needed to record your consent. Required fields are marked on each form. Standard hosting infrastructure may also process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
-                ("Purpose and legal basis", ["Contact details are used to read, verify and answer your request. Newsletter details are used only to send RidersFanatics updates after you confirm the subscription link sent by email. Newsletter processing is based on consent, which you may withdraw at any time using the unsubscribe link in every message. Do not send sensitive personal information."]),
+                ("Information processed", ["When you use the contact form, RidersFanatics receives your name, email address, chosen message category, message and any relevant page URL you provide. When you subscribe to the newsletter, Brevo processes your email address and the technical evidence needed to record your consent. Required fields are marked on each form. Standard hosting infrastructure may also process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
+                ("Purpose and legal basis", ["Contact details are used to read, verify and answer your request. Newsletter details are used only to send RidersFanatics updates and an automatic welcome message after you submit the subscription form. Newsletter processing is based on consent, which you may withdraw at any time using the unsubscribe link in every message. Do not send sensitive personal information."]),
                 ("Recipients and retention", [f"Contact messages are delivered to the RidersFanatics mailbox at {CONTACT_EMAIL}. Newsletter subscriptions are managed by Brevo as an email service provider. Details are not sold. Contact messages are kept only while the request is handled. Newsletter data is retained while the subscription remains active; limited suppression data may be retained after unsubscribe to ensure no further messages are sent, subject to legal obligations."]),
                 ("Your rights", [f"You can ask to access, correct or delete your contact information, or withdraw your consent, by emailing {CONTACT_EMAIL}. You may also contact the data protection authority applicable to you, such as the CNIL in France."]),
                 ("External services", ["The newsletter form and subscription emails are provided by Brevo. Pages may also link to manufacturers, retailers, Amazon and social platforms. Those services operate under their own privacy and cookie policies. Following an external link transfers the visitor to the third party's service."]),
@@ -2112,7 +2112,7 @@ def main():
         subprocess.run([sys.executable, seo_builder], check=True)
 
     print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men).")
-    print("newsletter:  Brevo double-opt-in form embedded.")
+    print("newsletter:  Brevo single-opt-in form embedded.")
 
 if __name__ == "__main__":
     main()

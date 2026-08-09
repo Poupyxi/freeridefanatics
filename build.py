@@ -39,6 +39,7 @@ SITE_NAME = "RidersFanatics"
 SITE_URL = "https://ridersfanatics.com"
 SITE_UPDATED = "2026-08-07"
 CONTACT_EMAIL = "contact@ridersfanatics.com"
+DATA_LICENSE_URL = f"{SITE_URL}/data-license.html"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
 
 # Competitions are deliberately separate from the RidersFanatics brand.  The
@@ -355,6 +356,7 @@ def footer_html(asset_prefix):
       <a href="{asset_prefix}guides/en/">DH Guide</a>
       <a href="{asset_prefix}index.html#faq">FAQ</a>
       <a href="{asset_prefix}methodology.html">Methodology</a>
+      <a href="{asset_prefix}data-license.html">Data license</a>
       <a href="{asset_prefix}about.html">About</a>
       <a href="{asset_prefix}contact.html">Contact</a>
       <a href="{asset_prefix}affiliate-disclosure.html">Affiliates</a>
@@ -525,6 +527,18 @@ def build_trust_pages():
                 ("Updates", ["Race results and standings are updated as new season data is imported. Equipment records are updated when a verifiable change is identified; the absence of a new entry does not mean that every component was physically rechecked after every run or every race.", "The global update date describes the most recent database publication, not a guarantee that all 64 setups were independently reconfirmed on that day."]),
                 ("Equipment rankings", ["Equipment rankings combine the current season points of tracked riders associated with a product. They describe competitive presence within this dataset; they are not laboratory tests and do not prove that one product is objectively better than another.", "The number and performance of sponsored riders strongly influence these totals. Rankings should be read alongside rider count, category and season context."]),
                 ("Corrections", ["Corrections should include the rider, component or result concerned, the proposed change, the relevant race or date and a public source that supports the correction.", f"Send a correction through the contact page or email {CONTACT_EMAIL}. Every proposed change is checked against a reliable public source before publication."]),
+            ],
+        ),
+        "data-license.html": build_editorial_page(
+            "data-license", "RidersFanatics Dataset License 1.0",
+            "Terms for accessing, citing and reusing the RidersFanatics professional rider, competition and equipment datasets.",
+            "Dataset access and reuse",
+            "These terms explain which parts of the RidersFanatics datasets may be reused and how attribution must be provided.",
+            [
+                ("Permitted use", ["The public RidersFanatics datasets may be viewed, linked to and cited for personal, educational, journalistic and research purposes. Short extracts may be reproduced when they are necessary to support commentary or analysis.", "Any reuse must clearly credit RidersFanatics and include a direct link to the relevant dataset page. The data must not be presented as official information from a rider, team, organiser, governing body or manufacturer."]),
+                ("Permission required", [f"Bulk republication, systematic redistribution, resale, commercial database use or the creation of a substantially similar competing dataset requires prior written permission from {CONTACT_EMAIL}.", "Automated access must respect the site's technical limits and must not interfere with availability, security or normal operation."]),
+                ("Third-party rights", ["This license applies only to the original selection, organisation, normalisation and presentation produced by RidersFanatics. Rider names, brand names, trademarks, photographs, event information and source material may remain subject to rights held by their respective owners."]),
+                ("Accuracy and changes", ["The datasets are provided for information without a guarantee of completeness or uninterrupted availability. Equipment can change between runs, and prototypes may differ from retail products.", "RidersFanatics may correct records and update these terms. Dataset pages identify their current publication date, and this page identifies version 1.0 of the reuse terms."]),
             ],
         ),
         "affiliate-disclosure.html": build_editorial_page(
@@ -1674,7 +1688,7 @@ def build_equipment_category_page(category, products):
         f"Pro Downhill {label} | {SITE_NAME}", description,
         "../", body_class="equipment-page", canonical_path=path,
         schemas=[
-            {"@context": "https://schema.org", "@type": "Dataset", "name": f"Professional downhill {label.lower()} usage", "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED, "creator": {"@type": "Organization", "name": SITE_NAME}, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
+            {"@context": "https://schema.org", "@type": "Dataset", "name": f"Professional downhill {label.lower()} usage", "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED, "creator": {"@type": "Organization", "name": SITE_NAME, "url": SITE_URL}, "license": {"@type": "CreativeWork", "name": "RidersFanatics Dataset License 1.0", "url": DATA_LICENSE_URL}, "isAccessibleForFree": True, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
             breadcrumb_schema([("Home", "/"), ("Equipment", "/equipment.html"), (label, path)]),
         ],
     )

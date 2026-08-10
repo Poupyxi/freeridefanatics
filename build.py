@@ -1692,15 +1692,37 @@ EQUIPMENT_CATEGORY_PLURALS = {
     "Derailleur": "Derailleurs", "Pedals": "Pedals", "Saddle": "Saddles",
     "DropperPost": "Dropper Posts", "Helmet": "Helmets", "Goggles": "Goggles",
     "Protection": "Body Protection", "Shoes": "Shoes", "CHAIN": "Chains",
-    "Disk": "Brake Rotors", "GRIP": "Grips",
+    "Disk": "Brake Rotors", "GRIP": "Grips", "Stem": "Stems",
+    "Shifter": "Shifters", "BrakeCaliper": "Brake Calipers",
 }
 
-EQUIPMENT_GROUP_CONTENT = {
-    "Chassis": ("Bike & suspension", "Frames and suspension platforms that define the bike's geometry, travel and control."),
-    "Cockpit": ("Cockpit & fit", "The contact points and controls that shape rider position, leverage and confidence."),
-    "Drivetrain": ("Drivetrain & braking", "Race-focused shifting, power transfer and braking components built for repeated impacts."),
-    "Wheels & Tyres": ("Wheels & contact", "Wheels, tires and pedals connecting the complete setup to the track and the rider."),
-    "Protection": ("Protection & apparel", "Helmets, goggles, body protection and shoes used across the tracked field."),
+DIRECTORY_GROUP_MAP = {
+    "Frame": "Frame & suspension", "Fork": "Frame & suspension", "RearShock": "Frame & suspension",
+    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit",
+    "BrakeLever": "Cockpit", "BrakeCaliper": "Cockpit", "Disk": "Cockpit",
+    "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "CHAIN": "Drivetrain", "Shifter": "Drivetrain",
+    "Wheels": "Wheels", "Tires": "Wheels",
+    "Saddle": "Extention", "Pedals": "Extention",
+    "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
+}
+DIRECTORY_GROUP_ORDER = ["Frame & suspension", "Cockpit", "Drivetrain", "Wheels", "Extention", "Protection"]
+
+DIRECTORY_GROUP_ICONS = {
+    "Frame & suspension": EQUIP_GROUP_ICONS["Chassis"],
+    "Cockpit": EQUIP_GROUP_ICONS["Cockpit"],
+    "Drivetrain": EQUIP_GROUP_ICONS["Drivetrain"],
+    "Wheels": EQUIP_GROUP_ICONS["Wheels & Tyres"],
+    "Extention": '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 9 H24 M16 9 V23 M11 23 H21"/><circle cx="16" cy="9" r="3"/></svg>',
+    "Protection": EQUIP_GROUP_ICONS["Protection"],
+}
+
+DIRECTORY_GROUP_CONTENT = {
+    "Frame & suspension": ("Frame & suspension", "Frames and suspension platforms that define the bike's geometry, travel and control."),
+    "Cockpit": ("Cockpit", "Handlebars, grips, stems, dropper posts and braking controls used by the tracked riders."),
+    "Drivetrain": ("Drivetrain", "Cranksets, derailleurs, chains and shifters that transfer power and manage gear changes."),
+    "Wheels": ("Wheels", "Wheels and tires connecting each race setup to the track."),
+    "Extention": ("Extention", "Saddles and pedals completing the rider's contact points."),
+    "Protection": ("Protection", "Helmets, goggles, body protection and shoes used across the tracked field."),
 }
 
 def equipment_category_plural(category):
@@ -1713,9 +1735,9 @@ def equipment_category_card(category, products, index):
     leader = ranked[0] if ranked else {"brand": "", "model": "", "points": 0}
     leader_name = " ".join([leader["brand"], leader["model"]]).strip()
     photo = has_equip_photo(category, leader["brand"], leader["model"]) if leader_name else None
-    group = EQUIP_GROUP_MAP.get(category, "Chassis")
+    group = DIRECTORY_GROUP_MAP.get(category, "Frame & suspension")
     media = (f'<img src="assets/img/equipment/{photo}" alt="{esc_attr(leader_name)}" loading="lazy">'
-             if photo else f'<span class="equipment-category-icon" aria-hidden="true">{EQUIP_GROUP_ICONS[group]}</span>')
+             if photo else f'<span class="equipment-category-icon" aria-hidden="true">{DIRECTORY_GROUP_ICONS[group]}</span>')
     return f'''<a class="equipment-category-card" href="equipment/{equip_image_slug(category, '', '')}.html">
       <div class="equipment-category-media">{media}<span class="equipment-category-number">{index:02d}</span><span class="equipment-category-arrow" aria-hidden="true">↗</span></div>
       <div class="equipment-category-body"><span class="label">{esc(label)}</span><h3>{esc(leader_name)}</h3>
@@ -1735,7 +1757,7 @@ def equipment_hero_visual(by_cat):
         title = " ".join([leader["brand"], leader["model"]]).strip()
         photo = has_equip_photo(category, leader["brand"], leader["model"])
         image = (f'<img src="assets/img/equipment/{photo}" alt="{esc_attr(title)}">' if photo else
-                 f'<span class="equipment-hero-icon">{EQUIP_GROUP_ICONS[EQUIP_GROUP_MAP.get(category, "Chassis")]}</span>')
+                 f'<span class="equipment-hero-icon">{DIRECTORY_GROUP_ICONS[DIRECTORY_GROUP_MAP.get(category, "Frame & suspension")]}</span>')
         cards.append(f'''<figure class="equipment-hero-product hero-product-{slot}">{image}<figcaption><span>{esc(equipment_category_plural(category))}</span><strong>{esc(title)}</strong></figcaption></figure>''')
     return "".join(cards)
 
@@ -1745,22 +1767,22 @@ def build_equipment_directory(riders):
     categories += sorted(c for c in by_cat if c not in categories)
     grouped_sections = []
     running_index = 1
-    for group in EQUIP_GROUP_ORDER:
-        group_categories = [c for c in categories if EQUIP_GROUP_MAP.get(c) == group]
+    for group in DIRECTORY_GROUP_ORDER:
+        group_categories = [c for c in categories if DIRECTORY_GROUP_MAP.get(c) == group]
         if not group_categories:
             continue
-        group_title, group_description = EQUIPMENT_GROUP_CONTENT[group]
+        group_title, group_description = DIRECTORY_GROUP_CONTENT[group]
         cards = []
         for category in group_categories:
             cards.append(equipment_category_card(category, by_cat[category], running_index))
             running_index += 1
         group_id = re.sub(r"[^a-z0-9]+", "-", group.lower()).strip("-")
-        grouped_sections.append(f'''<section class="equipment-group" id="{group_id}"><div class="equipment-group-head"><div class="equipment-group-icon">{EQUIP_GROUP_ICONS[group]}</div><div><span class="label">{len(group_categories)} categories</span><h2>{esc(group_title)}</h2><p>{esc(group_description)}</p></div></div><div class="equipment-category-grid">{"".join(cards)}</div></section>''')
+        grouped_sections.append(f'''<section class="equipment-group" id="{group_id}"><div class="equipment-group-head"><div class="equipment-group-icon">{DIRECTORY_GROUP_ICONS[group]}</div><div><span class="label">{len(group_categories)} categories</span><h2>{esc(group_title)}</h2><p>{esc(group_description)}</p></div></div><div class="equipment-category-grid">{"".join(cards)}</div></section>''')
     path = "/equipment.html"
     product_count = sum(len(by_cat[c]) for c in categories)
     group_nav = "".join(
-        f'<a href="#{re.sub(r"[^a-z0-9]+", "-", group.lower()).strip("-")}">{esc(EQUIPMENT_GROUP_CONTENT[group][0])}</a>'
-        for group in EQUIP_GROUP_ORDER if any(EQUIP_GROUP_MAP.get(c) == group for c in categories)
+        f'<a href="#{re.sub(r"[^a-z0-9]+", "-", group.lower()).strip("-")}">{esc(DIRECTORY_GROUP_CONTENT[group][0])}</a>'
+        for group in DIRECTORY_GROUP_ORDER if any(DIRECTORY_GROUP_MAP.get(c) == group for c in categories)
     )
     schema_items = [
         {"@type": "ListItem", "position": i, "name": equipment_category_plural(cat), "url": absolute_url(equipment_category_path(cat))}

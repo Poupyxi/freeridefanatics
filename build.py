@@ -1647,6 +1647,29 @@ def build_equipment_directory(riders):
     html += footer_html("")
     return html
 
+EQUIPMENT_EDITORIAL = {
+    "Frame": ("Frames define the chassis platform around which the rest of a downhill build is assembled.", "Compare the number of tracked riders, team representation and the suspension platform before using points as a measure of visibility."),
+    "Fork": ("Downhill forks manage front-wheel impacts and help riders maintain control through braking zones and rough terrain.", "Look at rider adoption and team use alongside the model name; race tunes and internal settings are not captured by this table."),
+    "RearShock": ("Rear shocks control the frame's rear suspension and are normally tuned to the rider, frame and course.", "Treat each model as a platform rather than an identical setup because springs, damping and prototype internals can vary."),
+    "Tires": ("Tires are a direct contact point with the course, and teams may change casing, compound or tread as conditions evolve.", "This ranking records the named product family. It should not be read as a fixed choice for every round or weather condition."),
+    "Wheels": ("Wheel systems influence durability, handling and serviceability across a downhill race weekend.", "Compare adoption across riders and teams, while remembering that rims, hubs and spokes can be combined in different builds."),
+    "BrakeLever": ("Brake controls are part of a complete braking system designed for repeatable modulation on steep tracks.", "Use the linked rider profiles to see the wider build; lever names alone do not document pads, rotors or individual setup."),
+    "Handlebar": ("Handlebars shape a rider's cockpit position and steering interface.", "Model usage shows paddock presence, but width, rise and trimming are rider-specific details that may not be public."),
+    "Stem": ("Stems connect the handlebar to the fork and contribute to cockpit fit.", "Compare named platforms and rider adoption without assuming that every rider uses the same length or position."),
+    "GRIP": ("Grips are a small but highly personal contact point between rider and bike.", "Usage totals show which products appear in the tracked field, not which diameter, compound or wear strategy suits every rider."),
+    "Crankset": ("Cranksets transfer rider input through the downhill drivetrain and must tolerate repeated impacts.", "Read points as competitive exposure and open the rider profiles for the surrounding drivetrain context."),
+    "CHAIN": ("Chains connect the drivetrain components and are selected as part of a complete transmission system.", "The table identifies recorded product families; compatibility, gearing and replacement schedules remain build-specific."),
+    "Derailleur": ("Rear derailleurs manage shifting and chain control on downhill race bikes.", "Compare rider and team presence, while recognising that gearing and electronic or mechanical configuration can differ."),
+    "Pedals": ("Pedals are a critical rider-to-bike contact point, with choice shaped by feel, retention and confidence.", "Adoption is useful evidence of paddock presence, but it is not a universal recommendation for every riding style."),
+    "Saddle": ("Saddles contribute to bike control and rider movement even though downhill riders spend limited time seated.", "The database records named models, not individual position, angle or customisation."),
+    "DropperPost": ("Seatposts and dropper posts help define clearance and saddle position on a race bike.", "Use the ranking to compare documented use; travel and setup dimensions may vary by rider and frame size."),
+    "Helmet": ("Full-face helmets are central protective equipment for professional downhill racing.", "Product presence does not replace fit checks, current certification guidance or manufacturer replacement advice."),
+    "Goggles": ("Goggles protect vision and help riders manage changing light, dust and mud.", "The recorded brand or model may cover several lens choices used across different race conditions."),
+    "Protection": ("Body protection is selected around coverage, mobility and the demands of the course.", "This list documents visible or published equipment only and should not be treated as a complete safety prescription."),
+    "Shoes": ("Shoes complete the rider's connection to the pedals and influence fit and feel.", "Compare tracked usage as paddock evidence, then check pedal compatibility and manufacturer sizing independently."),
+    "Disk": ("Brake rotors turn lever input into braking force at the wheel and must manage repeated heat cycles on long downhill tracks.", "Compare recorded diameters and product families in the rider profiles; rotor choice remains part of a complete brake setup."),
+}
+
 def build_equipment_category_page(category, products):
     label = equipment_category_plural(category)
     ranked = sorted(products.values(), key=lambda p: (-p["points"], -len(p["riders"]), p["brand"], p["model"]))
@@ -1687,6 +1710,13 @@ def build_equipment_category_page(category, products):
         rows.append(f'''<article class="equipment-rank-card"><span class="equipment-rank">{position:02d}</span>{photo_html}<div class="equipment-rank-main"><div class="label">{esc(label)}</div><h2>{esc(title)}</h2><p><strong>{p['points']} pts</strong> · {len(p['riders'])} tracked rider{'s' if len(p['riders']) != 1 else ''}</p><div class="equipment-riders">{rider_links}</div><div class="equip-actions">{compare_button}{external}</div></div></article>''')
         schema_items.append({"@type": "ListItem", "position": position, "name": title})
     leader = " ".join([ranked[0]["brand"], ranked[0]["model"]]).strip() if ranked else "—"
+    brand_count = len({p["brand"] for p in ranked if p["brand"]})
+    total_points = sum(p["points"] for p in ranked)
+    leader_share = round((ranked[0]["points"] / total_points) * 100) if ranked and total_points else 0
+    context, compare_note = EQUIPMENT_EDITORIAL.get(category, (
+        f"{label} form part of a complete professional downhill race setup.",
+        "Compare documented rider and team adoption, and use points only as a measure of presence in the tracked field.",
+    ))
     description = f"Compare {len(ranked)} {label.lower()} used by {len(tracked_riders)} tracked professional downhill riders. See rider count, competition points and associated profiles."
     html = head(
         f"Pro Downhill {label} | {SITE_NAME}", description,
@@ -1700,7 +1730,8 @@ def build_equipment_category_page(category, products):
     html += f'''<main><section class="hero equipment-hero"><div class="wrap hero-inner"><div class="label">Professional downhill · Competition-based data</div><h1>{esc(label)} used by professional downhill riders.</h1><p class="sub">{esc(description)} The current points leader in this category is {esc(leader)}.</p></div></section>
 <div class="wrap">{breadcrumb_html([("Home", "../"), ("Equipment", "../equipment.html"), (label, equip_image_slug(category, '', '') + ".html")])}</div>
 <section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Ranked by combined rider points</div><h2>{esc(label)} leaderboard</h2></div><a class="see-all" href="../methodology.html">Read the methodology →</a></div><div class="equipment-ranking-list">{"".join(rows)}</div>
-<div class="guide-callout"><strong>Editorial context</strong><p>This table records competitive usage within the RidersFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications.</p></div></div></section></main>'''
+<section class="equipment-editorial reveal"><div><div class="label">How to read this category</div><h2>What the {esc(label.lower())} data tells us.</h2><p>{esc(context)} {esc(compare_note)}</p><p>The current RidersFanatics dataset connects {len(ranked)} products from {brand_count} brands to {len(tracked_riders)} rider profiles. {esc(leader)} leads by combined rider points and represents {leader_share}% of the points attached to this category. That figure measures competitive exposure, not technical superiority.</p></div><dl class="content-stats"><div><dt>{len(ranked)}</dt><dd>Products</dd></div><div><dt>{brand_count}</dt><dd>Brands</dd></div><div><dt>{len(tracked_riders)}</dt><dd>Riders</dd></div><div><dt>{leader_share}%</dt><dd>Leader share</dd></div></dl></section>
+<div class="guide-callout"><strong>Editorial and data status</strong><p>This table records competitive usage within the RidersFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications. Counts are recalculated from the rider records at build time, so every category stays connected to its supporting profiles. Page generated from data updated {esc(SITE_UPDATED)}; see the <a href="../methodology.html">methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></div></section></main>'''
     html += footer_html("../")
     return html
 
@@ -1874,7 +1905,49 @@ def competition_filters(history):
                      f'{esc(comp)} ({counts[comp]})</button>')
     return f'<div class="filters results-filters" data-competition-filters>{"".join(chips)}</div>'
 
-def build_rider_page(r):
+def rider_editorial(r, riders):
+    history = r.get("competition_history") or []
+    equipment = r.get("equipment") or []
+    category = r.get("gender_category") or "tracked category"
+    field = sorted([x for x in riders if (x.get("gender_category") or "") == (r.get("gender_category") or "")], key=season_rank_key)
+    rank = next((i for i, x in enumerate(field, 1) if x.get("slug") == r.get("slug")), None)
+    places = [(history_place(h), h) for h in history if history_place(h)]
+    best_place, best_event = min(places, key=lambda x: x[0]) if places else (None, None)
+    podiums = sum(1 for place, _ in places if place <= 3)
+    top_tens = sum(1 for place, _ in places if place <= 10)
+    points = rider_total_points(r)
+    rank_text = f"ranked {ordinal(rank)} of {len(field)} riders in the tracked {category} field" if rank else f"listed in the tracked {category} field"
+    season = f"{r['display_name']} is currently {rank_text}, with {points} points across {len(history)} recorded start{'s' if len(history) != 1 else ''}."
+    if best_event:
+        season += f" The strongest recorded finish is {ordinal(best_place)} at {best_event.get('event')}."
+    if places:
+        season += f" The season sample contains {podiums} podium{'s' if podiums != 1 else ''} and {top_tens} top-ten result{'s' if top_tens != 1 else ''}."
+    else:
+        season += " No classified finish is currently recorded, so the profile remains a data-monitoring page rather than a performance assessment."
+
+    def product(cat):
+        item = next((e for e in equipment if e.get("category") == cat), None)
+        if not item:
+            return ""
+        model = next((p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()), "")
+        return " ".join(filter(None, [item.get("brand"), model])).strip()
+
+    frame, fork, shock = product("Frame"), product("Fork"), product("RearShock")
+    tires, wheels, brakes = product("Tires"), product("Wheels"), product("BrakeLever")
+    setup_bits = []
+    if frame: setup_bits.append(f"a {frame} frame")
+    if fork: setup_bits.append(f"a {fork} fork")
+    if shock: setup_bits.append(f"a {shock} rear shock")
+    setup = f"The recorded 2026 build contains {len(equipment)} identified equipment items."
+    if setup_bits:
+        setup += " Its documented chassis combines " + ", ".join(setup_bits) + "."
+    contact_bits = [x for x in (wheels, tires, brakes) if x]
+    if contact_bits:
+        setup += " Other published components include " + ", ".join(contact_bits) + "."
+    setup += " These entries describe the documented race platform; settings, compounds and prototype internals can change by event."
+    return rank, season, setup, best_place
+
+def build_rider_page(r, riders):
     prefix = "../"
     # The rider page hero prefers the portrait action shot; the square avatar
     # (used on the grid cards) is the fallback, then the initials placeholder.
@@ -1918,6 +1991,7 @@ def build_rider_page(r):
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'
 
     history = r.get("competition_history") or []
+    category_rank, season_analysis, setup_analysis, best_place = rider_editorial(r, riders)
     highlight_parts = []
     for wanted in ("Frame", "Fork", "RearShock"):
         item = next((e for e in equipment if e.get("category") == wanted), None)
@@ -1934,6 +2008,10 @@ def build_rider_page(r):
     if highlight_parts:
         rider_summary += ", including " + ", ".join(highlight_parts)
     rider_summary += f". The season record below contains {len(history)} tracked result{'s' if len(history) != 1 else ''} and {rider_total_points(r)} cumulative points."
+    meta_description = f"{r['display_name']}: 2026 downhill results, {rider_total_points(r)} tracked points"
+    if category_rank:
+        meta_description += f", {ordinal(category_rank)} in {r.get('gender_category') or 'the category'}"
+    meta_description += f", plus the documented bike setup and equipment."
     if history:
         results_html = f"""{competition_filters(history)}
       <table class="results-table" data-results-table>
@@ -1983,7 +2061,7 @@ def build_rider_page(r):
         person_schema["sameAs"] = [f"https://instagram.com/{r['instagram'].strip().lstrip('@')}"]
     html = head(
         f"{r['display_name']} — Bike Setup & Kit | {SITE_NAME}",
-        f"{r['display_name']}'s professional DH bike setup, sponsors, competitions and 2026 season results.",
+        meta_description,
         prefix, canonical_path=rider_url, page_type="article", image_path=rider_image,
         schemas=[
             {"@context": "https://schema.org", "@type": "WebPage", "name": f"{r['display_name']} bike setup and results", "url": absolute_url(rider_url), "dateModified": SITE_UPDATED, "mainEntity": {"@id": absolute_url(rider_url) + "#rider"}},
@@ -2009,8 +2087,15 @@ def build_rider_page(r):
       </div>
     </div>
 
+    <section class="rider-editorial reveal" aria-labelledby="season-snapshot">
+      <div><div class="label">Tracked performance</div><h2 id="season-snapshot">2026 season snapshot</h2><p>{esc(season_analysis)}</p><p class="data-note">Analysis is limited to results recorded in the RidersFanatics dataset and should not be read as a complete career assessment.</p></div>
+      <dl class="content-stats"><div><dt>{ordinal(category_rank) if category_rank else '—'}</dt><dd>Category rank</dd></div><div><dt>{len(history)}</dt><dd>Recorded starts</dd></div><div><dt>{ordinal(best_place) if best_place else '—'}</dt><dd>Best finish</dd></div><div><dt>{rider_total_points(r)}</dt><dd>Points</dd></div></dl>
+    </section>
+
     {setup_head}{build_html}
     {equip_html}
+
+    <section class="rider-editorial rider-setup-analysis reveal"><div><div class="label">Build context</div><h2>Setup analysis</h2><p>{esc(setup_analysis)}</p><p class="data-note">Page generated from the dataset updated {esc(SITE_UPDATED)}. Equipment is revised when a verifiable change is identified. <a href="../methodology.html">Read the methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></section>
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>
@@ -2129,7 +2214,7 @@ def main():
             f.write(content)
 
     for r in riders:
-        page = build_rider_page(r)
+        page = build_rider_page(r, riders)
         with open(os.path.join(RIDERS_DIR, f"{r['slug']}.html"), "w", encoding="utf-8") as f:
             f.write(page)
 

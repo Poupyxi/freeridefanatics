@@ -187,6 +187,10 @@ def canonical_equipment_product(category, brand, main_model):
         return alias
     return BRAND_DISPLAY.get(brand_key, (brand or "").strip()), (main_model or "").strip()
 
+def is_rankable_equipment_product(main_model):
+    """Rankings require a product reference, not a brand-only observation."""
+    return bool((main_model or "").strip())
+
 def bio_bullets(bio):
     if not bio:
         return []
@@ -1660,7 +1664,9 @@ def collect_equipment(riders):
             cat = item.get("category")
             parts = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
             brand, model = canonical_equipment_product(cat, item.get("brand") or "", parts[0] if parts else "")
-            if not cat or not (brand or model):
+            # Keep brand-only observations on rider profiles, but never present
+            # them as products in category rankings or their statistics.
+            if not cat or not is_rankable_equipment_product(model):
                 continue
             key = (cat, norm_product_text(brand), norm_product_text(model))
             if key in seen:
@@ -1916,7 +1922,7 @@ def build_best_equipment_carousel(riders):
             detail_parts = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
             main_model = detail_parts[0] if detail_parts else ""
             brand, main_model = canonical_equipment_product(cat, brand, main_model)
-            if not brand and not main_model:
+            if not is_rankable_equipment_product(main_model):
                 continue
             key = (brand, main_model)
             g = by_cat.setdefault(cat, {}).setdefault(key, {

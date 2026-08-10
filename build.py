@@ -998,6 +998,97 @@ def competition_rank_key(rider, competition_name):
     return (-competition_rider_points(rider, competition_name), places, -last,
             rider.get("display_name") or "")
 
+def competition_round_slug(event):
+    value = unicodedata.normalize("NFKD", event or "").encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-") or "round"
+
+def build_competition_round(riders, competition, event, round_number, events):
+    """One crawlable result page per recorded round, generated from rider history."""
+    name = competition["name"]
+    cid = competition["id"]
+    slug = competition_round_slug(event)
+    path = f"/competitions/{cid}/rounds/{slug}.html"
+
+    categories = {}
+    all_entries = []
+    for category in ("Men Elite", "Women Elite"):
+        entries = []
+        for rider in riders:
+            if rider.get("gender_category") != category:
+                continue
+            result = next((item for item in rider.get("competition_history") or []
+                           if item.get("category") == name and item.get("event") == event), None)
+            if result:
+                entries.append((rider, result))
+        entries.sort(key=lambda pair: (
+            history_place(pair[1]) is None,
+            history_place(pair[1]) or 9999,
+            -(pair[1].get("points") or 0),
+            pair[0].get("display_name") or "",
+        ))
+        categories[category] = entries
+        all_entries.extend(entries)
+
+    def result_table(category, label):
+        rows = []
+        entries = categories[category]
+        for rider, result in entries:
+            place = history_place(result)
+            result_label = result.get("result") or ordinal(place) or "—"
+            team = rider.get("team") or "Privateer"
+            nation = rider.get("country_code") or rider.get("country") or "—"
+            rows.append(f'''<tr><td class="round-place">{esc(result_label)}</td><th scope="row"><a href="../../../riders/{rider['slug']}.html">{esc(rider['display_name'])}</a><small>{esc(team)}</small></th><td>{esc(nation)}</td><td class="round-points">{esc(result.get('points')) if result.get('points') is not None else '—'}</td></tr>''')
+        if not rows:
+            return f'<section class="round-category"><h2>{label}</h2><p class="round-empty">No {label.lower()} results are recorded for this round yet.</p></section>'
+        return f'''<section class="round-category"><div class="round-category-head"><div><div class="label">{esc(category)}</div><h2>{label} results</h2></div><span>{len(entries)} tracked riders</span></div><div class="round-table-scroll" tabindex="0" role="region" aria-label="{label} results, horizontally scrollable"><table class="round-results"><caption>{label} results for {esc(event)}</caption><thead><tr><th scope="col">Result</th><th scope="col">Rider</th><th scope="col">Nation</th><th scope="col">Points</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>'''
+
+    leaders = []
+    for category, label in (("Men Elite", "Men winner"), ("Women Elite", "Women winner")):
+        winner = next(((rider, result) for rider, result in categories[category]
+                       if history_place(result) == 1), None)
+        if not winner and categories[category]:
+            winner = categories[category][0]
+        if winner:
+            rider, result = winner
+            leaders.append(f'<a href="../../../riders/{rider["slug"]}.html"><span>{label}</span><strong>{esc(rider["display_name"])}</strong><small>{esc(result.get("result") or ordinal(history_place(result)) or "Recorded leader")}</small></a>')
+
+    previous_link = ""
+    next_link = ""
+    if round_number > 1:
+        previous = events[round_number - 2]
+        previous_link = f'<a href="{competition_round_slug(previous)}.html"><span>Previous round</span><strong>{esc(previous)}</strong></a>'
+    if round_number < len(events):
+        following = events[round_number]
+        next_link = f'<a href="{competition_round_slug(following)}.html"><span>Next round</span><strong>{esc(following)}</strong></a>'
+
+    item_list = [
+        {"@type": "ListItem", "position": position, "name": rider["display_name"],
+         "url": absolute_url(f"/riders/{rider['slug']}.html")}
+        for position, (rider, _) in enumerate(all_entries, 1)
+    ]
+    description = f"{event} downhill results from the {name}: Elite Men and Women placings, points, teams and linked rider profiles."
+    html = head(
+        f"{event} Downhill Results | {competition['season']} {SITE_NAME}", description, "../../../",
+        body_class="competition-round-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{event} downhill results",
+             "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
+             "mainEntity": {"@type": "ItemList", "numberOfItems": len(item_list), "itemListElement": item_list}},
+            breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"),
+                               (name, f"/competitions/{cid}.html"), (event, path)]),
+        ],
+    )
+    html += header_html("../../../", active="competitions")
+    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1><p>Recorded Elite Men and Elite Women results for {esc(name)}, connected to each rider profile and season points.</p><div class="round-hero-stats"><span><strong>{len(all_entries)}</strong> results</span><span><strong>{len(categories['Men Elite'])}</strong> men</span><span><strong>{len(categories['Women Elite'])}</strong> women</span></div></div></section>
+<nav class="competition-subnav" aria-label="Competition navigation"><div class="wrap"><a href="../../{cid}.html">Overview</a><a href="../standings.html">Standings</a><a href="../../{cid}.html#rounds" aria-current="page">Rounds</a><a href="../../../riders.html#grid">Riders</a><a href="../../../equipment.html">Equipment</a></div></nav>
+<div class="wrap">{breadcrumb_html([("Home", "../../../"), ("Competitions", "../../../competitions.html"), (name, f"../../{cid}.html"), (event, slug + ".html")])}</div>
+<section class="section round-summary"><div class="wrap"><div class="round-summary-grid"><div><div class="label">Round overview</div><h2>Race snapshot.</h2><p>This page reflects the results currently recorded in the RidersFanatics dataset. A missing rider means no result is yet attached to this round in our source data; it does not automatically imply a DNS or absence.</p></div><div class="round-winners">{''.join(leaders)}</div></div></div></section>
+<section class="section round-results-section"><div class="wrap">{result_table('Men Elite', 'Men')}{result_table('Women Elite', 'Women')}</div></section>
+<nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
+</main>'''
+    html += footer_html("../../../")
+    return html
+
 def competition_subnav(competition, active):
     cid = competition["id"]
     if active == "standings":
@@ -1174,7 +1265,8 @@ def build_competition_detail(riders, competition):
         starters = sum(1 for rider in riders if any(
             h.get("category") == name and h.get("event") == event
             for h in rider.get("competition_history") or []))
-        event_rows.append(f'<li><span>{number:02d}</span><div><strong>{esc(event)}</strong><small>{starters} tracked results</small></div></li>')
+        round_href = f'{competition["id"]}/rounds/{competition_round_slug(event)}.html'
+        event_rows.append(f'<li><span>{number:02d}</span><div><strong><a href="{round_href}">{esc(event)}</a></strong><small>{starters} tracked results</small></div><a class="round-open" href="{round_href}" aria-label="Open results for {esc_attr(event)}">Results →</a></li>')
     description = f"{name} season overview: completed rounds, current leaders, rider profiles and links to overall standings and professional downhill equipment."
     html = head(
         f"{name} | Riders & Rounds", description, "../",
@@ -2227,6 +2319,13 @@ def main():
         os.makedirs(standings_dir, exist_ok=True)
         with open(os.path.join(standings_dir, "standings.html"), "w", encoding="utf-8") as f:
             f.write(build_competition_standings(riders, competition))
+        events = competition_events(riders, competition["name"])
+        rounds_dir = os.path.join(standings_dir, "rounds")
+        os.makedirs(rounds_dir, exist_ok=True)
+        for round_number, event in enumerate(events, 1):
+            round_file = os.path.join(rounds_dir, f"{competition_round_slug(event)}.html")
+            with open(round_file, "w", encoding="utf-8") as f:
+                f.write(build_competition_round(riders, competition, event, round_number, events))
 
     equipment_data = collect_equipment(riders)
     for category, products in equipment_data.items():

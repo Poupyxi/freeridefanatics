@@ -5,16 +5,14 @@ header('X-Robots-Tag: noindex, nofollow, noarchive', true);
 header('Cache-Control: no-store, max-age=0', true);
 header('Content-Type: application/json; charset=UTF-8', true);
 
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-    'httponly' => true,
-    'samesite' => 'Strict',
-]);
-session_start();
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_only_cookies', '1');
 
 const CONTACT_RECIPIENT = 'contact@ridersfanatics.com';
+const MAX_REQUEST_BYTES = 16384;
+const ALLOWED_HOSTS = ['ridersfanatics.com', 'www.ridersfanatics.com'];
 
 function wants_json(): bool
 {
@@ -33,23 +31,59 @@ function finish_request(bool $ok, string $message, int $status = 200): never
     exit;
 }
 
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    header('Allow: POST');
+    finish_request(false, 'Method not allowed.', 405);
+}
+
+$requestHost = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
+if (!in_array($requestHost, ALLOWED_HOSTS, true)) {
+    finish_request(false, 'Invalid request host.', 400);
+}
+
+$contentLength = filter_var($_SERVER['CONTENT_LENGTH'] ?? 0, FILTER_VALIDATE_INT);
+if ($contentLength !== false && $contentLength > MAX_REQUEST_BYTES) {
+    finish_request(false, 'Request too large.', 413);
+}
+
+$contentType = strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0]));
+if (!in_array($contentType, ['application/x-www-form-urlencoded', 'multipart/form-data'], true)) {
+    finish_request(false, 'Unsupported content type.', 415);
+}
+
+$fetchSite = strtolower($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '');
+if ($fetchSite !== '' && !in_array($fetchSite, ['same-origin', 'same-site', 'none'], true)) {
+    finish_request(false, 'Cross-site request rejected.', 403);
+}
+
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+    'samesite' => 'Strict',
+]);
+session_start();
+
 function clean_line(string $value, int $max): string
 {
     $value = trim(preg_replace('/[\r\n\t]+/u', ' ', $value) ?? '');
     return mb_substr($value, 0, $max, 'UTF-8');
 }
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    header('Allow: POST');
-    finish_request(false, 'Method not allowed.', 405);
-}
-
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if ($origin !== '') {
     $originHost = strtolower((string) parse_url($origin, PHP_URL_HOST));
-    $requestHost = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
     if ($originHost === '' || !hash_equals($requestHost, $originHost)) {
         finish_request(false, 'Invalid request origin.', 403);
+    }
+}
+
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+if ($origin === '' && $referer !== '') {
+    $refererHost = strtolower((string) parse_url($referer, PHP_URL_HOST));
+    if ($refererHost === '' || !hash_equals($requestHost, $refererHost)) {
+        finish_request(false, 'Invalid request source.', 403);
     }
 }
 

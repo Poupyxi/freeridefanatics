@@ -30,6 +30,9 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 img{max-width:100%; display:block;}
+/* The optimizer keeps JPG/PNG fallbacks but lets modern browsers select WebP.
+   display:contents preserves the existing grid and figure layouts. */
+picture.optimized-picture{display:contents;}
 a{color:inherit; text-decoration:none;}
 ul{list-style:none;}
 .wrap{max-width:1240px; margin:0 auto; padding:0 32px;}
@@ -1027,8 +1030,8 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .equipment-category-card{min-width:0; border:1px solid var(--line); background:#fff; display:flex; flex-direction:column; transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;}
 .equipment-category-card:hover{transform:translateY(-5px); border-color:#c2c4c2; box-shadow:0 22px 48px rgba(21,22,26,.11);}
 .equipment-category-media{position:relative; height:205px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:linear-gradient(145deg,#f8f8f5,#ecece8); border-bottom:1px solid var(--line);}
-.equipment-category-media>img{width:100%; height:100%; object-fit:contain; padding:18px; transition:transform .3s ease; mix-blend-mode:multiply;}
-.equipment-category-card:hover .equipment-category-media>img{transform:scale(1.055);}
+.equipment-category-media>img,.equipment-category-media>picture>img{width:100%; height:100%; object-fit:contain; padding:18px; transition:transform .3s ease; mix-blend-mode:multiply;}
+.equipment-category-card:hover .equipment-category-media>img,.equipment-category-card:hover .equipment-category-media>picture>img{transform:scale(1.055);}
 .equipment-category-icon{display:flex; align-items:center; justify-content:center; color:#bfc1bf;}
 .equipment-category-icon svg{width:82px; height:82px;}
 .equipment-category-number{position:absolute; left:14px; top:14px; font-family:var(--mono); font-size:9px; color:var(--muted); letter-spacing:.08em;}
@@ -1047,7 +1050,7 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .equipment-ranking-list{display:grid; gap:14px;}
 .equipment-rank-card{display:grid; grid-template-columns:54px 160px minmax(0,1fr); gap:24px; align-items:center; padding:20px 24px; border:1px solid var(--line); background:#fff;}
 .equipment-rank{font-family:var(--head); font-size:27px; color:var(--orange);}
-.equipment-rank-card>img,.equipment-placeholder{width:160px; height:120px; object-fit:contain; background:#f4f4f2; display:flex; align-items:center; justify-content:center; font-family:var(--head); color:#c8c9c7;}
+.equipment-rank-card>img,.equipment-rank-card>picture>img,.equipment-placeholder{width:160px; height:120px; object-fit:contain; background:#f4f4f2; display:flex; align-items:center; justify-content:center; font-family:var(--head); color:#c8c9c7;}
 .equipment-rank-main h2{font-family:var(--head); font-size:25px; line-height:1.1; text-transform:uppercase; margin:6px 0 8px;}
 .equipment-rank-main>p{font-family:var(--mono); font-size:11px; color:var(--muted);}
 .equipment-riders{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0;}
@@ -1112,7 +1115,7 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .hero-product-1{width:290px;height:350px;left:4%}.hero-product-2{width:225px;height:275px;right:4%}.hero-product-3{width:165px;height:195px;right:27%}
   .equipment-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .equipment-compare-banner{align-items:flex-start; flex-direction:column; gap:24px;}
-  .equipment-rank-card{grid-template-columns:44px 110px minmax(0,1fr)}.equipment-rank-card>img,.equipment-placeholder{width:110px;height:90px}
+  .equipment-rank-card{grid-template-columns:44px 110px minmax(0,1fr)}.equipment-rank-card>img,.equipment-rank-card>picture>img,.equipment-placeholder{width:110px;height:90px}
 }
 @media(max-width:620px){
   .equipment-hero-copy{padding:56px 0 20px}.equipment-hero-copy h1{font-size:48px}.equipment-hero-copy>p{font-size:15px}
@@ -1122,7 +1125,7 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .equipment-catalogue{padding-top:34px}.equipment-catalogue-head{align-items:flex-start;flex-direction:column;gap:15px}.equipment-group{padding-top:48px}
   .equipment-group-head{grid-template-columns:48px minmax(0,1fr);gap:14px}.equipment-group-icon{width:48px;height:48px}.equipment-group-icon svg{width:27px;height:27px}
   .equipment-category-grid{grid-template-columns:1fr}.equipment-category-media{height:185px}.equipment-compare-banner{padding:28px 24px;margin-top:58px}
-  .equipment-rank-card{grid-template-columns:38px minmax(0,1fr);gap:14px}.equipment-rank-card>img,.equipment-placeholder{display:none}.equipment-rank-main h2{font-size:20px}
+  .equipment-rank-card{grid-template-columns:38px minmax(0,1fr);gap:14px}.equipment-rank-card>img,.equipment-rank-card>picture>img,.equipment-placeholder{display:none}.equipment-rank-main h2{font-size:20px}
   .compare-tray{align-items:stretch;gap:11px;flex-direction:column}.compare-tray-actions{justify-content:flex-end}.compare-page-head{align-items:flex-start;flex-direction:column}.compare-grid{grid-template-columns:1fr}
 }
 

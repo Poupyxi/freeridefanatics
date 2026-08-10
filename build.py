@@ -2053,6 +2053,12 @@ def list_missing_images(riders):
     for s in sorted(missing_equip):
         print(f"  {s}.jpg")
 
+def run_image_optimizer():
+    image_optimizer = os.path.join(ROOT, "optimize_images.py")
+    if os.path.exists(image_optimizer):
+        subprocess.run([sys.executable, image_optimizer], check=True)
+
+
 def main():
     with open(DATA_PATH, encoding="utf-8") as f:
         riders = json.load(f)
@@ -2073,6 +2079,7 @@ def main():
     if "--standings-only" in sys.argv:
         with open(os.path.join(ROOT, "standings.html"), "w", encoding="utf-8") as f:
             f.write(build_standings(riders))
+        run_image_optimizer()
         print("Built standings.html.")
         return
 
@@ -2081,6 +2088,7 @@ def main():
         f.write(index_html)
 
     if "--index-only" in sys.argv:
+        run_image_optimizer()
         print("Built index.html.")
         return
 
@@ -2128,6 +2136,8 @@ def main():
     seo_builder = os.path.join(ROOT, "build_seo_guides.py")
     if os.path.exists(seo_builder):
         subprocess.run([sys.executable, seo_builder], check=True)
+
+    run_image_optimizer()
 
     print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men).")
     print("newsletter:  Brevo single-opt-in form embedded.")

@@ -164,6 +164,8 @@ EQUIPMENT_ALIASES = {
     ("Wheels", "crankbrothers", "synthesis dh carbon"): ("Crankbrothers", "Synthesis DH Carbon"),
     ("Tires", "maxxis", "assegai f dhr2 r"): ("Maxxis", "Assegai (F) + DHR II (R)"),
     ("Tires", "maxxis", "assegai f dhr ii r"): ("Maxxis", "Assegai (F) + DHR II (R)"),
+    ("BrakeLever", "sram", "maven ultimate"): ("SRAM", "Maven"),
+    ("BrakeLever", "sram", "maven silver"): ("SRAM", "Maven"),
     ("Crankset", "sram", "xo dh"): ("SRAM", "X0 DH"),
     ("Derailleur", "sram", "xo dh"): ("SRAM", "X0 DH"),
     ("Handlebar", "renthal", "fatbar 35mm"): ("Renthal", "Fatbar 35"),
@@ -215,6 +217,31 @@ def has_equip_photo(category, brand, main_model):
         if os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{ext}")):
             return f"{slug}.{ext}"
     return None
+
+def tire_component_photos(brand, main_model):
+    """Resolve a front/rear tire combo to at most two individual product photos."""
+    if "+" not in (main_model or ""):
+        return []
+    photos = []
+    for raw_part in re.split(r"\s*\+\s*", main_model)[:2]:
+        model = re.sub(r"\s*\((?:F|R|front|rear|avant|arriere)\)\s*", " ", raw_part,
+                       flags=re.I)
+        model = re.sub(r"\b(?:29|27[.,]5|26)(?:\s*[\"”]?\s*[x×]\s*[0-9.,]+)?", " ", model)
+        model = re.sub(rf"^{re.escape(brand)}\b", "", model, flags=re.I)
+        model = re.sub(r"\s+", " ", model).strip(" -/,")
+        if norm_product_text(brand) == "maxxis" and norm_product_text(model) in {"dhr ii", "dhr2"}:
+            model = "Minion DHR II"
+        photo = has_equip_photo("Tires", brand, model)
+        if photo:
+            photos.append(photo)
+    return photos if len(photos) == 2 else []
+
+def equipment_photos(category, brand, main_model):
+    combo = tire_component_photos(brand, main_model) if category == "Tires" else []
+    if combo:
+        return combo
+    photo = has_equip_photo(category, brand, main_model)
+    return [photo] if photo else []
 
 def has_action_photo(slug):
     for ext in ("jpg", "jpeg", "png", "webp"):
@@ -1784,8 +1811,11 @@ def build_equipment_category_page(category, products):
     for position, p in enumerate(ranked, 1):
         title = " ".join([p["brand"], p["model"]]).strip()
         rider_links = "".join(f'<a href="../riders/{r["slug"]}.html">{esc(r["display_name"])}</a>' for r in sorted(p["riders"], key=lambda x: season_rank_key(x)))
-        photo = has_equip_photo(category, p["brand"], p["model"])
-        photo_html = f'<img src="../assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy" width="160" height="120">' if photo else '<span class="equipment-placeholder" aria-hidden="true">FF</span>'
+        photos = equipment_photos(category, p["brand"], p["model"])
+        photo = photos[0] if photos else None
+        photo_html = (f'<span class="equipment-photo-pair">' + "".join(
+            f'<img src="../assets/img/equipment/{item}" alt="{esc_attr(title)}" loading="lazy" width="80" height="120">'
+            for item in photos) + '</span>') if len(photos) == 2 else (f'<img src="../assets/img/equipment/{photo}" alt="{esc_attr(title)}" loading="lazy" width="160" height="120">' if photo else '<span class="equipment-placeholder" aria-hidden="true">FF</span>')
         external = ""
         if p["link"]:
             external += f'<a class="shop-btn" href="{esc(p["link"])}" rel="noopener" target="_blank">Product details</a>'
@@ -1924,8 +1954,11 @@ def build_best_equipment_carousel(riders):
             title = " ".join([g["brand"], g["model"]]).strip() or "—"
             amazon_link = g["amazon_link"]
             width = max(6, round(g["points"] / max_pts * 100))
-            photo = has_equip_photo(cat, g["brand"], g["model"])
-            thumb = f'<span class="p-thumb"><img src="assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></span>' if photo else ""
+            photos = equipment_photos(cat, g["brand"], g["model"])
+            pair_class = " p-thumb-pair" if len(photos) == 2 else ""
+            thumb = (f'<span class="p-thumb{pair_class}">' + "".join(
+                f'<img src="assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy">'
+                for photo in photos) + '</span>') if photos else ""
             thumb_line = f'\n              {thumb}' if thumb else ""
             shop = (f'<a class="p-shop" href="{esc(amazon_link)}" target="_blank" '
                     f'rel="noopener sponsored">Amazon</a>' if amazon_link

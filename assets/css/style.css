@@ -779,7 +779,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
   position:relative;
   background:linear-gradient(180deg, var(--dark) 0%, var(--dark) 30%, var(--dark2) 65%, var(--dark3) 100%);
   color:#fff;
-  padding:90px 0 0;
+  padding:48px 0 0;
   overflow:hidden;
 }
 .cta-dark .waves{position:absolute; top:0; bottom:0; left:-100px; right:-100px; width:auto; opacity:1;}
@@ -789,16 +789,16 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .cta-dark .waves path:nth-child(2n){stroke-opacity:0.12;}
 .cta-dark .waves path:nth-child(3n){stroke-opacity:0.22;}
 .cta-inner{
-  position:relative; z-index:1; padding-bottom:72px;
-  display:grid; grid-template-columns:minmax(0, 1.35fr) minmax(390px, 0.85fr);
-  align-items:center; gap:clamp(42px, 7vw, 100px);
+  position:relative; z-index:1; padding-bottom:48px;
+  display:grid; grid-template-columns:minmax(0, 1fr) minmax(390px, 460px);
+  align-items:center; gap:clamp(32px, 4vw, 56px);
 }
 .cta-copy{min-width:0;}
-.cta-signup{min-width:0; padding-top:30px;}
+.cta-signup{min-width:0; padding-top:20px;}
 .cta-dark .label{color:#9aa0a5;}
 .cta-dark h2{
-  font-family:var(--head); font-size:clamp(30px, 5.4vw, 58px); text-transform:uppercase;
-  line-height:1.02; margin:14px 0 16px; max-width:760px;
+  font-family:var(--head); font-size:clamp(26px, 2.35vw, 32px); text-transform:uppercase;
+  line-height:1.02; margin:10px 0 12px; max-width:none; white-space:nowrap;
 }
 .cta-dark p.sub{color:#c7cbce; max-width:520px; margin-bottom:0; font-size:16px;}
 .cta-form{display:flex; gap:0; width:100%; max-width:520px; margin-bottom:18px;}
@@ -1311,10 +1311,11 @@ a.clean-standing-row:hover{background:#fff5ef;}
   clip:rect(0 0 0 0); white-space:nowrap;
 }
 
-@media (max-width:900px){
+@media (max-width:1080px){
   .cta-inner{grid-template-columns:1fr; gap:28px; padding-bottom:64px;}
   .cta-signup{padding-top:0;}
   .cta-dark p.sub{margin-bottom:0;}
+  .cta-dark h2{white-space:normal; font-size:clamp(30px, 5.4vw, 50px);}
 }
 
 @media (max-width:560px){

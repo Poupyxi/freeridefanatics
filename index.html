@@ -24,12 +24,13 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=1786376442">
+<link rel="stylesheet" href="assets/css/style.css?v=1786377063">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "RidersFanatics", "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": "https://ridersfanatics.com/", "description": "Professional riders, competitions, equipment, setups and race results."}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "RidersFanatics", "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": "https://ridersfanatics.com/", "logo": "https://ridersfanatics.com/assets/img/favicon.svg"}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Where does this data come from?", "acceptedAnswer": {"@type": "Answer", "text": "Setups and results are tracked from official competition information, team communications, manufacturer material and public sponsor listings."}}, {"@type": "Question", "name": "Are the shop links affiliate links?", "acceptedAnswer": {"@type": "Answer", "text": "Some product links are affiliate links. RidersFanatics may earn a commission on qualifying purchases at no extra cost to the visitor."}}, {"@type": "Question", "name": "How often is the equipment data updated?", "acceptedAnswer": {"@type": "Answer", "text": "Results are updated during the season and equipment is updated when a verifiable change is identified."}}, {"@type": "Question", "name": "How are corrections handled?", "acceptedAnswer": {"@type": "Answer", "text": "Corrections are checked against a public source before publication. The methodology page explains the evidence required and current submission status."}}, {"@type": "Question", "name": "Is Rider Fanatic the same as RidersFanatics?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common searches for RidersFanatics, the independent rider, equipment and race-results database at ridersfanatics.com."}}]}</script>
 </head>
 <body class="home-page">
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>
 
 <header>
@@ -38,7 +39,7 @@
       <span class="mark">R</span>
       RIDERSFANATICS
     </a>
-    <nav class="links">
+    <nav class="links" id="primary-navigation" aria-label="Primary navigation">
       <div class="nav-item has-dropdown competition-nav">
         <a href="competitions.html">Competitions <span class="caret">&#9662;</span></a>
         <div class="dropdown">
@@ -52,8 +53,8 @@
         <a href="riders.html#grid" class="active">Riders <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
-            <a href="riders.html?filter=Men+Elite#grid">Men</a>
-            <a href="riders.html?filter=Women+Elite#grid">Women</a>
+            <a href="riders.html#men">Men</a>
+            <a href="riders.html#women">Women</a>
           </div>
         </div>
       </div>
@@ -62,11 +63,12 @@
     </nav>
     <div class="nav-icons">
       <span class="icon-btn">64 Riders</span>
-      <button class="nav-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
 
+<main id="main-content">
 <section class="hero home-hero">
   <svg class="hero-waves" viewBox="0 0 1240 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M-50,40 C120,0 260,70 420,35 C580,0 700,60 880,30 C1000,10 1150,40 1290,25" fill="none" stroke="#15161a" stroke-opacity="0.06" stroke-width="1.2"/>
@@ -91,8 +93,8 @@
     </div>
     <div class="ticker-wrap">
       <div class="ticker-track">
-        <a href="riders.html#grid"><b>Rider</b> Profiles</a><span class="dot">·</span><a href="#equipment"><b>Pro</b> Setups</a><span class="dot">·</span><a href="standings.html"><b>Follow</b> the Season</a><span class="dot">·</span><a href="standings.html"><b>Race</b> Results</a><span class="dot">·</span><a href="#rankings"><b>Check</b> Rankings</a><span class="dot">·</span><a href="#equipment"><b>Equipment</b> Details</a><span class="dot">·</span><a href="#equipment"><b>Shop</b> the Gear</a><span class="dot">·</span>
-        <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Follow</b> the Season</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Race</b> Results</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
+        <a href="riders.html#grid"><b>Rider</b> Profiles</a><span class="dot">·</span><a href="#equipment"><b>Pro</b> Setups</a><span class="dot">·</span><a href="competitions/uci-mtb-world-cup-dh-2026/standings.html"><b>Championship</b> Standings</a><span class="dot">·</span><a href="standings.html"><b>Round</b> Results</a><span class="dot">·</span><a href="#rankings"><b>Check</b> Rankings</a><span class="dot">·</span><a href="#equipment"><b>Equipment</b> Details</a><span class="dot">·</span><a href="#equipment"><b>Shop</b> the Gear</a><span class="dot">·</span>
+        <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="competitions/uci-mtb-world-cup-dh-2026/standings.html" aria-hidden="true" tabindex="-1"><b>Championship</b> Standings</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Round</b> Results</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
       </div>
     </div>
   </div>
@@ -105,7 +107,7 @@
         <div class="label">Current competition · Season 2026</div>
         <h2>DH Rankings</h2>
       </div>
-      <a class="see-all" href="standings.html">View full standings →</a>
+      <a class="see-all" href="competitions/uci-mtb-world-cup-dh-2026/standings.html">View overall standings →</a>
     </div>
     <div class="rankings-grid">
       <div class="ranking-col">
@@ -1561,24 +1563,25 @@
       </div>
     </div>
     <div class="faq">
-        <div class="faq-q"><h3><span class="faq-num">Q1</span>Where does this data come from?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Every setup is tracked from official competition information, team press releases, manufacturer material and public sponsor listings. Each result remains attached to its competition and season.</p></div>
+      <div class="faq-item">
+        <h3><button class="faq-q" type="button" id="faq-question-1" aria-expanded="false" aria-controls="faq-answer-1"><span><span class="faq-num">Q1</span>Where does this data come from?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-1" role="region" aria-labelledby="faq-question-1" hidden><p>Every setup is tracked from official competition information, team press releases, manufacturer material and public sponsor listings. Each result remains attached to its competition and season.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q2</span>Are the "Shop" links affiliate links?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Yes — some product links on this site are affiliate links. We may earn a commission on qualifying purchases at no extra cost to you.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-2" aria-expanded="false" aria-controls="faq-answer-2"><span><span class="faq-num">Q2</span>Are the "Shop" links affiliate links?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-2" role="region" aria-labelledby="faq-question-2" hidden><p>Yes — some product links on this site are affiliate links. We may earn a commission on qualifying purchases at no extra cost to you.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q3</span>How often is the kit list updated?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Results are updated during the season. Equipment is updated when a verifiable change is identified; the global update date does not mean every setup was independently rescanned after every race.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-3" aria-expanded="false" aria-controls="faq-answer-3"><span><span class="faq-num">Q3</span>How often is the kit list updated?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-3" role="region" aria-labelledby="faq-question-3" hidden><p>Results are updated during the season. Equipment is updated when a verifiable change is identified; the global update date does not mean every setup was independently rescanned after every race.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q4</span>How are corrections handled?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Corrections are checked against a public source before publication. See our <a href="methodology.html">data methodology</a> for the evidence required and current submission status.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-4" aria-expanded="false" aria-controls="faq-answer-4"><span><span class="faq-num">Q4</span>How are corrections handled?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-4" role="region" aria-labelledby="faq-question-4" hidden><p>Corrections are checked against a public source before publication. See our <a href="methodology.html">data methodology</a> for the evidence required and current submission status.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q5</span>Is Rider Fanatic the same as RidersFanatics?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common ways people search for <strong>RidersFanatics</strong>, our independent professional rider, equipment and race-results database.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-5" aria-expanded="false" aria-controls="faq-answer-5"><span><span class="faq-num">Q5</span>Is Rider Fanatic the same as RidersFanatics?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-5" role="region" aria-labelledby="faq-question-5" hidden><p>Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common ways people search for <strong>RidersFanatics</strong>, our independent professional rider, equipment and race-results database.</p></div>
       </div>
     </div>
   </div>
@@ -1616,10 +1619,10 @@
       <a href="privacy.html">What we do with your email</a></div>
   </div>
 </section>
-<footer>
+</main><footer>
   <div class="wrap footer-row">
     <a class="footer-logo" href="./"><span class="mark">R</span>RIDERSFANATICS</a>
-    <nav class="footer-links">
+    <nav class="footer-links" aria-label="Footer navigation">
       <a href="riders.html#grid">Riders</a>
       <a href="competitions.html">Competitions</a>
       <a href="equipment.html">Equipment</a>
@@ -1637,6 +1640,6 @@
   <div class="wrap footer-updated">Last updated <time datetime="2026-08-10">10 Aug 2026</time></div>
 </footer>
 
-<script src="assets/js/site.js?v=1786376442"></script>
+<script src="assets/js/site.js?v=1786377063"></script>
 </body>
 </html>

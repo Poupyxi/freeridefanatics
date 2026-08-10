@@ -1,4 +1,7 @@
 (function(){
+  var mainContent = document.querySelector('main');
+  if(mainContent && !mainContent.id) mainContent.id = 'main-content';
+
   function safe(name, fn){
     try { fn(); } catch(err) { console.error('[site.js] ' + name + ' failed:', err); }
   }
@@ -17,11 +20,20 @@
     var toggle = document.querySelector('.nav-toggle');
     var navLinks = document.querySelector('nav.links');
     if(!toggle || !navLinks) return;
-    toggle.addEventListener('click', function(){
-      navLinks.classList.toggle('open');
-    });
+    function setMenu(open){
+      navLinks.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+    }
+    toggle.addEventListener('click', function(){ setMenu(!navLinks.classList.contains('open')); });
     navLinks.querySelectorAll('a').forEach(function(a){
-      a.addEventListener('click', function(){ navLinks.classList.remove('open'); });
+      a.addEventListener('click', function(){ setMenu(false); });
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && navLinks.classList.contains('open')){
+        setMenu(false);
+        toggle.focus();
+      }
     });
   });
 
@@ -50,21 +62,24 @@
       var q = item.querySelector('.faq-q');
       var a = item.querySelector('.faq-a');
       if(!q || !a) return;
+      function setOpen(open){
+        item.classList.toggle('open', open);
+        q.setAttribute('aria-expanded', open ? 'true' : 'false');
+        a.hidden = !open;
+        a.style.maxHeight = open ? a.scrollHeight + 'px' : null;
+      }
       q.addEventListener('click', function(){
         var isOpen = item.classList.contains('open');
         document.querySelectorAll('.faq-item.open').forEach(function(openItem){
           if(openItem !== item){
+            var openQ = openItem.querySelector('.faq-q');
+            var openA = openItem.querySelector('.faq-a');
             openItem.classList.remove('open');
-            openItem.querySelector('.faq-a').style.maxHeight = null;
+            if(openQ) openQ.setAttribute('aria-expanded', 'false');
+            if(openA){ openA.hidden = true; openA.style.maxHeight = null; }
           }
         });
-        if(isOpen){
-          item.classList.remove('open');
-          a.style.maxHeight = null;
-        } else {
-          item.classList.add('open');
-          a.style.maxHeight = a.scrollHeight + 'px';
-        }
+        setOpen(!isOpen);
       });
     });
   });
@@ -157,12 +172,17 @@
       });
     }
 
+    var filterHashes = {'all':'grid', 'Men Elite':'men', 'Women Elite':'women'};
+
     filterBtns.forEach(function(btn){
       btn.addEventListener('click', function(){
-        filterBtns.forEach(function(b){ b.classList.remove('active'); });
+        filterBtns.forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
         btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
         activeFilter = btn.getAttribute('data-filter');
         applyFilters();
+        var nextHash = filterHashes[activeFilter] || 'grid';
+        window.history.replaceState(null, '', window.location.pathname + '#' + nextHash);
       });
     });
 
@@ -170,15 +190,22 @@
       searchInput.addEventListener('input', applyFilters);
     }
 
-    // Support ?filter=Women+Elite links from the nav
+    // Filters use fragments so crawlers see one canonical directory URL.
+    // Legacy query-string links remain supported until their 301 redirects
+    // have been fully processed by search engines.
     var params = new URLSearchParams(window.location.search);
-    var urlFilter = params.get('filter');
-    if(urlFilter){
+    var hashFilters = {'#grid':'all', '#men':'Men Elite', '#women':'Women Elite'};
+    function activateLocationFilter(urlFilter){
+      if(!urlFilter) return;
       var match = filterBtns.find(function(b){
         return b.getAttribute('data-filter') === urlFilter;
       });
       if(match){ match.click(); }
     }
+    activateLocationFilter(params.get('filter') || hashFilters[window.location.hash]);
+    window.addEventListener('hashchange', function(){
+      activateLocationFilter(hashFilters[window.location.hash]);
+    });
   });
 
   // Standings page: pick a group (Men / Women / Teams) and a competition.

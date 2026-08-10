@@ -301,6 +301,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 {schema_html}
 </head>
 <body{body_attr}>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 """
 
 def header_html(asset_prefix, active=""):
@@ -316,7 +317,7 @@ def header_html(asset_prefix, active=""):
       <span class="mark">R</span>
       RIDERSFANATICS
     </a>
-    <nav class="links">
+    <nav class="links" id="primary-navigation" aria-label="Primary navigation">
       <div class="nav-item has-dropdown competition-nav">
         <a href="{asset_prefix}competitions.html"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
         <div class="dropdown">
@@ -330,8 +331,8 @@ def header_html(asset_prefix, active=""):
         <a href="{asset_prefix}riders.html#grid"{cls('riders')}>Riders <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
-            <a href="{asset_prefix}riders.html?filter=Men+Elite#grid">Men</a>
-            <a href="{asset_prefix}riders.html?filter=Women+Elite#grid">Women</a>
+            <a href="{asset_prefix}riders.html#men">Men</a>
+            <a href="{asset_prefix}riders.html#women">Women</a>
           </div>
         </div>
       </div>
@@ -340,7 +341,7 @@ def header_html(asset_prefix, active=""):
     </nav>
     <div class="nav-icons">
       <span class="icon-btn">64 Riders</span>
-      <button class="nav-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
@@ -351,7 +352,7 @@ def footer_html(asset_prefix):
     return f"""<footer>
   <div class="wrap footer-row">
     <a class="footer-logo" href="{home_href}"><span class="mark">R</span>RIDERSFANATICS</a>
-    <nav class="footer-links">
+    <nav class="footer-links" aria-label="Footer navigation">
       <a href="{asset_prefix}riders.html#grid">Riders</a>
       <a href="{asset_prefix}competitions.html">Competitions</a>
       <a href="{asset_prefix}equipment.html">Equipment</a>
@@ -441,7 +442,7 @@ def build_editorial_page(slug, title, description, label, lead, sections):
     html += f'''<main><article>
 <header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated 10 August 2026</time></div></div></header>
 <div class="wrap">{breadcrumb_html([("Home", "./"), (title, path.lstrip('/'))])}</div><div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>
-<aside class="guide-sidebar"><div class="guide-card"><h2>Explore</h2><a href="riders.html#grid">Rider directory</a><a href="equipment.html">Equipment database</a><a href="standings.html">2026 standings</a><a href="guides/en/">Downhill setup guide</a></div></aside></div>
+<aside class="guide-sidebar"><div class="guide-card"><h2>Explore</h2><a href="riders.html#grid">Rider directory</a><a href="equipment.html">Equipment database</a><a href="competitions/{CURRENT_COMPETITION['id']}/standings.html">2026 standings</a><a href="guides/en/">Downhill setup guide</a></div></aside></div>
 </article></main>'''
     html += footer_html("")
     return html
@@ -636,6 +637,7 @@ def build_index(riders, women_count, men_count):
     )
     html += header_html(prefix, active="riders")
     html += f"""
+<main id="main-content">
 <section class="hero home-hero">
   {hero_waves_svg()}
   <div class="wrap hero-inner">
@@ -649,8 +651,8 @@ def build_index(riders, women_count, men_count):
     </div>
     <div class="ticker-wrap">
       <div class="ticker-track">
-        <a href="riders.html#grid"><b>Rider</b> Profiles</a><span class="dot">·</span><a href="#equipment"><b>Pro</b> Setups</a><span class="dot">·</span><a href="standings.html"><b>Follow</b> the Season</a><span class="dot">·</span><a href="standings.html"><b>Race</b> Results</a><span class="dot">·</span><a href="#rankings"><b>Check</b> Rankings</a><span class="dot">·</span><a href="#equipment"><b>Equipment</b> Details</a><span class="dot">·</span><a href="#equipment"><b>Shop</b> the Gear</a><span class="dot">·</span>
-        <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Follow</b> the Season</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Race</b> Results</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
+        <a href="riders.html#grid"><b>Rider</b> Profiles</a><span class="dot">·</span><a href="#equipment"><b>Pro</b> Setups</a><span class="dot">·</span><a href="competitions/{CURRENT_COMPETITION['id']}/standings.html"><b>Championship</b> Standings</a><span class="dot">·</span><a href="standings.html"><b>Round</b> Results</a><span class="dot">·</span><a href="#rankings"><b>Check</b> Rankings</a><span class="dot">·</span><a href="#equipment"><b>Equipment</b> Details</a><span class="dot">·</span><a href="#equipment"><b>Shop</b> the Gear</a><span class="dot">·</span>
+        <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="competitions/{CURRENT_COMPETITION['id']}/standings.html" aria-hidden="true" tabindex="-1"><b>Championship</b> Standings</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Round</b> Results</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
       </div>
     </div>
   </div>
@@ -669,24 +671,25 @@ def build_index(riders, women_count, men_count):
       </div>
     </div>
     <div class="faq">
-        <div class="faq-q"><h3><span class="faq-num">Q1</span>Where does this data come from?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Every setup is tracked from official competition information, team press releases, manufacturer material and public sponsor listings. Each result remains attached to its competition and season.</p></div>
+      <div class="faq-item">
+        <h3><button class="faq-q" type="button" id="faq-question-1" aria-expanded="false" aria-controls="faq-answer-1"><span><span class="faq-num">Q1</span>Where does this data come from?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-1" role="region" aria-labelledby="faq-question-1" hidden><p>Every setup is tracked from official competition information, team press releases, manufacturer material and public sponsor listings. Each result remains attached to its competition and season.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q2</span>Are the "Shop" links affiliate links?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Yes — some product links on this site are affiliate links. We may earn a commission on qualifying purchases at no extra cost to you.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-2" aria-expanded="false" aria-controls="faq-answer-2"><span><span class="faq-num">Q2</span>Are the "Shop" links affiliate links?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-2" role="region" aria-labelledby="faq-question-2" hidden><p>Yes — some product links on this site are affiliate links. We may earn a commission on qualifying purchases at no extra cost to you.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q3</span>How often is the kit list updated?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Results are updated during the season. Equipment is updated when a verifiable change is identified; the global update date does not mean every setup was independently rescanned after every race.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-3" aria-expanded="false" aria-controls="faq-answer-3"><span><span class="faq-num">Q3</span>How often is the kit list updated?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-3" role="region" aria-labelledby="faq-question-3" hidden><p>Results are updated during the season. Equipment is updated when a verifiable change is identified; the global update date does not mean every setup was independently rescanned after every race.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q4</span>How are corrections handled?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Corrections are checked against a public source before publication. See our <a href="methodology.html">data methodology</a> for the evidence required and current submission status.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-4" aria-expanded="false" aria-controls="faq-answer-4"><span><span class="faq-num">Q4</span>How are corrections handled?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-4" role="region" aria-labelledby="faq-question-4" hidden><p>Corrections are checked against a public source before publication. See our <a href="methodology.html">data methodology</a> for the evidence required and current submission status.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h3><span class="faq-num">Q5</span>Is Rider Fanatic the same as RidersFanatics?</h3><span class="plus">+</span></div>
-        <div class="faq-a"><p>Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common ways people search for <strong>RidersFanatics</strong>, our independent professional rider, equipment and race-results database.</p></div>
+        <h3><button class="faq-q" type="button" id="faq-question-5" aria-expanded="false" aria-controls="faq-answer-5"><span><span class="faq-num">Q5</span>Is Rider Fanatic the same as RidersFanatics?</span><span class="plus" aria-hidden="true">+</span></button></h3>
+        <div class="faq-a" id="faq-answer-5" role="region" aria-labelledby="faq-question-5" hidden><p>Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common ways people search for <strong>RidersFanatics</strong>, our independent professional rider, equipment and race-results database.</p></div>
       </div>
     </div>
   </div>
@@ -703,6 +706,7 @@ def build_index(riders, women_count, men_count):
   </div>
 </section>
 """
+    html += "</main>"
     html += footer_html(prefix)
     return html
 
@@ -821,7 +825,7 @@ def build_standings(riders):
     for comp in competitions:
         events = events_for(comp)
         head_cells = "".join(
-            f'<th class="rd" title="{esc(ev)}"><abbr title="{esc(ev)}">{esc(short_event(ev))}</abbr></th>'
+            f'<th scope="col" class="rd" title="{esc(ev)}"><abbr title="{esc(ev)}">{esc(short_event(ev))}</abbr></th>'
             for ev in events)
         for group, label in (("Men Elite", "Men"), ("Women Elite", "Women")):
             rows, n = rider_rows(group, comp, events)
@@ -832,7 +836,7 @@ def build_standings(riders):
         <div class="standings-scroll">
           <table class="standings-table">
             <caption>{esc(label)} Elite standings for {esc(comp)} after {len(events)} rounds</caption>
-            <thead><tr><th>#</th><th>Rider</th><th>Nat</th>{head_cells}<th class="total">Pts</th></tr></thead>
+            <thead><tr><th scope="col">#</th><th scope="col">Rider</th><th scope="col">Nat</th>{head_cells}<th scope="col" class="total">Pts</th></tr></thead>
             <tbody>
             {"".join(rows)}
             </tbody>
@@ -847,7 +851,7 @@ def build_standings(riders):
         <div class="standings-scroll">
           <table class="standings-table">
             <caption>Team standings for {esc(comp)}</caption>
-            <thead><tr><th>#</th><th>Team</th><th class="total">Pts</th></tr></thead>
+            <thead><tr><th scope="col">#</th><th scope="col">Team</th><th scope="col" class="total">Pts</th></tr></thead>
             <tbody>
             {"".join(rows)}
             </tbody>
@@ -882,19 +886,20 @@ def build_standings(riders):
     women_lead_pts, women_lead = leader_for("Women Elite")
     latest_round = primary_events[-1] if primary_events else "Season start"
 
-    html = head(f"Standings — {SITE_NAME}",
-                "Full UCI MTB World Cup Downhill 2026 standings: every rider, every round, cumulative points.",
+    html = head(f"2026 UCI Downhill Results by Round | {SITE_NAME}",
+                "Round-by-round UCI MTB World Cup downhill results for 2026, with every tracked rider, finishing position and cumulative points across the season.",
                 prefix, body_class="standings-page", canonical_path="/standings.html",
                 schemas=[
-                    {"@context": "https://schema.org", "@type": "CollectionPage", "name": "UCI MTB World Cup Downhill 2026 standings", "url": absolute_url("/standings.html"), "description": "Round-by-round World Cup downhill standings for men, women and teams.", "dateModified": SITE_UPDATED},
+                    {"@context": "https://schema.org", "@type": "CollectionPage", "name": "2026 UCI MTB World Cup downhill results by round", "url": absolute_url("/standings.html"), "description": "Round-by-round World Cup downhill results and cumulative points for men, women and teams.", "dateModified": SITE_UPDATED},
                     breadcrumb_schema([("Home", "/"), ("Standings", "/standings.html")]),
                 ])
     html += header_html(prefix, active="standings")
     html += f"""
+<main id="main-content">
 <section class="hero standings-hero">
   <div class="wrap hero-inner">
     <div class="label">Season 2026 · Updated after round {len(primary_events)} · {esc(latest_round)}</div>
-    <h1>Standings.</h1>
+    <h1>Results by round.</h1>
   </div>
 </section>
 
@@ -930,6 +935,7 @@ def build_standings(riders):
     </div>
   </div>
 </section>
+</main>
 """
     html += footer_html(prefix)
     return html
@@ -1084,9 +1090,9 @@ def build_competition_standings(riders, competition):
          "name": rider["display_name"], "url": absolute_url(f"/riders/{rider['slug']}.html")}
         for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
     ]
-    description = f"Current {name} standings for elite men, elite women and teams, with rider profiles and round-by-round points."
+    description = "2026 UCI MTB World Cup downhill overall standings for Elite Men, Elite Women and teams, with current points, leaders and rider profiles."
     html = head(
-        f"{name} Standings — Men, Women & Teams | {SITE_NAME}", description, "../../",
+        f"2026 UCI Downhill Overall Standings | {SITE_NAME}", description, "../../",
         body_class="competition-standings-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage",
@@ -1100,7 +1106,7 @@ def build_competition_standings(riders, competition):
     )
     html += header_html("../../", active="competitions")
     html += f'''<main>
-<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>Season standings.</h1><p>{esc(name)} — the current championship order, designed for a quick read on any screen.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div></div></section>
+<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>2026 UCI Downhill standings.</h1><p>{esc(name)} — the current championship order for Elite Men, Elite Women and teams.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div></div></section>
 {competition_subnav(competition, "standings")}
 <div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
 <section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
@@ -1169,9 +1175,9 @@ def build_competition_detail(riders, competition):
             h.get("category") == name and h.get("event") == event
             for h in rider.get("competition_history") or []))
         event_rows.append(f'<li><span>{number:02d}</span><div><strong>{esc(event)}</strong><small>{starters} tracked results</small></div></li>')
-    description = f"{name}: season overview, completed rounds, rider leaders, standings and professional downhill equipment tracked by RidersFanatics."
+    description = f"{name} season overview: completed rounds, current leaders, rider profiles and links to overall standings and professional downhill equipment."
     html = head(
-        f"{name} — Standings, Riders & Equipment | {SITE_NAME}", description, "../",
+        f"{name} | Riders & Rounds", description, "../",
         body_class="competition-detail-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage", "name": name,
@@ -1236,6 +1242,7 @@ def build_riders_directory(riders, women_count, men_count):
     )
     html += header_html(prefix, active="riders")
     html += f"""
+<main id="main-content">
 <section class="hero" style="padding-bottom:0; border-bottom:none;">
   <div class="wrap hero-inner">
     <div class="label">Directory · Season 2026</div>
@@ -1253,17 +1260,18 @@ def build_riders_directory(riders, women_count, men_count):
       </div>
       <span class="see-all">{len(riders)} riders · {women_count} women · {men_count} men</span>
     </div>
-    <div class="filters">
-      <button class="filter-btn active" data-filter="all">All ({len(riders)})</button>
-      <button class="filter-btn" data-filter="Men Elite">Men ({men_count})</button>
-      <button class="filter-btn" data-filter="Women Elite">Women ({women_count})</button>
-      <input class="search-input" type="text" placeholder="Search a rider, team, country..." data-search>
+    <div class="filters" aria-label="Filter rider directory">
+      <button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(riders)})</button>
+      <button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({men_count})</button>
+      <button class="filter-btn" type="button" aria-pressed="false" data-filter="Women Elite">Women ({women_count})</button>
+      <label class="search-label"><span class="visually-hidden">Search riders</span><input class="search-input" type="search" placeholder="Search a rider, team, country..." data-search></label>
     </div>
     <div class="grid-riders" data-rider-grid>
       {cards}
     </div>
   </div>
 </section>
+</main>
 """
     html += footer_html(prefix)
     return html
@@ -1501,7 +1509,7 @@ def build_rankings_section(riders):
         <div class="label">Current competition · Season {CURRENT_COMPETITION['season']}</div>
         <h2>DH Rankings</h2>
       </div>
-      <a class="see-all" href="standings.html">View full standings →</a>
+      <a class="see-all" href="competitions/{CURRENT_COMPETITION['id']}/standings.html">View overall standings →</a>
     </div>
     <div class="rankings-grid">
       <div class="ranking-col">
@@ -2014,12 +2022,13 @@ def build_rider_page(r, riders):
     meta_description += f", plus the documented bike setup and equipment."
     if history:
         results_html = f"""{competition_filters(history)}
-      <table class="results-table" data-results-table>
-        <thead><tr><th>Year</th><th>Event</th><th>Result</th><th>Points</th></tr></thead>
+      <div class="results-scroll" tabindex="0" role="region" aria-label="Race results table, horizontally scrollable on small screens"><table class="results-table" data-results-table>
+        <caption>{esc(r['display_name'])} 2026 race results</caption>
+        <thead><tr><th scope="col">Year</th><th scope="col">Event</th><th scope="col">Result</th><th scope="col">Points</th></tr></thead>
         <tbody>
         {results_rows(history)}
         </tbody>
-      </table>"""
+      </table></div>"""
     else:
         results_html = '<p style="color:var(--muted); font-size:14px;">No 2026 results recorded yet.</p>'
 
@@ -2143,6 +2152,22 @@ def run_image_optimizer():
     if os.path.exists(image_optimizer):
         subprocess.run([sys.executable, image_optimizer], check=True)
 
+def ensure_accessibility_landmarks():
+    """Keep the skip link target in the static HTML, including generated pages."""
+    for directory, _, filenames in os.walk(ROOT):
+        if ".git" in directory.split(os.sep):
+            continue
+        for filename in filenames:
+            if not filename.endswith(".html"):
+                continue
+            path = os.path.join(directory, filename)
+            with open(path, encoding="utf-8") as source:
+                markup = source.read()
+            if 'id="main-content"' not in markup and "<main" in markup:
+                markup = markup.replace("<main", '<main id="main-content"', 1)
+                with open(path, "w", encoding="utf-8") as target:
+                    target.write(markup)
+
 
 def main():
     with open(DATA_PATH, encoding="utf-8") as f:
@@ -2222,6 +2247,7 @@ def main():
     if os.path.exists(seo_builder):
         subprocess.run([sys.executable, seo_builder], check=True)
 
+    ensure_accessibility_landmarks()
     run_image_optimizer()
 
     print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men).")

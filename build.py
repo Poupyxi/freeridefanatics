@@ -37,7 +37,7 @@ REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
 
 SITE_NAME = "RidersFanatics"
 SITE_URL = "https://ridersfanatics.com"
-SITE_UPDATED = "2026-08-07"
+SITE_UPDATED = "2026-08-10"
 CONTACT_EMAIL = "contact@ridersfanatics.com"
 DATA_LICENSE_URL = f"{SITE_URL}/data-license.html"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
@@ -307,11 +307,12 @@ def header_html(asset_prefix, active=""):
     def cls(name):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
+    home_href = asset_prefix or "./"
     return f"""<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>
 
 <header>
   <div class="wrap nav-row">
-    <a class="logo" href="{asset_prefix}index.html">
+    <a class="logo" href="{home_href}">
       <span class="mark">R</span>
       RIDERSFANATICS
     </a>
@@ -335,7 +336,7 @@ def header_html(asset_prefix, active=""):
         </div>
       </div>
       <a href="{asset_prefix}equipment.html"{cls('equipment')}>Equipment</a>
-      <a href="{asset_prefix}index.html#faq">FAQ</a>
+      <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
       <span class="icon-btn">64 Riders</span>
@@ -346,15 +347,16 @@ def header_html(asset_prefix, active=""):
 """
 
 def footer_html(asset_prefix):
+    home_href = asset_prefix or "./"
     return f"""<footer>
   <div class="wrap footer-row">
-    <a class="footer-logo" href="{asset_prefix}index.html"><span class="mark">R</span>RIDERSFANATICS</a>
+    <a class="footer-logo" href="{home_href}"><span class="mark">R</span>RIDERSFANATICS</a>
     <nav class="footer-links">
       <a href="{asset_prefix}riders.html#grid">Riders</a>
       <a href="{asset_prefix}competitions.html">Competitions</a>
       <a href="{asset_prefix}equipment.html">Equipment</a>
       <a href="{asset_prefix}guides/en/">DH Guide</a>
-      <a href="{asset_prefix}index.html#faq">FAQ</a>
+      <a href="{home_href}#faq">FAQ</a>
       <a href="{asset_prefix}methodology.html">Methodology</a>
       <a href="{asset_prefix}data-license.html">Data license</a>
       <a href="{asset_prefix}about.html">About</a>
@@ -364,7 +366,7 @@ def footer_html(asset_prefix):
     </nav>
     <span class="footer-copy">&copy; 2026 RidersFanatics</span>
   </div>
-  <div class="wrap footer-updated">Last updated <time datetime="2026-08-07">07 Aug 2026</time></div>
+  <div class="wrap footer-updated">Last updated <time datetime="{SITE_UPDATED}">10 Aug 2026</time></div>
 </footer>
 
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
@@ -437,8 +439,8 @@ def build_editorial_page(slug, title, description, label, lead, sections):
     )
     html += header_html("")
     html += f'''<main><article>
-<header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated 7 August 2026</time></div></div></header>
-<div class="wrap">{breadcrumb_html([("Home", "index.html"), (title, path.lstrip('/'))])}</div><div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>
+<header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated 10 August 2026</time></div></div></header>
+<div class="wrap">{breadcrumb_html([("Home", "./"), (title, path.lstrip('/'))])}</div><div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>
 <aside class="guide-sidebar"><div class="guide-card"><h2>Explore</h2><a href="riders.html#grid">Rider directory</a><a href="equipment.html">Equipment database</a><a href="standings.html">2026 standings</a><a href="guides/en/">Downhill setup guide</a></div></aside></div>
 </article></main>'''
     html += footer_html("")
@@ -467,7 +469,7 @@ def build_contact_page():
     html += header_html("")
     html += f'''<main><article>
 <header class="guide-hero"><div class="wrap"><div class="label">Corrections · Sources · Partnerships</div><h1>Contact RidersFanatics</h1><p class="lead">Found an outdated result or a component we should recheck? Send the source and context that will help us verify it.</p><div class="guide-meta"><span>English or French</span><span>Direct email available</span></div></div></header>
-<div class="wrap">{breadcrumb_html([("Home", "index.html"), ("Contact", "contact.html")])}</div>
+<div class="wrap">{breadcrumb_html([("Home", "./"), ("Contact", "contact.html")])}</div>
 <div class="wrap contact-layout">
   <section class="contact-intro" aria-labelledby="contact-intro-title">
     <div class="label">A useful message includes</div>
@@ -1100,7 +1102,7 @@ def build_competition_standings(riders, competition):
     html += f'''<main>
 <section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>Season standings.</h1><p>{esc(name)} — the current championship order, designed for a quick read on any screen.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div></div></section>
 {competition_subnav(competition, "standings")}
-<div class="wrap">{breadcrumb_html([("Home", "../../index.html"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
+<div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
 <section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
 <div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span><div class="filters" role="tablist" aria-label="Standings category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div><label class="standings-search"><span>Search</span><input class="search-input" type="search" placeholder="Rider, team or country…" data-standings-search></label></div>
 {rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}
@@ -1141,7 +1143,7 @@ def build_competitions_hub(riders):
     html += header_html("", active="competitions")
     html += f'''<main>
 <section class="competition-hero"><div class="wrap"><div class="label">Series · Seasons · Disciplines</div><h1>Choose a competition.</h1><p>RidersFanatics is built to follow more than one championship. Select the series you want, then move between riders, results and equipment without mixing seasons.</p></div></section>
-<div class="wrap">{breadcrumb_html([("Home", "index.html"), ("Competitions", "competitions.html")])}</div>
+<div class="wrap">{breadcrumb_html([("Home", "./"), ("Competitions", "competitions.html")])}</div>
 <section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Currently tracked</div><h2>Competition database</h2></div><span class="see-all">{len(COMPETITIONS)} active series</span></div><div class="competition-grid">{"".join(cards)}</div>
 <div class="competition-note"><strong>Built for expansion</strong><p>New winter, bike and action-sport competitions can be added as separate datasets. The RidersFanatics brand, rider directory and equipment catalogue remain shared.</p></div></div></section>
 </main>'''
@@ -1174,8 +1176,10 @@ def build_competition_detail(riders, competition):
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage", "name": name,
              "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
-             "about": {"@type": "SportsEvent", "name": name,
-                       "sport": f"{competition['sport']} {competition['discipline']}"}},
+             "mainEntity": {"@type": "ItemList", "numberOfItems": len(events),
+                            "itemListElement": [{"@type": "ListItem", "position": i,
+                                                 "name": event}
+                                                for i, event in enumerate(events, 1)]}},
             breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"), (name, path)]),
         ],
     )
@@ -1183,7 +1187,7 @@ def build_competition_detail(riders, competition):
     html += f'''<main>
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>One season hub for the riders, championship standings and equipment records currently connected in the RidersFanatics database.</p><div class="hero-ctas"><a class="btn btn-solid" href="{competition['id']}/standings.html">View standings</a><a class="btn" href="../riders.html#grid">Explore riders</a></div></div></section>
 {competition_subnav(competition, "overview")}
-<div class="wrap">{breadcrumb_html([("Home", "../index.html"), ("Competitions", "../competitions.html"), (name, competition['id'] + ".html")])}</div>
+<div class="wrap">{breadcrumb_html([("Home", "../"), ("Competitions", "../competitions.html"), (name, competition['id'] + ".html")])}</div>
 <section class="section competition-overview" id="overview"><div class="wrap"><div class="competition-overview-grid">
   <div class="competition-summary"><div class="label">Dataset status</div><h2>Season at a glance.</h2><p>The standings currently connect {len(stats['scored'])} riders from {len(stats['teams'])} teams across {len(events)} completed rounds. Results and equipment are kept distinct: a race result can update without implying that every rider setup was rescanned that weekend.</p><dl><div><dt>Rounds recorded</dt><dd>{len(events)}</dd></div><div><dt>Riders scored</dt><dd>{len(stats['scored'])}</dd></div><div><dt>Categories</dt><dd>Men &amp; Women Elite</dd></div></dl></div>
   <div class="competition-leaders"><div class="label">Current leaders</div>{"".join(leader_blocks)}</div>
@@ -1636,7 +1640,7 @@ def build_equipment_directory(riders):
     )
     html += header_html("", active="equipment")
     html += f'''<main><section class="equipment-hero"><div class="wrap equipment-hero-layout"><div class="equipment-hero-copy"><div class="label">Professional race equipment · Verified setups</div><h1>Race equipment, <em>decoded.</em></h1><p>Explore what professional riders actually use. Every category connects products to riders, teams and results within the selected competition.</p><div class="hero-ctas"><a class="btn btn-solid" href="#equipment-catalogue">Browse categories</a><a class="btn equipment-compare-cta" href="compare.html">Open comparator</a></div><div class="equipment-hero-stats"><div><strong>{len(categories)}</strong><span>Categories</span></div><div><strong>{product_count}</strong><span>Products</span></div><div><strong>{len(riders)}</strong><span>Riders</span></div></div></div><div class="equipment-hero-visual" aria-label="Leading tracked equipment">{equipment_hero_visual(by_cat)}</div></div></section>
-<div class="wrap">{breadcrumb_html([("Home", "index.html"), ("Equipment", "equipment.html")])}</div>
+<div class="wrap">{breadcrumb_html([("Home", "./"), ("Equipment", "equipment.html")])}</div>
 <section class="section equipment-catalogue" id="equipment-catalogue"><div class="wrap"><div class="equipment-catalogue-head"><div><div class="label">Equipment catalogue</div><h2>Explore the paddock.</h2><p>Choose a family, then open a category to see every tracked product and the riders using it.</p></div><a class="see-all" href="methodology.html">How rankings work →</a></div><nav class="equipment-group-nav" aria-label="Equipment families">{group_nav}</nav>{"".join(grouped_sections)}
 <div class="equipment-compare-banner"><div><span class="label">Product comparator</span><h2>Build a side-by-side shortlist.</h2><p>Select two to four products from the same category and compare their tracked riders, teams and competition presence.</p></div><a class="btn btn-solid" href="compare.html">Start comparing</a></div>
 <div class="guide-callout"><strong>How to read these rankings</strong><p>Combined rider points describe competitive presence in the tracked field. They are not a laboratory comparison: sponsorship, rider count and team selection influence every total.</p></div></div></section></main>'''
@@ -1694,7 +1698,7 @@ def build_equipment_category_page(category, products):
     )
     html += header_html("../", active="equipment")
     html += f'''<main><section class="hero equipment-hero"><div class="wrap hero-inner"><div class="label">Professional downhill · Competition-based data</div><h1>{esc(label)} used by professional downhill riders.</h1><p class="sub">{esc(description)} The current points leader in this category is {esc(leader)}.</p></div></section>
-<div class="wrap">{breadcrumb_html([("Home", "../index.html"), ("Equipment", "../equipment.html"), (label, equip_image_slug(category, '', '') + ".html")])}</div>
+<div class="wrap">{breadcrumb_html([("Home", "../"), ("Equipment", "../equipment.html"), (label, equip_image_slug(category, '', '') + ".html")])}</div>
 <section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Ranked by combined rider points</div><h2>{esc(label)} leaderboard</h2></div><a class="see-all" href="../methodology.html">Read the methodology →</a></div><div class="equipment-ranking-list">{"".join(rows)}</div>
 <div class="guide-callout"><strong>Editorial context</strong><p>This table records competitive usage within the RidersFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications.</p></div></div></section></main>'''
     html += footer_html("../")
@@ -1714,7 +1718,7 @@ def build_compare_page():
     html += header_html("", active="equipment")
     html += f'''<main>
 <section class="hero compare-hero"><div class="wrap hero-inner"><div class="label">Simple comparison · Up to 4 products</div><h1>Compare race equipment.</h1><p class="sub">Place products from the same category side by side using verified RidersFanatics data: tracked riders, teams and points in the current competition.</p></div></section>
-<div class="wrap">{breadcrumb_html([("Home", "index.html"), ("Equipment", "equipment.html"), ("Compare", "compare.html")])}</div>
+<div class="wrap">{breadcrumb_html([("Home", "./"), ("Equipment", "equipment.html"), ("Compare", "compare.html")])}</div>
 <section class="section"><div class="wrap">
   <div class="compare-notice"><strong>How to read this comparison</strong><p>Competition points describe sporting presence among tracked riders. They are not a laboratory score and do not prove that one product is technically better.</p></div>
   <div data-compare-page aria-live="polite">
@@ -1991,7 +1995,7 @@ def build_rider_page(r):
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
-    {breadcrumb_html([("Home", "../index.html"), ("Riders", "../riders.html"), (r["display_name"], rider_url.split('/')[-1])])}
+    {breadcrumb_html([("Home", "../"), ("Riders", "../riders.html"), (r["display_name"], rider_url.split('/')[-1])])}
     <div class="rider-hero">
       <div class="photo">{photo_html}</div>
       <div>

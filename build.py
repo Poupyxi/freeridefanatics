@@ -699,10 +699,14 @@ def build_index(riders, women_count, men_count):
 <section class="cta-dark">
   {cta_waves_svg()}
   <div class="wrap cta-inner">
-    <div class="label">Stay up to speed</div>
-    <h2>New kit drops every race weekend.</h2>
-    <p class="sub">Follow setup changes and results across every competition tracked by RidersFanatics.</p>
-    {newsletter_form_html()}
+    <div class="cta-copy">
+      <div class="label">Stay up to speed</div>
+      <h2>New kit drops every race weekend.</h2>
+      <p class="sub">Follow setup changes and results across every competition tracked by RidersFanatics.</p>
+    </div>
+    <div class="cta-signup">
+      {newsletter_form_html()}
+    </div>
   </div>
 </section>
 """

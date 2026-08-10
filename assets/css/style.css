@@ -337,6 +337,10 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
   display:flex; align-items:center; justify-content:center;
 }
 .podium-item .p-thumb img{width:100%; height:100%; object-fit:contain;}
+.podium-item .p-thumb-pair{display:grid; grid-template-columns:1fr 1fr;}
+.podium-item .p-thumb-pair img{min-width:0;}
+.equipment-photo-pair{display:grid; grid-template-columns:1fr 1fr; width:160px; height:120px; background:#fff;}
+.equipment-photo-pair img{width:100%; height:100%; object-fit:contain; min-width:0;}
 .podium-item.rank-1 .p-rank{color:var(--orange);}
 .podium-item .p-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:8px;}
 .podium-item h4{

@@ -410,6 +410,24 @@ def import_equipment(riders, force, dry):
             print(f"  ! {choice['name']}: {e}")
             missing.append(slug)
 
+    # Tires are a deliberate exception: a rider product can be a front/rear
+    # combo, while the library stores one file per tread. Import every tire so
+    # the site generator can compose the two matching product photos.
+    for choice in index.get("Tires", []):
+        slug = build.equip_image_slug("Tires", choice["brand"], choice["model"])
+        dest = os.path.join(OUT_EQUIP, f"{slug}.jpg")
+        if os.path.exists(dest) and not force:
+            continue
+        if dry:
+            imported.append(slug)
+            continue
+        try:
+            save_fitted(choice["path"], dest, EQUIP_MAX)
+            imported.append(slug)
+            used_files.add(choice["path"])
+        except Exception as e:
+            print(f"  ! {choice['name']}: {e}")
+
     total_files = sum(len(v) for v in index.values())
     verb = "would import" if dry else "imported"
     print(f"equipment: {len(products) - len(missing)}/{len(products)} products matched, "

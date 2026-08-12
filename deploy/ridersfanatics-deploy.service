@@ -1,0 +1,9 @@
+[Unit]
+Description=Update RidersFanatics from GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/ridersfanatics/repo/deploy/auto-deploy.sh /opt/ridersfanatics/repo /var/www/ridersfanatics-public main
+

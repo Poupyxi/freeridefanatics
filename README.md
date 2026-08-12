@@ -105,6 +105,20 @@ rider, equipment and editorial page exists, so the sitemap stays complete.
 Never hand-edit `index.html`, `riders.html` or files in `riders/` — they are
 overwritten on every build.
 
+### Automatic OVH deployment
+
+The production server can poll the public GitHub repository every two minutes
+and publish a new `main` commit automatically. On a new OVH VPS, run once:
+
+```bash
+sudo bash deploy/install-auto-deploy.sh
+```
+
+The installer creates a dedicated checkout in `/opt/ridersfanatics/repo`,
+publishes only public site files into `/var/www/ridersfanatics-public`, and
+enables `ridersfanatics-deploy.timer`. New imported images therefore reach
+production automatically after they are committed and pushed to `main`.
+
 ## Photos
 
 The photo library lives outside the project, at `~/Desktop/freeride/`, and

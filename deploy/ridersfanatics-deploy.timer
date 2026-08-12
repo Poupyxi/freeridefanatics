@@ -1,0 +1,13 @@
+[Unit]
+Description=Check GitHub for RidersFanatics updates
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+RandomizedDelaySec=20s
+Persistent=true
+Unit=ridersfanatics-deploy.service
+
+[Install]
+WantedBy=timers.target
+

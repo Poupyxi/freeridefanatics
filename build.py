@@ -170,6 +170,7 @@ EQUIPMENT_ALIASES = {
     ("Derailleur", "sram", "xo dh"): ("SRAM", "X0 DH"),
     ("Handlebar", "renthal", "fatbar 35mm"): ("Renthal", "Fatbar 35"),
     ("Handlebar", "renthal", "fatbar 35"): ("Renthal", "Fatbar 35"),
+    ("Handlebar", "renthal", "fatbar"): ("Renthal", "Fatbar"),
 }
 
 BRAND_DISPLAY = {

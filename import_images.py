@@ -96,6 +96,13 @@ PHOTO_ALIASES = {
     ("Frame", "specialized", "demo"): ("s works", "demo"),
     ("RearShock", "ohlins", "prototype coil"): ("ohlins", "ttx22 m2 coil"),
     ("RearShock", "float x2 factory", ""): ("fox", "float x2 factory 2026"),
+    ("Tires", "continental", "kryptotal"): ("continental", "kryptotal r"),
+    ("Tires", "continental", "kryptotal dh"): ("continental", "kryptotal r"),
+    ("Tires", "continental", "kryptotal f + argotal r"): ("continental", "kryptotal f"),
+    ("Tires", "continental", "argotal"): ("continental", "argotal"),
+    ("Tires", "continental", "argotal dh"): ("continental", "argotal"),
+    ("Tires", "continental", "argotal dh supersoft"): ("continental", "argotal"),
+    ("Tires", "continental", "argotal f + kryptotal r"): ("continental", "argotal"),
     ("Handlebar", "cast components", "20mm rise"): ("cast", "sfx"),
     ("Handlebar", "fsa", "gradient aluminum"): ("fsa", "gradient aluminium"),
     ("Handlebar", "burgtec", "alloy 31 8mm"): ("burgtec", "ride wide alloy downhill riser bar"),
@@ -207,6 +214,14 @@ def load_image(path):
         return flat
     return img.convert("RGB")
 
+def validate_library_image(path):
+    """Validate cheaply; only invoke the AVIF fallback when Pillow needs it."""
+    try:
+        with Image.open(path) as probe:
+            probe.verify()
+    except (OSError, ValueError):
+        open_library_image(path)
+
 def save_square(src, dest, size):
     img = load_image(src)
     ImageOps.fit(img, (size, size), Image.LANCZOS, centering=(0.5, 0.4)).save(
@@ -286,16 +301,22 @@ def index_library_equipment():
         for f in files:
             source_path = os.path.join(path, f)
             try:
-                open_library_image(source_path)
+                validate_library_image(source_path)
             except (OSError, ValueError):
                 continue
             stem = os.path.splitext(f)[0]
             parts = [p.strip() for p in stem.split(";")]
+            # Some bulk catalogue exports put tyre product images in the
+            # Wheels folder and mark them with a third `Pneu` field. Route
+            # those by their declared product type instead of their folder.
+            file_category = ("Tires" if category == "Wheels"
+                             and len(parts) > 2 and norm_text(parts[2]) == "pneu"
+                             else category)
             raw_brand = parts[0]
             raw_model = parts[1] if len(parts) > 1 else ""
             canonical_brand, canonical_model = build.canonical_equipment_product(
-                category, raw_brand, raw_model)
-            index[category].append({
+                file_category, raw_brand, raw_model)
+            index[file_category].append({
                 "brand": norm_text(canonical_brand),
                 "model": norm_text(canonical_model),
                 "full": norm_text(stem.replace(";", " ")),

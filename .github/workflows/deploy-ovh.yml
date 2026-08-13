@@ -43,7 +43,7 @@ jobs:
           set sftp:auto-confirm yes
           set net:max-retries 3
           set net:timeout 20
-          mirror --reverse --delete --verbose \
+          mirror --reverse --delete --parallel=4 --verbose \
             "$RUNNER_TEMP/public" "$OVH_REMOTE_DIR"
           bye
           LFTP
@@ -52,4 +52,3 @@ jobs:
         run: |
           curl --fail --silent --show-error --retry 5 \
             --retry-delay 5 https://ridersfanatics.com/ > /dev/null
-

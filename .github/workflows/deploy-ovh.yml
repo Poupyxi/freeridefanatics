@@ -1,0 +1,55 @@
+name: Deploy RidersFanatics to OVH
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ridersfanatics-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+
+    steps:
+      - name: Check out the production revision
+        uses: actions/checkout@v4
+
+      - name: Prepare public site files
+        run: |
+          mkdir -p "$RUNNER_TEMP/public"
+          deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public"
+
+      - name: Install SFTP publishing client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Publish to OVH
+        env:
+          OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
+          OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
+          OVH_SFTP_USER: ${{ secrets.OVH_SFTP_USER }}
+          OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
+          OVH_REMOTE_DIR: ${{ secrets.OVH_REMOTE_DIR }}
+        run: |
+          lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
+            "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" <<LFTP
+          set sftp:auto-confirm yes
+          set net:max-retries 3
+          set net:timeout 20
+          mirror --reverse --delete --verbose \
+            "$RUNNER_TEMP/public" "$OVH_REMOTE_DIR"
+          bye
+          LFTP
+
+      - name: Verify production
+        run: |
+          curl --fail --silent --show-error --retry 5 \
+            --retry-delay 5 https://ridersfanatics.com/ > /dev/null
+

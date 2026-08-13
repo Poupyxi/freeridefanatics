@@ -107,6 +107,14 @@ overwritten on every build.
 
 ### Automatic OVH deployment
 
+Production currently uses OVH shared Web Hosting. The GitHub Actions workflow
+`.github/workflows/deploy-ovh.yml` publishes every new `main` commit over SFTP
+to `/home/ridersi/www`. Credentials live only in encrypted GitHub Actions
+secrets. This is the active production deployment path.
+
+The systemd timer below is an alternative for a future full VPS; it is not
+required on OVH shared hosting.
+
 The production server can poll the public GitHub repository every two minutes
 and publish a new `main` commit automatically. On a new OVH VPS, run once:
 

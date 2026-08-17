@@ -74,6 +74,14 @@ jobs:
           PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
           PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
         run: |
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://preprod.ridersfanatics.com/)" = "401"
+          ready=0
+          for attempt in {1..20}; do
+            if test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://preprod.ridersfanatics.com/)" = "401"; then
+              ready=1
+              break
+            fi
+            sleep 15
+          done
+          test "$ready" = "1"
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/ > /dev/null
           curl --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'

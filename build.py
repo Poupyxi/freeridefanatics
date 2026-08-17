@@ -2377,6 +2377,8 @@ def list_missing_images(riders):
         print(f"  {s}.jpg")
 
 def run_image_optimizer():
+    if os.environ.get("RF_SKIP_IMAGE_OPTIMIZER") == "1":
+        return
     image_optimizer = os.path.join(ROOT, "optimize_images.py")
     if os.path.exists(image_optimizer):
         subprocess.run([sys.executable, image_optimizer], check=True)

@@ -20,6 +20,7 @@ jobs:
     env:
       RF_BUILD_ENV: preprod
       RF_SITE_URL: https://preprod.ridersfanatics.com
+      RF_SKIP_IMAGE_OPTIMIZER: "1"
 
     steps:
       - name: Check out the preproduction revision

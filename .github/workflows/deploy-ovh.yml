@@ -20,6 +20,7 @@ jobs:
     env:
       RF_BUILD_ENV: production
       RF_SITE_URL: https://ridersfanatics.com
+      RF_SKIP_IMAGE_OPTIMIZER: "1"
 
     steps:
       - name: Check out the production revision

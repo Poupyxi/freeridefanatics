@@ -1157,6 +1157,12 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .compare-empty{text-align:center; padding:64px 24px; border:1px dashed #c9cbc9; background:#fff;}
 .compare-empty h2{font-family:var(--head); font-size:clamp(26px,4vw,42px); text-transform:uppercase; margin-bottom:10px;}
 .compare-empty p{color:var(--muted); margin:0 auto 24px; max-width:580px;}
+.compare-guide{display:grid; grid-template-columns:minmax(0,1.35fr) minmax(230px,.65fr); gap:48px; margin-top:34px; padding:34px; border:1px solid var(--line); background:#f7f7f4;}
+.compare-guide h2{font-family:var(--head); font-size:clamp(24px,3vw,36px); text-transform:uppercase; line-height:1.06; margin:9px 0 12px;}
+.compare-guide p{max-width:700px; color:var(--muted); font-size:14px; line-height:1.65;}
+.compare-guide-links{display:grid; align-content:start;}
+.compare-guide-links a{padding:11px 0; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em;}
+.compare-guide-links a:hover{color:var(--orange);}
 .compare-page-head{display:flex; align-items:end; justify-content:space-between; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--line); margin-bottom:22px;}
 .compare-page-head h2{font-family:var(--head); font-size:clamp(27px,4vw,44px); text-transform:uppercase; margin-top:8px;}
 .compare-hint{padding:13px 16px; margin-bottom:18px; background:#fff3ec; border:1px solid #f0c7af; color:#7c3d1a; font-size:13px;}
@@ -1313,6 +1319,23 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .newsletter-response{
   position:absolute; width:1px; height:1px; border:0; overflow:hidden;
   clip:rect(0 0 0 0); white-space:nowrap;
+}
+
+/* Contextual profile links strengthen discovery without turning rider pages
+   into another full directory. */
+.rider-related{margin-top:56px; padding-top:8px;}
+.rider-related-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid var(--line);}
+.rider-related-grid a{display:flex; flex-direction:column; gap:5px; padding:18px; border-right:1px solid var(--line); background:rgba(255,255,255,.35);}
+.rider-related-grid a:last-child{border-right:0;}
+.rider-related-grid a:hover{background:#fff5ef;}
+.rider-related-grid strong{font-size:14px;}
+.rider-related-grid span{font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+
+@media (max-width:760px){
+  .rider-related-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .rider-related-grid a:nth-child(2){border-right:0;}
+  .rider-related-grid a:nth-child(-n+2){border-bottom:1px solid var(--line);}
+  .compare-guide{grid-template-columns:1fr; gap:24px; padding:26px 22px;}
 }
 
 @media (max-width:1080px){

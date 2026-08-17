@@ -37,7 +37,9 @@ REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
 
 SITE_NAME = "RidersFanatics"
 SITE_URL = "https://ridersfanatics.com"
-SITE_UPDATED = "2026-08-10"
+SITE_UPDATED = "2026-08-17"
+SITE_UPDATED_LABEL = "17 Aug 2026"
+SITE_UPDATED_LONG = "17 August 2026"
 CONTACT_EMAIL = "contact@ridersfanatics.com"
 DATA_LICENSE_URL = f"{SITE_URL}/data-license.html"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
@@ -399,7 +401,7 @@ def footer_html(asset_prefix):
     </nav>
     <span class="footer-copy">&copy; 2026 RidersFanatics</span>
   </div>
-  <div class="wrap footer-updated">Last updated <time datetime="{SITE_UPDATED}">10 Aug 2026</time></div>
+  <div class="wrap footer-updated">Last updated <time datetime="{SITE_UPDATED}">{SITE_UPDATED_LABEL}</time></div>
 </footer>
 
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
@@ -472,7 +474,7 @@ def build_editorial_page(slug, title, description, label, lead, sections):
     )
     html += header_html("")
     html += f'''<main><article>
-<header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated 10 August 2026</time></div></div></header>
+<header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated {SITE_UPDATED_LONG}</time></div></div></header>
 <div class="wrap">{breadcrumb_html([("Home", "./"), (title, path.lstrip('/'))])}</div><div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>
 <aside class="guide-sidebar"><div class="guide-card"><h2>Explore</h2><a href="riders.html#grid">Rider directory</a><a href="equipment.html">Equipment database</a><a href="competitions/{CURRENT_COMPETITION['id']}/standings.html">2026 standings</a><a href="guides/en/">Downhill setup guide</a></div></aside></div>
 </article></main>'''
@@ -679,6 +681,7 @@ def build_index(riders, women_count, men_count):
     <div class="hero-ctas">
       <a href="riders.html#grid" class="btn btn-solid">Explore riders</a>
       {random_rider_button(riders, solid=False)}
+      <a href="compare.html" class="home-text-link">Compare equipment <span aria-hidden="true">→</span></a>
       <a href="#faq" class="home-text-link">Read the FAQ <span aria-hidden="true">↓</span></a>
     </div>
     <div class="ticker-wrap">
@@ -1217,9 +1220,9 @@ def build_competition_standings(riders, competition):
          "name": rider["display_name"], "url": absolute_url(f"/riders/{rider['slug']}.html")}
         for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
     ]
-    description = "2026 UCI MTB World Cup downhill overall standings for Elite Men, Elite Women and teams, with current points, leaders and rider profiles."
+    description = "UCI downhill standings 2026 for Elite Men, Elite Women and teams: current World Cup points, championship leaders and linked rider profiles."
     html = head(
-        f"2026 UCI Downhill Overall Standings | {SITE_NAME}", description, "../../",
+        f"UCI Downhill Standings 2026 | Men, Women & Teams", description, "../../",
         body_class="competition-standings-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage",
@@ -1885,7 +1888,7 @@ def build_equipment_category_page(category, products):
         f"Pro Downhill {label} | {SITE_NAME}", description,
         "../", body_class="equipment-page", canonical_path=path,
         schemas=[
-            {"@context": "https://schema.org", "@type": "Dataset", "name": f"Professional downhill {label.lower()} usage", "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED, "creator": {"@type": "Organization", "name": SITE_NAME, "url": SITE_URL}, "license": {"@type": "CreativeWork", "name": "RidersFanatics Dataset License 1.0", "url": DATA_LICENSE_URL}, "isAccessibleForFree": True, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
+            {"@context": "https://schema.org", "@type": "Dataset", "name": f"Professional downhill {label.lower()} usage", "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED, "creator": {"@type": "Organization", "name": SITE_NAME, "url": SITE_URL}, "license": DATA_LICENSE_URL, "isAccessibleForFree": True, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
             breadcrumb_schema([("Home", "/"), ("Equipment", "/equipment.html"), (label, path)]),
         ],
     )
@@ -1918,6 +1921,7 @@ def build_compare_page():
   <div data-compare-page aria-live="polite">
     <div class="compare-empty"><h2>No products selected yet.</h2><p>Open an equipment category and select between two and four products marked “Compare”.</p><a class="btn btn-solid" href="equipment.html">Browse equipment</a></div>
   </div>
+  <section class="compare-guide" aria-labelledby="compare-guide-title"><div><div class="label">Start with comparable products</div><h2 id="compare-guide-title">Build a useful downhill equipment comparison.</h2><p>Select products from the same component category, then compare the professional riders, teams and 2026 competition points connected to each product. Rider points measure visibility in the tracked field; they do not replace geometry, weight, price or laboratory testing.</p></div><div class="compare-guide-links"><a href="equipment/frame.html">Compare frames</a><a href="equipment/fork.html">Compare forks</a><a href="equipment/rearshock.html">Compare rear shocks</a><a href="equipment/tires.html">Compare tires</a></div></section>
 </div></section>
 </main>'''
     html += footer_html("")
@@ -2178,6 +2182,24 @@ def build_rider_page(r, riders):
     if category_rank:
         meta_description += f", {ordinal(category_rank)} in {r.get('gender_category') or 'the category'}"
     meta_description += f", plus the documented bike setup and equipment."
+    keyword_pages = {
+        "jackson-goldstone": (
+            "Jackson Goldstone Bike Setup 2026 | Results & Kit",
+            "Jackson Goldstone bike setup for 2026: frame, suspension, wheels and components, plus UCI downhill results, ranking and tracked points.",
+        ),
+        "jordan-williams": (
+            "Jordan Williams Bike Check 2026 | Setup & Results",
+            "Jordan Williams bike check and 2026 downhill setup: documented frame, suspension and components with UCI results, ranking and points.",
+        ),
+        "asa-vermette": (
+            "Asa Vermette Bike Setup 2026 | Results & Equipment",
+            "Asa Vermette bike setup and equipment for 2026, with documented race components, UCI downhill results, championship ranking and points.",
+        ),
+    }
+    page_title, meta_description = keyword_pages.get(
+        r.get("slug"),
+        (f"{r['display_name']} — Bike Setup & Kit | {SITE_NAME}", meta_description),
+    )
     if history:
         results_html = f"""{competition_filters(history)}
       <div class="results-scroll" tabindex="0" role="region" aria-label="Race results table, horizontally scrollable on small screens"><table class="results-table" data-results-table>
@@ -2227,7 +2249,7 @@ def build_rider_page(r, riders):
     if r.get("instagram"):
         person_schema["sameAs"] = [f"https://instagram.com/{r['instagram'].strip().lstrip('@')}"]
     html = head(
-        f"{r['display_name']} — Bike Setup & Kit | {SITE_NAME}",
+        page_title,
         meta_description,
         prefix, canonical_path=rider_url, page_type="article", image_path=rider_image,
         schemas=[
@@ -2237,6 +2259,16 @@ def build_rider_page(r, riders):
         ]
     )
     html += header_html(prefix, active="riders")
+
+    related = [candidate for candidate in sorted(
+        riders, key=season_rank_key
+    ) if candidate.get("slug") != r.get("slug")
+        and candidate.get("gender_category") == r.get("gender_category")][:4]
+    related_html = "".join(
+        f'<a href="{candidate["slug"]}.html"><strong>{esc(candidate["display_name"])}</strong>'
+        f'<span>{esc(candidate.get("team") or "Privateer")} · {rider_total_points(candidate)} pts</span></a>'
+        for candidate in related
+    )
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
@@ -2271,6 +2303,10 @@ def build_rider_page(r, riders):
       </div>
     </div>
     {results_html}
+    <section class="rider-related" aria-labelledby="related-riders-title">
+      <div class="section-head"><div><div class="label">Continue exploring</div><h2 id="related-riders-title">Related 2026 downhill riders</h2></div><a class="see-all" href="../riders.html#grid">All riders →</a></div>
+      <div class="rider-related-grid">{related_html}</div>
+    </section>
   </div>
 </main>
 """

@@ -52,3 +52,7 @@ jobs:
         run: |
           curl --fail --silent --show-error --retry 5 \
             --retry-delay 5 https://ridersfanatics.com/ > /dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
+          curl --silent --show-error --head https://ridersfanatics.com/ \
+            | grep -qi '^strict-transport-security:'

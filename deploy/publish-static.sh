@@ -21,6 +21,6 @@ rsync -a "$SOURCE_DIR/" "$PUBLIC_DIR/" \
   --include='/*.html' \
   --include='/robots.txt' \
   --include='/sitemap.xml' \
+  --include='/.htaccess' \
   --include='/contact-submit.php' \
   --exclude='*'
-

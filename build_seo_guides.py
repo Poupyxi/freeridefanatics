@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 BASE = "https://ridersfanatics.com"
-UPDATED = "2026-08-10"
+UPDATED = "2026-08-17"
 STANDINGS = "competitions/uci-mtb-world-cup-dh-2026/standings.html"
 
 LANGS = {

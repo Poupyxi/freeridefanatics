@@ -12,7 +12,17 @@
           "short_name": "Rampage",
           "sport": "Mountain bike",
           "discipline": "Freeride",
-          "status": "draft"
+          "season": 2026,
+          "status": "draft",
+          "events": [
+            {
+              "name": "Red Bull Rampage 2026",
+              "status": "to-confirm",
+              "location": "To be confirmed",
+              "dates": "To be confirmed",
+              "note": "The 2026 event details will be added only after publication by the organiser."
+            }
+          ]
         },
         {
           "id": "hardline",
@@ -20,7 +30,31 @@
           "short_name": "Hardline",
           "sport": "Mountain bike",
           "discipline": "Downhill / freeride",
-          "status": "draft"
+          "season": 2026,
+          "status": "draft",
+          "events": [
+            {
+              "name": "Red Bull Hardline Tasmania 2026",
+              "status": "completed",
+              "location": "Maydena Bike Park, Tasmania, Australia",
+              "dates": "7–8 February 2026",
+              "format": "Invitational · Seeding and finals",
+              "note": "The finals were cancelled because of severe weather; official seeding results determined the winners.",
+              "winners": ["Asa Vermette — Men", "Gracey Hemstreet — Women"],
+              "source_url": "https://www.redbull.com/ie-en/events/red-bull-hardline-australia/red-bull-hardline-tasmania-2026-recap",
+              "source_label": "Official 2026 Tasmania recap"
+            },
+            {
+              "name": "Red Bull Hardline Canada 2026",
+              "status": "upcoming",
+              "location": "Cypress Mountain, Canada",
+              "dates": "16 October 2026",
+              "format": "Invitational",
+              "note": "Event information remains subject to organiser updates.",
+              "source_url": "https://www.redbull.com/gb-en/event-series/red-bull-hardline",
+              "source_label": "Official Hardline event series"
+            }
+          ]
         }
       ]
     }

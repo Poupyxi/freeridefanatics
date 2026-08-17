@@ -1316,9 +1316,20 @@ def build_organization_page(organization):
     return html + footer_html("../../")
 
 def build_organization_competition_page(organization, competition):
+    event_cards = []
+    for event in competition.get("events", []):
+        winners = ""
+        if event.get("winners"):
+            winners = '<div class="competition-card-stats">' + "".join(
+                f'<span><strong>{esc(winner)}</strong></span>' for winner in event["winners"]
+            ) + "</div>"
+        source = ""
+        if event.get("source_url"):
+            source = f'<a class="see-all" href="{esc_attr(event["source_url"])}" rel="nofollow noopener" target="_blank">{esc(event.get("source_label", "Official source"))} ↗</a>'
+        event_cards.append(f'''<article class="competition-card"><div class="competition-card-top"><span class="competition-status">{esc(event.get('status', 'draft'))}</span><span>{competition.get('season', 2026)}</span></div><div class="competition-sport">{esc(event.get('location'))}</div><h2>{esc(event['name'])}</h2><p><strong>{esc(event.get('dates'))}</strong></p><p>{esc(event.get('format'))}</p><p>{esc(event.get('note'))}</p>{winners}{source}</article>''')
     html = head(f"{competition['name']} — Draft | {SITE_NAME}", f"Protected editorial draft for {competition['name']} on RidersFanatics.", "../../../", body_class="competition-detail-page", canonical_path=f"/competitions/{organization['id']}/{competition['id']}/")
     html += header_html("../../../", active="competitions")
-    html += f'''<main><section class="competition-detail-hero"><div class="wrap"><div class="label">Draft · {esc(competition.get('sport'))} · {esc(competition.get('discipline'))}</div><h1>{esc(competition['name'])}</h1><p>This page is a neutral editorial placeholder in preproduction. No official affiliation is claimed and no protected brand artwork is used.</p><div class="hero-ctas"><a class="btn" href="../">Back to {esc(organization['name'])}</a></div></div></section><div class="wrap">{breadcrumb_html([("Home", "../../../"), ("Competitions", "../../../competitions.html"), (organization['name'], "../"), (competition['name'], "./")])}</div><section class="section competition-overview"><div class="wrap"><div class="competition-note"><strong>Draft dataset</strong><p>Results, riders, dates and equipment will be added only after their sources and publication status have been validated.</p></div></div></section></main>'''
+    html += f'''<main><section class="competition-detail-hero"><div class="wrap"><div class="label">Draft · {competition.get('season', 2026)} · {esc(competition.get('sport'))} · {esc(competition.get('discipline'))}</div><h1>{esc(competition['name'])}</h1><p>Protected 2026 editorial workspace. No official affiliation is claimed and no protected brand artwork is used.</p><div class="hero-ctas"><a class="btn" href="../">Back to {esc(organization['name'])}</a></div></div></section><div class="wrap">{breadcrumb_html([("Home", "../../../"), ("Competitions", "../../../competitions.html"), (organization['name'], "../"), (competition['name'], "./")])}</div><section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">2026 only</div><h2>Events and verified status.</h2></div><span class="see-all">{len(event_cards)} event{'s' if len(event_cards) != 1 else ''}</span></div><div class="competition-grid">{"".join(event_cards)}</div><div class="competition-note"><strong>Draft dataset</strong><p>Dates, results and participants are included only when an official source is available. Unannounced details remain explicitly marked as to be confirmed.</p></div></div></section></main>'''
     return html + footer_html("../../../")
 
 def build_competition_detail(riders, competition):

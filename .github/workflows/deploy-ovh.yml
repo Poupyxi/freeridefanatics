@@ -17,15 +17,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
+    env:
+      RF_BUILD_ENV: production
+      RF_SITE_URL: https://ridersfanatics.com
 
     steps:
       - name: Check out the production revision
         uses: actions/checkout@v4
 
+      - name: Build and verify production visibility
+        run: |
+          python3 build.py
+          python3 tests/environment_visibility.py
+          test ! -e competitions/red-bull
+          ! grep -Rqi 'Red Bull Rampage\|Red Bull Hardline' --include='*.html' .
+
       - name: Prepare public site files
         run: |
           mkdir -p "$RUNNER_TEMP/public"
-          deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public"
+          deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" production
 
       - name: Install SFTP publishing client
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp

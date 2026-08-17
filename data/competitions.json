@@ -1,0 +1,39 @@
+{
+  "organizations": [
+    {
+      "id": "red-bull",
+      "name": "Red Bull",
+      "status": "draft",
+      "description": "Independent coverage hub for selected action-sport competitions. RidersFanatics is not presented as an official Red Bull partner.",
+      "competitions": [
+        {
+          "id": "rampage",
+          "name": "Red Bull Rampage",
+          "short_name": "Rampage",
+          "sport": "Mountain bike",
+          "discipline": "Freeride",
+          "status": "draft"
+        },
+        {
+          "id": "hardline",
+          "name": "Red Bull Hardline",
+          "short_name": "Hardline",
+          "sport": "Mountain bike",
+          "discipline": "Downhill / freeride",
+          "status": "draft"
+        }
+      ]
+    }
+  ],
+  "series": [
+    {
+      "id": "uci-mtb-world-cup-dh-2026",
+      "name": "UCI MTB World Cup DH 2026",
+      "short_name": "World Cup DH",
+      "sport": "Mountain bike",
+      "discipline": "Downhill",
+      "season": 2026,
+      "status": "published"
+    }
+  ]
+}

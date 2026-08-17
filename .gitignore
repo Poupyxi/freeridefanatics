@@ -13,3 +13,6 @@ tmp/
 .results-latest.csv
 .profiles-latest.csv
 node_modules/
+.env
+.env.*
+!.env.example

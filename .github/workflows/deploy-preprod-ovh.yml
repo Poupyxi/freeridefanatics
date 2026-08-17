@@ -1,0 +1,78 @@
+name: Deploy RidersFanatics preproduction to OVH
+
+on:
+  push:
+    branches: [preprod]
+  workflow_dispatch:
+
+concurrency:
+  group: ridersfanatics-preproduction
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: preproduction
+    env:
+      RF_BUILD_ENV: preprod
+      RF_SITE_URL: https://preprod.ridersfanatics.com
+
+    steps:
+      - name: Check out the preproduction revision
+        uses: actions/checkout@v4
+
+      - name: Build and test the protected preview
+        run: |
+          python3 build.py
+          python3 tests/environment_visibility.py
+          grep -q 'Disallow: /' robots.txt
+          grep -q 'noindex,nofollow,noarchive' index.html
+          test -f competitions/red-bull/index.html
+          test -f competitions/red-bull/rampage/index.html
+          test -f competitions/red-bull/hardline/index.html
+
+      - name: Prepare isolated public files
+        env:
+          PREPROD_AUTH_FILE: ${{ secrets.OVH_AUTH_FILE }}
+        run: |
+          test -n "$PREPROD_AUTH_FILE"
+          mkdir -p "$RUNNER_TEMP/public"
+          deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" preprod
+          sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
+          ! test -f "$RUNNER_TEMP/public/contact-submit.php"
+
+      - name: Install publishing and authentication tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp apache2-utils
+
+      - name: Publish to the separate OVH directory
+        env:
+          OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
+          OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
+          OVH_SFTP_USER: ${{ secrets.OVH_SFTP_USER }}
+          OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
+          OVH_REMOTE_DIR: ${{ secrets.OVH_REMOTE_DIR }}
+          OVH_AUTH_FILE: ${{ secrets.OVH_AUTH_FILE }}
+          PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
+          PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
+        run: |
+          case "$OVH_REMOTE_DIR" in
+            /home/ridersi/www|/home/ridersi/www/|/|"") echo "Unsafe preproduction directory" >&2; exit 2 ;;
+          esac
+          test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
+          htpasswd -nbB "$PREPROD_BASIC_USER" "$PREPROD_BASIC_PASSWORD" > "$RUNNER_TEMP/preprod.htpasswd"
+          lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
+            "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" \
+            -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 20; put $RUNNER_TEMP/preprod.htpasswd -o $OVH_AUTH_FILE; mirror --reverse --delete --parallel=4 --verbose $RUNNER_TEMP/public $OVH_REMOTE_DIR; bye"
+
+      - name: Verify preproduction protection
+        env:
+          PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
+          PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
+        run: |
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://preprod.ridersfanatics.com/)" = "401"
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/ > /dev/null
+          curl --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'

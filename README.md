@@ -115,6 +115,25 @@ secrets. This is the active production deployment path.
 The systemd timer below is an alternative for a future full VPS; it is not
 required on OVH shared hosting.
 
+### Protected preproduction
+
+The `preprod` branch is built with `RF_BUILD_ENV=preprod` and deployed by
+`.github/workflows/deploy-preprod-ovh.yml` to a directory that must be separate
+from `/home/ridersi/www`. Its canonical origin is
+`https://preprod.ridersfanatics.com`.
+
+Competition publication state lives in `data/competitions.json`. Production
+builds include only `published` records. Preproduction builds also include
+`draft` records, add `noindex` metadata, generate a blocking `robots.txt`,
+disable Brevo signup and omit the PHP contact endpoint. Apache Basic Auth is
+applied with `deploy/preprod.htaccess`; credentials and the absolute htpasswd
+path live only in the GitHub `preproduction` environment.
+
+Required preproduction secrets are `OVH_SFTP_HOST`, `OVH_SFTP_PORT`,
+`OVH_SFTP_USER`, `OVH_SFTP_PASSWORD`, `OVH_REMOTE_DIR`, `OVH_AUTH_FILE`,
+`PREPROD_BASIC_USER` and `PREPROD_BASIC_PASSWORD`. The remote directory must
+never be `/home/ridersi/www`.
+
 The production server can poll the public GitHub repository every two minutes
 and publish a new `main` commit automatically. On a new OVH VPS, run once:
 

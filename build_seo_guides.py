@@ -2,10 +2,14 @@
 """Generate localized editorial SEO guides without changing the homepage."""
 from html import escape
 import json
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-BASE = "https://ridersfanatics.com"
+BUILD_ENV = os.environ.get("RF_BUILD_ENV", "production").strip().lower()
+IS_PREPROD = BUILD_ENV == "preprod"
+BASE = os.environ.get("RF_SITE_URL", "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com").rstrip("/")
+ROBOTS_META = "noindex,nofollow,noarchive" if IS_PREPROD else "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
 UPDATED = "2026-08-17"
 STANDINGS = "competitions/uci-mtb-world-cup-dh-2026/standings.html"
 
@@ -72,7 +76,7 @@ def page(lang, d):
     faqs = "".join(f'<details><summary>{escape(q)}</summary><p>{escape(a)}</p></details>' for q,a in d["faq"])
     return f'''<!DOCTYPE html>
 <html lang="{HREFLANG.get(lang, lang)}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{escape(SEO_TITLES[lang])} | RidersFanatics</title><meta name="description" content="{escape(d["meta"], quote=True)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+<title>{escape(SEO_TITLES[lang])} | RidersFanatics</title><meta name="description" content="{escape(d["meta"], quote=True)}"><meta name="robots" content="{ROBOTS_META}">
 <link rel="canonical" href="{BASE}{path}">{alternates}
 <meta property="og:type" content="article"><meta property="og:site_name" content="RidersFanatics"><meta property="og:title" content="{escape(d["title"], quote=True)}"><meta property="og:description" content="{escape(d["meta"], quote=True)}"><meta property="og:url" content="{BASE}{path}"><meta property="og:image" content="{BASE}/assets/img/og-default.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{BASE}/assets/img/og-default.png"><link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml"><script type="application/ld+json">{json.dumps(article,ensure_ascii=False)}</script><script type="application/ld+json">{json.dumps(faq,ensure_ascii=False)}</script><script type="application/ld+json">{json.dumps(breadcrumb,ensure_ascii=False)}</script>
@@ -118,6 +122,7 @@ for item in pages:
     "\n".join(xml_rows) + "\n</urlset>\n", encoding="utf-8"
 )
 (ROOT / "robots.txt").write_text(
-    f"User-agent: *\nAllow: /\n\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8"
+    "User-agent: *\nDisallow: /\n" if IS_PREPROD else f"User-agent: *\nAllow: /\n\nSitemap: {BASE}/sitemap.xml\n",
+    encoding="utf-8",
 )
 print(f"Generated {len(ORDER)} localized SEO guides")

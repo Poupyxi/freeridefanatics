@@ -144,6 +144,8 @@ nav.links .dropdown-inner a:hover{background:var(--bg-card); color:var(--orange)
 nav.links .competition-nav .dropdown-inner{min-width:235px;}
 nav.links .competition-nav .dropdown-inner a{display:flex; flex-direction:column; gap:4px;}
 nav.links .competition-nav .dropdown-inner small{font-family:var(--mono); font-size:9px; color:var(--muted); letter-spacing:.08em;}
+nav.links .competition-menu-group + .competition-menu-group{border-top:1px solid var(--line); margin-top:8px; padding-top:8px;}
+nav.links .competition-nav .dropdown-inner .competition-menu-title{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); padding-bottom:6px;}
 nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:.08em;}
 .nav-icons{display:flex; align-items:center; gap:18px;}
 .icon-btn{

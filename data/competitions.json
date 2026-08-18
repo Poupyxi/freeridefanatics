@@ -1,6 +1,35 @@
 {
   "organizations": [
     {
+      "id": "uci",
+      "name": "UCI",
+      "status": "published",
+      "show_in_hub": false,
+      "description": "Competition series governed by the Union Cycliste Internationale and independently documented by RidersFanatics.",
+      "competitions": [
+        {
+          "id": "dh-world-cup-2026",
+          "name": "DH World Cup 2026",
+          "short_name": "DH World Cup 2026",
+          "sport": "Mountain bike",
+          "discipline": "Downhill",
+          "season": 2026,
+          "status": "published",
+          "existing_path": "/competitions/uci-mtb-world-cup-dh-2026.html"
+        },
+        {
+          "id": "enduro-world-cup-2026",
+          "name": "Enduro World Cup 2026",
+          "short_name": "Enduro World Cup 2026",
+          "sport": "Mountain bike",
+          "discipline": "Enduro",
+          "season": 2026,
+          "status": "draft",
+          "events": []
+        }
+      ]
+    },
+    {
       "id": "red-bull",
       "name": "Red Bull",
       "status": "draft",

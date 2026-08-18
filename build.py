@@ -361,6 +361,23 @@ def header_html(asset_prefix, active=""):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
     home_href = asset_prefix or "./"
+    competition_groups = []
+    for organization in ORGANIZATIONS:
+        items = []
+        for competition in organization.get("competitions", []):
+            if not visible_status(competition):
+                continue
+            href = competition.get("existing_path")
+            if href:
+                href = asset_prefix + href.lstrip("/")
+            else:
+                href = f"{asset_prefix}competitions/{organization['id']}/{competition['id']}/"
+            items.append(f'<a href="{href}"><strong>{esc(competition.get("short_name", competition["name"]))}</strong><small>{esc(competition.get("discipline"))} · {competition.get("season", "")}</small></a>')
+        if items:
+            organization_href = f"{asset_prefix}competitions/{organization['id']}/"
+            competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
+    if not competition_groups:
+        competition_groups.append(f'<a href="{asset_prefix}competitions/{CURRENT_COMPETITION["id"]}.html"><strong>{CURRENT_COMPETITION["short_name"]}</strong><small>{CURRENT_COMPETITION["discipline"]} · {CURRENT_COMPETITION["season"]}</small></a>')
     return f"""<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>
 
 <header>
@@ -374,8 +391,7 @@ def header_html(asset_prefix, active=""):
         <a href="{asset_prefix}competitions.html"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
-            <a href="{asset_prefix}competitions/{CURRENT_COMPETITION['id']}.html"><strong>{CURRENT_COMPETITION['short_name']}</strong><small>{CURRENT_COMPETITION['discipline']} · {CURRENT_COMPETITION['season']}</small></a>
-            <span class="dropdown-note">More competitions coming</span>
+            {''.join(competition_groups)}
           </div>
         </div>
       </div>
@@ -1376,7 +1392,8 @@ def build_competitions_hub(riders):
         </article>''')
         item_list.append({"@type": "ListItem", "position": position,
                           "name": competition["name"], "url": absolute_url(detail_path)})
-    for organization in ORGANIZATIONS:
+    hub_organizations = [organization for organization in ORGANIZATIONS if organization.get("show_in_hub", True)]
+    for organization in hub_organizations:
         children = [item for item in organization.get("competitions", []) if visible_status(item)]
         status_label = "Draft preview" if organization.get("status") == "draft" else "Published"
         cards.append(f'''<article class="competition-card">
@@ -1403,7 +1420,7 @@ def build_competitions_hub(riders):
     html += f'''<main>
 <section class="competition-hero"><div class="wrap"><div class="label">Series · Seasons · Disciplines</div><h1>Choose a competition.</h1><p>RidersFanatics is built to follow more than one championship. Select the series you want, then move between riders, results and equipment without mixing seasons.</p></div></section>
 <div class="wrap">{breadcrumb_html([("Home", "./"), ("Competitions", "competitions.html")])}</div>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Currently tracked</div><h2>Competition database</h2></div><span class="see-all">{len(COMPETITIONS) + len(ORGANIZATIONS)} active series</span></div><div class="competition-grid">{"".join(cards)}</div>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Currently tracked</div><h2>Competition database</h2></div><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div>
 <div class="competition-note"><strong>Built for expansion</strong><p>New winter, bike and action-sport competitions can be added as separate datasets. The RidersFanatics brand, rider directory and equipment catalogue remain shared.</p></div></div></section>
 </main>'''
     html += footer_html("")
@@ -1414,7 +1431,11 @@ def build_organization_page(organization):
     children = [item for item in organization.get("competitions", []) if visible_status(item)]
     cards = []
     for item in children:
-        cards.append(f'''<article class="competition-card"><div class="competition-card-top"><span class="competition-status">Draft preview</span><span>{esc(item.get('discipline'))}</span></div><div class="competition-sport">{esc(item.get('sport'))}</div><h2>{esc(item['name'])}</h2><p>Structure and content are being prepared in the protected RidersFanatics preproduction environment.</p><a class="btn btn-solid" href="{item['id']}/">Open draft</a></article>''')
+        item_href = item.get("existing_path") or f"{item['id']}/"
+        if item_href.startswith("/"):
+            item_href = "../.." + item_href
+        status_label = "Published" if item.get("status") == "published" else "Draft preview"
+        cards.append(f'''<article class="competition-card"><div class="competition-card-top"><span class="competition-status">{status_label}</span><span>{esc(item.get('discipline'))}</span></div><div class="competition-sport">{esc(item.get('sport'))}</div><h2>{esc(item['name'])}</h2><p>Explore the 2026 competition workspace, verified information and connected RidersFanatics data.</p><a class="btn btn-solid" href="{item_href}">Open competition</a></article>''')
     html = head(f"{organization['name']} competitions — Draft | {SITE_NAME}", organization.get("description", "Competition organisation preview."), "../../", body_class="competitions-page", canonical_path=f"/competitions/{organization_id}/")
     html += header_html("../../", active="competitions")
     html += f'''<main><section class="competition-hero"><div class="wrap"><div class="label">Protected draft · Independent coverage</div><h1>{esc(organization['name'])}</h1><p>{esc(organization.get('description'))}</p></div></section><div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (organization['name'], "./")])}</div><section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Draft competitions</div><h2>Choose an event.</h2></div><span class="see-all">{len(children)} drafts</span></div><div class="competition-grid">{"".join(cards)}</div></div></section></main>'''
@@ -2572,6 +2593,11 @@ def main():
     for item in COMPETITION_CATALOG.get("organizations", []):
         if item["id"] not in visible_organization_ids:
             shutil.rmtree(os.path.join(COMPETITIONS_DIR, item["id"]), ignore_errors=True)
+            continue
+        organization_dir = os.path.join(COMPETITIONS_DIR, item["id"])
+        for competition in item.get("competitions", []):
+            if not visible_status(competition) or competition.get("existing_path"):
+                shutil.rmtree(os.path.join(organization_dir, competition["id"]), ignore_errors=True)
 
     if "--missing-images" in sys.argv:
         list_missing_images(riders)
@@ -2636,6 +2662,8 @@ def main():
             f.write(build_organization_page(organization))
         for competition in organization.get("competitions", []):
             if not visible_status(competition):
+                continue
+            if competition.get("existing_path"):
                 continue
             competition_dir = os.path.join(organization_dir, competition["id"])
             os.makedirs(competition_dir, exist_ok=True)

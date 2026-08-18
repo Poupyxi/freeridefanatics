@@ -11,8 +11,10 @@ red_bull = root / "competitions" / "red-bull"
 assert (root / "advertise.html").is_file()
 assert 'class="direct-ad promo-strip"' in home
 assert home.count('<article class="promo-card') == 3
-assert "Random rider" in home
-assert "Random equipment" in home
+assert "Top 1 Women · Last race" in home
+assert "Common equipment" in home
+assert "Top 1 Men · Last race" in home
+assert 'class="direct-ad-shell"' in home
 
 if environment == "preprod":
     assert red_bull.joinpath("index.html").is_file()

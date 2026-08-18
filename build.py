@@ -426,7 +426,7 @@ def footer_html(asset_prefix):
 </html>
 """
 
-def direct_ad_card_html(asset_prefix):
+def direct_ad_banner_html(asset_prefix):
     campaign = next((item for item in AD_CATALOG.get("campaigns", []) if item.get("status") == "active"), None)
     if not campaign:
         return ""
@@ -437,28 +437,72 @@ def direct_ad_card_html(asset_prefix):
     media = (f'<img src="{asset_prefix}{esc_attr(campaign["image"].lstrip("/"))}" alt="" loading="lazy" width="320" height="180">'
              if campaign.get("image") else '<span class="direct-ad-mark" aria-hidden="true">RF</span>')
     disclosure = "Advertisement" if campaign.get("type") == "sponsor" else "Partnership"
-    return f'''<article class="promo-card promo-card-ad" aria-label="{disclosure}"><div class="promo-card-media">{media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">{disclosure} · {esc(campaign.get('label'))}</span><strong>{esc(campaign.get('title'))}</strong><p>{esc(campaign.get('description'))}</p></div><a class="promo-card-link" href="{esc_attr(href)}"{link_attrs}>{esc(campaign.get('cta') or 'Learn more')} <span aria-hidden="true">→</span></a></article>'''
+    return f'''<div class="direct-ad-shell" aria-label="{disclosure}"><div class="direct-ad-media">{media}</div><div class="direct-ad-copy"><span class="direct-ad-disclosure">{disclosure} · {esc(campaign.get('label'))}</span><strong>{esc(campaign.get('title'))}</strong><p>{esc(campaign.get('description'))}</p></div><a class="direct-ad-cta" href="{esc_attr(href)}"{link_attrs}>{esc(campaign.get('cta') or 'Learn more')} <span aria-hidden="true">→</span></a></div>'''
 
 def promo_strip_html(asset_prefix):
     if not PROMO_RIDERS or not PROMO_EQUIPMENT:
         return ""
-    rider = random.choice(PROMO_RIDERS)
-    rider_photo = has_photo(rider["slug"])
-    rider_media = (f'<img src="{asset_prefix}assets/img/riders/{rider_photo}" alt="" loading="lazy" width="180" height="180">'
-                   if rider_photo else f'<span class="promo-initials" aria-hidden="true">{esc(initials(rider))}</span>')
-    rider_card = f'''<article class="promo-card"><div class="promo-card-media">{rider_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Random rider</span><strong>{esc(rider['display_name'])}</strong><p>{esc(rider.get('team') or 'Independent rider')}</p></div><a class="promo-card-link" href="{asset_prefix}riders/{rider['slug']}.html">View profile <span aria-hidden="true">→</span></a></article>'''
+    competition_name = CURRENT_COMPETITION["name"]
+    events = competition_events(PROMO_RIDERS, competition_name)
+    last_event = events[-1] if events else "Latest recorded race"
 
-    equipment = random.choice(PROMO_EQUIPMENT)
-    category = equipment["category"]
-    model = (equipment.get("model_detail") or "").split(";")[0].strip()
-    brand, model = canonical_equipment_product(category, equipment.get("brand") or "", model)
+    def last_race_winner(category):
+        entries = []
+        for rider in PROMO_RIDERS:
+            if rider.get("gender_category") != category:
+                continue
+            result = next((item for item in rider.get("competition_history") or []
+                           if item.get("category") == competition_name and item.get("event") == last_event), None)
+            if result:
+                entries.append((rider, result))
+        entries.sort(key=lambda entry: (
+            history_place(entry[1]) is None,
+            history_place(entry[1]) or 9999,
+            -(entry[1].get("points") or 0),
+            entry[0].get("display_name") or "",
+        ))
+        return entries[0][0] if entries else None
+
+    def rider_card(rider, label):
+        if not rider:
+            return ""
+        photo = has_photo(rider["slug"])
+        media = (f'<img src="{asset_prefix}assets/img/riders/{photo}" alt="" loading="lazy" width="180" height="180">'
+                 if photo else f'<span class="promo-initials" aria-hidden="true">{esc(initials(rider))}</span>')
+        return f'''<article class="promo-card"><div class="promo-card-media">{media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">{label} · Last race</span><strong>{esc(rider['display_name'])}</strong><p>{esc(last_event)}</p></div><a class="promo-card-link" href="{asset_prefix}riders/{rider['slug']}.html">View winner <span aria-hidden="true">→</span></a></article>'''
+
+    women_winner = last_race_winner("Women Elite")
+    men_winner = last_race_winner("Men Elite")
+
+    def equipment_by_identity(rider):
+        products = {}
+        for item in (rider or {}).get("equipment") or []:
+            category = item.get("category") or ""
+            model = (item.get("model_detail") or "").split(";")[0].strip()
+            brand, model = canonical_equipment_product(category, item.get("brand") or "", model)
+            if category and model:
+                products[(category, norm_product_text(brand), norm_product_text(model))] = (category, brand, model)
+        return products
+
+    women_equipment = equipment_by_identity(women_winner)
+    men_equipment = equipment_by_identity(men_winner)
+    common_keys = sorted(set(women_equipment) & set(men_equipment))
+    if common_keys:
+        category, brand, model = women_equipment[random.choice(common_keys)]
+        equipment_note = "Used by both last-race winners."
+    else:
+        equipment = random.choice(PROMO_EQUIPMENT)
+        category = equipment["category"]
+        model = (equipment.get("model_detail") or "").split(";")[0].strip()
+        brand, model = canonical_equipment_product(category, equipment.get("brand") or "", model)
+        equipment_note = "Popular across tracked professional setups."
     equipment_title = " ".join(part for part in (brand, model) if part)
     category_slug = equip_image_slug(category, "", "")
     photo = has_equip_photo(category, brand, model)
     equipment_media = (f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="" loading="lazy" width="180" height="180">'
                        if photo else '<span class="promo-equipment-icon" aria-hidden="true">+</span>')
-    equipment_card = f'''<article class="promo-card"><div class="promo-card-media">{equipment_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Random equipment · {esc(category)}</span><strong>{esc(equipment_title)}</strong><p>Used in a tracked professional setup.</p></div><a class="promo-card-link" href="{asset_prefix}equipment/{category_slug}.html">Explore category <span aria-hidden="true">→</span></a></article>'''
-    return f'''<aside class="direct-ad promo-strip" aria-label="Featured discovery and advertising"><div class="wrap"><div class="promo-grid">{rider_card}{direct_ad_card_html(asset_prefix)}{equipment_card}</div></div></aside>'''
+    equipment_card = f'''<article class="promo-card"><div class="promo-card-media">{equipment_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Common equipment · {esc(category)}</span><strong>{esc(equipment_title)}</strong><p>{equipment_note}</p></div><a class="promo-card-link" href="{asset_prefix}equipment/{category_slug}.html">Explore category <span aria-hidden="true">→</span></a></article>'''
+    return f'''<aside class="direct-ad promo-strip" aria-label="Latest winners, equipment and advertising"><div class="wrap"><div class="promo-grid">{rider_card(women_winner, 'Top 1 Women')}{equipment_card}{rider_card(men_winner, 'Top 1 Men')}</div>{direct_ad_banner_html(asset_prefix)}</div></aside>'''
 
 def hero_waves_svg():
     return """<svg class="hero-waves" viewBox="0 0 1240 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">

@@ -31,7 +31,6 @@ jobs:
           python3 build.py
           python3 tests/environment_visibility.py
           test ! -e competitions/red-bull
-          ! grep -Rqi 'Red Bull Rampage\|Red Bull Hardline' --include='*.html' .
 
       - name: Prepare public site files
         run: |

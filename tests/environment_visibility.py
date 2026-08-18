@@ -9,7 +9,8 @@ home = (root / "index.html").read_text(encoding="utf-8")
 robots = (root / "robots.txt").read_text(encoding="utf-8")
 red_bull = root / "competitions" / "red-bull"
 assert (root / "advertise.html").is_file()
-assert (root / "assets" / "data" / "promo-pool.json").is_file()
+assert (root / "assets" / "js" / "promo-pool.js").is_file()
+assert "assets/js/promo-pool.js" in home
 assert 'class="direct-ad promo-strip"' in home
 assert home.count('<article class="promo-card') == 3
 assert "Top 1 Women · Last race" in home

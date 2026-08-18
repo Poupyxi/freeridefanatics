@@ -421,6 +421,7 @@ def footer_html(asset_prefix):
   <div class="wrap footer-updated">Last updated <time datetime="{SITE_UPDATED}">{SITE_UPDATED_LABEL}</time></div>
 </footer>
 
+<script src="{asset_prefix}assets/js/promo-pool.js?v={BUILD_VERSION}"></script>
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
 </body>
 </html>
@@ -2547,10 +2548,10 @@ def write_promo_pool(riders):
             "href": f"/riders/{rider['slug']}.html",
             "equipment": equipment,
         })
-    public_data_dir = os.path.join(ROOT, "assets", "data")
-    os.makedirs(public_data_dir, exist_ok=True)
-    with open(os.path.join(public_data_dir, "promo-pool.json"), "w", encoding="utf-8") as target:
-        json.dump({"riders": public_riders}, target, ensure_ascii=False, separators=(",", ":"))
+    promo_path = os.path.join(ROOT, "assets", "js", "promo-pool.js")
+    with open(promo_path, "w", encoding="utf-8") as target:
+        payload = json.dumps({"riders": public_riders}, ensure_ascii=False, separators=(",", ":"))
+        target.write(f"window.RF_PROMO_POOL={payload};\n")
 
 
 def main():

@@ -12,7 +12,7 @@ __pycache__/
 tmp/
 .results-latest.csv
 .profiles-latest.csv
-assets/data/promo-pool.json
+assets/js/promo-pool.js
 node_modules/
 .env
 .env.*

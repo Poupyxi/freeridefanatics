@@ -811,13 +811,7 @@
       return;
     }
 
-    var prefix = strip.getAttribute('data-promo-prefix') || '';
-    fetch(prefix + 'assets/data/promo-pool.json', {credentials:'same-origin'})
-      .then(function(response){
-        if(!response.ok) throw new Error('Promo pool unavailable');
-        return response.json();
-      })
-      .then(function(data){
+    var data = window.RF_PROMO_POOL || {};
         var riders = Array.isArray(data.riders) ? data.riders : [];
         var women = riders.filter(function(rider){ return rider.gender === 'Women Elite'; });
         var men = riders.filter(function(rider){ return rider.gender === 'Men Elite'; });
@@ -882,7 +876,5 @@
           equipmentLink.href = product.href;
           equipmentLink.innerHTML = 'Explore category <span aria-hidden="true">→</span>';
         }
-      })
-      .catch(function(err){ console.error('[site.js] promo rotation failed:', err); });
   });
 })();

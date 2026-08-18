@@ -469,7 +469,8 @@ def promo_strip_html(asset_prefix):
         photo = has_photo(rider["slug"])
         media = (f'<img src="{asset_prefix}assets/img/riders/{photo}" alt="" loading="lazy" width="180" height="180">'
                  if photo else f'<span class="promo-initials" aria-hidden="true">{esc(initials(rider))}</span>')
-        return f'''<article class="promo-card"><div class="promo-card-media">{media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">{label} · Last race</span><strong>{esc(rider['display_name'])}</strong><p>{esc(last_event)}</p></div><a class="promo-card-link" href="{asset_prefix}riders/{rider['slug']}.html">View winner <span aria-hidden="true">→</span></a></article>'''
+        role = "women" if rider.get("gender_category") == "Women Elite" else "men"
+        return f'''<article class="promo-card" data-promo-role="{role}" data-current-slug="{esc_attr(rider['slug'])}"><div class="promo-card-media">{media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">{label} · Last race</span><strong>{esc(rider['display_name'])}</strong><p>{esc(last_event)}</p></div><a class="promo-card-link" href="{asset_prefix}riders/{rider['slug']}.html">View winner <span aria-hidden="true">→</span></a></article>'''
 
     women_winner = last_race_winner("Women Elite")
     men_winner = last_race_winner("Men Elite")
@@ -501,8 +502,8 @@ def promo_strip_html(asset_prefix):
     photo = has_equip_photo(category, brand, model)
     equipment_media = (f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="" loading="lazy" width="180" height="180">'
                        if photo else '<span class="promo-equipment-icon" aria-hidden="true">+</span>')
-    equipment_card = f'''<article class="promo-card"><div class="promo-card-media">{equipment_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Common equipment · {esc(category)}</span><strong>{esc(equipment_title)}</strong><p>{equipment_note}</p></div><a class="promo-card-link" href="{asset_prefix}equipment/{category_slug}.html">Explore category <span aria-hidden="true">→</span></a></article>'''
-    return f'''<aside class="direct-ad promo-strip" aria-label="Latest winners, equipment and advertising"><div class="wrap"><div class="promo-grid">{rider_card(women_winner, 'Top 1 Women')}{equipment_card}{rider_card(men_winner, 'Top 1 Men')}</div>{direct_ad_banner_html(asset_prefix)}</div></aside>'''
+    equipment_card = f'''<article class="promo-card" data-promo-role="equipment"><div class="promo-card-media">{equipment_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Common equipment · {esc(category)}</span><strong>{esc(equipment_title)}</strong><p>{equipment_note}</p></div><a class="promo-card-link" href="{asset_prefix}equipment/{category_slug}.html">Explore category <span aria-hidden="true">→</span></a></article>'''
+    return f'''<aside class="direct-ad promo-strip" data-promo-prefix="{esc_attr(asset_prefix)}" aria-label="Latest winners, equipment and advertising"><div class="wrap"><div class="promo-grid">{rider_card(women_winner, 'Top 1 Women')}{equipment_card}{rider_card(men_winner, 'Top 1 Men')}</div>{direct_ad_banner_html(asset_prefix)}</div></aside>'''
 
 def hero_waves_svg():
     return """<svg class="hero-waves" viewBox="0 0 1240 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -2511,6 +2512,46 @@ def ensure_accessibility_landmarks():
                 with open(path, "w", encoding="utf-8") as target:
                     target.write(markup)
 
+def write_promo_pool(riders):
+    """Small public dataset used to rotate footer discoveries after the daily first visit."""
+    public_riders = []
+    for rider in riders:
+        equipment = []
+        seen = set()
+        for item in rider.get("equipment") or []:
+            category = item.get("category") or ""
+            raw_model = (item.get("model_detail") or "").split(";")[0].strip()
+            brand, model = canonical_equipment_product(category, item.get("brand") or "", raw_model)
+            if not category or not model:
+                continue
+            key = "|".join((category, norm_product_text(brand), norm_product_text(model)))
+            if key in seen:
+                continue
+            seen.add(key)
+            photo = has_equip_photo(category, brand, model)
+            equipment.append({
+                "key": key,
+                "category": category,
+                "brand": brand,
+                "model": model,
+                "photo": f"/assets/img/equipment/{photo}" if photo else "",
+                "href": equipment_category_path(category),
+            })
+        photo = has_photo(rider["slug"])
+        public_riders.append({
+            "name": rider["display_name"],
+            "slug": rider["slug"],
+            "gender": rider.get("gender_category") or "",
+            "team": rider.get("team") or "Independent rider",
+            "photo": f"/assets/img/riders/{photo}" if photo else "",
+            "href": f"/riders/{rider['slug']}.html",
+            "equipment": equipment,
+        })
+    public_data_dir = os.path.join(ROOT, "data", "public")
+    os.makedirs(public_data_dir, exist_ok=True)
+    with open(os.path.join(public_data_dir, "promo-pool.json"), "w", encoding="utf-8") as target:
+        json.dump({"riders": public_riders}, target, ensure_ascii=False, separators=(",", ":"))
+
 
 def main():
     with open(DATA_PATH, encoding="utf-8") as f:
@@ -2535,6 +2576,7 @@ def main():
 
     women = [r for r in riders if r.get("gender_category") == "Women Elite"]
     men = [r for r in riders if r.get("gender_category") == "Men Elite"]
+    write_promo_pool(riders)
 
     if "--standings-only" in sys.argv:
         with open(os.path.join(ROOT, "standings.html"), "w", encoding="utf-8") as f:

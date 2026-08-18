@@ -793,4 +793,96 @@
     updateTray();
     renderPage();
   });
+
+  // Keep the latest race winners for the first visit of each local day. Every
+  // following navigation or reload rotates both riders and their shared kit.
+  safe('daily-promo-rotation', function(){
+    var strip = document.querySelector('[data-promo-prefix]');
+    if(!strip) return;
+    var now = new Date();
+    var today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+    var storageKey = 'rf-promo-first-visit';
+    try {
+      if(localStorage.getItem(storageKey) !== today){
+        localStorage.setItem(storageKey, today);
+        return;
+      }
+    } catch(err) {
+      return;
+    }
+
+    var prefix = strip.getAttribute('data-promo-prefix') || '';
+    fetch(prefix + 'data/public/promo-pool.json', {credentials:'same-origin'})
+      .then(function(response){
+        if(!response.ok) throw new Error('Promo pool unavailable');
+        return response.json();
+      })
+      .then(function(data){
+        var riders = Array.isArray(data.riders) ? data.riders : [];
+        var women = riders.filter(function(rider){ return rider.gender === 'Women Elite'; });
+        var men = riders.filter(function(rider){ return rider.gender === 'Men Elite'; });
+        var womenCard = strip.querySelector('[data-promo-role="women"]');
+        var menCard = strip.querySelector('[data-promo-role="men"]');
+        var equipmentCard = strip.querySelector('[data-promo-role="equipment"]');
+        if(!women.length || !men.length || !womenCard || !menCard || !equipmentCard) return;
+
+        function choose(pool, excludedSlug){
+          var choices = pool.filter(function(item){ return item.slug !== excludedSlug; });
+          if(!choices.length) choices = pool;
+          return choices[Math.floor(Math.random() * choices.length)];
+        }
+        function setMedia(card, source, fallback){
+          var media = card.querySelector('.promo-card-media');
+          if(!media) return;
+          media.textContent = '';
+          if(source){
+            var image = document.createElement('img');
+            image.src = source;
+            image.alt = '';
+            image.loading = 'lazy';
+            image.width = 180;
+            image.height = 180;
+            media.appendChild(image);
+          } else {
+            var placeholder = document.createElement('span');
+            placeholder.className = 'promo-initials';
+            placeholder.setAttribute('aria-hidden', 'true');
+            placeholder.textContent = fallback;
+            media.appendChild(placeholder);
+          }
+        }
+        function updateRider(card, rider, label){
+          var words = rider.name.trim().split(/\s+/);
+          var initials = (words[0] ? words[0][0] : '') + (words.length > 1 ? words[words.length - 1][0] : '');
+          setMedia(card, rider.photo, initials.toUpperCase());
+          card.querySelector('.direct-ad-disclosure').textContent = label;
+          card.querySelector('strong').textContent = rider.name;
+          card.querySelector('p').textContent = rider.team;
+          var link = card.querySelector('a');
+          link.href = rider.href;
+          link.innerHTML = 'View profile <span aria-hidden="true">→</span>';
+        }
+
+        var woman = choose(women, womenCard.getAttribute('data-current-slug'));
+        var man = choose(men, menCard.getAttribute('data-current-slug'));
+        updateRider(womenCard, woman, 'Random Women');
+        updateRider(menCard, man, 'Random Men');
+
+        var womanProducts = {};
+        (woman.equipment || []).forEach(function(item){ womanProducts[item.key] = item; });
+        var common = (man.equipment || []).filter(function(item){ return womanProducts[item.key]; });
+        var productPool = common.length ? common : (woman.equipment || []).concat(man.equipment || []);
+        if(productPool.length){
+          var product = productPool[Math.floor(Math.random() * productPool.length)];
+          setMedia(equipmentCard, product.photo, '+');
+          equipmentCard.querySelector('.direct-ad-disclosure').textContent = (common.length ? 'Common equipment · ' : 'Random equipment · ') + product.category;
+          equipmentCard.querySelector('strong').textContent = [product.brand, product.model].filter(Boolean).join(' ');
+          equipmentCard.querySelector('p').textContent = common.length ? 'Used by both selected riders.' : 'Used by one of the selected riders.';
+          var equipmentLink = equipmentCard.querySelector('a');
+          equipmentLink.href = product.href;
+          equipmentLink.innerHTML = 'Explore category <span aria-hidden="true">→</span>';
+        }
+      })
+      .catch(function(err){ console.error('[site.js] promo rotation failed:', err); });
+  });
 })();

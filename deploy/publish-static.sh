@@ -22,9 +22,6 @@ rsync -a --delete "$SOURCE_DIR/assets/" "$PUBLIC_DIR/assets/"
 for directory in riders equipment competitions guides; do
   rsync -a --delete "$SOURCE_DIR/$directory/" "$PUBLIC_DIR/$directory/"
 done
-mkdir -p "$PUBLIC_DIR/data/public"
-rsync -a --delete "$SOURCE_DIR/data/public/" "$PUBLIC_DIR/data/public/"
-
 rsync -a "$SOURCE_DIR/" "$PUBLIC_DIR/" \
   --include='/*.html' \
   --include='/robots.txt' \

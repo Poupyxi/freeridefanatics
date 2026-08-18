@@ -2547,7 +2547,7 @@ def write_promo_pool(riders):
             "href": f"/riders/{rider['slug']}.html",
             "equipment": equipment,
         })
-    public_data_dir = os.path.join(ROOT, "data", "public")
+    public_data_dir = os.path.join(ROOT, "assets", "data")
     os.makedirs(public_data_dir, exist_ok=True)
     with open(os.path.join(public_data_dir, "promo-pool.json"), "w", encoding="utf-8") as target:
         json.dump({"riders": public_riders}, target, ensure_ascii=False, separators=(",", ":"))

@@ -812,7 +812,7 @@
     }
 
     var prefix = strip.getAttribute('data-promo-prefix') || '';
-    fetch(prefix + 'data/public/promo-pool.json', {credentials:'same-origin'})
+    fetch(prefix + 'assets/data/promo-pool.json', {credentials:'same-origin'})
       .then(function(response){
         if(!response.ok) throw new Error('Promo pool unavailable');
         return response.json();

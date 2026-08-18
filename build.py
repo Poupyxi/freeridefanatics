@@ -19,6 +19,7 @@ instead of "#".
 """
 import json
 import os
+import random
 import re
 import shutil
 import subprocess
@@ -68,6 +69,12 @@ ORGANIZATIONS = [item for item in COMPETITION_CATALOG.get("organizations", []) i
 CURRENT_COMPETITION = COMPETITIONS[0]
 with open(ADS_PATH, encoding="utf-8") as ads_source:
     AD_CATALOG = json.load(ads_source)
+with open(DATA_PATH, encoding="utf-8") as promo_source:
+    PROMO_RIDERS = json.load(promo_source)
+PROMO_EQUIPMENT = [
+    item for rider in PROMO_RIDERS for item in (rider.get("equipment") or [])
+    if item.get("category") and (item.get("brand") or item.get("model_detail"))
+]
 
 # Brevo-hosted subscription form. Brevo handles double opt-in, unsubscribe
 # records and abuse protection; no API key is exposed in this static site.
@@ -392,7 +399,7 @@ def header_html(asset_prefix, active=""):
 
 def footer_html(asset_prefix):
     home_href = asset_prefix or "./"
-    return f"""{ad_slot_html(asset_prefix)}<footer>
+    return f"""{promo_strip_html(asset_prefix)}<footer>
   <div class="wrap footer-row">
     <a class="footer-logo" href="{home_href}"><span class="mark">R</span>RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
@@ -419,7 +426,7 @@ def footer_html(asset_prefix):
 </html>
 """
 
-def ad_slot_html(asset_prefix):
+def direct_ad_card_html(asset_prefix):
     campaign = next((item for item in AD_CATALOG.get("campaigns", []) if item.get("status") == "active"), None)
     if not campaign:
         return ""
@@ -430,7 +437,28 @@ def ad_slot_html(asset_prefix):
     media = (f'<img src="{asset_prefix}{esc_attr(campaign["image"].lstrip("/"))}" alt="" loading="lazy" width="320" height="180">'
              if campaign.get("image") else '<span class="direct-ad-mark" aria-hidden="true">RF</span>')
     disclosure = "Advertisement" if campaign.get("type") == "sponsor" else "Partnership"
-    return f'''<aside class="direct-ad" aria-label="{disclosure}"><div class="wrap"><div class="direct-ad-shell"><div class="direct-ad-media">{media}</div><div class="direct-ad-copy"><span class="direct-ad-disclosure">{disclosure} · {esc(campaign.get('label'))}</span><strong>{esc(campaign.get('title'))}</strong><p>{esc(campaign.get('description'))}</p></div><a class="direct-ad-cta" href="{esc_attr(href)}"{link_attrs}>{esc(campaign.get('cta') or 'Learn more')} <span aria-hidden="true">→</span></a></div></div></aside>'''
+    return f'''<article class="promo-card promo-card-ad" aria-label="{disclosure}"><div class="promo-card-media">{media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">{disclosure} · {esc(campaign.get('label'))}</span><strong>{esc(campaign.get('title'))}</strong><p>{esc(campaign.get('description'))}</p></div><a class="promo-card-link" href="{esc_attr(href)}"{link_attrs}>{esc(campaign.get('cta') or 'Learn more')} <span aria-hidden="true">→</span></a></article>'''
+
+def promo_strip_html(asset_prefix):
+    if not PROMO_RIDERS or not PROMO_EQUIPMENT:
+        return ""
+    rider = random.choice(PROMO_RIDERS)
+    rider_photo = has_photo(rider["slug"])
+    rider_media = (f'<img src="{asset_prefix}assets/img/riders/{rider_photo}" alt="" loading="lazy" width="180" height="180">'
+                   if rider_photo else f'<span class="promo-initials" aria-hidden="true">{esc(initials(rider))}</span>')
+    rider_card = f'''<article class="promo-card"><div class="promo-card-media">{rider_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Random rider</span><strong>{esc(rider['display_name'])}</strong><p>{esc(rider.get('team') or 'Independent rider')}</p></div><a class="promo-card-link" href="{asset_prefix}riders/{rider['slug']}.html">View profile <span aria-hidden="true">→</span></a></article>'''
+
+    equipment = random.choice(PROMO_EQUIPMENT)
+    category = equipment["category"]
+    model = (equipment.get("model_detail") or "").split(";")[0].strip()
+    brand, model = canonical_equipment_product(category, equipment.get("brand") or "", model)
+    equipment_title = " ".join(part for part in (brand, model) if part)
+    category_slug = equip_image_slug(category, "", "")
+    photo = has_equip_photo(category, brand, model)
+    equipment_media = (f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="" loading="lazy" width="180" height="180">'
+                       if photo else '<span class="promo-equipment-icon" aria-hidden="true">+</span>')
+    equipment_card = f'''<article class="promo-card"><div class="promo-card-media">{equipment_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Random equipment · {esc(category)}</span><strong>{esc(equipment_title)}</strong><p>Used in a tracked professional setup.</p></div><a class="promo-card-link" href="{asset_prefix}equipment/{category_slug}.html">Explore category <span aria-hidden="true">→</span></a></article>'''
+    return f'''<aside class="direct-ad promo-strip" aria-label="Featured discovery and advertising"><div class="wrap"><div class="promo-grid">{rider_card}{direct_ad_card_html(asset_prefix)}{equipment_card}</div></div></aside>'''
 
 def hero_waves_svg():
     return """<svg class="hero-waves" viewBox="0 0 1240 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">

@@ -9,7 +9,10 @@ home = (root / "index.html").read_text(encoding="utf-8")
 robots = (root / "robots.txt").read_text(encoding="utf-8")
 red_bull = root / "competitions" / "red-bull"
 assert (root / "advertise.html").is_file()
-assert 'class="direct-ad"' in home
+assert 'class="direct-ad promo-strip"' in home
+assert home.count('<article class="promo-card') == 3
+assert "Random rider" in home
+assert "Random equipment" in home
 
 if environment == "preprod":
     assert red_bull.joinpath("index.html").is_file()

@@ -8,6 +8,8 @@ environment = os.environ.get("RF_BUILD_ENV", "production")
 home = (root / "index.html").read_text(encoding="utf-8")
 robots = (root / "robots.txt").read_text(encoding="utf-8")
 red_bull = root / "competitions" / "red-bull"
+assert (root / "advertise.html").is_file()
+assert 'class="direct-ad"' in home
 
 if environment == "preprod":
     assert red_bull.joinpath("index.html").is_file()

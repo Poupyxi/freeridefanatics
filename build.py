@@ -56,6 +56,7 @@ BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes eve
 # first release contains one series, but navigation and result filters consume
 # this catalogue so future series can be added without renaming the whole site.
 COMPETITIONS_PATH = os.path.join(ROOT, "data", "competitions.json")
+ADS_PATH = os.path.join(ROOT, "data", "ads.json")
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
@@ -65,6 +66,8 @@ def visible_status(item):
 COMPETITIONS = [item for item in COMPETITION_CATALOG.get("series", []) if visible_status(item)]
 ORGANIZATIONS = [item for item in COMPETITION_CATALOG.get("organizations", []) if visible_status(item)]
 CURRENT_COMPETITION = COMPETITIONS[0]
+with open(ADS_PATH, encoding="utf-8") as ads_source:
+    AD_CATALOG = json.load(ads_source)
 
 # Brevo-hosted subscription form. Brevo handles double opt-in, unsubscribe
 # records and abuse protection; no API key is exposed in this static site.
@@ -389,7 +392,7 @@ def header_html(asset_prefix, active=""):
 
 def footer_html(asset_prefix):
     home_href = asset_prefix or "./"
-    return f"""<footer>
+    return f"""{ad_slot_html(asset_prefix)}<footer>
   <div class="wrap footer-row">
     <a class="footer-logo" href="{home_href}"><span class="mark">R</span>RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
@@ -402,6 +405,7 @@ def footer_html(asset_prefix):
       <a href="{asset_prefix}data-license.html">Data license</a>
       <a href="{asset_prefix}about.html">About</a>
       <a href="{asset_prefix}contact.html">Contact</a>
+      <a href="{asset_prefix}advertise.html">Advertise</a>
       <a href="{asset_prefix}affiliate-disclosure.html">Affiliates</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
@@ -414,6 +418,19 @@ def footer_html(asset_prefix):
 </body>
 </html>
 """
+
+def ad_slot_html(asset_prefix):
+    campaign = next((item for item in AD_CATALOG.get("campaigns", []) if item.get("status") == "active"), None)
+    if not campaign:
+        return ""
+    destination = campaign.get("url") or "/advertise.html"
+    is_external = destination.startswith(("http://", "https://"))
+    href = destination if is_external else asset_prefix + destination.lstrip("/")
+    link_attrs = ' target="_blank" rel="noopener sponsored"' if is_external or campaign.get("type") == "sponsor" else ""
+    media = (f'<img src="{asset_prefix}{esc_attr(campaign["image"].lstrip("/"))}" alt="" loading="lazy" width="320" height="180">'
+             if campaign.get("image") else '<span class="direct-ad-mark" aria-hidden="true">RF</span>')
+    disclosure = "Advertisement" if campaign.get("type") == "sponsor" else "Partnership"
+    return f'''<aside class="direct-ad" aria-label="{disclosure}"><div class="wrap"><div class="direct-ad-shell"><div class="direct-ad-media">{media}</div><div class="direct-ad-copy"><span class="direct-ad-disclosure">{disclosure} · {esc(campaign.get('label'))}</span><strong>{esc(campaign.get('title'))}</strong><p>{esc(campaign.get('description'))}</p></div><a class="direct-ad-cta" href="{esc_attr(href)}"{link_attrs}>{esc(campaign.get('cta') or 'Learn more')} <span aria-hidden="true">→</span></a></div></div></aside>'''
 
 def hero_waves_svg():
     return """<svg class="hero-waves" viewBox="0 0 1240 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -595,6 +612,18 @@ def build_trust_pages():
                 ("How affiliate links work", ["Some external product links are affiliate links. If a visitor follows one of these links and completes a qualifying purchase, RidersFanatics may receive a commission without increasing the visitor's purchase price."]),
                 ("Editorial independence", ["Equipment is recorded because it is publicly associated with a tracked rider, not because a retailer offers a commission. A product without an affiliate link can rank above a monetised product, and many tracked components have no commercial link at all."]),
                 ("Buying decisions", ["Race equipment may be a prototype, a team-specific tune or a configuration that differs from a retail product. Visitors should verify compatibility, sizing, specification, warranty and local availability with the manufacturer or retailer before buying."]),
+            ],
+        ),
+        "advertise.html": build_editorial_page(
+            "advertise", "Advertise with RidersFanatics",
+            "Direct advertising and partnership opportunities across RidersFanatics rider, competition and equipment pages.",
+            "Direct partnerships",
+            "Reach an audience actively exploring professional riders, race results and identifiable equipment through a clear, lightweight placement.",
+            [
+                ("Available placement", ["The primary partnership placement appears immediately before the footer across core RidersFanatics pages. It is designed for one clearly identified advertiser at a time, with a visual, short message and destination link.", "Campaigns can be scheduled and measured without adding third-party advertising scripts to the site."]),
+                ("Suitable partners", ["Relevant campaigns may include mountain-bike equipment, protection, apparel, destinations, events, coaching and services that genuinely fit the RidersFanatics audience.", "Advertising availability never determines rider coverage, competition results or equipment rankings."]),
+                ("Campaign requirements", ["Advertisers must provide the campaign name, destination URL, approved visual, start and end dates, target markets and confirmation that they hold the necessary rights to the supplied material.", "Every paid placement is clearly labelled as advertising and outbound commercial links are marked as sponsored."]),
+                ("Request a proposal", [f"Contact {CONTACT_EMAIL} with the subject ‘Advertising’ and include your brand, campaign objective, preferred dates and destination markets.", "Audience figures and pricing will be shared from verified traffic data rather than estimated or invented reach."]),
             ],
         ),
         "privacy.html": build_editorial_page(

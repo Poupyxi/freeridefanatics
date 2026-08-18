@@ -1,0 +1,15 @@
+{
+  "campaigns": [
+    {
+      "id": "ridersfanatics-partnership",
+      "status": "active",
+      "type": "house",
+      "label": "Partnership opportunity",
+      "title": "Reach downhill fans at the point of discovery.",
+      "description": "Sponsor this placement with a clear, lightweight campaign connected to riders, competitions and equipment.",
+      "cta": "Advertise with RidersFanatics",
+      "url": "/advertise.html",
+      "image": null
+    }
+  ]
+}

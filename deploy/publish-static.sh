@@ -26,6 +26,7 @@ rsync -a "$SOURCE_DIR/" "$PUBLIC_DIR/" \
   --include='/*.html' \
   --include='/robots.txt' \
   --include='/sitemap.xml' \
+  --include='/ads.txt' \
   --include='/.htaccess' \
   $([[ "$BUILD_ENV" == "production" ]] && printf '%s' "--include=/contact-submit.php") \
   --exclude='*'

@@ -322,6 +322,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
     image_dimensions = "" if image_path else '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'
     image_preload = f'<link rel="preload" as="image" href="{image}">' if image_path else ""
     schema_html = "\n".join(json_ld(s) for s in (schemas or []))
+    adsense_script = "" if IS_PREPROD else '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" crossorigin="anonymous"></script>'
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -348,6 +349,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{asset_prefix}assets/css/style.css?v={BUILD_VERSION}">
+{adsense_script}
 {schema_html}
 </head>
 <body{body_attr}>

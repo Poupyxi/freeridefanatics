@@ -46,9 +46,9 @@ SITE_URL = os.environ.get(
     "RF_SITE_URL",
     "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com",
 ).rstrip("/")
-SITE_UPDATED = "2026-08-17"
-SITE_UPDATED_LABEL = "17 Aug 2026"
-SITE_UPDATED_LONG = "17 August 2026"
+SITE_UPDATED = "2026-08-24"
+SITE_UPDATED_LABEL = "24 Aug 2026"
+SITE_UPDATED_LONG = "24 August 2026"
 CONTACT_EMAIL = "contact@ridersfanatics.com"
 DATA_LICENSE_URL = f"{SITE_URL}/data-license.html"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
@@ -1350,6 +1350,9 @@ def build_competition_standings(riders, competition):
         for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
     ]
     description = "UCI downhill standings 2026 for Elite Men, Elite Women and teams: current World Cup points, championship leaders and linked rider profiles."
+    latest_round = stats["events"][-1] if stats["events"] else "Season start"
+    latest_round_href = (f"rounds/{competition_round_slug(latest_round)}.html"
+                         if stats["events"] else "../../competitions.html")
     html = head(
         f"UCI Downhill Standings 2026 | Men, Women & Teams", description, "../../",
         body_class="competition-standings-page", canonical_path=path,
@@ -1359,19 +1362,24 @@ def build_competition_standings(riders, competition):
              "url": absolute_url(path), "dateModified": SITE_UPDATED,
              "mainEntity": {"@type": "ItemList", "numberOfItems": len(item_list),
                             "itemListElement": item_list}},
+            {"@context": "https://schema.org", "@type": "Dataset",
+             "name": f"{name} standings dataset", "description": description,
+             "url": absolute_url(path), "dateModified": SITE_UPDATED,
+             "creator": {"@type": "Organization", "name": SITE_NAME, "url": SITE_URL},
+             "license": DATA_LICENSE_URL, "isAccessibleForFree": True},
             breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"),
                                (name, f"/competitions/{cid}.html"), ("Standings", path)]),
         ],
     )
     html += header_html("../../", active="competitions")
     html += f'''<main>
-<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>2026 UCI Downhill standings.</h1><p>{esc(name)} — the current championship order for Elite Men, Elite Women and teams.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div></div></section>
+<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>2026 UCI Downhill standings.</h1><p>{esc(name)} — the current championship order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
 {competition_subnav(competition, "standings")}
 <div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
 <section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
 <div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span><div class="filters" role="tablist" aria-label="Standings category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div><label class="standings-search"><span>Search</span><input class="search-input" type="search" placeholder="Rider, team or country…" data-standings-search></label></div>
 {rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}
-<div class="clean-standings-note"><strong>How to read this ranking</strong><p>Points are attached to this competition only. The detailed view keeps every recorded round visible, while this page focuses on the championship order.</p><a href="../../methodology.html">Read the methodology →</a></div>
+<div class="clean-standings-note"><strong>How to read this ranking</strong><p>Points are attached to this competition only. The detailed view keeps every recorded round visible, while this page focuses on the championship order. Dataset updated {SITE_UPDATED_LONG}.</p><div><a href="../../methodology.html">Methodology →</a><br><a href="../../data-license.html">Data license →</a></div></div>
 </div></section></main>'''
     html += footer_html("../../")
     return html
@@ -1436,9 +1444,15 @@ def build_organization_page(organization):
             item_href = "../.." + item_href
         status_label = "Published" if item.get("status") == "published" else "Draft preview"
         cards.append(f'''<article class="competition-card"><div class="competition-card-top"><span class="competition-status">{status_label}</span><span>{esc(item.get('discipline'))}</span></div><div class="competition-sport">{esc(item.get('sport'))}</div><h2>{esc(item['name'])}</h2><p>Explore the 2026 competition workspace, verified information and connected RidersFanatics data.</p><a class="btn btn-solid" href="{item_href}">Open competition</a></article>''')
-    html = head(f"{organization['name']} competitions — Draft | {SITE_NAME}", organization.get("description", "Competition organisation preview."), "../../", body_class="competitions-page", canonical_path=f"/competitions/{organization_id}/")
+    is_draft = organization.get("status") == "draft"
+    page_label = "Protected draft · Independent coverage" if is_draft else "Competition organisation · Independent coverage"
+    list_label = "Draft competitions" if is_draft else "Tracked competitions"
+    title_suffix = " — Draft" if is_draft else " Competitions 2026"
+    description = organization.get("description", "Competition organisation overview.")
+    html = head(f"{organization['name']}{title_suffix} | {SITE_NAME}", description, "../../", body_class="competitions-page", canonical_path=f"/competitions/{organization_id}/",
+                schemas=[{"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{organization['name']} competitions", "description": description, "url": absolute_url(f"/competitions/{organization_id}/"), "dateModified": SITE_UPDATED}])
     html += header_html("../../", active="competitions")
-    html += f'''<main><section class="competition-hero"><div class="wrap"><div class="label">Protected draft · Independent coverage</div><h1>{esc(organization['name'])}</h1><p>{esc(organization.get('description'))}</p></div></section><div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (organization['name'], "./")])}</div><section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Draft competitions</div><h2>Choose an event.</h2></div><span class="see-all">{len(children)} drafts</span></div><div class="competition-grid">{"".join(cards)}</div></div></section></main>'''
+    html += f'''<main><section class="competition-hero"><div class="wrap"><div class="label">{page_label}</div><h1>{esc(organization['name'])}</h1><p>{esc(description)}</p></div></section><div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (organization['name'], "./")])}</div><section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">{list_label}</div><h2>Choose an event.</h2></div><span class="see-all">{len(children)} competition{'s' if len(children) != 1 else ''}</span></div><div class="competition-grid">{"".join(cards)}</div><div class="competition-note"><strong>Independent database</strong><p>Open a competition to explore its 2026 standings, round results, rider profiles and documented equipment. RidersFanatics is not affiliated with the organiser.</p></div></div></section></main>'''
     return html + footer_html("../../")
 
 def build_organization_competition_page(organization, competition):
@@ -2221,9 +2235,14 @@ def results_rows(history):
         place = history_place(h)
         result = h.get("result") or ordinal(place) or "—"
         podium = f" podium p{place}" if place and place <= 3 else ""
+        competition = next((item for item in COMPETITIONS if item.get("name") == comp), None)
+        event_label = esc(h.get('event'))
+        if competition and h.get("event"):
+            event_label = (f'<a href="../competitions/{competition["id"]}/rounds/'
+                           f'{competition_round_slug(h["event"])}.html">{event_label}</a>')
         rows.append(f"""<tr data-competition="{esc(comp)}">
           <td>{esc(h.get('year'))}</td>
-          <td>{esc(h.get('event'))}</td>
+          <td>{event_label}</td>
           <td class="result{podium}">{esc(result)}</td>
           <td class="points">{esc(points) if points is not None else '—'}</td>
         </tr>""")
@@ -2367,6 +2386,18 @@ def build_rider_page(r, riders):
             "Asa Vermette Bike Setup 2026 | Results & Equipment",
             "Asa Vermette bike setup and equipment for 2026, with documented race components, UCI downhill results, championship ranking and points.",
         ),
+        "anna-newkirk": (
+            "Anna Newkirk 2026 | UCI DH Results & Bike Setup",
+            "Anna Newkirk’s 2026 UCI downhill results, World Cup standings, points and documented Frameworks DH bike setup.",
+        ),
+        "gloria-scarsi": (
+            "Gloria Scarsi 2026 | UCI DH Results & Zerode Setup",
+            "Gloria Scarsi’s 2026 UCI downhill results, World Cup standings, points and documented Zerode G3 race setup.",
+        ),
+        "sacha-earnest": (
+            "Sacha Earnest 2026 | UCI DH Results & Trek Setup",
+            "Sacha Earnest’s 2026 UCI downhill results, World Cup standings, podiums and documented Trek Session race setup.",
+        ),
     }
     page_title, meta_description = keyword_pages.get(
         r.get("slug"),
@@ -2462,6 +2493,11 @@ def build_rider_page(r, riders):
       <div><div class="label">Tracked performance</div><h2 id="season-snapshot">2026 season snapshot</h2><p>{esc(season_analysis)}</p><p class="data-note">Analysis is limited to results recorded in the RidersFanatics dataset and should not be read as a complete career assessment.</p></div>
       <dl class="content-stats"><div><dt>{ordinal(category_rank) if category_rank else '—'}</dt><dd>Category rank</dd></div><div><dt>{len(history)}</dt><dd>Recorded starts</dd></div><div><dt>{ordinal(best_place) if best_place else '—'}</dt><dd>Best finish</dd></div><div><dt>{rider_total_points(r)}</dt><dd>Points</dd></div></dl>
     </section>
+    <nav class="rider-context-links" aria-label="2026 competition links">
+      <a href="../competitions/uci-mtb-world-cup-dh-2026.html"><span>Competition</span><strong>UCI DH World Cup 2026</strong></a>
+      <a href="../competitions/uci-mtb-world-cup-dh-2026/standings.html"><span>Championship</span><strong>View current standings</strong></a>
+      <a href="../standings.html"><span>Race detail</span><strong>Results by round</strong></a>
+    </nav>
 
     {setup_head}{build_html}
     {equip_html}

@@ -1354,6 +1354,11 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .rider-related-grid a:hover{background:#fff5ef;}
 .rider-related-grid strong{font-size:14px;}
 .rider-related-grid span{font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+.rider-context-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);background:#fff}
+.rider-context-links a{display:flex;flex-direction:column;gap:6px;min-height:76px;padding:16px 18px;border-right:1px solid var(--line)}
+.rider-context-links a:last-child{border-right:0}.rider-context-links a:hover{background:#fff5ef}
+.rider-context-links span{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--orange-dark)}
+.rider-context-links strong{font-size:13px;line-height:1.35}
 
 @media (max-width:760px){
   .rider-related-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
@@ -1370,6 +1375,15 @@ a.clean-standing-row:hover{background:#fff5ef;}
 }
 
 @media (max-width:560px){
+  body{overflow-wrap:anywhere}
+  .wrap{width:min(100% - 30px,1120px)}
+  .rider-context-links{grid-template-columns:1fr}
+  .rider-context-links a{min-height:64px;border-right:0;border-bottom:1px solid var(--line)}
+  .rider-context-links a:last-child{border-bottom:0}
+  .results-table{min-width:540px}
+  .results-table th,.results-table td{padding:12px 10px}
+  .filter-btn,.competition-subnav a{min-height:44px}
+  .clean-standing-name strong{white-space:normal;line-height:1.25}
   .cta-form{flex-wrap:wrap;}
   .cta-form input{flex:1 1 100%; min-width:0;}
   .cta-form button{flex:1 1 100%; margin-top:8px;}

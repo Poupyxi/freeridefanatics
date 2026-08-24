@@ -33,4 +33,21 @@ rsync -a "$SOURCE_DIR/" "$PUBLIC_DIR/" \
 
 if [[ "$BUILD_ENV" == "preprod" ]]; then
   cp "$SOURCE_DIR/deploy/preprod.htaccess" "$PUBLIC_DIR/.htaccess"
+
+  # Pages intentionally hidden while the next site version is reviewed.
+  # Keep this at publish time so production sources and deployment stay intact.
+  for hidden_page in \
+    methodology.html \
+    data-license.html \
+    advertise.html \
+    affiliate-disclosure.html
+  do
+    find "$PUBLIC_DIR" -maxdepth 1 -type f -name "$hidden_page" -delete
+    sed -i.bak "\\|<loc>https://ridersfanatics.com/$hidden_page</loc>|d" "$PUBLIC_DIR/sitemap.xml"
+  done
+  find "$PUBLIC_DIR" -type f -name '*.html' -exec perl -0pi -e \
+    's{<a\b[^>]*href="[^"]*(?:methodology|data-license|advertise|affiliate-disclosure)\.html"[^>]*>(.*?)</a>}{$1}gis;
+     s{,\s*"license"\s*:\s*"https://ridersfanatics\.com/data-license\.html"}{}gis;
+     s{,\s*"license"\s*:\s*\{[^{}]*"https://ridersfanatics\.com/data-license\.html"[^{}]*\}}{}gis' {} +
+  find "$PUBLIC_DIR" -type f -name '*.bak' -delete
 fi

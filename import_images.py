@@ -66,7 +66,7 @@ ACTION_MAX = 900
 EQUIP_MAX = 600
 JPEG_QUALITY = 82
 
-IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp")
+IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".avif")
 
 # Library folder name -> category key used in riders.json.
 # Folders with no equivalent (Hub, Spacer, Stems) are intentionally absent:
@@ -114,6 +114,7 @@ PHOTO_ALIASES = {
     ("Crankset", "sram", "x0 dh carbon"): ("sram", "x01 dh x sync crankset"),
     ("Crankset", "shimano", "saint"): ("shimano", "shimano saint fc m825 single 10 speed crankset"),
     ("BrakeLever", "brembo lever", ""): ("brembo gr pro gravity lever", ""),
+    ("BrakeLever", "brembo", ""): ("brembo gr pro gravity lever", ""),
     ("BrakeLever", "brembo", "prototype"): ("brembo gr pro gravity", ""),
     ("BrakeLever", "hope", "evo lever"): ("hope tech 4 evo red", ""),
     ("BrakeLever", "shimano", "saint shimano"): ("shimano", "saint 820"),
@@ -127,6 +128,7 @@ PHOTO_ALIASES = {
     ("Wheels", "crankbrothers", "synthesis dh"): ("crankbrother", "synthesis dh alloy 2 0 i9"),
     ("Wheels", "dt swiss", ""): ("dtswiss", "fanatik"),
     ("Wheels", "dt swiss", "ex471 + dt swiss 240"): ("dtswiss", "fanatik"),
+    ("Wheels", "dt swiss", "fr1500 + dt swiss 240"): ("dt swiss", "fr 1500 classic"),
     ("Wheels", "reserve", "30dh carbon"): ("reserve", "30dhcarbon"),
     ("Wheels", "reserve", "carbon dh"): ("reserve", "30dhcarbon"),
 }

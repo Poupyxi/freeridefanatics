@@ -877,7 +877,8 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .header-language summary::-webkit-details-marker{display:none;}
 .header-language[open] summary{border-color:var(--ink);}
 .header-language-menu{position:absolute; z-index:80; top:calc(100% + 9px); right:0; display:grid; grid-template-columns:repeat(2,minmax(110px,1fr)); width:270px; padding:10px; background:#fff; border:1px solid var(--line); box-shadow:0 16px 38px rgba(21,22,26,.16);}
-.header-language-menu a{padding:10px 11px; font-size:10px; letter-spacing:.04em; border-bottom:1px solid var(--line);}
+.header-language-menu a{display:flex; align-items:center; gap:8px; padding:10px 11px; font-size:10px; letter-spacing:.04em; border-bottom:1px solid var(--line);}
+.language-flag{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-size:15px; line-height:1; letter-spacing:0;}
 .header-language-menu a:hover{color:var(--orange-dark); background:#f6f4f0;}
 .header-language-menu a[aria-current="page"]{color:#fff; background:var(--dark);}
 .guide-hero-feature{padding:28px 0 26px; background:#f2f0ec; overflow:hidden;}

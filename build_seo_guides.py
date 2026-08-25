@@ -50,6 +50,7 @@ LANGS = {
 
 ORDER = ["en","fr","de","es","it","pt","nl","pl","ja","zh-cn"]
 HREFLANG = {"zh-cn": "zh-CN"}
+LANGUAGE_FLAGS = {"en":"🇬🇧","fr":"🇫🇷","de":"🇩🇪","es":"🇪🇸","it":"🇮🇹","pt":"🇵🇹","nl":"🇳🇱","pl":"🇵🇱","ja":"🇯🇵","zh-cn":"🇨🇳"}
 SEO_TITLES = {
     "en": "World Cup DH Bike Setup Guide",
     "fr": "Réglage VTT de descente : guide Coupe du monde",
@@ -74,8 +75,8 @@ def page(lang, d):
     toc = "".join(f'<a href="#s{i}">{escape(h)}</a>' for i,(h,_) in enumerate(d["sections"],1))
     langs = "".join(f'<a href="../{code}/" hreflang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'>{escape(LANGS[code]["name"])}</a>' for code in ORDER)
     active_lang = "ZH" if lang == "zh-cn" else lang.upper()
-    header_langs = "".join(f'<a href="../{code}/" lang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'>{escape(LANGS[code]["name"])}</a>' for code in ORDER)
-    language_switcher = f'<details class="header-language"><summary aria-label="Change language"><span>{active_lang}</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu">{header_langs}</div></details>'
+    header_langs = "".join(f'<a href="../{code}/" lang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[code]}</span>{escape(LANGS[code]["name"])}</a>' for code in ORDER)
+    language_switcher = f'<details class="header-language"><summary aria-label="Change language"><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[lang]}</span><span>{active_lang}</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu">{header_langs}</div></details>'
     faqs = "".join(f'<details><summary>{escape(q)}</summary><p>{escape(a)}</p></details>' for q,a in d["faq"])
     if lang == "en":
         hero = f'''<header class="guide-hero guide-hero-feature"><div class="wrap guide-hero-grid"><div class="guide-hero-copy"><div class="label">{escape(d["label"])}</div><h1>{escape(d["title"])}</h1><p class="lead">How professional downhill bikes are adjusted to the rider, track and race conditions.</p><div class="guide-hero-footer"><div class="hero-ctas guide-hero-actions"><a class="btn btn-solid" href="../../riders.html#grid">Explore rider setups</a><a class="btn" href="../../compare.html">Compare equipment</a></div><div class="guide-meta"><span>RidersFanatics</span><time datetime="{UPDATED}">Updated 10 August 2026</time></div></div></div></div></header>'''
@@ -87,7 +88,7 @@ def page(lang, d):
 <link rel="canonical" href="{BASE}{path}">{alternates}
 <meta property="og:type" content="article"><meta property="og:site_name" content="RidersFanatics"><meta property="og:title" content="{escape(d["title"], quote=True)}"><meta property="og:description" content="{escape(d["meta"], quote=True)}"><meta property="og:url" content="{BASE}{path}"><meta property="og:image" content="{BASE}/assets/img/og-default.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{BASE}/assets/img/og-default.png"><link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml"><script type="application/ld+json">{json.dumps(article,ensure_ascii=False)}</script><script type="application/ld+json">{json.dumps(faq,ensure_ascii=False)}</script><script type="application/ld+json">{json.dumps(breadcrumb,ensure_ascii=False)}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../../assets/css/style.css?v=20260825-guide-language"></head>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../../assets/css/style.css?v=20260825-guide-flags"></head>
 <body class="guide-page"><a class="skip-link" href="#main-content">Skip to main content</a><div class="announce">Professional rider &amp; equipment database · <span>64 riders</span> tracked</div>
 <header><div class="wrap nav-row"><a class="logo" href="../../"><span class="mark">R</span>RIDERSFANATICS</a><nav class="links" id="primary-navigation" aria-label="Primary navigation"><a href="../../competitions.html">Competitions</a><a href="../../riders.html#grid">Riders</a><a href="../../equipment.html">Equipment</a><a href="../../#faq">FAQ</a></nav><div class="nav-icons">{language_switcher}<span class="icon-btn">64 Riders</span><button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button></div></div></header>
 <main id="main-content"><article>{hero}

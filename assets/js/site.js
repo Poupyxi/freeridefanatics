@@ -37,6 +37,38 @@
     });
   });
 
+  // Keep the language selector available in the main header on every page.
+  safe('global-language-switcher', function(){
+    var navIcons = document.querySelector('header .nav-icons');
+    if(!navIcons || navIcons.querySelector('.header-language')) return;
+
+    var languages = [
+      ['en', 'en', 'EN', 'English', '🇬🇧'],
+      ['fr', 'fr', 'FR', 'Français', '🇫🇷'],
+      ['de', 'de', 'DE', 'Deutsch', '🇩🇪'],
+      ['es', 'es', 'ES', 'Español', '🇪🇸'],
+      ['it', 'it', 'IT', 'Italiano', '🇮🇹'],
+      ['pt', 'pt', 'PT', 'Português', '🇵🇹'],
+      ['nl', 'nl', 'NL', 'Nederlands', '🇳🇱'],
+      ['pl', 'pl', 'PL', 'Polski', '🇵🇱'],
+      ['ja', 'ja', 'JA', '日本語', '🇯🇵'],
+      ['zh-cn', 'zh-CN', 'ZH', '简体中文', '🇨🇳']
+    ];
+    var guideMatch = location.pathname.match(/\/guides\/([^/]+)\/?/);
+    var activeCode = guideMatch ? guideMatch[1].toLowerCase() : 'en';
+    var active = languages.filter(function(language){ return language[0] === activeCode; })[0] || languages[0];
+    var logo = document.querySelector('header .logo');
+    var siteRoot = logo ? new URL(logo.getAttribute('href'), document.baseURI) : new URL('./', document.baseURI);
+    var details = document.createElement('details');
+    details.className = 'header-language';
+    details.innerHTML = '<summary aria-label="Change language"><span class="language-flag" aria-hidden="true">' + active[4] + '</span><span>' + active[2] + '</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu">' + languages.map(function(language){
+      var current = language[0] === activeCode ? ' aria-current="page"' : '';
+      var href = new URL('guides/' + language[0] + '/', siteRoot).href;
+      return '<a href="' + href + '" lang="' + language[1] + '"' + current + '><span class="language-flag" aria-hidden="true">' + language[4] + '</span>' + language[3] + '</a>';
+    }).join('') + '</div>';
+    navIcons.insertBefore(details, navIcons.firstChild);
+  });
+
   // Scroll-reveal
   safe('scroll-reveal', function(){
     var revealEls = document.querySelectorAll('.reveal');

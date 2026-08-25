@@ -1000,4 +1000,16 @@
         }
   });
 
+  // The supplied nine-stage tour belongs to the UCI season header only.
+  safe('uci-tour-header', function(){
+    if(!document.body.classList.contains('competition-detail-page')) return;
+    if(!/\/competitions\/uci-mtb-world-cup-dh-2026\.html$/.test(location.pathname)) return;
+    var hero = document.querySelector('.competition-detail-hero');
+    var tour = document.querySelector('.uci-round-showcase');
+    if(!hero || !tour || hero.contains(tour)) return;
+    hero.classList.add('has-uci-tour-header');
+    tour.classList.add('uci-tour-in-header');
+    hero.appendChild(tour);
+  });
+
 })();

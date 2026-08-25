@@ -1263,7 +1263,7 @@ def competition_subnav(competition, active):
         links = [
             ("Overview", f"../{cid}.html", "overview"),
             ("Standings", "standings.html", "standings"),
-            ("Rounds", f"../{cid}.html#rounds", "rounds"),
+            ("Events", f"../{cid}.html#events", "rounds"),
             ("Riders", "../../riders.html#grid", "riders"),
             ("Equipment", "../../equipment.html", "equipment"),
         ]
@@ -1271,7 +1271,7 @@ def competition_subnav(competition, active):
         links = [
             ("Overview", f"{cid}.html", "overview"),
             ("Standings", f"{cid}/standings.html", "standings"),
-            ("Rounds", f"{cid}.html#rounds", "rounds"),
+            ("Events", f"{cid}.html#events", "rounds"),
             ("Riders", "../riders.html#grid", "riders"),
             ("Equipment", "../equipment.html", "equipment"),
         ]
@@ -1492,9 +1492,9 @@ def build_competition_detail(riders, competition):
             for h in rider.get("competition_history") or []))
         round_href = f'{competition["id"]}/rounds/{competition_round_slug(event)}.html'
         event_rows.append(f'<li><span>{number:02d}</span><div><strong><a href="{round_href}">{esc(event)}</a></strong><small>{starters} tracked results</small></div><a class="round-open" href="{round_href}" aria-label="Open results for {esc_attr(event)}">Results →</a></li>')
-    description = f"{name} season overview: completed rounds, current leaders, rider profiles and links to overall standings and professional downhill equipment."
+    description = f"{name} season overview: completed events, current leaders, rider profiles and links to overall standings and professional downhill equipment."
     html = head(
-        f"{name} | Riders & Rounds", description, "../",
+        f"{name} | Riders & Events", description, "../",
         body_class="competition-detail-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage", "name": name,
@@ -1506,19 +1506,23 @@ def build_competition_detail(riders, competition):
             breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"), (name, path)]),
         ],
     )
+    html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
     html += header_html("../", active="competitions")
     html += f'''<main>
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>One season hub for the riders, championship standings and equipment records currently connected in the RidersFanatics database.</p><div class="hero-ctas"><a class="btn btn-solid" href="{competition['id']}/standings.html">View standings</a><a class="btn" href="../riders.html#grid">Explore riders</a></div></div></section>
+<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>
 {competition_subnav(competition, "overview")}
 <div class="wrap">{breadcrumb_html([("Home", "../"), ("Competitions", "../competitions.html"), (name, competition['id'] + ".html")])}</div>
 <section class="section competition-overview" id="overview"><div class="wrap"><div class="competition-overview-grid">
-  <div class="competition-summary"><div class="label">Dataset status</div><h2>Season at a glance.</h2><p>The standings currently connect {len(stats['scored'])} riders from {len(stats['teams'])} teams across {len(events)} completed rounds. Results and equipment are kept distinct: a race result can update without implying that every rider setup was rescanned that weekend.</p><dl><div><dt>Rounds recorded</dt><dd>{len(events)}</dd></div><div><dt>Riders scored</dt><dd>{len(stats['scored'])}</dd></div><div><dt>Categories</dt><dd>Men &amp; Women Elite</dd></div></dl></div>
+  <div class="competition-summary"><div class="label">Dataset status</div><h2>Season at a glance.</h2><p>The standings currently connect {len(stats['scored'])} riders from {len(stats['teams'])} teams across {len(events)} completed events. Results and equipment are kept distinct: a race result can update without implying that every rider setup was rescanned that weekend.</p><dl><div><dt>Events recorded</dt><dd>{len(events)}</dd></div><div><dt>Riders scored</dt><dd>{len(stats['scored'])}</dd></div><div><dt>Categories</dt><dd>Men &amp; Women Elite</dd></div></dl></div>
   <div class="competition-leaders"><div class="label">Current leaders</div>{"".join(leader_blocks)}</div>
 </div></div></section>
-<section class="section competition-rounds" id="rounds"><div class="wrap"><div class="section-head"><div><div class="label">Round index</div><h2>Recorded events</h2></div><a class="see-all" href="../standings.html">See points by round →</a></div><ol>{"".join(event_rows)}</ol></div></section>
 <section class="section competition-links"><div class="wrap"><div class="competition-link-grid"><a href="{competition['id']}/standings.html"><span>01</span><strong>Standings</strong><small>Men, women and teams</small></a><a href="../riders.html#grid"><span>02</span><strong>Riders</strong><small>Profiles, results and setups</small></a><a href="../equipment.html"><span>03</span><strong>Equipment</strong><small>Products ranked in context</small></a><a href="../methodology.html"><span>04</span><strong>Methodology</strong><small>Sources and limitations</small></a></div></div></section>
 </main>'''
-    html += footer_html("../")
+    html += footer_html("../").replace(
+        '<script src="../assets/js/site.js',
+        '<script src="../assets/js/uci-iconic-tour.js?v=3"></script>\n<script src="../assets/js/site.js',
+    )
     return html
 
 def short_event(ev):

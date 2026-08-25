@@ -40,7 +40,7 @@
   // Keep the language selector available in the main header on every page.
   safe('global-language-switcher', function(){
     var navIcons = document.querySelector('header .nav-icons');
-    if(!navIcons || navIcons.querySelector('.header-language')) return;
+    if(!navIcons) return;
 
     var languages = [
       ['en', 'en', 'EN', 'English', '🇬🇧'],
@@ -55,18 +55,95 @@
       ['zh-cn', 'zh-CN', 'ZH', '简体中文', '🇨🇳']
     ];
     var guideMatch = location.pathname.match(/\/guides\/([^/]+)\/?/);
-    var activeCode = guideMatch ? guideMatch[1].toLowerCase() : 'en';
+    var requestedLanguage = new URL(location.href).searchParams.get('lang');
+    var activeCode = guideMatch ? guideMatch[1].toLowerCase() : (requestedLanguage || 'en').toLowerCase();
     var active = languages.filter(function(language){ return language[0] === activeCode; })[0] || languages[0];
     var logo = document.querySelector('header .logo');
     var siteRoot = logo ? new URL(logo.getAttribute('href'), document.baseURI) : new URL('./', document.baseURI);
-    var details = document.createElement('details');
-    details.className = 'header-language';
-    details.innerHTML = '<summary aria-label="Change language"><span class="language-flag" aria-hidden="true">' + active[4] + '</span><span>' + active[2] + '</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu">' + languages.map(function(language){
-      var current = language[0] === activeCode ? ' aria-current="page"' : '';
-      var href = new URL('guides/' + language[0] + '/', siteRoot).href;
-      return '<a href="' + href + '" lang="' + language[1] + '"' + current + '><span class="language-flag" aria-hidden="true">' + language[4] + '</span>' + language[3] + '</a>';
-    }).join('') + '</div>';
-    navIcons.insertBefore(details, navIcons.firstChild);
+    if(!navIcons.querySelector('.header-language')){
+      var details = document.createElement('details');
+      details.className = 'header-language';
+      details.innerHTML = '<summary aria-label="Change language"><span class="language-flag" aria-hidden="true">' + active[4] + '</span><span>' + active[2] + '</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu" translate="no">' + languages.map(function(language){
+        var current = language[0] === activeCode ? ' aria-current="page"' : '';
+        var localizedUrl = new URL(location.href);
+        if(language[0] === 'en') localizedUrl.searchParams.delete('lang');
+        else localizedUrl.searchParams.set('lang', language[0]);
+        return '<a href="' + localizedUrl.href + '" lang="' + language[1] + '"' + current + '><span class="language-flag" aria-hidden="true">' + language[4] + '</span>' + language[3] + '</a>';
+      }).join('') + '</div>';
+      navIcons.insertBefore(details, navIcons.firstChild);
+    }
+
+    var supported = languages.some(function(language){ return language[0] === activeCode; });
+    if(!supported) return;
+
+    function localizeLinks(root){
+      root.querySelectorAll('a[href]').forEach(function(link){
+        if(link.closest('.header-language-menu,.language-list') || link.hasAttribute('hreflang') || link.hasAttribute('download')) return;
+        var raw = link.getAttribute('href');
+        if(!raw || raw.charAt(0) === '#' || /^(mailto:|tel:|javascript:)/i.test(raw)) return;
+        var target;
+        try { target = new URL(raw, document.baseURI); } catch(error) { return; }
+        if(target.origin !== location.origin || /\/assets\//.test(target.pathname)) return;
+        target.searchParams.set('lang', activeCode);
+        link.href = target.href;
+      });
+    }
+
+    if(guideMatch){
+      if(activeCode !== 'en') localizeLinks(document.body);
+      return;
+    }
+    if(activeCode === 'en') return;
+
+    function applyCatalog(catalog, root){
+      var scope = root || document.body;
+      var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+      var nodes = [];
+      while(walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        var parent = node.parentElement;
+        if(!parent || parent.closest('script,style,noscript,svg,code,pre,[translate="no"]')) return;
+        var trimmed = node.nodeValue.trim();
+        if(!trimmed || !catalog[trimmed]) return;
+        node.nodeValue = node.nodeValue.replace(trimmed, catalog[trimmed]);
+      });
+      scope.querySelectorAll('[alt],[aria-label],[placeholder],[title]').forEach(function(element){
+        ['alt','aria-label','placeholder','title'].forEach(function(attribute){
+          var value = element.getAttribute(attribute);
+          if(value && catalog[value.trim()]) element.setAttribute(attribute, catalog[value.trim()]);
+        });
+      });
+      localizeLinks(scope);
+    }
+
+    var catalogRequest = fetch(new URL('assets/i18n/' + activeCode + '.json', siteRoot)).then(function(response){
+      if(!response.ok) throw new Error('Translation catalog unavailable');
+      return response.json();
+    });
+    var overrideRequest = activeCode === 'fr'
+      ? fetch(new URL('assets/i18n/fr-overrides.json', siteRoot)).then(function(response){ return response.ok ? response.json() : {}; })
+      : Promise.resolve({});
+    Promise.all([catalogRequest, overrideRequest])
+      .then(function(result){
+        var catalog = Object.assign(result[0], result[1]);
+        document.documentElement.lang = active[1];
+        applyCatalog(catalog, document.body);
+        if(catalog[document.title]) document.title = catalog[document.title];
+        document.querySelectorAll('meta[name="description"],meta[property="og:title"],meta[property="og:description"],meta[name="twitter:title"],meta[name="twitter:description"]').forEach(function(meta){
+          var content = meta.getAttribute('content');
+          if(content && catalog[content.trim()]) meta.setAttribute('content', catalog[content.trim()]);
+        });
+        var observer = new MutationObserver(function(mutations){
+          mutations.forEach(function(mutation){
+            mutation.addedNodes.forEach(function(node){
+              if(node.nodeType === 1) applyCatalog(catalog, node);
+              else if(node.nodeType === 3 && node.parentElement) applyCatalog(catalog, node.parentElement);
+            });
+          });
+        });
+        observer.observe(document.body, {childList:true, subtree:true});
+      })
+      .catch(function(error){ console.error('[site.js] translations failed:', error); });
   });
 
   // Scroll-reveal
@@ -900,8 +977,21 @@
         var productPool = common.length ? common : (woman.equipment || []).concat(man.equipment || []);
         if(productPool.length){
           var product = productPool[Math.floor(Math.random() * productPool.length)];
+          var categoryLabels = {
+            BrakeLever: 'Brake Lever',
+            CHAIN: 'Chain',
+            Disk: 'Brake Disc',
+            DropperPost: 'Dropper Post',
+            GRIP: 'Grip',
+            RearShock: 'Rear Shock'
+          };
+          var categoryLabel = categoryLabels[product.category] || product.category;
           setMedia(equipmentCard, product.photo, '+');
-          equipmentCard.querySelector('.direct-ad-disclosure').textContent = (common.length ? 'Common equipment · ' : 'Random equipment · ') + product.category;
+          var equipmentDisclosure = equipmentCard.querySelector('.direct-ad-disclosure');
+          equipmentDisclosure.textContent = '';
+          equipmentDisclosure.appendChild(document.createTextNode(common.length ? 'Common equipment' : 'Random equipment'));
+          equipmentDisclosure.appendChild(document.createTextNode(' · '));
+          equipmentDisclosure.appendChild(document.createTextNode(categoryLabel));
           equipmentCard.querySelector('strong').textContent = [product.brand, product.model].filter(Boolean).join(' ');
           equipmentCard.querySelector('p').textContent = common.length ? 'Used by both selected riders.' : 'Used by one of the selected riders.';
           var equipmentLink = equipmentCard.querySelector('a');

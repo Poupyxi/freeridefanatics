@@ -999,4 +999,47 @@
           equipmentLink.innerHTML = 'Explore category <span aria-hidden="true">→</span>';
         }
   });
+
+  // One horizontal mountain line per competition series, plus one identifying
+  // profile on every individual event page.
+  safe('competition-event-lines', function(){
+    var uciEvents = [
+      {slug:'mona-yongpyong-south-korea-may',number:'01',name:'Mona Yongpyong',path:'M0 82 C24 78 42 64 61 48 C82 31 101 35 121 43 C143 52 158 34 180 28'},
+      {slug:'loudenvielle-france-may',number:'02',name:'Loudenvielle',path:'M0 28 C23 40 38 69 61 73 C84 78 106 49 129 22 C148 1 165 29 180 47'},
+      {slug:'leogang-austria-june',number:'03',name:'Leogang',path:'M0 52 L18 39 L34 45 L51 28 L68 34 L87 10 L104 1 L124 14 L143 38 L162 31 L180 51'},
+      {slug:'switzerland-june',number:'04',name:'Lenzerheide',path:'M0 49 L20 37 L38 43 L57 27 L77 33 L97 13 L117 2 L138 14 L158 38 L180 54'},
+      {slug:'la-thuile-italy-july',number:'05',name:'La Thuile',path:'M0 56 C22 50 39 36 58 20 L77 27 L97 12 L117 20 L137 1 L157 17 L180 39'},
+      {slug:'andorra-july',number:'06',name:'Pal Arinsal',path:'M0 39 L19 21 L38 28 L57 10 L76 1 L96 15 L116 8 L136 27 L156 20 L180 39'},
+      {slug:'les-gets',number:'07',name:'Les Gets',path:'M0 35 C24 22 43 6 62 15 C83 25 98 52 120 47 C143 42 160 20 180 25'},
+      {slug:'whistler',number:'08',name:'Whistler',path:'M0 25 C23 14 40 20 57 33 C76 48 92 41 109 18 C127 -4 144 0 159 16 C168 25 174 30 180 31'},
+      {slug:'lake-placid',number:'09',name:'Lake Placid',path:'M0 31 C28 25 48 14 72 1 C95 -10 114 0 134 17 C150 32 166 37 180 29'}
+    ];
+    function eventSvg(event, compact){
+      return '<svg viewBox="0 0 180 ' + (compact ? '92' : '110') + '" aria-hidden="true"><path class="event-line-ghost" d="' + event.path + '"/><path class="event-line-draw" pathLength="1" d="' + event.path + '"/></svg>';
+    }
+
+    var competitionCard = document.querySelector('.competitions-page .competition-card');
+    if(competitionCard && !competitionCard.querySelector('.competition-series-line')){
+      competitionCard.classList.add('competition-card-with-line');
+      var series = document.createElement('div');
+      series.className = 'competition-series-line';
+      series.setAttribute('aria-label', 'Nine rounds in the 2026 UCI Downhill World Cup');
+      series.innerHTML = uciEvents.map(function(event){
+        return '<a href="competitions/uci-mtb-world-cup-dh-2026.html#rounds" class="competition-series-event" title="Event ' + event.number + ' · ' + event.name + '"><span>' + event.number + '</span>' + eventSvg(event, true) + '</a>';
+      }).join('');
+      competitionCard.insertBefore(series, competitionCard.querySelector('.competition-card-stats'));
+    }
+
+    var roundHero = document.querySelector('.competition-round-page .round-hero .wrap');
+    if(!roundHero || roundHero.querySelector('.round-mountain-line')) return;
+    var pathMatch = location.pathname.match(/\/rounds\/([^/]+)\.html$/);
+    if(!pathMatch) return;
+    var currentEvent = uciEvents.filter(function(event){ return event.slug === pathMatch[1]; })[0];
+    if(!currentEvent) return;
+    var line = document.createElement('div');
+    line.className = 'round-mountain-line';
+    line.setAttribute('aria-hidden', 'true');
+    line.innerHTML = '<span>Event ' + currentEvent.number + '</span>' + eventSvg(currentEvent, false);
+    roundHero.appendChild(line);
+  });
 })();

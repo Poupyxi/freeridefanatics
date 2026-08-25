@@ -24,7 +24,7 @@
 .favorite-benefit-grid p{margin-top:5px;color:#aeb2b5;font-size:12px}
 .favorite-shop{padding:96px 0 110px}
 .favorite-shop-head{display:flex;justify-content:space-between;align-items:end;gap:32px;margin-bottom:42px}
-.favorite-shop-head h2,.favorite-buying-guide h2{font:clamp(40px,5vw,68px)/.95 var(--head);text-transform:uppercase;letter-spacing:-.04em;margin:14px 0 15px}
+.favorite-shop-head h1,.favorite-buying-guide h2{font:clamp(40px,5vw,68px)/.95 var(--head);text-transform:uppercase;letter-spacing:-.04em;margin:14px 0 15px}
 .favorite-shop-head p{max-width:650px;color:var(--muted)}
 .favorite-result-count{font:11px var(--mono);text-transform:uppercase;letter-spacing:.12em;white-space:nowrap}
 .favorite-result-count strong{font:34px var(--head);color:var(--orange);margin-right:8px}

@@ -14,6 +14,9 @@ RewriteCond %{QUERY_STRING} (^|&)filter=Women(?:\+|%20)Elite(?:&|$) [NC]
 RewriteRule ^riders\.html$ https://ridersfanatics.com/riders.html#women [R=301,L,NE,QSD]
 RewriteCond %{QUERY_STRING} (^|&)filter= [NC]
 RewriteRule ^riders\.html$ https://ridersfanatics.com/riders.html [R=301,L,NE,QSD]
+# Translation catalogs are the only JSON files intentionally served publicly.
+RewriteCond %{REQUEST_URI} !^/assets/i18n/(?:de|es|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn)\.json$ [NC]
+RewriteRule \.json$ - [F,L,NC]
 RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
 
 <IfModule mod_headers.c>
@@ -46,6 +49,6 @@ RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
   ExpiresByType font/woff2 "access plus 1 year"
 </IfModule>
 
-<FilesMatch "\.(?:py|xlsx|csv|md|json)$">
+<FilesMatch "\.(?:py|xlsx|csv|md)$">
   Require all denied
 </FilesMatch>

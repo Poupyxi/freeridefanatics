@@ -8,6 +8,9 @@ Require valid-user
 
 RewriteEngine On
 RewriteRule ^contact-submit\.php$ - [R=404,L]
+# Translation catalogs are the only JSON files intentionally served publicly.
+RewriteCond %{REQUEST_URI} !^/assets/i18n/(?:de|es|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn)\.json$ [NC]
+RewriteRule \.json$ - [F,L,NC]
 RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
 
 <IfModule mod_headers.c>
@@ -21,6 +24,6 @@ RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
   Header always unset X-Powered-By
 </IfModule>
 
-<FilesMatch "\.(?:py|xlsx|csv|md|json)$">
+<FilesMatch "\.(?:py|xlsx|csv|md)$">
   Require all denied
 </FilesMatch>

@@ -356,7 +356,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <a class="skip-link" href="#main-content">Skip to main content</a>
 """
 
-def header_html(asset_prefix, active="", show_announce=True):
+def header_html(asset_prefix, active=""):
     def cls(name):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
@@ -378,8 +378,7 @@ def header_html(asset_prefix, active="", show_announce=True):
             competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
     if not competition_groups:
         competition_groups.append(f'<a href="{asset_prefix}competitions/{CURRENT_COMPETITION["id"]}.html"><strong>{CURRENT_COMPETITION["short_name"]}</strong><small>{CURRENT_COMPETITION["discipline"]} · {CURRENT_COMPETITION["season"]}</small></a>')
-    announce = '<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>' if show_announce else ""
-    return f"""{announce}
+    return f"""<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>
 
 <header>
   <div class="wrap nav-row">
@@ -590,7 +589,7 @@ def build_editorial_page(slug, title, description, label, lead, sections):
             breadcrumb_schema([("Home", "/"), (title, path)]),
         ],
     )
-    html += header_html("", show_announce=False)
+    html += header_html("")
     html += f'''<main><article>
 <header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated {SITE_UPDATED_LONG}</time></div></div></header>
 <div class="wrap">{breadcrumb_html([("Home", "./"), (title, path.lstrip('/'))])}</div><div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>

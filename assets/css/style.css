@@ -1457,31 +1457,3 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .cta-form input{flex:1 1 100%; min-width:0;}
   .cta-form button{flex:1 1 100%; margin-top:8px;}
 }
-
-/* Competition event skylines: one line per series and one event profile on
-   every individual results page. */
-.competition-card-with-line{grid-column:1/-1;min-height:500px}
-.competition-series-line{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));width:100%;height:135px;margin:28px 0 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
-.competition-series-event{position:relative;display:block;min-width:0;height:135px;border-right:1px solid var(--line);overflow:hidden;background:#f5f4f0}
-.competition-series-event:last-child{border-right:0}
-.competition-series-event>span{position:absolute;z-index:2;top:12px;left:12px;color:var(--orange);font:700 8px var(--mono);letter-spacing:.16em}
-.competition-series-event svg{position:absolute;left:0;right:0;bottom:-3px;width:100%;height:88px;overflow:visible}
-.event-line-ghost,.event-line-draw{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.event-line-ghost{stroke:#6f756f;stroke-width:2.5;opacity:.2}
-.event-line-draw{stroke:var(--ink);stroke-width:2.7;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.15s cubic-bezier(.65,0,.2,1)}
-.competition-series-event:hover,.competition-series-event:focus-visible{background:#ebe9e3}
-.competition-series-event:hover .event-line-draw,.competition-series-event:focus-visible .event-line-draw{stroke-dashoffset:0}
-.round-hero .wrap{padding-right:min(36vw,470px)}
-.round-mountain-line{position:absolute;z-index:-1;right:0;bottom:-61px;width:min(37vw,480px);height:220px;pointer-events:none}
-.round-mountain-line>span{position:absolute;right:10px;top:0;color:var(--orange-on-dark);font:9px var(--mono);letter-spacing:.18em;text-transform:uppercase}
-.round-mountain-line svg{position:absolute;right:0;bottom:0;width:100%;height:180px}
-.round-mountain-line .event-line-ghost{stroke:rgba(255,255,255,.14);stroke-width:3}
-.round-mountain-line .event-line-draw{stroke:var(--orange-on-dark);stroke-width:3;stroke-dashoffset:0;opacity:.75}
-@media(max-width:760px){
-  .competition-series-line{overflow-x:auto;grid-template-columns:repeat(9,120px);scroll-snap-type:x proximity}
-  .competition-series-event{scroll-snap-align:start}
-  .round-hero .wrap{padding-right:32px;padding-bottom:120px}
-  .round-mountain-line{right:16px;bottom:-35px;width:calc(100% - 32px);height:150px;opacity:.72}
-  .round-mountain-line svg{height:130px}
-}
-@media(prefers-reduced-motion:reduce){.event-line-draw{transition:none;stroke-dashoffset:0}}

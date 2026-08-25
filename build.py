@@ -1494,7 +1494,6 @@ def build_competition_detail(riders, competition):
   <div class="competition-summary"><div class="label">Dataset status</div><h2>Season at a glance.</h2><p>The standings currently connect {len(stats['scored'])} riders from {len(stats['teams'])} teams across {len(events)} completed events. Results and equipment are kept distinct: a race result can update without implying that every rider setup was rescanned that weekend.</p><dl><div><dt>Events recorded</dt><dd>{len(events)}</dd></div><div><dt>Riders scored</dt><dd>{len(stats['scored'])}</dd></div><div><dt>Categories</dt><dd>Men &amp; Women Elite</dd></div></dl></div>
   <div class="competition-leaders"><div class="label">Current leaders</div>{"".join(leader_blocks)}</div>
 </div></div></section>
-<section class="section competition-links"><div class="wrap"><div class="competition-link-grid"><a href="{competition['id']}/standings.html"><span>01</span><strong>Standings</strong><small>Men, women and teams</small></a><a href="../riders.html#grid"><span>02</span><strong>Riders</strong><small>Profiles, results and setups</small></a><a href="../equipment.html"><span>03</span><strong>Equipment</strong><small>Products ranked in context</small></a><a href="../methodology.html"><span>04</span><strong>Methodology</strong><small>Sources and limitations</small></a></div></div></section>
 </main>'''
     html += footer_html("../").replace(
         '<script src="../assets/js/site.js',

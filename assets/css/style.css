@@ -1261,6 +1261,40 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .compare-tray{align-items:stretch;gap:11px;flex-direction:column}.compare-tray-actions{justify-content:flex-end}.compare-page-head{align-items:flex-start;flex-direction:column}.compare-grid{grid-template-columns:1fr}
 }
 
+/* Keep the equipment overview and all three featured products in view. */
+.equipment-page .equipment-hero-layout{min-height:500px;grid-template-columns:minmax(0,1.05fr) minmax(430px,.95fr);gap:40px;}
+.equipment-page .equipment-hero-copy{padding:44px 0 38px;}
+.equipment-page .equipment-hero-copy h1{font-size:clamp(42px,4.4vw,58px);line-height:.94;max-width:620px;margin:12px 0 16px;}
+.equipment-page .equipment-hero-copy>p{font-size:15px;line-height:1.55;}
+.equipment-page .equipment-hero-copy .hero-ctas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:22px 0 26px;}
+.equipment-page .equipment-hero-copy .hero-ctas .btn{padding:15px 10px;text-align:center;font-size:10px;}
+.equipment-page .equipment-hero-stats>div{padding-top:16px;}
+.equipment-page .equipment-hero-visual{height:440px;}
+.equipment-page .hero-product-1{width:270px;height:335px;}
+.equipment-page .hero-product-2{width:200px;height:245px;bottom:40px;}
+.equipment-page .hero-product-3{width:150px;height:175px;top:4px;}
+@media(max-width:900px){
+  .equipment-page .equipment-hero-layout{grid-template-columns:1fr;gap:0;}
+  .equipment-page .equipment-hero-copy{padding:42px 0 16px;}
+  .equipment-page .equipment-hero-copy h1{font-size:clamp(40px,7vw,54px);}
+  .equipment-page .equipment-hero-visual{height:280px;}
+  .equipment-page .hero-product-1{width:220px;height:270px;}
+  .equipment-page .hero-product-2{width:170px;height:210px;bottom:24px;}
+  .equipment-page .hero-product-3{width:125px;height:145px;}
+}
+@media(max-width:620px){
+  .equipment-page .equipment-hero-copy{padding:32px 0 12px;}
+  .equipment-page .equipment-hero-copy h1{font-size:clamp(34px,10vw,40px);margin:10px 0 12px;}
+  .equipment-page .equipment-hero-copy>p{font-size:14px;line-height:1.45;}
+  .equipment-page .equipment-hero-copy .hero-ctas{grid-template-columns:repeat(2,minmax(0,1fr));margin:16px 0 18px;}
+  .equipment-page .equipment-hero-copy .hero-ctas .btn{padding:13px 8px;font-size:9px;}
+  .equipment-page .equipment-hero-stats>div{padding-top:13px;}
+  .equipment-page .equipment-hero-visual{height:220px;}
+  .equipment-page .hero-product-1{width:155px;height:190px;}
+  .equipment-page .hero-product-2{width:120px;height:150px;bottom:18px;}
+  .equipment-page .hero-product-3{width:90px;height:105px;top:0;}
+}
+
 /* ===== Responsive ===== */
 @media (max-width:1000px){
   .grid-riders{grid-template-columns:repeat(3,1fr);}

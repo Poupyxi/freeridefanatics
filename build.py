@@ -1263,17 +1263,11 @@ def competition_subnav(competition, active):
         links = [
             ("Overview", f"../{cid}.html", "overview"),
             ("Standings", "standings.html", "standings"),
-            ("Events", f"../{cid}.html#events", "rounds"),
-            ("Riders", "../../riders.html#grid", "riders"),
-            ("Equipment", "../../equipment.html", "equipment"),
         ]
     else:
         links = [
             ("Overview", f"{cid}.html", "overview"),
             ("Standings", f"{cid}/standings.html", "standings"),
-            ("Events", f"{cid}.html#events", "rounds"),
-            ("Riders", "../riders.html#grid", "riders"),
-            ("Equipment", "../equipment.html", "equipment"),
         ]
     items = "".join(
         f'<a href="{href}"{current}>{label}</a>'

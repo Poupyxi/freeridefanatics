@@ -1009,6 +1009,9 @@
     if(!hero || !tour || hero.contains(tour)) return;
     hero.classList.add('has-uci-tour-header');
     tour.classList.add('uci-tour-in-header');
+    if(customElements.get('uci-iconic-tour')){
+      tour.innerHTML = '<uci-iconic-tour aria-label="Nine iconic mountain profiles from the 2026 UCI Downhill World Cup"></uci-iconic-tour>';
+    }
     hero.appendChild(tour);
   });
 

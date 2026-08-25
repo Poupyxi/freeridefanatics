@@ -29,7 +29,8 @@
 /* UCI season page: adapt the supplied nine-stage strip into the hero banner. */
 .competition-detail-hero.has-uci-tour-header{padding-bottom:0;overflow:hidden}
 .has-uci-tour-header>.wrap{padding-bottom:32px}
-.uci-tour-in-header{padding:0;background:#f5f4f0}
+.competition-detail-hero section.uci-tour-in-header{padding:0;background:#f5f4f0}
+.uci-tour-in-header uci-iconic-tour{display:block;width:100%;height:300px}
 .uci-tour-in-header .uci-round-heading,.uci-tour-in-header .uci-tour-hint{display:none}
 .uci-tour-in-header .uci-tour{--tour-accent:#8aa377;width:100%;max-width:none;height:280px}
 .uci-tour-in-header .uci-stage{height:280px;padding-top:16px}
@@ -38,4 +39,5 @@
   .has-uci-tour-header>.wrap{padding-bottom:24px}
   .uci-tour-in-header .uci-tour{height:260px}
   .uci-tour-in-header .uci-stage{height:260px}
+  .uci-tour-in-header uci-iconic-tour{height:300px}
 }

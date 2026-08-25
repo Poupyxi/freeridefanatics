@@ -6,7 +6,7 @@ class UciIconicTour extends HTMLElement {
     *{box-sizing:border-box}
     .tour{width:max(1440px,100%);height:300px;min-height:250px;display:grid;grid-template-columns:repeat(9,1fr);position:relative;overflow:hidden;background:var(--paper);isolation:isolate}
     .tour:after{content:"";position:absolute;inset:0;z-index:5;pointer-events:none;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-    .stage{position:relative;min-width:0;overflow:hidden;cursor:pointer;transition:background .4s ease}
+    .stage{position:relative;min-width:0;overflow:hidden;cursor:default;transition:background .4s ease}.stage.has-results{cursor:pointer}
     .stage{transition:opacity .4s ease}
     .head{position:absolute;z-index:3;top:14px;left:34px;right:26px}.number{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
     h2{margin:9px 0 4px;font:500 clamp(26px,2.4vw,43px)/.96 Georgia,serif;letter-spacing:-.04em}.meta{font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.48}
@@ -162,17 +162,35 @@ class UciIconicTour extends HTMLElement {
         </g></svg>
       <button aria-label="Révéler l’étape 9"></button>
     </section></div>`;
-    root.querySelectorAll('.stage').forEach(stage => {
+    const resultPages = [
+      'uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may.html',
+      'uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may.html',
+      'uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june.html',
+      'uci-mtb-world-cup-dh-2026/rounds/switzerland-june.html',
+      null,
+      null,
+      'uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july.html',
+      null,
+      'uci-mtb-world-cup-dh-2026/rounds/andorra-july.html'
+    ];
+    root.querySelectorAll('.stage').forEach((stage, index) => {
       const svg = stage.querySelector('svg');
+      const button = stage.querySelector('button');
+      const resultPage = resultPages[index];
       svg.querySelectorAll('.ghost').forEach(path => {
         const active = path.cloneNode();
         active.classList.remove('ghost');
         active.classList.add('draw');
         path.parentNode.appendChild(active);
       });
-      stage.querySelector('button').addEventListener('click', () => {
-        if(matchMedia('(hover: none)').matches) stage.classList.toggle('active');
-      });
+      if(resultPage){
+        stage.classList.add('has-results');
+        button.setAttribute('aria-label', `View ${stage.querySelector('h2').textContent} event results`);
+        button.addEventListener('click', () => window.location.assign(resultPage));
+      } else {
+        button.setAttribute('aria-label', `${stage.querySelector('h2').textContent}: results not available yet`);
+        button.addEventListener('click', () => stage.classList.toggle('active'));
+      }
     });
   }
 }

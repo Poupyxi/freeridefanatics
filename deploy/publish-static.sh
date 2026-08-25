@@ -46,7 +46,8 @@ if [[ "$BUILD_ENV" == "preprod" ]]; then
     sed -i.bak "\\|<loc>https://ridersfanatics.com/$hidden_page</loc>|d" "$PUBLIC_DIR/sitemap.xml"
   done
   find "$PUBLIC_DIR" -type f -name '*.html' -print0 | xargs -0 perl -0pi -e \
-    's{<a\b[^>]*href="[^"]*(?:methodology|data-license|advertise|affiliate-disclosure)\.html"[^>]*>(.*?)</a>}{$1}gis;
+    's{<a\b[^>]*href="[^"]*(?:methodology|data-license|advertise|affiliate-disclosure)\.html"[^>]*>\s*(?:Methodology|Data license|Advertise|Affiliates)\s*</a>}{}gis;
+     s{<a\b[^>]*href="[^"]*(?:methodology|data-license|advertise|affiliate-disclosure)\.html"[^>]*>(.*?)</a>}{$1}gis;
      s{,\s*"license"\s*:\s*"https://ridersfanatics\.com/data-license\.html"}{}gis;
      s{,\s*"license"\s*:\s*\{[^{}]*"https://ridersfanatics\.com/data-license\.html"[^{}]*\}}{}gis'
   find "$PUBLIC_DIR" -type f -name '*.bak' -delete

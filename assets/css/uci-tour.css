@@ -25,3 +25,17 @@
 @media(min-width:1440px){.uci-tour-hint{display:none}}
 @media(max-width:700px){.uci-round-heading{align-items:flex-start;flex-direction:column}.uci-round-heading h2{font-size:40px}.uci-tour{grid-template-columns:repeat(9,260px);min-width:2340px;height:300px}.uci-stage{height:300px;padding:20px 22px}.uci-stage h3{font-size:29px}.uci-stage-action{opacity:1;transform:none}.uci-tour-scroll{scroll-snap-type:x proximity}.uci-stage{scroll-snap-align:start}}
 @media(prefers-reduced-motion:reduce){.terrain-draw{transition:none;stroke-dashoffset:0}.terrain-shadow{transition:none}.uci-stage-action{transition:none}}
+
+/* UCI season page: adapt the supplied nine-stage strip into the hero banner. */
+.competition-detail-hero.has-uci-tour-header{padding-bottom:0;overflow:hidden}
+.has-uci-tour-header>.wrap{padding-bottom:32px}
+.uci-tour-in-header{padding:0;background:#f5f4f0}
+.uci-tour-in-header .uci-round-heading,.uci-tour-in-header .uci-tour-hint{display:none}
+.uci-tour-in-header .uci-tour{--tour-accent:#8aa377;width:100%;max-width:none;height:280px}
+.uci-tour-in-header .uci-stage{height:280px;padding-top:16px}
+.uci-tour-in-header .uci-stage-number,.uci-tour-in-header .uci-stage-action{color:var(--tour-accent)}
+@media(max-width:700px){
+  .has-uci-tour-header>.wrap{padding-bottom:24px}
+  .uci-tour-in-header .uci-tour{height:260px}
+  .uci-tour-in-header .uci-stage{height:260px}
+}

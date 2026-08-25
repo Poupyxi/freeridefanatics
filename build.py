@@ -1248,7 +1248,6 @@ def build_competition_round(riders, competition, event, round_number, events):
     )
     html += header_html("../../../", active="competitions")
     html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1><p>Recorded Elite Men and Elite Women results for {esc(name)}, connected to each rider profile and season points.</p><div class="round-hero-stats"><span><strong>{len(all_entries)}</strong> results</span><span><strong>{len(categories['Men Elite'])}</strong> men</span><span><strong>{len(categories['Women Elite'])}</strong> women</span></div></div></section>
-<nav class="competition-subnav" aria-label="Competition navigation"><div class="wrap"><a href="../../{cid}.html">Overview</a><a href="../standings.html">Standings</a><a href="../../{cid}.html#rounds" aria-current="page">Rounds</a><a href="../../../riders.html#grid">Riders</a><a href="../../../equipment.html">Equipment</a></div></nav>
 <div class="wrap">{breadcrumb_html([("Home", "../../../"), ("Competitions", "../../../competitions.html"), (name, f"../../{cid}.html"), (event, slug + ".html")])}</div>
 <section class="section round-summary"><div class="wrap"><div class="round-summary-grid"><div><div class="label">Round overview</div><h2>Race snapshot.</h2><p>This page reflects the results currently recorded in the RidersFanatics dataset. A missing rider means no result is yet attached to this round in our source data; it does not automatically imply a DNS or absence.</p></div><div class="round-winners">{''.join(leaders)}</div></div></div></section>
 <section class="section round-results-section"><div class="wrap">{result_table('Men Elite', 'Men')}{result_table('Women Elite', 'Women')}</div></section>
@@ -1258,23 +1257,7 @@ def build_competition_round(riders, competition, event, round_number, events):
     return html
 
 def competition_subnav(competition, active):
-    cid = competition["id"]
-    if active == "standings":
-        links = [
-            ("Overview", f"../{cid}.html", "overview"),
-            ("Standings", "standings.html", "standings"),
-        ]
-    else:
-        links = [
-            ("Overview", f"{cid}.html", "overview"),
-            ("Standings", f"{cid}/standings.html", "standings"),
-        ]
-    items = "".join(
-        f'<a href="{href}"{current}>{label}</a>'
-        for label, href, key in links
-        for current in [' aria-current="page"' if key == active else ""]
-    )
-    return f'<nav class="competition-subnav" aria-label="Competition navigation"><div class="wrap">{items}</div></nav>'
+    return ""
 
 def build_competition_standings(riders, competition):
     name = competition["name"]
@@ -1515,7 +1498,7 @@ def build_competition_detail(riders, competition):
 </main>'''
     html += footer_html("../").replace(
         '<script src="../assets/js/site.js',
-        '<script src="../assets/js/uci-iconic-tour.js?v=3"></script>\n<script src="../assets/js/site.js',
+        '<script src="../assets/js/uci-iconic-tour.js?v=4"></script>\n<script src="../assets/js/site.js',
     )
     return html
 

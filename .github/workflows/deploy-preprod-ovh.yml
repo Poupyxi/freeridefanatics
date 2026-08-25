@@ -36,7 +36,7 @@ jobs:
           test -f competitions/red-bull/rampage/index.html
           test -f competitions/red-bull/hardline/index.html
           grep -q 'uci-events-banner' competitions/uci-mtb-world-cup-dh-2026.html
-          grep -q 'uci-iconic-tour.js?v=3' competitions/uci-mtb-world-cup-dh-2026.html
+          grep -q 'uci-iconic-tour.js?v=4' competitions/uci-mtb-world-cup-dh-2026.html
           ! grep -qi 'Recorded events' competitions/uci-mtb-world-cup-dh-2026.html
 
       - name: Prepare isolated public files
@@ -91,7 +91,7 @@ jobs:
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
           page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
           grep -q 'uci-events-banner' <<< "$page_html"
-          grep -q 'uci-iconic-tour.js?v=3' <<< "$page_html"
+          grep -q 'uci-iconic-tour.js?v=4' <<< "$page_html"
           ! grep -qi 'Recorded events' <<< "$page_html"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=3 | grep -q 'customElements.define'
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=4 | grep -q 'customElements.define'
           curl --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'

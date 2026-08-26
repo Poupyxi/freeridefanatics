@@ -1224,6 +1224,16 @@ def build_competition_round(riders, competition, event, round_number, events):
         team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{esc(team)}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
     team_table = f'''<section class="round-category standings-block" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="round-category-head"><div><div class="label">Teams</div><h2>Team results</h2></div><span>{len(event_teams)} tracked teams</span></div><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="Team results, horizontally scrollable"><table class="round-results"><caption>Team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div><p class="standings-empty" hidden>No team result is recorded for this event.</p></section>'''
 
+    hero_leaders = []
+    for category, label in (("Men Elite", "Men winner"), ("Women Elite", "Women winner")):
+        if categories[category]:
+            rider, result = categories[category][0]
+            result_label = result.get("result") or ordinal(history_place(result)) or "1st"
+            hero_leaders.append(f'''<a href="../../../riders/{rider['slug']}.html"><span>{label}</span><strong>{esc(rider['display_name'])}</strong><small>{esc(result_label)}</small></a>''')
+    if event_teams:
+        winning_team = event_teams[0]
+        hero_leaders.append(f'''<div><span>Team winner</span><strong>{esc(winning_team)}</strong><small>{event_team_points[winning_team]} pts</small></div>''')
+
     previous_link = ""
     next_link = ""
     if round_number > 1:
@@ -1251,7 +1261,7 @@ def build_competition_round(riders, competition, event, round_number, events):
         ],
     )
     html += header_html("../../../", active="competitions")
-    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1><p>Recorded Elite Men and Elite Women results for {esc(name)}, connected to each rider profile and season points.</p><div class="round-hero-stats"><span><strong>{len(all_entries)}</strong> results</span><span><strong>{len(categories['Men Elite'])}</strong> men</span><span><strong>{len(categories['Women Elite'])}</strong> women</span></div></div></section>
+    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1><p>Recorded Elite Men and Elite Women results for {esc(name)}, connected to each rider profile and season points.</p><div class="round-hero-stats"><span><strong>{len(all_entries)}</strong> results</span><span><strong>{len(categories['Men Elite'])}</strong> men</span><span><strong>{len(categories['Women Elite'])}</strong> women</span></div><div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
 <section class="section round-results-section"><div class="wrap"><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div></div>{result_table('Men Elite', 'Men')}{result_table('Women Elite', 'Women')}{team_table}</div></section>
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''

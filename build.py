@@ -2492,14 +2492,9 @@ def build_rider_page(r, riders):
         </div>
         {bio_html}
         {sponsor_html}
-        <p class="rider-summary">{esc(rider_summary)}</p>
       </div>
     </div>
 
-    <section class="rider-editorial reveal" aria-labelledby="season-snapshot">
-      <div><div class="label">Tracked performance</div><h2 id="season-snapshot">2026 season snapshot</h2><p>{esc(season_analysis)}</p><p class="data-note">Analysis is limited to results recorded in the RidersFanatics dataset and should not be read as a complete career assessment.</p></div>
-      <dl class="content-stats"><div><dt>{ordinal(category_rank) if category_rank else '—'}</dt><dd>Category rank</dd></div><div><dt>{len(history)}</dt><dd>Recorded starts</dd></div><div><dt>{ordinal(best_place) if best_place else '—'}</dt><dd>Best finish</dd></div><div><dt>{rider_total_points(r)}</dt><dd>Points</dd></div></dl>
-    </section>
     <nav class="rider-context-links" aria-label="2026 competition links">
       <a href="../competitions/uci-mtb-world-cup-dh-2026.html"><span>Competition</span><strong>UCI DH World Cup 2026</strong></a>
       <a href="../competitions/uci-mtb-world-cup-dh-2026/standings.html"><span>Championship</span><strong>View current standings</strong></a>

@@ -468,7 +468,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
   /* white, not --bg-card: the product shots are cut out on white, so anything
      else leaves a visible rectangle around every part */
   background:#fff;
-  padding:18px clamp(24px, 5vw, 80px) 32px; margin-bottom:36px; overflow:hidden;
+  padding:8px clamp(24px, 5vw, 80px) 20px; margin-bottom:28px; overflow:hidden;
 }
 .bb-label{
   font-family:var(--mono); text-transform:uppercase; letter-spacing:0.18em;
@@ -479,7 +479,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .bb-stage{
   position:relative;
   display:flex; align-items:center; justify-content:center;
-  min-height:340px;
+  min-height:285px;
 }
 .bb-part{margin:0; text-align:center;}
 .bb-part img{display:block; margin:0 auto; object-fit:contain;}
@@ -498,7 +498,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 /* explicit width: as a flex item with only max-width, the figure would
    shrink to nothing and collapse the 100%-wide image inside it */
 .bb-frame{position:relative; z-index:2; flex:0 0 auto; width:min(560px, 62%);}
-.bb-frame img{width:100%; max-height:300px;}
+.bb-frame img{width:100%; max-height:260px;}
 .bb-frame .bb-name{font-size:15px;}
 
 /* --- frame reveal: outline draws itself, becomes a pencil sketch, then the
@@ -564,8 +564,8 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .bb-shock{left:15%; z-index:1; opacity:0.92;}
 /* no drop-shadow here: the JPEGs are opaque white rectangles, so the shadow
    traces the image box instead of the part and reads as a stray card */
-.bb-fork img{width:100%; max-height:240px;}
-.bb-shock img{width:100%; max-height:190px;}
+.bb-fork img{width:100%; max-height:210px;}
+.bb-shock img{width:100%; max-height:165px;}
 .bb-shock .bb-name, .bb-fork .bb-name{font-size:12px;}
 .equip-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;}
 .equip-item{
@@ -1309,7 +1309,7 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .carousel-slide{flex:0 0 min(82vw, 340px); padding:26px 22px 24px;}
   .carousel-slide .slide-head h3{font-size:22px;}
   /* Not enough width to overlap parts around the frame — stack them instead */
-  .bike-build{padding:24px 18px 18px;}
+  .bike-build{padding:14px 18px 16px;}
   .bb-stage{flex-direction:column; gap:24px; min-height:0;}
   /* DOM order is shock/frame/fork for the desktop stacking; stacked vertically
      the centrepiece should come first instead */

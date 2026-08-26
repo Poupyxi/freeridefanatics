@@ -1710,7 +1710,6 @@ def bike_build_html(equipment):
         part("fork", fork, "Fork"),
     ]))
     return f"""<div class="bike-build reveal">
-      <div class="bb-label">Race Setup</div>
       <div class="bb-stage">
         {parts_html}
       </div>
@@ -2344,13 +2343,7 @@ def build_rider_page(r, riders):
 
     equipment = r.get("equipment") or []
     build_html = bike_build_html(equipment)
-    # The label lives inside the banner; without a banner it still needs a home
-    setup_head = "" if build_html else """<div class="section-head reveal" style="border-bottom:none; padding-bottom:8px; margin-bottom:0;">
-      <div>
-        <div class="label">Race Setup</div>
-      </div>
-    </div>
-    """
+    setup_head = ""
     banner = bike_build_parts(equipment) or {}
     shown_in_banner = [p["item"] for p in banner.values() if p]
     if equipment:

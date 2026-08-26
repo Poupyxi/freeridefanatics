@@ -306,13 +306,7 @@ def breadcrumb_schema(items):
     }
 
 def breadcrumb_html(items):
-    parts = []
-    for i, (name, href) in enumerate(items):
-        if i == len(items) - 1:
-            parts.append(f'<span aria-current="page">{esc(name)}</span>')
-        else:
-            parts.append(f'<a href="{href}">{esc(name)}</a><span aria-hidden="true">/</span>')
-    return f'<nav class="breadcrumbs" aria-label="Breadcrumb">{"".join(parts)}</nav>'
+    return ""
 
 def head(title, description, asset_prefix, body_class="", canonical_path="/",
          schemas=None, image_path=None, page_type="website"):
@@ -378,9 +372,7 @@ def header_html(asset_prefix, active=""):
             competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
     if not competition_groups:
         competition_groups.append(f'<a href="{asset_prefix}competitions/{CURRENT_COMPETITION["id"]}.html"><strong>{CURRENT_COMPETITION["short_name"]}</strong><small>{CURRENT_COMPETITION["discipline"]} · {CURRENT_COMPETITION["season"]}</small></a>')
-    return f"""<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>
-
-<header>
+    return f"""<header>
   <div class="wrap nav-row">
     <a class="logo" href="{home_href}">
       <span class="mark">R</span>

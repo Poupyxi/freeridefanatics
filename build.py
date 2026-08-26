@@ -2495,12 +2495,6 @@ def build_rider_page(r, riders):
       </div>
     </div>
 
-    <nav class="rider-context-links" aria-label="2026 competition links">
-      <a href="../competitions/uci-mtb-world-cup-dh-2026.html"><span>Competition</span><strong>UCI DH World Cup 2026</strong></a>
-      <a href="../competitions/uci-mtb-world-cup-dh-2026/standings.html"><span>Championship</span><strong>View current standings</strong></a>
-      <a href="../standings.html"><span>Race detail</span><strong>Results by round</strong></a>
-    </nav>
-
     {setup_head}{build_html}
     {equip_html}
 

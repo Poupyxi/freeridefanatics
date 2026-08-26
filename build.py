@@ -1518,7 +1518,7 @@ def build_competition_detail(riders, competition):
     html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
     html += header_html("../", active="competitions")
     html += f'''<main>
-<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>One season hub for the riders, championship standings and equipment records currently connected in the RidersFanatics database.</p><div class="hero-ctas"><a class="btn btn-solid" href="{competition['id']}/standings.html">View standings</a><a class="btn" href="../riders.html#grid">Explore riders</a></div></div></section>
+<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1></div></section>
 <section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>
 {season_ranking_selector(riders, competition)}
 </main>'''

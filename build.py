@@ -427,12 +427,8 @@ def footer_html(asset_prefix):
       <a href="{asset_prefix}equipment.html">Equipment</a>
       <a href="{asset_prefix}guides/en/">DH Guide</a>
       <a href="{home_href}#faq">FAQ</a>
-      <a href="{asset_prefix}methodology.html">Methodology</a>
-      <a href="{asset_prefix}data-license.html">Data license</a>
       <a href="{asset_prefix}about.html">About</a>
       <a href="{asset_prefix}contact.html">Contact</a>
-      <a href="{asset_prefix}advertise.html">Advertise</a>
-      <a href="{asset_prefix}affiliate-disclosure.html">Affiliates</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
     <span class="footer-copy">&copy; 2026 RidersFanatics</span>

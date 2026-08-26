@@ -1567,23 +1567,8 @@ def build_riders_directory(riders, women_count, men_count):
     html += header_html(prefix, active="riders")
     html += f"""
 <main id="main-content">
-<section class="hero" style="padding-bottom:0; border-bottom:none;">
-  <div class="wrap hero-inner">
-    <div class="label">Directory · Season 2026</div>
-    <h1>All <em>{len(riders)}</em> riders.</h1>
-    <p class="sub">Explore every professional athlete currently tracked — filter by category or search a name, team or country. Results stay organised by competition and season.</p>
-  </div>
-</section>
-
 <section class="section" id="grid" style="padding-top:32px;">
   <div class="wrap">
-    <div class="section-head reveal">
-      <div>
-        <div class="label">Directory</div>
-        <h2>All Riders</h2>
-      </div>
-      <span class="see-all">{len(riders)} riders · {women_count} women · {men_count} men</span>
-    </div>
     <div class="filters" aria-label="Filter rider directory">
       <button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(riders)})</button>
       <button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({men_count})</button>

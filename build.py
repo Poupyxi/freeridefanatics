@@ -356,7 +356,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <a class="skip-link" href="#main-content">Skip to main content</a>
 """
 
-def header_html(asset_prefix, active=""):
+def header_html(asset_prefix, active="", show_announce=True):
     def cls(name):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
@@ -378,7 +378,8 @@ def header_html(asset_prefix, active=""):
             competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
     if not competition_groups:
         competition_groups.append(f'<a href="{asset_prefix}competitions/{CURRENT_COMPETITION["id"]}.html"><strong>{CURRENT_COMPETITION["short_name"]}</strong><small>{CURRENT_COMPETITION["discipline"]} · {CURRENT_COMPETITION["season"]}</small></a>')
-    return f"""<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>
+    announce = '<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>' if show_announce else ""
+    return f"""{announce}
 
 <header>
   <div class="wrap nav-row">
@@ -1260,7 +1261,7 @@ def build_competition_round(riders, competition, event, round_number, events):
                                (name, f"/competitions/{cid}.html"), (event, path)]),
         ],
     )
-    html += header_html("../../../", active="competitions")
+    html += header_html("../../../", active="competitions", show_announce=False)
     html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1><div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
 <section class="section round-results-section"><div class="wrap"><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div></div>{result_table('Men Elite', 'Men')}{result_table('Women Elite', 'Women')}{team_table}</div></section>
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
@@ -1360,11 +1361,10 @@ def build_competition_standings(riders, competition):
                                (name, f"/competitions/{cid}.html"), ("Standings", path)]),
         ],
     )
-    html += header_html("../../", active="competitions")
+    html += header_html("../../", active="competitions", show_announce=False)
     html += f'''<main>
 <section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>2026 UCI Downhill standings.</h1><p>{esc(name)} — the current championship order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
 {competition_subnav(competition, "standings")}
-<div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
 <section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
 <div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span><div class="filters" role="tablist" aria-label="Standings category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div><label class="standings-search"><span>Search</span><input class="search-input" type="search" placeholder="Rider, team or country…" data-standings-search></label></div>
 {rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}
@@ -1516,7 +1516,7 @@ def build_competition_detail(riders, competition):
         ],
     )
     html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
-    html += header_html("../", active="competitions")
+    html += header_html("../", active="competitions", show_announce=False)
     html += f'''<main>
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1></div></section>
 <section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>
@@ -1564,7 +1564,7 @@ def build_riders_directory(riders, women_count, men_count):
             breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html")]),
         ]
     )
-    html += header_html(prefix, active="riders")
+    html += header_html(prefix, active="riders", show_announce=False)
     html += f"""
 <main id="main-content">
 <section class="section" id="grid" style="padding-top:32px;">
@@ -2446,7 +2446,7 @@ def build_rider_page(r, riders):
             breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html"), (r["display_name"], rider_url)]),
         ]
     )
-    html += header_html(prefix, active="riders")
+    html += header_html(prefix, active="riders", show_announce=False)
 
     related = [candidate for candidate in sorted(
         riders, key=season_rank_key
@@ -2460,7 +2460,6 @@ def build_rider_page(r, riders):
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
-    {breadcrumb_html([("Home", "../"), ("Riders", "../riders.html"), (r["display_name"], rider_url.split('/')[-1])])}
     <div class="rider-hero">
       <div class="photo">{photo_html}</div>
       <div>

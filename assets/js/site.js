@@ -999,5 +999,4 @@
           equipmentLink.innerHTML = 'Explore category <span aria-hidden="true">→</span>';
         }
   });
-
 })();

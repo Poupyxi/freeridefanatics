@@ -2364,16 +2364,16 @@ def build_rider_page(r, riders):
             "Asa Vermette bike setup and equipment for 2026, with documented race components, UCI downhill results, championship ranking and points.",
         ),
         "anna-newkirk": (
-            "Anna Newkirk 2026 | UCI DH Results & Bike Setup",
-            "Anna Newkirk’s 2026 UCI downhill results, World Cup standings, points and documented Frameworks DH bike setup.",
+            "Anna Newkirk — Downhill Rider, Results & Bike 2026",
+            "Anna Newkirk’s 2026 profile: 4th in the tracked UCI DH Women Elite standings with 565 points, plus results and her Frameworks race bike setup.",
         ),
         "gloria-scarsi": (
-            "Gloria Scarsi 2026 | UCI DH Results & Zerode Setup",
-            "Gloria Scarsi’s 2026 UCI downhill results, World Cup standings, points and documented Zerode G3 race setup.",
+            "Gloria Scarsi — Downhill Rider, Results & Bike 2026",
+            "Gloria Scarsi’s 2026 profile: 5th in the tracked UCI DH Women Elite standings with 550 points, plus results and her Zerode G3 race bike setup.",
         ),
         "sacha-earnest": (
-            "Sacha Earnest 2026 | UCI DH Results & Trek Setup",
-            "Sacha Earnest’s 2026 UCI downhill results, World Cup standings, podiums and documented Trek Session race setup.",
+            "Sacha Earnest — Downhill Rider, Results & Bike 2026",
+            "Sacha Earnest’s 2026 profile: 7th in the tracked UCI DH Women Elite standings with 520 points, plus results, podiums and her Trek Session setup.",
         ),
     }
     page_title, meta_description = keyword_pages.get(
@@ -2452,7 +2452,6 @@ def build_rider_page(r, riders):
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
-    {breadcrumb_html([("Home", "../"), ("Riders", "../riders.html"), (r["display_name"], rider_url.split('/')[-1])])}
     <div class="rider-hero">
       <div class="photo">{photo_html}</div>
       <div>

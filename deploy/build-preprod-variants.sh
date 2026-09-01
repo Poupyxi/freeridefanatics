@@ -55,8 +55,6 @@ HTML
   notion_state="unavailable"
 fi
 
-cat > "$PUBLIC_DIR/data-source-status.json" <<JSON
-{"active":"google","google":"ready","notion":"$notion_state"}
-JSON
+printf 'active=google\ngoogle=ready\nnotion=%s\n' "$notion_state" > "$PUBLIC_DIR/data-source-status.txt"
 
 echo "Preproduction variants built: google=ready notion=$notion_state"

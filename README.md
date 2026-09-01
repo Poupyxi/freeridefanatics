@@ -134,6 +134,13 @@ Required preproduction secrets are `OVH_SFTP_HOST`, `OVH_SFTP_PORT`,
 `PREPROD_BASIC_USER` and `PREPROD_BASIC_PASSWORD`. The remote directory must
 never be `/home/ridersi/www`.
 
+Preproduction uses isolated data-source variants. The stable Google Sheets
+build is published both at `/` and `/google/`. A read-only Notion snapshot,
+when present at `data/notion/riders.json`, is validated and published at
+`/notion/`. Until that snapshot exists and passes validation, `/notion/`
+shows a safe unavailable state and cannot replace the Google build. Generated
+preproduction pages include a source selector; production pages never do.
+
 The production server can poll the public GitHub repository every two minutes
 and publish a new `main` commit automatically. On a new OVH VPS, run once:
 

@@ -28,7 +28,15 @@ import time
 import unicodedata
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(ROOT, "data", "riders.json")
+DATA_SOURCE = os.environ.get("RF_DATA_SOURCE", "google").strip().lower()
+if DATA_SOURCE not in {"google", "notion"}:
+    raise RuntimeError("RF_DATA_SOURCE must be 'google' or 'notion'")
+_configured_data_path = os.environ.get("RF_DATA_PATH", os.path.join("data", "riders.json"))
+DATA_PATH = (
+    _configured_data_path
+    if os.path.isabs(_configured_data_path)
+    else os.path.join(ROOT, _configured_data_path)
+)
 RIDERS_DIR = os.path.join(ROOT, "riders")
 EQUIPMENT_DIR = os.path.join(ROOT, "equipment")
 COMPETITIONS_DIR = os.path.join(ROOT, "competitions")
@@ -372,7 +380,18 @@ def header_html(asset_prefix, active=""):
             competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
     if not competition_groups:
         competition_groups.append(f'<a href="{asset_prefix}competitions/{CURRENT_COMPETITION["id"]}.html"><strong>{CURRENT_COMPETITION["short_name"]}</strong><small>{CURRENT_COMPETITION["discipline"]} · {CURRENT_COMPETITION["season"]}</small></a>')
-    return f"""<header>
+    source_switcher = ""
+    if IS_PREPROD:
+        google_current = ' aria-current="true"' if DATA_SOURCE == "google" else ""
+        notion_current = ' aria-current="true"' if DATA_SOURCE == "notion" else ""
+        source_switcher = f'''<aside class="preprod-source-switcher" aria-label="Preproduction data source">
+  <span>Preprod data source</span>
+  <nav aria-label="Choose generated data source">
+    <a href="/google/"{google_current}>Google Sheets</a>
+    <a href="/notion/"{notion_current}>Notion</a>
+  </nav>
+</aside>'''
+    return f"""{source_switcher}<header>
   <div class="wrap nav-row">
     <a class="logo" href="{home_href}">
       <span class="mark">R</span>

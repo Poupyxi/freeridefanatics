@@ -45,9 +45,12 @@ jobs:
         run: |
           test -n "$PREPROD_AUTH_FILE"
           mkdir -p "$RUNNER_TEMP/public"
-          deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" preprod
+          deploy/build-preprod-variants.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" "$RUNNER_TEMP/source-variants"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
           ! test -f "$RUNNER_TEMP/public/contact-submit.php"
+          test -f "$RUNNER_TEMP/public/google/index.html"
+          test -f "$RUNNER_TEMP/public/notion/index.html"
+          test -f "$RUNNER_TEMP/public/data-source-status.json"
 
       - name: Install publishing and authentication tools
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp apache2-utils
@@ -89,6 +92,9 @@ jobs:
           test "$ready" = "1"
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/ > /dev/null
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/google/ | grep -q 'Google Sheets'
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion/ > /dev/null
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/data-source-status.json | grep -q '"active":"google"'
           page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
           grep -q 'uci-events-banner' <<< "$page_html"
           grep -q 'uci-iconic-tour.js?v=4' <<< "$page_html"

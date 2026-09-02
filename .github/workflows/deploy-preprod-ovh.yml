@@ -26,6 +26,20 @@ jobs:
       - name: Check out the preproduction revision
         uses: actions/checkout@v4
 
+      - name: Read the 2026 data from Notion
+        id: notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          if test -z "$NOTION_TOKEN"; then
+            echo "Notion is not connected: add NOTION_TOKEN to the preproduction environment." >&2
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 scripts/sync_notion.py
+          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
       - name: Build and test the protected preview
         run: |
           python3 build.py

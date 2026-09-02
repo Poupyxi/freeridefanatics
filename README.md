@@ -141,6 +141,21 @@ when present at `data/notion/riders.json`, is validated and published at
 shows a safe unavailable state and cannot replace the Google build. Generated
 preproduction pages include a source selector; production pages never do.
 
+### Daily read-only Notion sync
+
+Preproduction queries the 2026 Notion data every day at 04:17 UTC (06:17 in
+Paris during summer time, 05:17 during winter time). The workflow reads Notion
+through an integration with content-read permission only; it never creates,
+updates or deletes a Notion page. It exports only UCI downhill finals with at
+least one point, validates the generated rider snapshot and compares its hash
+with the version already on OVH. An unchanged snapshot is not redeployed, and
+an invalid or unavailable export cannot replace the last valid preview.
+
+The Notion public API queries data sources rather than UI views. Equivalent
+filters are therefore enforced in `scripts/sync_notion.py`. Add the integration
+secret as `NOTION_TOKEN` in the GitHub `preproduction` environment and share
+the RidersFanatics database plus each related source with that integration.
+
 The production server can poll the public GitHub repository every two minutes
 and publish a new `main` commit automatically. On a new OVH VPS, run once:
 

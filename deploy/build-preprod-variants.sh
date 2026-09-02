@@ -46,6 +46,11 @@ if [[ -f "$NOTION_SNAPSHOT" ]]; then
   mkdir -p "$PUBLIC_DIR/notion"
   rsync -a --delete "$WORK_DIR/notion-public/" "$PUBLIC_DIR/notion/"
   rm -f "$PUBLIC_DIR/notion/.htaccess"
+  if [[ -f "$SOURCE_DIR/data/notion/sync-metadata.json" ]]; then
+    cp "$SOURCE_DIR/data/notion/sync-metadata.json" "$PUBLIC_DIR/notion-sync-metadata.json"
+    notion_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$SOURCE_DIR/data/notion/sync-metadata.json")"
+    printf '%s\n' "$notion_version" > "$PUBLIC_DIR/notion-data-version.txt"
+  fi
   notion_state="ready"
 else
   mkdir -p "$PUBLIC_DIR/notion"

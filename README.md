@@ -143,8 +143,8 @@ preproduction pages include a source selector; production pages never do.
 
 ### Daily read-only Notion sync
 
-Preproduction queries the 2026 Notion data every day at 04:17 UTC (06:17 in
-Paris during summer time, 05:17 during winter time). The workflow reads Notion
+Preproduction queries the 2026 Notion data twice a day, at 06:00 and 18:00 UTC.
+The workflow reads Notion
 through an integration with content-read permission only; it never creates,
 updates or deletes a Notion page. It exports only UCI downhill finals with at
 least one point, validates the generated rider snapshot and compares its hash

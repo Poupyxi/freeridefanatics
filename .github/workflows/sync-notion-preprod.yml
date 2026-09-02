@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "0 6,18 * * *"
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "Force rebuilding and publishing preproduction"
+        required: true
+        type: boolean
+        default: true
 
 concurrency:
   group: ridersfanatics-preproduction
@@ -42,6 +48,11 @@ jobs:
           PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
           PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
         run: |
+          if test "$GITHUB_EVENT_NAME" = "workflow_dispatch" && test "${{ inputs.force_deploy }}" = "true"; then
+            echo "Manual forced refresh requested."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           local_version="$(python3 -c 'import json; print(json.load(open("data/notion/sync-metadata.json"))["sha256"])')"
           remote_version="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion-data-version.txt || true)"
           changed=true

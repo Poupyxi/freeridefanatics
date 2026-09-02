@@ -117,7 +117,7 @@ class Notion:
     def query(self, source_id: str):
         results, cursor = [], None
         while True:
-            body = {"page_size": 100, "result_type": "page", "in_trash": False}
+            body = {"page_size": 100, "result_type": "page"}
             if cursor:
                 body["start_cursor"] = cursor
             payload = self.request("POST", f"/data_sources/{source_id}/query", body)

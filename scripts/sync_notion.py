@@ -2,9 +2,9 @@
 """Export the read-only RidersFanatics Notion model to the site data contract.
 
 The exporter never writes to Notion.  It queries the connected data sources,
-keeps 2026 UCI downhill finals with at least one point, and merges the result
-with the current Google snapshot so profile fields and photos remain stable
-during the migration.
+keeps 2026 UCI downhill results with at least one point, combines final and
+qualifying points for each event, and merges the result with the current Google
+snapshot so profile fields and photos remain stable during the migration.
 """
 from __future__ import annotations
 
@@ -239,10 +239,19 @@ def export(client: Notion, baseline_path: Path):
     for item in pages["races"]:
         event_ids = value(item, "🏆 Event ") or []
         event_id = next((identifier for identifier in event_ids if identifier in events), None)
-        if event_id and value(item, "Sélectionner") == "Final" and value(item, "Type") == "Downhill":
-            races[page_id(item.get("id"))] = {"event": events[event_id]["name"], "date": events[event_id]["date"], "gender": value(item, "Sélectionner 1")}
+        phase = value(item, "Sélectionner")
+        if event_id and phase in {"Final", "Qualifier"} and value(item, "Type") == "Downhill":
+            races[page_id(item.get("id"))] = {
+                "event": events[event_id]["name"],
+                "date": events[event_id]["date"],
+                "gender": value(item, "Sélectionner 1"),
+                "phase": phase,
+            }
 
-    result_rows = {}
+    # Notion stores final and qualifying points on separate Scoring rows.  The
+    # public site expects one row per rider and event, so combine both point
+    # awards while keeping the final placing as the displayed race result.
+    combined_results = {}
     for item in pages["scoring"]:
         rider_ids = value(item, "🚻 Riders") or []
         race_ids = value(item, "🏁 Race") or []
@@ -251,15 +260,31 @@ def export(client: Notion, baseline_path: Path):
         points = safe_int(value(item, "points"))
         place = safe_int(value(item, "Place"))
         if rider_id and race_id in races and points is not None and points >= 1:
-            result_rows.setdefault(rider_id, []).append({
+            race = races[race_id]
+            key = (rider_id, race["event"], race["gender"])
+            result = combined_results.setdefault(key, {
                 "year": 2026,
-                "event": races[race_id]["event"],
+                "event": race["event"],
                 "category": COMPETITION,
-                "result": ordinal(place),
-                "place": place,
-                "points": points,
-                "_event_date": races[race_id]["date"],
+                "result": None,
+                "place": None,
+                "points": 0,
+                "_event_date": race["date"],
+                "_has_final": False,
             })
+            result["points"] += points
+            if race["phase"] == "Final":
+                result["place"] = place
+                result["result"] = ordinal(place)
+                result["_has_final"] = True
+            elif not result["_has_final"]:
+                result["place"] = place
+                result["result"] = f"Q1 {ordinal(place)}" if place is not None else "Q1"
+
+    result_rows = {}
+    for (rider_id, _event, _gender), result in combined_results.items():
+        result.pop("_has_final", None)
+        result_rows.setdefault(rider_id, []).append(result)
 
     equipment = {}
     for item in pages["equipment"]:
@@ -328,7 +353,7 @@ def export(client: Notion, baseline_path: Path):
         riders.append(rider)
 
     if not riders:
-        raise RuntimeError("No rider with a 2026 UCI downhill final result of at least one point was exported")
+        raise RuntimeError("No rider with a 2026 UCI downhill result of at least one point was exported")
     minimum_riders = int(os.environ.get("NOTION_MIN_RIDERS", "40"))
     if len(riders) < minimum_riders:
         raise RuntimeError(f"Only {len(riders)} riders were exported; safety minimum is {minimum_riders}")

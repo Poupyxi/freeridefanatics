@@ -38,10 +38,13 @@ if [[ -f "$NOTION_SNAPSHOT" ]]; then
     RF_BUILD_ENV=preprod \
     RF_DATA_SOURCE=notion \
     RF_DATA_PATH=data/notion/riders.json \
+    RF_COMPETITIONS_PATH=data/notion/competitions.json \
     RF_SITE_URL=https://preprod.ridersfanatics.com/notion \
     RF_SKIP_IMAGE_OPTIMIZER="${RF_SKIP_IMAGE_OPTIMIZER:-1}" \
     python3 build.py
   )
+  test -f "$WORK_DIR/notion-build/competitions/red-bull-cerro-abajo-2026.html"
+  grep -q 'Red Bull Cerro Abajo 2026' "$WORK_DIR/notion-build/competitions.html"
   "$WORK_DIR/notion-build/deploy/publish-static.sh" "$WORK_DIR/notion-build" "$WORK_DIR/notion-public" preprod
   mkdir -p "$PUBLIC_DIR/notion"
   rsync -a --delete "$WORK_DIR/notion-public/" "$PUBLIC_DIR/notion/"

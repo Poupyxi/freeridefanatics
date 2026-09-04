@@ -64,7 +64,10 @@ BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes eve
 # Competitions are deliberately separate from the RidersFanatics brand.  The
 # first release contains one series, but navigation and result filters consume
 # this catalogue so future series can be added without renaming the whole site.
-COMPETITIONS_PATH = os.path.join(ROOT, "data", "competitions.json")
+COMPETITIONS_PATH = os.environ.get(
+    "RF_COMPETITIONS_PATH",
+    os.path.join(ROOT, "data", "competitions.json"),
+)
 ADS_PATH = os.path.join(ROOT, "data", "ads.json")
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
@@ -1362,12 +1365,12 @@ def build_competition_standings(riders, competition):
          "name": rider["display_name"], "url": absolute_url(f"/riders/{rider['slug']}.html")}
         for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
     ]
-    description = "UCI downhill standings 2026 for Elite Men, Elite Women and teams: current World Cup points, championship leaders and linked rider profiles."
+    description = f"{name} standings for Elite Men, Elite Women and teams: current points, season leaders and linked rider profiles."
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
     latest_round_href = (f"rounds/{competition_round_slug(latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
     html = head(
-        f"UCI Downhill Standings 2026 | Men, Women & Teams", description, "../../",
+        f"{name} Standings | Men, Women & Teams", description, "../../",
         body_class="competition-standings-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage",
@@ -1386,7 +1389,7 @@ def build_competition_standings(riders, competition):
     )
     html += header_html("../../", active="competitions")
     html += f'''<main>
-<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>2026 UCI Downhill standings.</h1><p>{esc(name)} — the current championship order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
+<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>{esc(name)} standings.</h1><p>The current season order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
 {competition_subnav(competition, "standings")}
 <div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
 <section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
@@ -1539,17 +1542,34 @@ def build_competition_detail(riders, competition):
             breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"), (name, path)]),
         ],
     )
-    html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
+    is_uci_dh = competition["id"] == "uci-mtb-world-cup-dh-2026"
+    if is_uci_dh:
+        html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
     html += header_html("../", active="competitions")
+    if is_uci_dh:
+        season_visual = '<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>'
+    else:
+        recorded_events = set(events)
+        event_cards = []
+        for event in competition.get("events", []):
+            event_name = event.get("name") or "Event"
+            event_date = event.get("date")
+            event_status = "Results available" if event_name in recorded_events else "Season event"
+            action = (f'<a class="btn" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results</a>'
+                      if event_name in recorded_events else "")
+            event_cards.append(f'''<article class="competition-card"><div class="competition-card-top"><span class="competition-status">{esc(event_status)}</span><span>{competition['season']}</span></div><div class="competition-sport">{esc(event_date)}</div><h2>{esc(event_name)}</h2>{action}</article>''')
+        season_visual = f'''<section class="section competitions-list" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Notion season</div><h2>Events.</h2></div><span class="see-all">{len(event_cards)} events</span></div><div class="competition-grid">{"".join(event_cards)}</div></div></section>'''
     html += f'''<main>
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1></div></section>
-<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>
+{season_visual}
 {season_ranking_selector(riders, competition)}
 </main>'''
-    html += footer_html("../").replace(
-        '<script src="../assets/js/site.js',
-        '<script src="../assets/js/uci-iconic-tour.js?v=4"></script>\n<script src="../assets/js/site.js',
-    )
+    html += footer_html("../")
+    if is_uci_dh:
+        html = html.replace(
+            '<script src="../assets/js/site.js',
+            '<script src="../assets/js/uci-iconic-tour.js?v=4"></script>\n<script src="../assets/js/site.js',
+        )
     return html
 
 def short_event(ev):

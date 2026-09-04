@@ -28,6 +28,7 @@ NOTION_VERSION = "2026-03-11"
 ROOT = Path(__file__).resolve().parents[1]
 
 DATA_SOURCES = {
+    "seasons": "3c99cf6b-f148-80f4-a3ad-000b1635fee6",
     "riders": "3c89cf6b-f148-8044-9283-000b552443a8",
     "scoring": "3c99cf6b-f148-80cb-9bb7-000b0e98c714",
     "races": "3c99cf6b-f148-8025-8fd2-000b87843559",
@@ -38,8 +39,7 @@ DATA_SOURCES = {
     "brands": "3cb9cf6b-f148-8090-b481-000b49ff2d90",
     "equipment_links": "3ca9cf6b-f148-8018-9a11-000b4b610ef2",
 }
-SEASON_PAGE_ID = "3c99cf6b-f148-8077-b23f-e87cec70ad46"
-COMPETITION = "UCI MTB World Cup DH 2026"
+PRIMARY_SEASON_PAGE_ID = "3c99cf6b-f148-8077-b23f-e87cec70ad46"
 
 CATEGORY_MAP = {
     "Shox": "RearShock",
@@ -210,6 +210,13 @@ def display_birth(birth: str | None) -> str | None:
         return birth
 
 
+def competition_id(name: str) -> str:
+    """Keep the established UCI URL stable while allowing new Notion seasons."""
+    if slugify(name) == "uci-world-series-2026":
+        return "uci-mtb-world-cup-dh-2026"
+    return slugify(name)
+
+
 def export(client: Notion, baseline_path: Path):
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
     baseline_by_slug = {item.get("slug"): item for item in baseline if item.get("slug")}
@@ -219,10 +226,19 @@ def export(client: Notion, baseline_path: Path):
     }
 
     pages = {name: client.query(source_id) for name, source_id in DATA_SOURCES.items()}
-    season = client.retrieve_page(os.environ.get("NOTION_SEASON_PAGE_ID", SEASON_PAGE_ID))
-    season_event_ids = set(value(season, "🏆 Event ") or [])
-    if not season_event_ids:
-        raise RuntimeError("The UCI World Series 2026 season has no visible Event relations")
+    seasons = {}
+    event_seasons = {}
+    for item in pages["seasons"]:
+        identifier = page_id(item.get("id"))
+        name = value(item, "Nom") or ""
+        event_ids = value(item, "🏆 Event ") or []
+        if not identifier or not name or not event_ids:
+            continue
+        seasons[identifier] = {"name": name, "event_ids": event_ids}
+        for event_id in event_ids:
+            event_seasons.setdefault(event_id, identifier)
+    if not seasons:
+        raise RuntimeError("No Notion season with visible Event relations was found")
 
     teams = title_map(pages["teams"], "Nom")
     countries = title_map(pages["countries"], "Name")
@@ -232,20 +248,42 @@ def export(client: Notion, baseline_path: Path):
             "name": value(item, "Name competition"),
             "date": value(item, "Date") or "9999-12-31",
         }
-        for item in pages["events"] if page_id(item.get("id")) in season_event_ids
+        for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }
+
+    competition_catalog = {"organizations": [], "series": []}
+    ordered_seasons = sorted(
+        seasons.items(),
+        key=lambda entry: (not entry[1]["name"].lower().startswith("uci"), entry[1]["name"].lower()),
+    )
+    for identifier, season in ordered_seasons:
+        event_records = [events[event_id] for event_id in season["event_ids"] if event_id in events]
+        year_match = re.search(r"\b(20\d{2})\b", season["name"])
+        competition_catalog["series"].append({
+            "id": competition_id(season["name"]),
+            "name": season["name"],
+            "short_name": re.sub(r"\s+20\d{2}\s*$", "", season["name"]).strip(),
+            "sport": "Mountain bike",
+            "discipline": "Downhill",
+            "season": int(year_match.group(1)) if year_match else 2026,
+            "status": "published",
+            "notion_page_id": identifier,
+            "events": sorted(event_records, key=lambda event: (event["date"], event["name"])),
+        })
 
     races = {}
     for item in pages["races"]:
         event_ids = value(item, "🏆 Event ") or []
         event_id = next((identifier for identifier in event_ids if identifier in events), None)
+        season_id = event_seasons.get(event_id)
         phase = value(item, "Sélectionner")
-        if event_id and phase in {"Final", "Qualifier"} and value(item, "Type") == "Downhill":
+        if season_id and phase in {"Final", "Qualifier"} and value(item, "Type") == "Downhill":
             races[page_id(item.get("id"))] = {
                 "event": events[event_id]["name"],
                 "date": events[event_id]["date"],
                 "gender": value(item, "Sélectionner 1"),
                 "phase": phase,
+                "competition": seasons[season_id]["name"],
             }
 
     # Notion stores final and qualifying points on separate Scoring rows.  The
@@ -261,11 +299,12 @@ def export(client: Notion, baseline_path: Path):
         place = safe_int(value(item, "Place"))
         if rider_id and race_id in races and points is not None and points >= 1:
             race = races[race_id]
-            key = (rider_id, race["event"], race["gender"])
+            key = (rider_id, race["competition"], race["event"], race["gender"])
+            year_match = re.search(r"\b(20\d{2})\b", race["competition"])
             result = combined_results.setdefault(key, {
-                "year": 2026,
+                "year": int(year_match.group(1)) if year_match else 2026,
                 "event": race["event"],
-                "category": COMPETITION,
+                "category": race["competition"],
                 "result": None,
                 "place": None,
                 "points": 0,
@@ -282,7 +321,7 @@ def export(client: Notion, baseline_path: Path):
                 result["result"] = f"Q1 {ordinal(place)}" if place is not None else "Q1"
 
     result_rows = {}
-    for (rider_id, _event, _gender), result in combined_results.items():
+    for (rider_id, _competition, _event, _gender), result in combined_results.items():
         result.pop("_has_final", None)
         result_rows.setdefault(rider_id, []).append(result)
 
@@ -297,9 +336,9 @@ def export(client: Notion, baseline_path: Path):
         }
 
     equipment_by_rider = {}
-    season_id = page_id(os.environ.get("NOTION_SEASON_PAGE_ID", SEASON_PAGE_ID))
+    primary_season_id = page_id(os.environ.get("NOTION_SEASON_PAGE_ID", PRIMARY_SEASON_PAGE_ID))
     for item in pages["equipment_links"]:
-        if season_id not in set(value(item, "☀️ Saison") or []):
+        if primary_season_id not in set(value(item, "☀️ Saison") or []):
             continue
         rider_ids = value(item, "🚻 Riders") or []
         product_ids = value(item, "Equipments") or []
@@ -335,7 +374,7 @@ def export(client: Notion, baseline_path: Path):
             "display_name": display_name,
             "slug": base.get("slug") or slugify(display_name),
             "gender_category": "Women Elite" if gender == "Women" else "Men Elite",
-            "discipline": "UCI MTB World Cup Downhill (DH)",
+            "discipline": "Professional Downhill (DH)",
             "country": country or base.get("country"),
             "hometown": value(item, "Hometown") or base.get("hometown"),
             "date_of_birth": display_birth(birth) or base.get("date_of_birth"),
@@ -364,34 +403,42 @@ def export(client: Notion, baseline_path: Path):
     if len(slugs) != len(set(slugs)):
         raise RuntimeError("Duplicate rider slugs were generated")
     riders.sort(key=lambda rider: (rider.get("gender_category") or "", -(sum(row["points"] for row in rider["competition_history"])), rider["display_name"]))
-    return riders, {name: len(items) for name, items in pages.items()}
+    return riders, competition_catalog, {name: len(items) for name, items in pages.items()}
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", type=Path, default=ROOT / "data" / "riders.json")
     parser.add_argument("--output", type=Path, default=ROOT / "data" / "notion" / "riders.json")
+    parser.add_argument("--competitions-output", type=Path, default=ROOT / "data" / "notion" / "competitions.json")
     parser.add_argument("--metadata", type=Path, default=ROOT / "data" / "notion" / "sync-metadata.json")
     args = parser.parse_args()
     token = os.environ.get("NOTION_TOKEN", "").strip()
     if not token:
         raise SystemExit("NOTION_TOKEN is required")
 
-    riders, counts = export(Notion(token), args.baseline)
+    riders, competitions, counts = export(Notion(token), args.baseline)
     serialized = json.dumps(riders, ensure_ascii=False, indent=2) + "\n"
     digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.competitions_output.parent.mkdir(parents=True, exist_ok=True)
+    args.metadata.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(serialized, encoding="utf-8")
+    args.competitions_output.write_text(
+        json.dumps(competitions, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     args.metadata.write_text(json.dumps({
         "source": "notion-read-only",
         "notion_api_version": NOTION_VERSION,
-        "season_page_id": os.environ.get("NOTION_SEASON_PAGE_ID", SEASON_PAGE_ID),
+        "season_data_source_id": DATA_SOURCES["seasons"],
+        "seasons": len(competitions["series"]),
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "sha256": digest,
         "riders": len(riders),
         "queried_pages": counts,
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Notion snapshot ready: {len(riders)} riders, sha256={digest}")
+    print(f"Notion snapshot ready: {len(riders)} riders, {len(competitions['series'])} seasons, sha256={digest}")
 
 
 if __name__ == "__main__":

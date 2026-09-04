@@ -391,6 +391,37 @@ def export(client: Notion, baseline_path: Path):
             rider["bike"] = {"brand": frame.get("brand") or "", "model": frame.get("model_detail") or ""}
         riders.append(rider)
 
+    # Imports can leave two Notion rider pages for the same athlete (usually an
+    # established profile plus a result-import profile sharing the same
+    # Instagram handle).  Both resolve to the same public slug, so consolidate
+    # their season history instead of either publishing a duplicate profile or
+    # aborting the whole preproduction refresh.
+    riders_by_slug = {}
+    for rider in riders:
+        slug = rider.get("slug")
+        if slug not in riders_by_slug:
+            riders_by_slug[slug] = rider
+            continue
+        current = riders_by_slug[slug]
+        histories = {}
+        for row in current.get("competition_history", []) + rider.get("competition_history", []):
+            key = (row.get("year"), row.get("category"), row.get("event"))
+            previous = histories.get(key)
+            if previous is None or (row.get("points") or 0) > (previous.get("points") or 0):
+                histories[key] = row
+        current["competition_history"] = sorted(
+            histories.values(), key=lambda row: (row.get("year") or 0, row.get("event") or "")
+        )
+        equipment_rows = {}
+        for part in current.get("equipment", []) + rider.get("equipment", []):
+            key = (part.get("category"), part.get("brand"), part.get("model_detail"))
+            equipment_rows.setdefault(key, part)
+        current["equipment"] = list(equipment_rows.values())
+        for field in ("team", "country", "instagram", "hometown", "date_of_birth", "bio"):
+            if not current.get(field) and rider.get(field):
+                current[field] = rider[field]
+    riders = list(riders_by_slug.values())
+
     if not riders:
         raise RuntimeError("No rider with a 2026 UCI downhill result of at least one point was exported")
     minimum_riders = int(os.environ.get("NOTION_MIN_RIDERS", "40"))

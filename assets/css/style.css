@@ -743,6 +743,8 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
   .standings-overview > div:nth-child(-n+2){border-bottom:1px solid var(--line);}
   .standings-toolbar{grid-template-columns:1fr; gap:16px;}
   .standings-toolbar [data-standings-filters]{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .standings-toolbar [data-standings-filters][data-filter-count="2"]{grid-template-columns:repeat(2,1fr);}
+  .standings-toolbar [data-standings-filters][data-filter-count="1"]{grid-template-columns:1fr;}
   .standings-toolbar .filter-btn{min-height:40px; padding:9px 10px;}
   .competition-badge{width:100%; justify-content:center;}
   .standings-search .search-input{min-height:44px;}

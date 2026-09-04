@@ -382,7 +382,12 @@ def header_html(asset_prefix, active=""):
             organization_href = f"{asset_prefix}competitions/{organization['id']}/"
             competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
     if not competition_groups:
-        competition_groups.append(f'<a href="{asset_prefix}competitions/{CURRENT_COMPETITION["id"]}.html"><strong>{CURRENT_COMPETITION["short_name"]}</strong><small>{CURRENT_COMPETITION["discipline"]} · {CURRENT_COMPETITION["season"]}</small></a>')
+        for competition in COMPETITIONS:
+            competition_groups.append(
+                f'<a href="{asset_prefix}competitions/{competition["id"]}.html">'
+                f'<strong>{esc(competition["short_name"])}</strong>'
+                f'<small>{esc(competition["discipline"])} · {competition["season"]}</small></a>'
+            )
     source_switcher = ""
     if IS_PREPROD:
         google_current = ' aria-current="true"' if DATA_SOURCE == "google" else ""

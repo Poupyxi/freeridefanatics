@@ -1536,9 +1536,15 @@ def season_ranking_selector(riders, competition):
             rows.append(f'''<a class="clean-standing-row" href="../riders/{rider['slug']}.html" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span><b>{points}<small>pts</small></b></a>''')
         return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{''.join(rows)}</div><p class="standings-empty" hidden>No {label.lower()} ranking is available.</p></section>'''
 
+    ranked_riders = categories["Men Elite"] + categories["Women Elite"]
+    team_riders_with_data = [
+        rider for rider in ranked_riders
+        if (rider.get("team") or "").strip().lower() not in {"", "privateer"}
+    ]
+    show_team_ranking = bool(ranked_riders) and len(team_riders_with_data) * 2 >= len(ranked_riders)
     team_points, team_riders = {}, {}
-    for rider in categories["Men Elite"] + categories["Women Elite"]:
-        team = rider.get("team") or "Privateer"
+    for rider in team_riders_with_data:
+        team = rider["team"].strip()
         team_points[team] = team_points.get(team, 0) + competition_rider_points(rider, name)
         team_riders.setdefault(team, []).append(rider["display_name"])
     teams = sorted(team_points, key=lambda team: (-team_points[team], team.lower()))
@@ -1547,8 +1553,22 @@ def season_ranking_selector(riders, competition):
         names = ", ".join(team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
         team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
-    team_panel = f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p></section>'''
-    return f'''<section class="section clean-standings-section season-ranking-section" id="season-ranking"><div class="wrap"><div class="clean-standings-heading"><div><h2>Season ranking.</h2></div></div><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Season ranking category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div></div>{rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}</div></section>'''
+    team_panel = (f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p></section>'''
+                  if show_team_ranking else "")
+    visible_categories = [
+        (category, label) for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
+        if categories[category]
+    ]
+    ranking_filters = list(visible_categories)
+    if show_team_ranking:
+        ranking_filters.append(("Teams", "Teams"))
+    filter_buttons = "".join(
+        f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
+        f'data-standings-group="{group}" aria-selected="{"true" if index == 0 else "false"}">{label}</button>'
+        for index, (group, label) in enumerate(ranking_filters)
+    )
+    rider_panels = "".join(rider_panel(category, label) for category, label in visible_categories)
+    return f'''<section class="section clean-standings-section season-ranking-section" id="season-ranking"><div class="wrap"><div class="clean-standings-heading"><div><h2>Season ranking.</h2></div></div><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Season ranking category" data-standings-filters data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{rider_panels}{team_panel}</div></section>'''
 
 def build_competition_detail(riders, competition):
     stats = competition_stats(riders, competition)
@@ -1577,15 +1597,21 @@ def build_competition_detail(riders, competition):
         season_visual = '<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>'
     else:
         recorded_events = set(events)
-        event_cards = []
-        for event in competition.get("events", []):
+        event_rows = []
+        for position, event in enumerate(competition.get("events", []), 1):
             event_name = event.get("name") or "Event"
             event_date = event.get("date")
-            event_status = "Results available" if event_name in recorded_events else "Season event"
-            action = (f'<a class="btn" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results</a>'
-                      if event_name in recorded_events else "")
-            event_cards.append(f'''<article class="competition-card"><div class="competition-card-top"><span class="competition-status">{esc(event_status)}</span><span>{competition['season']}</span></div><div class="competition-sport">{esc(event_date)}</div><h2>{esc(event_name)}</h2>{action}</article>''')
-        season_visual = f'''<section class="section competitions-list" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Notion season</div><h2>Events.</h2></div><span class="see-all">{len(event_cards)} events</span></div><div class="competition-grid">{"".join(event_cards)}</div></div></section>'''
+            try:
+                date_label = time.strftime("%d %b %Y", time.strptime(event_date, "%Y-%m-%d"))
+            except (TypeError, ValueError):
+                date_label = event_date or str(competition["season"])
+            has_results = event_name in recorded_events
+            status = "Results available" if has_results else "No results recorded"
+            action = (f'<a class="season-race-link" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results <span aria-hidden="true">→</span></a>'
+                      if has_results else '<span class="season-race-pending">Awaiting results</span>')
+            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(event_name)}</h2></div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
+        race_count = len(event_rows)
+        season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Race calendar · {competition['season']}</div><h2>{race_count} race{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     html += f'''<main>
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1></div></section>
 {season_visual}

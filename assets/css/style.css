@@ -1004,6 +1004,17 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-card-stats{display:flex; flex-wrap:wrap; gap:14px 22px; margin:28px 0; font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--muted);}
 .competition-card-stats strong{color:var(--ink); font-size:15px;}
 .competition-card .btn{margin-top:auto;}
+.season-race-calendar{padding-top:52px;padding-bottom:64px;background:var(--bg);}
+.season-race-list{border-top:1px solid var(--line);}
+.season-race-row{display:grid;grid-template-columns:64px minmax(260px,1fr) 170px 150px;gap:22px;align-items:center;min-height:122px;border-bottom:1px solid var(--line);transition:background .18s ease;}
+.season-race-row:hover{background:rgba(221,106,52,.04);}
+.season-race-index{font-family:var(--head);font-size:28px;color:var(--orange);}
+.season-race-main time,.season-race-pending{display:block;font-family:var(--mono);font-size:10px;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.season-race-main h2{font-family:var(--head);font-size:clamp(25px,3vw,38px);line-height:1;text-transform:uppercase;margin:8px 0 0;}
+.season-race-row>.competition-status{justify-self:start;white-space:nowrap;}
+.season-race-action{justify-self:end;text-align:right;}
+.season-race-link{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--orange-dark);border-bottom:1px solid currentColor;padding-bottom:4px;}
+.season-race-link:hover{color:var(--ink);}
 .competition-note{display:grid; grid-template-columns:220px 1fr; gap:30px; margin-top:28px; padding:28px; border:1px solid var(--line);}
 .competition-note strong{font-family:var(--head); font-size:22px; text-transform:uppercase;}
 .competition-note p{color:var(--muted); line-height:1.65;}
@@ -1404,6 +1415,15 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .home-rankings .ranking-row .sub{font-size:9px;}
   .home-rankings .ranking-row .pts{font-size:10px; padding:3px 6px;}
   .home-page .eq-carousel-section{padding-top:0;}
+}
+
+@media (max-width:620px){
+  .season-race-calendar{padding-top:38px;padding-bottom:46px;}
+  .season-race-row{grid-template-columns:42px minmax(0,1fr);gap:10px 14px;padding:20px 0;min-height:0;}
+  .season-race-index{grid-row:1/span 3;align-self:start;font-size:22px;}
+  .season-race-main,.season-race-row>.competition-status,.season-race-action{grid-column:2;}
+  .season-race-row>.competition-status{margin-top:5px;}
+  .season-race-action{justify-self:start;text-align:left;margin-top:4px;}
 }
 
 @media (prefers-reduced-motion: reduce){

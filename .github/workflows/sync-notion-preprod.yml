@@ -1,8 +1,10 @@
-name: Daily Notion sync to RidersFanatics preproduction
+name: Frequent Notion sync to RidersFanatics preproduction
 
 on:
   schedule:
-    - cron: "0 6,18 * * *"
+    # OVH publications can take 10-15 minutes. A 30-minute interval leaves
+    # enough room for one verified deployment to finish before the next check.
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       force_deploy:

@@ -228,7 +228,8 @@ def bio_bullets(bio):
     return parts
 
 def has_photo(slug):
-    for ext in ("jpg", "jpeg", "png", "webp"):
+    """Prefer the current PictureRiders WebP, then fall back to PPRiders."""
+    for ext in ("webp", "jpg", "jpeg", "png"):
         if os.path.exists(os.path.join(IMG_DIR, f"{slug}.{ext}")):
             return f"{slug}.{ext}"
     return None
@@ -278,7 +279,7 @@ def equipment_photos(category, brand, main_model):
     return [photo] if photo else []
 
 def has_action_photo(slug):
-    for ext in ("jpg", "jpeg", "png", "webp"):
+    for ext in ("webp", "jpg", "jpeg", "png"):
         if os.path.exists(os.path.join(ACTION_IMG_DIR, f"{slug}.{ext}")):
             return f"{slug}.{ext}"
     return None

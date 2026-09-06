@@ -2,9 +2,9 @@ name: Frequent Notion sync to RidersFanatics preproduction
 
 on:
   schedule:
-    # OVH publications can take 10-15 minutes. A 30-minute interval leaves
-    # enough room for one verified deployment to finish before the next check.
-    - cron: "*/30 * * * *"
+    # Check Notion four times per hour. Unchanged snapshots do not trigger an
+    # OVH publication, keeping frequent checks lightweight.
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       force_deploy:

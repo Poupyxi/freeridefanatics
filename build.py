@@ -417,7 +417,7 @@ def header_html(asset_prefix, active=""):
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
-      <span class="icon-btn">64 Riders</span>
+      <span class="icon-btn">{len(PROMO_RIDERS)} Riders</span>
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>

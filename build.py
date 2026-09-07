@@ -28,7 +28,15 @@ import time
 import unicodedata
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(ROOT, "data", "riders.json")
+DATA_SOURCE = os.environ.get("RF_DATA_SOURCE", "google").strip().lower()
+if DATA_SOURCE not in {"google", "notion"}:
+    raise RuntimeError("RF_DATA_SOURCE must be 'google' or 'notion'")
+_configured_data_path = os.environ.get("RF_DATA_PATH", os.path.join("data", "riders.json"))
+DATA_PATH = (
+    _configured_data_path
+    if os.path.isabs(_configured_data_path)
+    else os.path.join(ROOT, _configured_data_path)
+)
 RIDERS_DIR = os.path.join(ROOT, "riders")
 EQUIPMENT_DIR = os.path.join(ROOT, "equipment")
 COMPETITIONS_DIR = os.path.join(ROOT, "competitions")
@@ -56,7 +64,10 @@ BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes eve
 # Competitions are deliberately separate from the RidersFanatics brand.  The
 # first release contains one series, but navigation and result filters consume
 # this catalogue so future series can be added without renaming the whole site.
-COMPETITIONS_PATH = os.path.join(ROOT, "data", "competitions.json")
+COMPETITIONS_PATH = os.environ.get(
+    "RF_COMPETITIONS_PATH",
+    os.path.join(ROOT, "data", "competitions.json"),
+)
 ADS_PATH = os.path.join(ROOT, "data", "ads.json")
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
@@ -217,7 +228,8 @@ def bio_bullets(bio):
     return parts
 
 def has_photo(slug):
-    for ext in ("jpg", "jpeg", "png", "webp"):
+    """Prefer the current PictureRiders WebP, then fall back to PPRiders."""
+    for ext in ("webp", "jpg", "jpeg", "png"):
         if os.path.exists(os.path.join(IMG_DIR, f"{slug}.{ext}")):
             return f"{slug}.{ext}"
     return None
@@ -267,7 +279,7 @@ def equipment_photos(category, brand, main_model):
     return [photo] if photo else []
 
 def has_action_photo(slug):
-    for ext in ("jpg", "jpeg", "png", "webp"):
+    for ext in ("webp", "jpg", "jpeg", "png"):
         if os.path.exists(os.path.join(ACTION_IMG_DIR, f"{slug}.{ext}")):
             return f"{slug}.{ext}"
     return None
@@ -306,13 +318,7 @@ def breadcrumb_schema(items):
     }
 
 def breadcrumb_html(items):
-    parts = []
-    for i, (name, href) in enumerate(items):
-        if i == len(items) - 1:
-            parts.append(f'<span aria-current="page">{esc(name)}</span>')
-        else:
-            parts.append(f'<a href="{href}">{esc(name)}</a><span aria-hidden="true">/</span>')
-    return f'<nav class="breadcrumbs" aria-label="Breadcrumb">{"".join(parts)}</nav>'
+    return ""
 
 def head(title, description, asset_prefix, body_class="", canonical_path="/",
          schemas=None, image_path=None, page_type="website"):
@@ -356,7 +362,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <a class="skip-link" href="#main-content">Skip to main content</a>
 """
 
-def header_html(asset_prefix, active="", show_announce=True):
+def header_html(asset_prefix, active=""):
     def cls(name):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
@@ -377,11 +383,13 @@ def header_html(asset_prefix, active="", show_announce=True):
             organization_href = f"{asset_prefix}competitions/{organization['id']}/"
             competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
     if not competition_groups:
-        competition_groups.append(f'<a href="{asset_prefix}competitions/{CURRENT_COMPETITION["id"]}.html"><strong>{CURRENT_COMPETITION["short_name"]}</strong><small>{CURRENT_COMPETITION["discipline"]} · {CURRENT_COMPETITION["season"]}</small></a>')
-    announce = '<div class="announce">Professional rider &amp; equipment database &nbsp;·&nbsp; <span>64 riders</span> tracked</div>' if show_announce else ""
-    return f"""{announce}
-
-<header>
+        for competition in COMPETITIONS:
+            competition_groups.append(
+                f'<a href="{asset_prefix}competitions/{competition["id"]}.html">'
+                f'<strong>{esc(competition["short_name"])}</strong>'
+                f'<small>{esc(competition["discipline"])} · {competition["season"]}</small></a>'
+            )
+    return f"""<header>
   <div class="wrap nav-row">
     <a class="logo" href="{home_href}">
       <span class="mark">R</span>
@@ -538,23 +546,33 @@ def hero_waves_svg():
 def newsletter_form_html(prefix=""):
     """Native-looking signup posted to Brevo without exposing an API key."""
     if IS_PREPROD:
-        return f'''<div class="fineprint"><strong>Newsletter disabled in preproduction.</strong> No address is sent to Brevo. · <a href="{prefix}privacy.html">Privacy information</a></div>'''
+        return f'''<form class="cta-form is-preview" aria-label="Newsletter preview">
+      <label class="cta-field-label" for="newsletter-email-preview">Email address</label>
+      <div class="cta-field-row">
+        <input id="newsletter-email-preview" type="email" placeholder="you@example.com" disabled>
+        <button type="button" disabled>Subscribe <span aria-hidden="true">→</span></button>
+      </div>
+    </form>
+    <div class="fineprint"><strong>Preview only.</strong> Signup is disabled in preproduction. ·
+      <a href="{prefix}privacy.html">Privacy</a></div>'''
     return f"""<form class="cta-form" action="{esc_attr(NEWSLETTER_FORM_URL)}" method="post"
           target="brevo-newsletter-response" accept-charset="UTF-8" data-brevo-newsletter>
-      <label class="visually-hidden" for="newsletter-email">Email address</label>
-      <input id="newsletter-email" name="EMAIL" type="email" autocomplete="email"
-             inputmode="email" placeholder="Your email address" required>
+      <label class="cta-field-label" for="newsletter-email">Email address</label>
+      <div class="cta-field-row">
+        <input id="newsletter-email" name="EMAIL" type="email" autocomplete="email"
+               inputmode="email" placeholder="you@example.com" required>
+        <button type="submit">Subscribe <span aria-hidden="true">→</span></button>
+      </div>
       <span class="nl-trap" aria-hidden="true"><label>Leave this empty
         <input name="email_address_check" type="text" tabindex="-1" autocomplete="off">
       </label></span>
       <input name="locale" type="hidden" value="fr">
-      <button type="submit">Join the newsletter</button>
     </form>
     <p class="cta-status" data-brevo-newsletter-status aria-live="polite"></p>
     <iframe class="newsletter-response" name="brevo-newsletter-response"
             title="Newsletter subscription response" tabindex="-1" aria-hidden="true"></iframe>
-    <div class="fineprint">Instant signup · No spam · Unsubscribe anytime ·
-      <a href="{prefix}privacy.html">What we do with your email</a></div>"""
+    <div class="fineprint">Free · No spam · Unsubscribe anytime ·
+      <a href="{prefix}privacy.html">Privacy</a></div>"""
 
 def cta_waves_svg():
     return """<svg class="waves" viewBox="0 0 1240 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -861,9 +879,12 @@ def build_index(riders, women_count, men_count):
   {cta_waves_svg()}
   <div class="wrap cta-inner">
     <div class="cta-copy">
-      <div class="label">Stay up to speed</div>
-      <h2>New kit drops every race weekend.</h2>
-      <p class="sub">Follow setup changes and results across every competition tracked by RidersFanatics.</p>
+      <div class="label">RidersFanatics newsletter</div>
+      <h2>Race updates. No noise.</h2>
+      <p class="sub">The useful changes from the downhill paddock, sent only when there is something worth sharing.</p>
+      <ul class="newsletter-benefits" aria-label="Newsletter content">
+        <li>Race results</li><li>Pro setup updates</li><li>New equipment</li>
+      </ul>
     </div>
     <div class="cta-signup">
       {newsletter_form_html()}
@@ -1208,9 +1229,14 @@ def build_competition_round(riders, competition, event, round_number, events):
             return f'<section class="round-category"><h2>{label}</h2><p class="round-empty">No {label.lower()} results are recorded for this round yet.</p></section>'
         return f'''<section class="round-category standings-block" data-standings="{category}" data-competition="{esc_attr(name)}"><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{label} results, horizontally scrollable"><table class="round-results"><caption>{label} results for {esc(event)}</caption><thead><tr><th scope="col">Result</th><th scope="col">Rider</th><th scope="col">Nation</th><th scope="col">Points</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div><p class="standings-empty" hidden>No {label.lower()} results are recorded for this event.</p></section>'''
 
+    team_entries = [
+        (rider, result) for rider, result in all_entries
+        if (rider.get("team") or "").strip().lower() not in {"", "privateer"}
+    ]
+    show_team_ranking = bool(all_entries) and len(team_entries) * 2 >= len(all_entries)
     event_team_points, event_team_riders = {}, {}
-    for rider, result in all_entries:
-        team = rider.get("team") or "Privateer"
+    for rider, result in team_entries:
+        team = rider["team"].strip()
         event_team_points[team] = event_team_points.get(team, 0) + (result.get("points") or 0)
         event_team_riders.setdefault(team, []).append(rider["display_name"])
     event_teams = sorted(event_team_points, key=lambda team: (-event_team_points[team], team.lower()))
@@ -1219,7 +1245,8 @@ def build_competition_round(riders, competition, event, round_number, events):
         names = ", ".join(event_team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
         team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{esc(team)}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
-    team_table = f'''<section class="round-category standings-block" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="Team results, horizontally scrollable"><table class="round-results"><caption>Team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div><p class="standings-empty" hidden>No team result is recorded for this event.</p></section>'''
+    team_table = (f'''<section class="round-category standings-block" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="Team results, horizontally scrollable"><table class="round-results"><caption>Team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div><p class="standings-empty" hidden>No team result is recorded for this event.</p></section>'''
+                  if show_team_ranking else "")
 
     hero_leaders = []
     for category, label in (("Men Elite", "Men winner"), ("Women Elite", "Women winner")):
@@ -1227,9 +1254,23 @@ def build_competition_round(riders, competition, event, round_number, events):
             rider, result = categories[category][0]
             result_label = result.get("result") or ordinal(history_place(result)) or "1st"
             hero_leaders.append(f'''<a href="../../../riders/{rider['slug']}.html"><span>{label}</span><strong>{esc(rider['display_name'])}</strong><small>{esc(result_label)}</small></a>''')
-    if event_teams:
+    if show_team_ranking and event_teams:
         winning_team = event_teams[0]
         hero_leaders.append(f'''<div><span>Team winner</span><strong>{esc(winning_team)}</strong><small>{event_team_points[winning_team]} pts</small></div>''')
+
+    visible_categories = [
+        (category, label) for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
+        if categories[category]
+    ]
+    ranking_filters = list(visible_categories)
+    if show_team_ranking:
+        ranking_filters.append(("Teams", "Teams"))
+    filter_buttons = "".join(
+        f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
+        f'data-standings-group="{group}" aria-selected="{"true" if index == 0 else "false"}">{label}</button>'
+        for index, (group, label) in enumerate(ranking_filters)
+    )
+    result_tables = "".join(result_table(category, label) for category, label in visible_categories)
 
     previous_link = ""
     next_link = ""
@@ -1245,7 +1286,9 @@ def build_competition_round(riders, competition, event, round_number, events):
          "url": absolute_url(f"/riders/{rider['slug']}.html")}
         for position, (rider, _) in enumerate(all_entries, 1)
     ]
-    description = f"{event} downhill results from the {name}: Elite Men and Women placings, points, teams and linked rider profiles."
+    category_description = " and ".join(label for _, label in visible_categories) or "rider"
+    team_description = ", teams" if show_team_ranking else ""
+    description = f"{event} downhill results from the {name}: {category_description} placings, points{team_description} and linked rider profiles."
     html = head(
         f"{event} Downhill Results | {competition['season']} {SITE_NAME}", description, "../../../",
         body_class="competition-round-page", canonical_path=path,
@@ -1257,9 +1300,9 @@ def build_competition_round(riders, competition, event, round_number, events):
                                (name, f"/competitions/{cid}.html"), (event, path)]),
         ],
     )
-    html += header_html("../../../", active="competitions", show_announce=False)
+    html += header_html("../../../", active="competitions")
     html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1><div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
-<section class="section round-results-section"><div class="wrap"><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div></div>{result_table('Men Elite', 'Men')}{result_table('Women Elite', 'Women')}{team_table}</div></section>
+<section class="section round-results-section"><div class="wrap"><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{result_tables}{team_table}</div></section>
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''
     html += footer_html("../../../")
@@ -1335,12 +1378,12 @@ def build_competition_standings(riders, competition):
          "name": rider["display_name"], "url": absolute_url(f"/riders/{rider['slug']}.html")}
         for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
     ]
-    description = "UCI downhill standings 2026 for Elite Men, Elite Women and teams: current World Cup points, championship leaders and linked rider profiles."
+    description = f"{name} standings for Elite Men, Elite Women and teams: current points, season leaders and linked rider profiles."
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
     latest_round_href = (f"rounds/{competition_round_slug(latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
     html = head(
-        f"UCI Downhill Standings 2026 | Men, Women & Teams", description, "../../",
+        f"{name} Standings | Men, Women & Teams", description, "../../",
         body_class="competition-standings-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage",
@@ -1357,10 +1400,11 @@ def build_competition_standings(riders, competition):
                                (name, f"/competitions/{cid}.html"), ("Standings", path)]),
         ],
     )
-    html += header_html("../../", active="competitions", show_announce=False)
+    html += header_html("../../", active="competitions")
     html += f'''<main>
-<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>2026 UCI Downhill standings.</h1><p>{esc(name)} — the current championship order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
+<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>{esc(name)} standings.</h1><p>The current season order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
 {competition_subnav(competition, "standings")}
+<div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
 <section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
 <div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span><div class="filters" role="tablist" aria-label="Standings category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div><label class="standings-search"><span>Search</span><input class="search-input" type="search" placeholder="Rider, team or country…" data-standings-search></label></div>
 {rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}
@@ -1478,9 +1522,15 @@ def season_ranking_selector(riders, competition):
             rows.append(f'''<a class="clean-standing-row" href="../riders/{rider['slug']}.html" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span><b>{points}<small>pts</small></b></a>''')
         return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{''.join(rows)}</div><p class="standings-empty" hidden>No {label.lower()} ranking is available.</p></section>'''
 
+    ranked_riders = categories["Men Elite"] + categories["Women Elite"]
+    team_riders_with_data = [
+        rider for rider in ranked_riders
+        if (rider.get("team") or "").strip().lower() not in {"", "privateer"}
+    ]
+    show_team_ranking = bool(ranked_riders) and len(team_riders_with_data) * 2 >= len(ranked_riders)
     team_points, team_riders = {}, {}
-    for rider in categories["Men Elite"] + categories["Women Elite"]:
-        team = rider.get("team") or "Privateer"
+    for rider in team_riders_with_data:
+        team = rider["team"].strip()
         team_points[team] = team_points.get(team, 0) + competition_rider_points(rider, name)
         team_riders.setdefault(team, []).append(rider["display_name"])
     teams = sorted(team_points, key=lambda team: (-team_points[team], team.lower()))
@@ -1489,8 +1539,22 @@ def season_ranking_selector(riders, competition):
         names = ", ".join(team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
         team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
-    team_panel = f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p></section>'''
-    return f'''<section class="section clean-standings-section season-ranking-section" id="season-ranking"><div class="wrap"><div class="clean-standings-heading"><div><h2>Season ranking.</h2></div></div><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Season ranking category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button><button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button></div></div></div>{rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}</div></section>'''
+    team_panel = (f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p></section>'''
+                  if show_team_ranking else "")
+    visible_categories = [
+        (category, label) for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
+        if categories[category]
+    ]
+    ranking_filters = list(visible_categories)
+    if show_team_ranking:
+        ranking_filters.append(("Teams", "Teams"))
+    filter_buttons = "".join(
+        f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
+        f'data-standings-group="{group}" aria-selected="{"true" if index == 0 else "false"}">{label}</button>'
+        for index, (group, label) in enumerate(ranking_filters)
+    )
+    rider_panels = "".join(rider_panel(category, label) for category, label in visible_categories)
+    return f'''<section class="section clean-standings-section season-ranking-section" id="season-ranking"><div class="wrap"><div class="clean-standings-heading"><div><h2>Season ranking.</h2></div></div><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Season ranking category" data-standings-filters data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{rider_panels}{team_panel}</div></section>'''
 
 def build_competition_detail(riders, competition):
     stats = competition_stats(riders, competition)
@@ -1511,17 +1575,40 @@ def build_competition_detail(riders, competition):
             breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"), (name, path)]),
         ],
     )
-    html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
-    html += header_html("../", active="competitions", show_announce=False)
+    is_uci_dh = competition["id"] == "uci-mtb-world-cup-dh-2026"
+    if is_uci_dh:
+        html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
+    html += header_html("../", active="competitions")
+    if is_uci_dh:
+        season_visual = '<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>'
+    else:
+        recorded_events = set(events)
+        event_rows = []
+        for position, event in enumerate(competition.get("events", []), 1):
+            event_name = event.get("name") or "Event"
+            event_date = event.get("date")
+            try:
+                date_label = time.strftime("%d %b %Y", time.strptime(event_date, "%Y-%m-%d"))
+            except (TypeError, ValueError):
+                date_label = event_date or str(competition["season"])
+            has_results = event_name in recorded_events
+            status = "Results available" if has_results else "No results recorded"
+            action = (f'<a class="season-race-link" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results <span aria-hidden="true">→</span></a>'
+                      if has_results else '<span class="season-race-pending">Awaiting results</span>')
+            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(event_name)}</h2></div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
+        race_count = len(event_rows)
+        season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Race calendar · {competition['season']}</div><h2>{race_count} race{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     html += f'''<main>
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1></div></section>
-<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>
+{season_visual}
 {season_ranking_selector(riders, competition)}
 </main>'''
-    html += footer_html("../").replace(
-        '<script src="../assets/js/site.js',
-        '<script src="../assets/js/uci-iconic-tour.js?v=4"></script>\n<script src="../assets/js/site.js',
-    )
+    html += footer_html("../")
+    if is_uci_dh:
+        html = html.replace(
+            '<script src="../assets/js/site.js',
+            '<script src="../assets/js/uci-iconic-tour.js?v=4"></script>\n<script src="../assets/js/site.js',
+        )
     return html
 
 def short_event(ev):
@@ -1560,7 +1647,7 @@ def build_riders_directory(riders, women_count, men_count):
             breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html")]),
         ]
     )
-    html += header_html(prefix, active="riders", show_announce=False)
+    html += header_html(prefix, active="riders")
     html += f"""
 <main id="main-content">
 <section class="section" id="grid" style="padding-top:32px;">
@@ -2368,16 +2455,16 @@ def build_rider_page(r, riders):
             "Asa Vermette bike setup and equipment for 2026, with documented race components, UCI downhill results, championship ranking and points.",
         ),
         "anna-newkirk": (
-            "Anna Newkirk 2026 | UCI DH Results & Bike Setup",
-            "Anna Newkirk’s 2026 UCI downhill results, World Cup standings, points and documented Frameworks DH bike setup.",
+            "Anna Newkirk — Downhill Rider, Results & Bike 2026",
+            "Anna Newkirk’s 2026 profile: 4th in the tracked UCI DH Women Elite standings with 565 points, plus results and her Frameworks race bike setup.",
         ),
         "gloria-scarsi": (
-            "Gloria Scarsi 2026 | UCI DH Results & Zerode Setup",
-            "Gloria Scarsi’s 2026 UCI downhill results, World Cup standings, points and documented Zerode G3 race setup.",
+            "Gloria Scarsi — Downhill Rider, Results & Bike 2026",
+            "Gloria Scarsi’s 2026 profile: 5th in the tracked UCI DH Women Elite standings with 550 points, plus results and her Zerode G3 race bike setup.",
         ),
         "sacha-earnest": (
-            "Sacha Earnest 2026 | UCI DH Results & Trek Setup",
-            "Sacha Earnest’s 2026 UCI downhill results, World Cup standings, podiums and documented Trek Session race setup.",
+            "Sacha Earnest — Downhill Rider, Results & Bike 2026",
+            "Sacha Earnest’s 2026 profile: 7th in the tracked UCI DH Women Elite standings with 520 points, plus results, podiums and her Trek Session setup.",
         ),
     }
     page_title, meta_description = keyword_pages.get(
@@ -2442,7 +2529,7 @@ def build_rider_page(r, riders):
             breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html"), (r["display_name"], rider_url)]),
         ]
     )
-    html += header_html(prefix, active="riders", show_announce=False)
+    html += header_html(prefix, active="riders")
 
     related = [candidate for candidate in sorted(
         riders, key=season_rank_key

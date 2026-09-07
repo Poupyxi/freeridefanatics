@@ -26,6 +26,20 @@ jobs:
       - name: Check out the preproduction revision
         uses: actions/checkout@v4
 
+      - name: Read the 2026 data from Notion
+        id: notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          if test -z "$NOTION_TOKEN"; then
+            echo "Notion is not connected: add NOTION_TOKEN to the preproduction environment." >&2
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 scripts/sync_notion.py
+          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
       - name: Build and test the protected preview
         run: |
           python3 build.py
@@ -35,6 +49,9 @@ jobs:
           test -f competitions/red-bull/index.html
           test -f competitions/red-bull/rampage/index.html
           test -f competitions/red-bull/hardline/index.html
+          grep -q 'uci-events-banner' competitions/uci-mtb-world-cup-dh-2026.html
+          grep -q 'uci-iconic-tour.js?v=4' competitions/uci-mtb-world-cup-dh-2026.html
+          ! grep -qi 'Recorded events' competitions/uci-mtb-world-cup-dh-2026.html
 
       - name: Prepare isolated public files
         env:
@@ -42,9 +59,12 @@ jobs:
         run: |
           test -n "$PREPROD_AUTH_FILE"
           mkdir -p "$RUNNER_TEMP/public"
-          deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" preprod
+          deploy/build-preprod-variants.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" "$RUNNER_TEMP/source-variants"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
           ! test -f "$RUNNER_TEMP/public/contact-submit.php"
+          test -f "$RUNNER_TEMP/public/google/index.html"
+          test -f "$RUNNER_TEMP/public/notion/index.html"
+          test -f "$RUNNER_TEMP/public/data-source-status.txt"
 
       - name: Install publishing and authentication tools
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp apache2-utils
@@ -86,4 +106,14 @@ jobs:
           test "$ready" = "1"
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/ > /dev/null
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
+          google_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/google/)"
+          grep -q 'Google Sheets' <<< "$google_html"
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion/ > /dev/null
+          source_status="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/data-source-status.txt)"
+          grep -q '^active=google$' <<< "$source_status"
+          page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
+          grep -q 'uci-events-banner' <<< "$page_html"
+          grep -q 'uci-iconic-tour.js?v=4' <<< "$page_html"
+          ! grep -qi 'Recorded events' <<< "$page_html"
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=4 | grep -q 'customElements.define'
           curl --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'

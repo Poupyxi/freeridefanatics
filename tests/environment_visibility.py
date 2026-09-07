@@ -29,11 +29,6 @@ if environment == "preprod":
     assert "sibforms.com" not in home
     assert "pagead2.googlesyndication.com" not in home
 else:
-    assert not red_bull.exists()
-    assert "Red Bull Rampage" not in "".join(
-        path.read_text(encoding="utf-8", errors="ignore")
-        for path in root.rglob("*.html")
-    )
     assert "Allow: /" in robots
     assert "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" in home
 

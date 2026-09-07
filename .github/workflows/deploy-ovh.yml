@@ -13,7 +13,32 @@ permissions:
   contents: read
 
 jobs:
+  notion-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: preproduction
+
+    steps:
+      - name: Check out the production revision
+        uses: actions/checkout@v4
+
+      - name: Read and validate Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          test -n "$NOTION_TOKEN" || { echo "NOTION_TOKEN is missing." >&2; exit 1; }
+          python3 scripts/sync_notion.py
+          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+
+      - name: Pass the validated snapshot to the production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: notion-production-snapshot
+          path: data/notion/
+          retention-days: 1
+
   deploy:
+    needs: notion-snapshot
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -26,16 +51,33 @@ jobs:
       - name: Check out the production revision
         uses: actions/checkout@v4
 
+      - name: Load the validated Notion snapshot
+        uses: actions/download-artifact@v4
+        with:
+          name: notion-production-snapshot
+          path: data/notion
+
       - name: Build and verify production visibility
+        env:
+          RF_DATA_SOURCE: notion
+          RF_DATA_PATH: data/notion/riders.json
+          RF_COMPETITIONS_PATH: data/notion/competitions.json
         run: |
+          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
           python3 build.py
           python3 tests/environment_visibility.py
-          test ! -e competitions/red-bull
+          ! grep -q 'preprod-source-switcher' index.html
+          ! grep -q 'Google Sheets' index.html
+          test -f competitions/red-bull-cerro-abajo-2026.html
+          grep -q 'Red Bull Cerro Abajo 2026' competitions.html
 
       - name: Prepare public site files
         run: |
           mkdir -p "$RUNNER_TEMP/public"
           deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" production
+          cp data/notion/sync-metadata.json "$RUNNER_TEMP/public/notion-sync-metadata.json"
+          python3 -c 'import json; print(json.load(open("data/notion/sync-metadata.json"))["sha256"])' \
+            > "$RUNNER_TEMP/public/notion-data-version.txt"
 
       - name: Install SFTP publishing client
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
@@ -64,6 +106,8 @@ jobs:
             --retry-delay 5 https://ridersfanatics.com/ > /dev/null
           curl --fail --silent --show-error --retry 5 \
             --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
+          curl --fail --silent --show-error --retry 5 \
+            --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
           curl --silent --show-error --head https://ridersfanatics.com/ \

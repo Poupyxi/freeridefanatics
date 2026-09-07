@@ -447,7 +447,11 @@ def export(client: Notion, baseline_path: Path):
     slugs = [rider.get("slug") for rider in riders]
     if len(slugs) != len(set(slugs)):
         raise RuntimeError("Duplicate rider slugs were generated")
-    riders.sort(key=lambda rider: (rider.get("gender_category") or "", -(sum(row["points"] for row in rider["competition_history"])), rider["display_name"]))
+    riders.sort(key=lambda rider: (
+        rider.get("gender_category") or "",
+        -sum((row.get("points") or 0) for row in rider["competition_history"]),
+        rider["display_name"],
+    ))
     return riders, competition_catalog, {name: len(items) for name, items in pages.items()}
 
 

@@ -297,8 +297,17 @@ def export(client: Notion, baseline_path: Path):
         race_id = race_ids[0] if race_ids else None
         points = safe_int(value(item, "points"))
         place = safe_int(value(item, "Place"))
-        if rider_id and race_id in races and points is not None and points >= 1:
-            race = races[race_id]
+        race = races.get(race_id)
+        has_points = points is not None and points >= 1
+        # Invitational Red Bull races publish an official finishing order but
+        # do not necessarily award championship points. Keep those placings so
+        # their event result page is not empty. UCI remains points-gated.
+        has_invitational_place = (
+            place is not None
+            and race is not None
+            and not race["competition"].casefold().startswith("uci")
+        )
+        if rider_id and race is not None and (has_points or has_invitational_place):
             key = (rider_id, race["competition"], race["event"], race["gender"])
             year_match = re.search(r"\b(20\d{2})\b", race["competition"])
             result = combined_results.setdefault(key, {
@@ -310,8 +319,11 @@ def export(client: Notion, baseline_path: Path):
                 "points": 0,
                 "_event_date": race["date"],
                 "_has_final": False,
+                "_has_points": False,
             })
-            result["points"] += points
+            if has_points:
+                result["points"] += points
+                result["_has_points"] = True
             if race["phase"] == "Final":
                 result["place"] = place
                 result["result"] = ordinal(place)
@@ -323,6 +335,8 @@ def export(client: Notion, baseline_path: Path):
     result_rows = {}
     for (rider_id, _competition, _event, _gender), result in combined_results.items():
         result.pop("_has_final", None)
+        if not result.pop("_has_points", False):
+            result["points"] = None
         result_rows.setdefault(rider_id, []).append(result)
 
     equipment = {}

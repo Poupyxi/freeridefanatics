@@ -10,7 +10,7 @@ BUILD_ENV = os.environ.get("RF_BUILD_ENV", "production").strip().lower()
 IS_PREPROD = BUILD_ENV == "preprod"
 BASE = os.environ.get("RF_SITE_URL", "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com").rstrip("/")
 ROBOTS_META = "noindex,nofollow,noarchive" if IS_PREPROD else "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
-UPDATED = "2026-08-24"
+UPDATED = "2026-09-09"
 STANDINGS = "competitions/uci-mtb-world-cup-dh-2026/standings.html"
 
 LANGS = {
@@ -109,6 +109,8 @@ pages += [ROOT / "guides" / code / "index.html" for code in ORDER]
 xml_rows = []
 for item in pages:
     rel = item.relative_to(ROOT).as_posix()
+    if rel == "competitions/red-bull-cerro-abajo-2026/standings.html":
+        continue
     if rel == "index.html":
         url = BASE + "/"
     elif rel.endswith("/index.html"):

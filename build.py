@@ -54,9 +54,9 @@ SITE_URL = os.environ.get(
     "RF_SITE_URL",
     "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com",
 ).rstrip("/")
-SITE_UPDATED = "2026-08-24"
-SITE_UPDATED_LABEL = "24 Aug 2026"
-SITE_UPDATED_LONG = "24 August 2026"
+SITE_UPDATED = "2026-09-09"
+SITE_UPDATED_LABEL = "9 Sep 2026"
+SITE_UPDATED_LONG = "9 September 2026"
 CONTACT_EMAIL = "contact@ridersfanatics.com"
 DATA_LICENSE_URL = f"{SITE_URL}/data-license.html"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
@@ -1203,6 +1203,9 @@ def competition_round_slug(event):
     value = unicodedata.normalize("NFKD", event or "").encode("ascii", "ignore").decode("ascii")
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-") or "round"
 
+def is_red_bull_cerro_abajo(competition):
+    return competition.get("id") == "red-bull-cerro-abajo-2026"
+
 def build_competition_round(riders, competition, event, round_number, events):
     """One crawlable result page per recorded round, generated from rider history."""
     name = competition["name"]
@@ -1303,13 +1306,24 @@ def build_competition_round(riders, competition, event, round_number, events):
     ]
     category_description = " and ".join(label for _, label in visible_categories) or "rider"
     team_description = ", teams" if show_team_ranking else ""
-    description = f"{event} downhill results from the {name}: {category_description} placings, points{team_description} and linked rider profiles."
+    has_points = any(result.get("points") is not None for _, result in all_entries)
+    if is_red_bull_cerro_abajo(competition):
+        page_title = f"{event} Red Bull Cerro Abajo 2026 Results | {SITE_NAME}"
+        recorded_data = "recorded placings and points" if has_points else "the recorded finishing order"
+        description = (f"{event} results from Red Bull Cerro Abajo 2026: {category_description} results with "
+                       f"{recorded_data}{team_description}, linked to rider profiles in RidersFanatics.")
+    else:
+        page_title = f"{event} Downhill Results | {competition['season']} {SITE_NAME}"
+        points_copy = ", points" if has_points else ""
+        description = f"{event} downhill results from the {name}: {category_description} placings{points_copy}{team_description} and linked rider profiles."
     html = head(
-        f"{event} Downhill Results | {competition['season']} {SITE_NAME}", description, "../../../",
+        page_title, description, "../../../",
         body_class="competition-round-page", canonical_path=path,
         schemas=[
-            {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{event} downhill results",
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{event} {name} results",
              "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
+             "isPartOf": {"@type": "CollectionPage", "name": name,
+                          "url": absolute_url(f"/competitions/{cid}.html")},
              "mainEntity": {"@type": "ItemList", "numberOfItems": len(item_list), "itemListElement": item_list}},
             breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"),
                                (name, f"/competitions/{cid}.html"), (event, path)]),
@@ -1434,11 +1448,16 @@ def build_competitions_hub(riders):
     for position, competition in enumerate(COMPETITIONS, 1):
         stats = competition_stats(riders, competition)
         detail_path = f"/competitions/{competition['id']}.html"
+        card_description = (
+            "Follow Red Bull Cerro Abajo 2026 results and rankings across Valparaiso, Genova and Stuttgart, with every recorded rider linked to a profile."
+            if is_red_bull_cerro_abajo(competition)
+            else "Explore the season context, completed rounds, tracked riders and links to the live standings and equipment database."
+        )
         cards.append(f'''<article class="competition-card">
           <div class="competition-card-top"><span class="competition-status">Tracking now</span><span>{competition['season']}</span></div>
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
           <h2>{esc(competition['name'])}</h2>
-          <p>Explore the season context, completed rounds, tracked riders and links to the live standings and equipment database.</p>
+          <p>{esc(card_description)}</p>
           <div class="competition-card-stats"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{len(stats['teams'])}</strong> teams</span></div>
           <a class="btn btn-solid" href="competitions/{competition['id']}.html">Open competition</a>
         </article>''')
@@ -1576,9 +1595,16 @@ def build_competition_detail(riders, competition):
     events = stats["events"]
     name = competition["name"]
     path = f"/competitions/{competition['id']}.html"
-    description = f"{name} season overview: completed events, current leaders, rider profiles and links to overall standings and professional downhill equipment."
+    is_red_bull = is_red_bull_cerro_abajo(competition)
+    if is_red_bull:
+        page_title = f"Red Bull Cerro Abajo 2026 Results & Rankings | {SITE_NAME}"
+        description = ("Red Bull Cerro Abajo 2026 results, rider rankings and race pages for "
+                       "Valparaiso, Genova and Stuttgart, independently tracked by RidersFanatics.")
+    else:
+        page_title = f"{name} | Riders & Events"
+        description = f"{name} season overview: completed events, current leaders, rider profiles and links to overall standings and professional downhill equipment."
     html = head(
-        f"{name} | Riders & Events", description, "../",
+        page_title, description, "../",
         body_class="competition-detail-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage", "name": name,
@@ -1613,9 +1639,15 @@ def build_competition_detail(riders, competition):
             event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(event_name)}</h2></div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)
         season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Race calendar · {competition['season']}</div><h2>{race_count} race{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
+    hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "
+                  "Each recorded result links directly to the rider profile.</p>"
+                  if is_red_bull else "")
+    season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>Red Bull Cerro Abajo 2026 results database</strong><p>RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles. Use the race calendar above to open each event result, or the ranking below to follow the season order.</p></div></div></section>'''
+                      if is_red_bull else "")
     html += f'''<main>
-<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1></div></section>
+<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1>{hero_intro}</div></section>
 {season_visual}
+{season_context}
 {season_ranking_selector(riders, competition)}
 </main>'''
     html += footer_html("../")
@@ -2753,8 +2785,13 @@ def main():
             f.write(build_competition_detail(riders, competition))
         standings_dir = os.path.join(COMPETITIONS_DIR, competition["id"])
         os.makedirs(standings_dir, exist_ok=True)
-        with open(os.path.join(standings_dir, "standings.html"), "w", encoding="utf-8") as f:
-            f.write(build_competition_standings(riders, competition))
+        standings_file = os.path.join(standings_dir, "standings.html")
+        if is_red_bull_cerro_abajo(competition):
+            if os.path.exists(standings_file):
+                os.remove(standings_file)
+        else:
+            with open(standings_file, "w", encoding="utf-8") as f:
+                f.write(build_competition_standings(riders, competition))
         events = competition_events(riders, competition["name"])
         rounds_dir = os.path.join(standings_dir, "rounds")
         os.makedirs(rounds_dir, exist_ok=True)

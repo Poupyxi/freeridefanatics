@@ -1191,12 +1191,49 @@ def competition_round_slug(event):
 def is_red_bull_cerro_abajo(competition):
     return competition.get("id") == "red-bull-cerro-abajo-2026"
 
+RED_BULL_CERRO_ABAJO_EVENTS = {
+    "valparaiso": {
+        "display_name": "Valparaíso",
+        "start_date": "2026-02-15",
+        "end_date": "2026-02-15",
+        "city": "Valparaíso",
+        "country": "Chile",
+        "country_code": "CL",
+        "summary": "The Chilean stop raced through the steep streets and stairways of Valparaíso on 15 February 2026.",
+        "official_url": "https://www.redbull.com/cl-es/events/red-bull-valparaiso-cerro-abajo-2026",
+    },
+    "genova": {
+        "display_name": "Genova",
+        "start_date": "2026-06-27",
+        "end_date": "2026-06-28",
+        "city": "Genova",
+        "country": "Italy",
+        "country_code": "IT",
+        "summary": "The Italian stop ran through Genova's historic streets on 27–28 June 2026.",
+        "official_url": "https://www.redbull.com/gb-en/events/red-bull-genova-cerro-abajo-2026",
+    },
+    "stuttgart": {
+        "display_name": "Stuttgart",
+        "start_date": "2026-09-05",
+        "end_date": "2026-09-06",
+        "city": "Stuttgart",
+        "country": "Germany",
+        "country_code": "DE",
+        "summary": "The first German stop brought the season finale to Stuttgart on 5–6 September 2026.",
+        "official_url": "https://www.redbull.com/int-en/events/red-bull-stuttgart-cerro-abajo",
+    },
+}
+
+def red_bull_event_info(event):
+    return RED_BULL_CERRO_ABAJO_EVENTS.get(competition_round_slug(event))
+
 def build_competition_round(riders, competition, event, round_number, events):
     """One crawlable result page per recorded round, generated from rider history."""
     name = competition["name"]
     cid = competition["id"]
     slug = competition_round_slug(event)
     path = f"/competitions/{cid}/rounds/{slug}.html"
+    official_event = red_bull_event_info(event) if is_red_bull_cerro_abajo(competition) else None
 
     categories = {}
     all_entries = []
@@ -1301,21 +1338,38 @@ def build_competition_round(riders, competition, event, round_number, events):
         page_title = f"{event} Downhill Results | {competition['season']} {SITE_NAME}"
         points_copy = ", points" if has_points else ""
         description = f"{event} downhill results from the {name}: {category_description} placings{points_copy}{team_description} and linked rider profiles."
+    schemas = [
+        {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{event} {name} results",
+         "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
+         "isPartOf": {"@type": "CollectionPage", "name": name,
+                      "url": absolute_url(f"/competitions/{cid}.html")},
+         "mainEntity": {"@type": "ItemList", "numberOfItems": len(item_list), "itemListElement": item_list}},
+        breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"),
+                           (name, f"/competitions/{cid}.html"), (event, path)]),
+    ]
+    if official_event:
+        schemas.append({
+            "@context": "https://schema.org", "@type": "SportsEvent",
+            "name": f"Red Bull Cerro Abajo {official_event['display_name']} 2026",
+            "description": official_event["summary"],
+            "startDate": official_event["start_date"], "endDate": official_event["end_date"],
+            "eventStatus": "https://schema.org/EventCompleted",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "location": {"@type": "Place", "name": official_event["city"],
+                         "address": {"@type": "PostalAddress",
+                                     "addressLocality": official_event["city"],
+                                     "addressCountry": official_event["country_code"]}},
+            "url": absolute_url(path), "sameAs": official_event["official_url"],
+        })
     html = head(
         page_title, description, "../../../",
         body_class="competition-round-page", canonical_path=path,
-        schemas=[
-            {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{event} {name} results",
-             "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
-             "isPartOf": {"@type": "CollectionPage", "name": name,
-                          "url": absolute_url(f"/competitions/{cid}.html")},
-             "mainEntity": {"@type": "ItemList", "numberOfItems": len(item_list), "itemListElement": item_list}},
-            breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"),
-                               (name, f"/competitions/{cid}.html"), (event, path)]),
-        ],
+        schemas=schemas,
     )
     html += header_html("../../../", active="competitions")
-    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1><div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
+    official_source = (f'''<p class="round-official-source"><a href="{esc_attr(official_event['official_url'])}" rel="nofollow noopener" target="_blank">Official event information <span aria-hidden="true">↗</span></a></p>'''
+                       if official_event else "")
+    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
 <section class="section round-results-section"><div class="wrap"><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{result_tables}{team_table}</div></section>
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''
@@ -1612,22 +1666,28 @@ def build_competition_detail(riders, competition):
         event_rows = []
         for position, event in enumerate(competition.get("events", []), 1):
             event_name = event.get("name") or "Event"
-            event_date = event.get("date")
+            official_event = red_bull_event_info(event_name) if is_red_bull else None
+            event_date = official_event["start_date"] if official_event else event.get("date")
             try:
                 date_label = time.strftime("%d %b %Y", time.strptime(event_date, "%Y-%m-%d"))
             except (TypeError, ValueError):
                 date_label = event_date or str(competition["season"])
+            if official_event and official_event["end_date"] != official_event["start_date"]:
+                start = time.strptime(official_event["start_date"], "%Y-%m-%d")
+                end = time.strptime(official_event["end_date"], "%Y-%m-%d")
+                date_label = f"{start.tm_mday}–{end.tm_mday} {time.strftime('%b %Y', end)}"
             has_results = event_name in recorded_events
             status = "Results available" if has_results else "No results recorded"
             action = (f'<a class="season-race-link" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results <span aria-hidden="true">→</span></a>'
                       if has_results else '<span class="season-race-pending">Awaiting results</span>')
-            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(event_name)}</h2></div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
+            event_summary = f'<p>{esc(official_event["summary"])}</p>' if official_event else ""
+            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(event_name)}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)
         season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Race calendar · {competition['season']}</div><h2>{race_count} race{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "
                   "Each recorded result links directly to the rider profile.</p>"
                   if is_red_bull else "")
-    season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>Red Bull Cerro Abajo 2026 results database</strong><p>RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles. Use the race calendar above to open each event result, or the ranking below to follow the season order.</p></div></div></section>'''
+    season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
     html += f'''<main>
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1>{hero_intro}</div></section>

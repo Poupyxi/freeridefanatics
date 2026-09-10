@@ -611,6 +611,158 @@ def build_editorial_page(slug, title, description, label, lead, sections):
     html += footer_html("")
     return html
 
+def build_privacy_page():
+    path = "/privacy.html"
+    updated = "2026-09-10"
+    updated_label = "10 September 2026"
+    description = "How RidersFanatics handles public sporting information, visitor data, newsletter subscriptions, technical logs, cookies and privacy requests."
+
+    sections = [
+        ("01 — Our Approach", [
+            ("p", "RidersFanatics focuses on information connected to public sporting activity."),
+            ("p", "Most information displayed on the platform comes from publicly accessible sources such as official competition websites, federations, teams, brands, riders’ public profiles, event organizers and public announcements."),
+            ("p", "We aim to collect only information that is relevant to the RidersFanatics database."),
+            ("p", "We do not intentionally collect or publish private or confidential information."),
+        ]),
+        ("02 — Public Information", [
+            ("p", "RidersFanatics may display publicly available information about:"),
+            ("ul", ["Riders", "Teams", "Brands", "Equipment", "Events", "Competitions", "Results", "Rankings", "Sponsors", "Public partnerships"]),
+            ("p", "For Riders, this may include information such as:"),
+            ("ul", ["Name", "Nationality", "Discipline", "Competition category", "Team", "Public social media profiles", "Sponsors", "Bike and equipment", "Competition participation", "Results", "Rankings", "Publicly available sporting statistics"]),
+            ("p", "For Teams, Brands and Events, RidersFanatics may display publicly available information such as official names, websites, social profiles, riders, partnerships, sponsors, equipment, dates, locations and competition information."),
+        ]),
+        ("03 — Sources", [
+            ("p", "We prioritize reliable and publicly accessible sources, including:"),
+            ("ul", ["Official federation and competition websites", "Official event organizers", "Team websites", "Brand websites", "Riders’ public social media profiles", "Official public announcements", "Press releases", "Public competition results and rankings"]),
+            ("p", "Information from several sources may be combined to create a structured profile or relationship between a Rider, Team, Brand, Equipment item or Event."),
+            ("p", "RidersFanatics does not knowingly use leaked databases, private accounts or unauthorized sources."),
+        ]),
+        ("04 — What We Do Not Collect", [
+            ("p", "RidersFanatics does not intentionally collect information unrelated to a person’s public sporting activity."),
+            ("p", "We do not aim to publish:"),
+            ("ul", ["Private home addresses", "Private telephone numbers", "Private email addresses", "Private social media content", "Login credentials", "Payment information", "Private conversations", "Information obtained from private databases"]),
+            ("p", "For young riders, additional care is taken to avoid unnecessary private information."),
+        ]),
+        ("05 — Accuracy and Historical Information", [
+            ("p", "Information in the riding world changes frequently."),
+            ("p", "A rider may change team, sponsors or equipment. Event information and results may also be updated after publication."),
+            ("p", "RidersFanatics makes reasonable efforts to keep information accurate and relevant, but we cannot guarantee that every item is always complete or immediately up to date."),
+            ("p", "Some information may remain visible as part of the historical record."),
+            ("p", "For example:"),
+            ("ul", ["Previous teams", "Previous sponsors", "Past competition results", "Historical rankings", "Previous equipment", "Past event participation"]),
+            ("p", "Historical information may remain available when it is relevant to understanding a rider, team, brand or competition history."),
+        ]),
+        ("06 — Corrections and Updates", [
+            ("p", "Something wrong or outdated?"),
+            ("p", "Riders, Teams, Brands and Event organizers can request a correction or update at any time."),
+            ("p", "When contacting us, please provide:"),
+            ("ul", ["The page concerned", "The information that should be corrected", "The correct information", "When possible, an official or publicly accessible source confirming the change"]),
+            ("p", "This allows us to review updates efficiently and reduce inaccurate edits."),
+            ("p", "Privacy and correction requests can be sent to:"),
+            ("email", CONTACT_EMAIL),
+            ("p", "Each request is reviewed individually."),
+        ]),
+        ("07 — Visitor and Email Data", [
+            ("p", "RidersFanatics does not require visitors to create an account."),
+            ("p", "We do not maintain an internal user account database."),
+            ("p", "RidersFanatics also does not maintain its own database of visitor email addresses."),
+            ("p", "If you contact us through the website, your email address is used only so that we can receive and respond to your message."),
+            ("p", "It is not automatically used to create a user profile or added to a marketing database."),
+            ("p", "Contact messages may exist in the email systems used to receive and respond to your request."),
+            ("p", "RidersFanatics does not sell, rent or commercially distribute visitor email addresses."),
+        ]),
+        ("08 — Newsletter", [
+            ("p", "If you voluntarily subscribe to the RidersFanatics newsletter, your email address may be processed by our newsletter provider, currently Brevo."),
+            ("p", "The address is used only for the newsletter you requested."),
+            ("p", "You may unsubscribe at any time using the unsubscribe link included in the emails."),
+            ("p", "RidersFanatics does not maintain a separate internal copy of the newsletter email database."),
+            ("p", "The newsletter provider may retain information necessary to manage subscriptions, consent and unsubscribe requests."),
+        ]),
+        ("09 — Technical Data and Third Parties", [
+            ("p", "When you visit RidersFanatics, limited technical information may be processed automatically by the website infrastructure."),
+            ("p", "This may include:"),
+            ("ul", ["IP address", "Browser information", "Device information", "Requested URL", "Date and time of access", "Security or technical logs"]),
+            ("p", "This information is used for website operation, security and reliability."),
+            ("p", "RidersFanatics may also use third-party services for hosting, email delivery, security and other technical functions."),
+            ("p", "These providers may process limited information when necessary to provide their services."),
+        ]),
+        ("10 — Cookies, Analytics and Affiliate Links", [
+            ("p", "RidersFanatics aims to limit unnecessary tracking."),
+            ("p", "If non-essential analytics, advertising or tracking technologies requiring consent are used, appropriate consent mechanisms will be provided where required."),
+            ("p", "Some links on RidersFanatics may be affiliate links."),
+            ("p", "When you follow an affiliate link, the external website may use referral identifiers or cookies to determine that the visit originated from RidersFanatics."),
+            ("p", "Purchases are completed directly with the third-party retailer."),
+            ("p", "RidersFanatics does not receive or store your bank card or payment credentials from those retailers."),
+        ]),
+        ("11 — No Sale of Personal Data", [
+            ("p", "RidersFanatics does not sell personal information."),
+            ("p", "We do not sell rider information, visitor information or email addresses to data brokers."),
+            ("p", "Our database is designed to organize publicly accessible sporting information, not to create a marketplace for private personal data."),
+        ]),
+        ("12 — Your Rights", [
+            ("p", "Depending on applicable law and the type of information concerned, you may have rights including:"),
+            ("ul", ["Access", "Correction", "Deletion in applicable circumstances", "Restriction of processing", "Objection to certain processing", "Withdrawal of consent where consent is used", "Complaint to the competent data protection authority"]),
+            ("p", "In France, the competent authority is the CNIL."),
+            ("p", "Requests can be sent to:"),
+            ("email", CONTACT_EMAIL),
+        ]),
+        ("13 — Young Riders", [
+            ("p", "Some competitions featured on RidersFanatics may include minors."),
+            ("p", "For young riders, RidersFanatics aims to display only information relevant to their public sporting activity and already made public through appropriate sporting or official sources."),
+            ("p", "We do not intentionally publish private addresses, private contact information, school information or other unnecessary personal information about minors."),
+            ("p", "Requests concerning information about a young rider can be sent to:"),
+            ("email", CONTACT_EMAIL),
+        ]),
+        ("14 — Changes to This Policy", [
+            ("p", "RidersFanatics may update this Privacy Policy when the website, services or legal requirements change."),
+            ("p", "The latest revision date will always appear at the top of this page."),
+        ]),
+        ("Contact", [
+            ("p", "For privacy questions, corrections or data requests:"),
+            ("email", CONTACT_EMAIL),
+            ("site", SITE_URL),
+        ]),
+    ]
+
+    body = [
+        '<section class="privacy-introduction">',
+        '<p>RidersFanatics is a public information platform dedicated to riders, teams, brands, equipment and events.</p>',
+        '<p>Our goal is to organize information that is already publicly accessible and make it easier to discover, compare and explore.</p>',
+        '<p>We do not build private profiles.</p>',
+        '<p class="privacy-principles"><strong>PUBLIC INFORMATION · NO USER ACCOUNTS · NO INTERNAL EMAIL DATABASE · NO DATA SALES</strong></p>',
+        '</section>',
+    ]
+    for heading, entries in sections:
+        body.append(f'<section><h2>{esc(heading)}</h2>')
+        for kind, value in entries:
+            if kind == "p":
+                body.append(f'<p>{esc(value)}</p>')
+            elif kind == "ul":
+                body.append('<ul>' + ''.join(f'<li>{esc(item)}</li>' for item in value) + '</ul>')
+            elif kind == "email":
+                body.append(f'<p><strong><a href="mailto:{esc_attr(value)}">{esc(value)}</a></strong></p>')
+            elif kind == "site":
+                body.append(f'<p><strong>{SITE_NAME}</strong><br><a href="{esc_attr(value)}">ridersfanatics.com</a></p>')
+        body.append('</section>')
+
+    html = head(
+        f"Privacy Policy | {SITE_NAME}", description, "", body_class="guide-page privacy-page",
+        canonical_path=path, page_type="article",
+        schemas=[
+            {"@context": "https://schema.org", "@type": "WebPage", "name": "Privacy Policy",
+             "description": description, "dateModified": updated, "url": absolute_url(path),
+             "publisher": {"@type": "Organization", "name": SITE_NAME, "url": SITE_URL}},
+            breadcrumb_schema([("Home", "/"), ("Privacy Policy", path)]),
+        ],
+    )
+    html += header_html("")
+    html += f'''<main><article>
+<header class="guide-hero"><div class="wrap"><div class="label">Public information · Privacy</div><h1>Privacy Policy</h1><p class="lead">How RidersFanatics handles public sporting information and the limited data involved when people visit or contact the platform.</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{updated}">Last updated: {updated_label}</time></div></div></header>
+<div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>
+<aside class="guide-sidebar"><div class="guide-card"><h2>Contact</h2><a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a><a href="contact.html">Contact RidersFanatics</a></div></aside></div>
+</article></main>'''
+    return html + footer_html("")
+
 def build_contact_page():
     path = "/contact.html"
     description = "Contact RidersFanatics to report a correction, share a reliable source, discuss equipment data or ask a partnership question."
@@ -731,21 +883,7 @@ def build_trust_pages():
                 ("Request a proposal", [f"Contact {CONTACT_EMAIL} with the subject ‘Advertising’ and include your brand, campaign objective, preferred dates and destination markets.", "Audience figures and pricing will be shared from verified traffic data rather than estimated or invented reach."]),
             ],
         ),
-        "privacy.html": build_editorial_page(
-            "privacy", "Privacy policy",
-            "Privacy information for visitors to RidersFanatics, including server logs, external links, affiliate links and future service changes.",
-            "Visitor information",
-            "RidersFanatics is primarily a static editorial website. It operates a contact form and an optional newsletter provided by Brevo; it has no user account system.",
-            [
-                ("Information processed", ["When you use the contact form, RidersFanatics receives your name, email address, chosen message category, message and any relevant page URL you provide. When you subscribe to the newsletter, Brevo processes your email address and the technical evidence needed to record your consent. Required fields are marked on each form. Standard hosting infrastructure may also process technical request information such as IP address, browser type, requested URL, timestamp and security events in server logs."]),
-                ("Purpose and legal basis", ["Contact details are used to read, verify and answer your request. Newsletter details are used only to send RidersFanatics updates and an automatic welcome message after you submit the subscription form. Newsletter processing is based on consent, which you may withdraw at any time using the unsubscribe link in every message. Do not send sensitive personal information."]),
-                ("Recipients and retention", [f"Contact messages are delivered to the RidersFanatics mailbox at {CONTACT_EMAIL}. Newsletter subscriptions are managed by Brevo as an email service provider. Details are not sold. Contact messages are kept only while the request is handled. Newsletter data is retained while the subscription remains active; limited suppression data may be retained after unsubscribe to ensure no further messages are sent, subject to legal obligations."]),
-                ("Your rights", [f"You can ask to access, correct or delete your contact information, or withdraw your consent, by emailing {CONTACT_EMAIL}. You may also contact the data protection authority applicable to you, such as the CNIL in France."]),
-                ("External services", ["The newsletter form and subscription emails are provided by Brevo. Pages may also link to manufacturers, retailers, Amazon and social platforms. Those services operate under their own privacy and cookie policies. Following an external link transfers the visitor to the third party's service."]),
-                ("Affiliate links", ["Some outbound links are marked as sponsored affiliate links. The destination retailer may use its own identifiers or cookies to attribute a qualifying purchase. RidersFanatics does not receive the visitor's payment details from the retailer."]),
-                ("Future changes", ["If analytics or user accounts are activated later, this policy will be updated before the new processing begins, with appropriate consent and retention information where required."]),
-            ],
-        ),
+        "privacy.html": build_privacy_page(),
     }
 
 # ---------------------------------------------------------------- index page

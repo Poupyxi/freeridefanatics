@@ -433,9 +433,7 @@ def footer_html(asset_prefix):
       <a href="{asset_prefix}riders.html#grid">Riders</a>
       <a href="{asset_prefix}competitions.html">Competitions</a>
       <a href="{asset_prefix}equipment.html">Equipment</a>
-      <a href="{asset_prefix}guides/en/">DH Guide</a>
-      <a href="{home_href}#faq">FAQ</a>
-      <a href="{asset_prefix}about.html">About</a>
+      <a href="{asset_prefix}equipment.html#equipment-catalogue">Brands</a>
       <a href="{asset_prefix}contact.html">Contact</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>

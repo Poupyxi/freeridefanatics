@@ -317,6 +317,28 @@
     });
   });
 
+  // Dedicated brand directory search.
+  safe('brand-directory', function(){
+    var grid = document.querySelector('[data-brand-grid]');
+    if(!grid) return;
+    var cards = Array.prototype.slice.call(grid.querySelectorAll('[data-brand-card]'));
+    var searchInput = document.querySelector('[data-brand-search]');
+    var results = document.querySelector('[data-brand-results]');
+
+    function render(){
+      var term = (searchInput && searchInput.value || '').trim().toLowerCase();
+      var shown = 0;
+      cards.forEach(function(card){
+        var match = !term || (card.getAttribute('data-search') || '').indexOf(term) !== -1;
+        card.hidden = !match;
+        if(match) shown += 1;
+      });
+      if(results) results.textContent = shown + (shown === 1 ? ' brand' : ' brands');
+    }
+
+    if(searchInput) searchInput.addEventListener('input', render);
+  });
+
   // Standings page: pick a group (Men / Women / Teams) and a competition.
   // Every table is rendered; only the matching one is shown.
   safe('standings', function(){

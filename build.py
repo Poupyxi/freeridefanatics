@@ -433,7 +433,7 @@ def footer_html(asset_prefix):
       <a href="{asset_prefix}riders.html#grid">Riders</a>
       <a href="{asset_prefix}competitions.html">Competitions</a>
       <a href="{asset_prefix}equipment.html">Equipment</a>
-      <a href="{asset_prefix}equipment.html#equipment-catalogue">Brands</a>
+      <a href="{asset_prefix}brands.html">Brands</a>
       <a href="{asset_prefix}contact.html">Contact</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
@@ -2298,6 +2298,75 @@ def build_equipment_directory(riders):
     html += footer_html("")
     return html
 
+def collect_brands(riders):
+    """Aggregate the ranked equipment catalogue into one record per brand."""
+    brands = {}
+    for category, products in collect_equipment(riders).items():
+        for product in products.values():
+            brand = (product.get("brand") or "").strip()
+            if not brand:
+                continue
+            key = norm_product_text(brand)
+            record = brands.setdefault(key, {
+                "name": brand, "products": [], "categories": set(), "riders": {},
+            })
+            record["categories"].add(category)
+            record["products"].append({
+                "category": category,
+                "model": product.get("model") or "",
+            })
+            for rider in product.get("riders") or []:
+                record["riders"][rider["slug"]] = rider
+    return brands
+
+def build_brands_directory(riders):
+    brands = sorted(collect_brands(riders).values(), key=lambda brand: norm_product_text(brand["name"]))
+    product_count = sum(len(brand["products"]) for brand in brands)
+    represented_riders = {slug for brand in brands for slug in brand["riders"]}
+    cards = []
+    for index, brand in enumerate(brands, 1):
+        categories = sorted(brand["categories"], key=lambda category: equipment_category_plural(category))
+        category_links = "".join(
+            f'<a href="equipment/{equip_image_slug(category, "", "")}.html">{esc(equipment_category_plural(category))}</a>'
+            for category in categories
+        )
+        models = sorted({product["model"] for product in brand["products"] if product["model"]}, key=norm_product_text)
+        visible_models = models[:4]
+        model_text = ", ".join(visible_models)
+        if len(models) > len(visible_models):
+            model_text += f" +{len(models) - len(visible_models)} more"
+        search_text = " ".join([brand["name"], *models, *(equipment_category_plural(c) for c in categories)]).lower()
+        cards.append(f'''<article class="brand-card" data-brand-card data-search="{esc_attr(search_text)}">
+          <div class="brand-card-top"><span>{index:02d}</span><span>{len(categories)} categor{'y' if len(categories) == 1 else 'ies'}</span></div>
+          <h2>{esc(brand['name'])}</h2>
+          <dl class="brand-card-stats"><div><dt>{len(brand['products'])}</dt><dd>Products</dd></div><div><dt>{len(brand['riders'])}</dt><dd>Riders</dd></div></dl>
+          <div class="brand-category-links">{category_links}</div>
+          <p><strong>Tracked models</strong>{esc(model_text) if model_text else 'Product references available in rider profiles.'}</p>
+        </article>''')
+    path = "/brands.html"
+    schema_items = [
+        {"@type": "ListItem", "position": index, "name": brand["name"]}
+        for index, brand in enumerate(brands, 1)
+    ]
+    html = head(
+        f"Mountain Bike Brands Used by Pro Riders | {SITE_NAME}",
+        "Explore the mountain bike brands, products and equipment categories used by professional downhill and urban downhill riders tracked by RidersFanatics.",
+        "", body_class="brands-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": "Mountain bike brands used by professional riders", "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "numberOfItems": len(brands), "itemListElement": schema_items}},
+            breadcrumb_schema([("Home", "/"), ("Brands", path)]),
+        ],
+    )
+    html += header_html("", active="equipment")
+    html += f'''<main id="main-content">
+<section class="brands-hero"><div class="wrap brands-hero-layout"><div><div class="label">Professional equipment database · Season 2026</div><h1>Brands in the <em>paddock.</em></h1><p>Discover the brands and product references documented on professional rider setups. Every count connects directly to the RidersFanatics equipment database.</p></div><dl class="brands-hero-stats"><div><dt>{len(brands)}</dt><dd>Brands</dd></div><div><dt>{product_count}</dt><dd>Products</dd></div><div><dt>{len(represented_riders)}</dt><dd>Riders</dd></div></dl></div></section>
+<section class="section brands-directory"><div class="wrap"><div class="brands-directory-head"><div><div class="label">Brand directory</div><h2>Explore every brand.</h2></div><label class="brand-search"><span class="visually-hidden">Search brands</span><input class="search-input" type="search" placeholder="Search a brand, product or category..." data-brand-search></label></div>
+<p class="brand-results" data-brand-results>{len(brands)} brands</p><div class="brand-grid" data-brand-grid>{''.join(cards)}</div>
+<div class="guide-callout"><strong>How these counts work</strong><p>Products and riders are counted from documented race setups. Presence in this directory describes tracked use, not an endorsement or a complete list of everything a brand manufactures.</p><a href="equipment.html">Explore equipment rankings →</a></div></div></section>
+</main>'''
+    html += footer_html("")
+    return html
+
 EQUIPMENT_EDITORIAL = {
     "Frame": ("Frames define the chassis platform around which the rest of a downhill build is assembled.", "Compare the number of tracked riders, team representation and the suspension platform before using points as a measure of visibility."),
     "Fork": ("Downhill forks manage front-wheel impacts and help riders maintain control through braking zones and rough terrain.", "Look at rider adoption and team use alongside the model name; race tunes and internal settings are not captured by this table."),
@@ -2952,6 +3021,9 @@ def main():
 
     with open(os.path.join(ROOT, "equipment.html"), "w", encoding="utf-8") as f:
         f.write(build_equipment_directory(riders))
+
+    with open(os.path.join(ROOT, "brands.html"), "w", encoding="utf-8") as f:
+        f.write(build_brands_directory(riders))
 
     with open(os.path.join(ROOT, "compare.html"), "w", encoding="utf-8") as f:
         f.write(build_compare_page())

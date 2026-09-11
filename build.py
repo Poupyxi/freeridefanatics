@@ -2330,50 +2330,68 @@ def collect_brands(riders):
                 record["riders"][rider["slug"]] = rider
     return brands
 
+BRAND_LOGO_DOMAINS = [
+    ("Bontrager", ("Bontrager",), "bontrager.com"),
+    ("Burgtec", ("Burgtec",), "burgtec.co.uk"),
+    ("Commençal", ("Commençal",), "commencal.com"),
+    ("Continental", ("Continental",), "continental-tires.com"),
+    ("Crankbrothers", ("Crankbrother", "Crankbrothers"), "crankbrothers.com"),
+    ("ENVE", ("ENVE",), "enve.com"),
+    ("Fox", ("Fox",), "ridefox.com"),
+    ("Frameworks", ("Frameworks",), "rideframeworks.com"),
+    ("Hope", ("Hope",), "hopetech.com"),
+    ("Manitou", ("Manitou",), "manitou.hayesbicycle.com"),
+    ("Maxxis", ("Maxxis",), "maxxis.com"),
+    ("Michelin", ("Michelin",), "michelin.com"),
+    ("Nukeproof", ("Nukeproof",), "nukeproof.com"),
+    ("Öhlins", ("Öhlins",), "ohlins.com"),
+    ("Pinion", ("Pinion",), "pinion.eu"),
+    ("Pivot", ("Pivot",), "pivotcycles.com"),
+    ("Renthal", ("Renthal",), "renthal.com"),
+    ("Reynolds", ("Reynolds",), "reynoldscycling.com"),
+    ("RockShox", ("RockShox",), "rockshox.com"),
+    ("Santa Cruz", ("Santa Cruz",), "santacruzbicycles.com"),
+    ("Schwalbe", ("Schwalbe",), "schwalbetires.com"),
+    ("SDG", ("SDG",), "sdgcomponents.com"),
+    ("Shimano", ("Shimano",), "bike.shimano.com"),
+    ("Specialized", ("Specialized",), "specialized.com"),
+    ("SR Suntour", ("SR Suntour",), "srsuntour.com"),
+    ("SRAM", ("SRAM",), "sram.com"),
+    ("The Gravity Cartel", ("The gravity Cartel",), "thegravitycartel.com"),
+    ("Trek", ("Trek",), "trekbikes.com"),
+    ("TRP", ("TRP",), "trpcycling.com"),
+    ("WTB", ("WTB",), "wtb.com"),
+    ("Zerode", ("Zerode",), "zerodebikes.com"),
+]
+
 def build_brands_directory(riders):
-    brands = sorted(collect_brands(riders).values(), key=lambda brand: norm_product_text(brand["name"]))
-    product_count = sum(len(brand["products"]) for brand in brands)
-    represented_riders = {slug for brand in brands for slug in brand["riders"]}
-    cards = []
-    for index, brand in enumerate(brands, 1):
-        categories = sorted(brand["categories"], key=lambda category: equipment_category_plural(category))
-        category_links = "".join(
-            f'<a href="equipment/{equip_image_slug(category, "", "")}.html">{esc(equipment_category_plural(category))}</a>'
-            for category in categories
-        )
-        models = sorted({product["model"] for product in brand["products"] if product["model"]}, key=norm_product_text)
-        visible_models = models[:4]
-        model_text = ", ".join(visible_models)
-        if len(models) > len(visible_models):
-            model_text += f" +{len(models) - len(visible_models)} more"
-        search_text = " ".join([brand["name"], *models, *(equipment_category_plural(c) for c in categories)]).lower()
-        cards.append(f'''<article class="brand-card" data-brand-card data-search="{esc_attr(search_text)}">
-          <div class="brand-card-top"><span>{index:02d}</span><span>{len(categories)} categor{'y' if len(categories) == 1 else 'ies'}</span></div>
-          <h2>{esc(brand['name'])}</h2>
-          <dl class="brand-card-stats"><div><dt>{len(brand['products'])}</dt><dd>Products</dd></div><div><dt>{len(brand['riders'])}</dt><dd>Riders</dd></div></dl>
-          <div class="brand-category-links">{category_links}</div>
-          <p><strong>Tracked models</strong>{esc(model_text) if model_text else 'Product references available in rider profiles.'}</p>
-        </article>''')
+    recorded = collect_brands(riders)
+    logos = []
+    for display_name, aliases, domain in BRAND_LOGO_DOMAINS:
+        if not any(norm_product_text(alias) in recorded for alias in aliases):
+            continue
+        logos.append({"name": display_name, "domain": domain})
+    cards = "".join(
+        f'<div class="brand-logo"><img src="https://logos.hunter.io/{esc_attr(brand["domain"])}" alt="{esc_attr(brand["name"])}" loading="lazy" width="240" height="120"></div>'
+        for brand in logos
+    )
     path = "/brands.html"
     schema_items = [
         {"@type": "ListItem", "position": index, "name": brand["name"]}
-        for index, brand in enumerate(brands, 1)
+        for index, brand in enumerate(logos, 1)
     ]
     html = head(
         f"Mountain Bike Brands Used by Pro Riders | {SITE_NAME}",
         "Explore the mountain bike brands, products and equipment categories used by professional downhill and urban downhill riders tracked by RidersFanatics.",
         "", body_class="brands-page", canonical_path=path,
         schemas=[
-            {"@context": "https://schema.org", "@type": "CollectionPage", "name": "Mountain bike brands used by professional riders", "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "numberOfItems": len(brands), "itemListElement": schema_items}},
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": "Mountain bike brands used by professional riders", "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "numberOfItems": len(logos), "itemListElement": schema_items}},
             breadcrumb_schema([("Home", "/"), ("Brands", path)]),
         ],
     )
     html += header_html("", active="equipment")
     html += f'''<main id="main-content">
-<section class="brands-hero"><div class="wrap brands-hero-layout"><div><div class="label">Professional equipment database · Season 2026</div><h1>Brands in the <em>paddock.</em></h1><p>Discover the brands and product references documented on professional rider setups. Every count connects directly to the RidersFanatics equipment database.</p></div><dl class="brands-hero-stats"><div><dt>{len(brands)}</dt><dd>Brands</dd></div><div><dt>{product_count}</dt><dd>Products</dd></div><div><dt>{len(represented_riders)}</dt><dd>Riders</dd></div></dl></div></section>
-<section class="section brands-directory"><div class="wrap"><div class="brands-directory-head"><div><div class="label">Brand directory</div><h2>Explore every brand.</h2></div><label class="brand-search"><span class="visually-hidden">Search brands</span><input class="search-input" type="search" placeholder="Search a brand, product or category..." data-brand-search></label></div>
-<p class="brand-results" data-brand-results>{len(brands)} brands</p><div class="brand-grid" data-brand-grid>{''.join(cards)}</div>
-<div class="guide-callout"><strong>How these counts work</strong><p>Products and riders are counted from documented race setups. Presence in this directory describes tracked use, not an endorsement or a complete list of everything a brand manufactures.</p><a href="equipment.html">Explore equipment rankings →</a></div></div></section>
+<section class="brand-logo-directory"><div class="wrap"><h1 class="visually-hidden">Mountain bike brands used by professional riders</h1><div class="brand-logo-grid">{cards}</div></div></section>
 </main>'''
     html += footer_html("")
     return html

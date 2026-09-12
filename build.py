@@ -17,6 +17,7 @@ Affiliate links: fill the "affiliate_link" field on any equipment item
 in data/riders.json and rebuild — the "Shop" button will link there
 instead of "#".
 """
+import base64
 import json
 import os
 import random
@@ -43,6 +44,7 @@ COMPETITIONS_DIR = os.path.join(ROOT, "competitions")
 IMG_DIR = os.path.join(ROOT, "assets", "img", "riders")
 ACTION_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-action")
 EQUIP_IMG_DIR = os.path.join(ROOT, "assets", "img", "equipment")
+BRAND_IMG_DIR = os.path.join(ROOT, "assets", "img", "brands")
 REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
 
 SITE_NAME = "RidersFanatics"
@@ -2336,8 +2338,22 @@ def build_brands_directory(riders):
     with open(BRAND_LOGOS_PATH, encoding="utf-8") as logo_source:
         logo_data = json.load(logo_source)
     logos = sorted(logo_data.get("logos", []), key=lambda item: norm_product_text(item.get("name", "")))
+    os.makedirs(BRAND_IMG_DIR, exist_ok=True)
+    for brand in logos:
+        logo_key = unicodedata.normalize("NFKD", brand["name"]).encode("ascii", "ignore").decode("ascii")
+        logo_key = re.sub(r"[^a-z0-9]+", "-", logo_key.lower()).strip("-")
+        logo_bytes = base64.b64decode(brand["data"], validate=True)
+        logo_path = os.path.join(BRAND_IMG_DIR, f"{logo_key}.webp")
+        current_logo = None
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as logo_file:
+                current_logo = logo_file.read()
+        if current_logo != logo_bytes:
+            with open(logo_path, "wb") as logo_file:
+                logo_file.write(logo_bytes)
+        brand["src"] = f"assets/img/brands/{logo_key}.webp"
     cards = "".join(
-        f'<div class="brand-logo"><img src="data:{brand["mime"]};base64,{brand["data"]}" alt="{esc_attr(brand["name"])}" loading="lazy" width="240" height="120"></div>'
+        f'<div class="brand-logo"><img src="{brand["src"]}" alt="{esc_attr(brand["name"])}" loading="lazy" width="240" height="120"></div>'
         for brand in logos
     )
     path = "/brands.html"

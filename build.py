@@ -69,6 +69,7 @@ COMPETITIONS_PATH = os.environ.get(
     os.path.join(ROOT, "data", "competitions.json"),
 )
 ADS_PATH = os.path.join(ROOT, "data", "ads.json")
+BRAND_LOGOS_PATH = os.path.join(ROOT, "data", "brand-logos.json")
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
@@ -2355,13 +2356,19 @@ BRAND_LOGO_DOMAINS = [
 
 def build_brands_directory(riders):
     recorded = collect_brands(riders)
+    with open(BRAND_LOGOS_PATH, encoding="utf-8") as logo_source:
+        logo_data = json.load(logo_source)
     logos = []
-    for display_name, aliases, domain in BRAND_LOGO_DOMAINS:
+    for display_name, aliases, _domain in BRAND_LOGO_DOMAINS:
         if not any(norm_product_text(alias) in recorded for alias in aliases):
             continue
-        logos.append({"name": display_name, "domain": domain})
+        logo_key = unicodedata.normalize("NFKD", display_name).encode("ascii", "ignore").decode("ascii")
+        logo_key = re.sub(r"[^a-z0-9]+", "-", logo_key.lower()).strip("-")
+        asset = logo_data.get(logo_key)
+        if asset:
+            logos.append({"name": display_name, "src": f'data:{asset["mime"]};base64,{asset["data"]}'})
     cards = "".join(
-        f'<div class="brand-logo"><img src="https://logos.hunter.io/{esc_attr(brand["domain"])}" alt="{esc_attr(brand["name"])}" loading="lazy" width="240" height="120"></div>'
+        f'<div class="brand-logo"><img src="{brand["src"]}" alt="{esc_attr(brand["name"])}" loading="lazy" width="240" height="120"></div>'
         for brand in logos
     )
     path = "/brands.html"

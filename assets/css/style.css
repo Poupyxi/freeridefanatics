@@ -1247,8 +1247,8 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .brand-logo-directory{padding:64px 0 82px;background:#fff}
 .brand-logo-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
 .brand-logo{display:flex;min-width:0;height:180px;align-items:center;justify-content:center;padding:34px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
-.brand-logo img{display:block;width:100%;height:100%;max-width:190px;max-height:90px;object-fit:contain;filter:grayscale(1);transition:filter .2s ease,transform .2s ease}
-.brand-logo:hover img{filter:grayscale(0);transform:scale(1.04)}
+.brand-logo img{display:block;width:100%;height:100%;max-width:190px;max-height:90px;object-fit:contain;transition:transform .2s ease}
+.brand-logo:hover img{transform:scale(1.04)}
 @media(max-width:980px){.brand-logo-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:720px){.brand-logo-directory{padding:34px 0 54px}.brand-logo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.brand-logo{height:140px;padding:24px}}
 @media(max-width:460px){.brand-logo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.brand-logo{height:125px;padding:20px}}

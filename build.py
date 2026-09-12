@@ -2331,55 +2331,13 @@ def collect_brands(riders):
                 record["riders"][rider["slug"]] = rider
     return brands
 
-BRAND_LOGO_DOMAINS = [
-    ("Bontrager", ("Bontrager",), "bontrager.com"),
-    ("Burgtec", ("Burgtec",), "burgtec.co.uk"),
-    ("Commençal", ("Commençal",), "commencal.com"),
-    ("Continental", ("Continental",), "continental-tires.com"),
-    ("Crankbrothers", ("Crankbrother", "Crankbrothers"), "crankbrothers.com"),
-    ("ENVE", ("ENVE",), "enve.com"),
-    ("Fox", ("Fox",), "ridefox.com"),
-    ("Frameworks", ("Frameworks",), "rideframeworks.com"),
-    ("Hope", ("Hope",), "hopetech.com"),
-    ("Manitou", ("Manitou",), "manitou.hayesbicycle.com"),
-    ("Maxxis", ("Maxxis",), "maxxis.com"),
-    ("Michelin", ("Michelin",), "michelin.com"),
-    ("Nukeproof", ("Nukeproof",), "nukeproof.com"),
-    ("Öhlins", ("Öhlins",), "ohlins.com"),
-    ("Pinion", ("Pinion",), "pinion.eu"),
-    ("Pivot", ("Pivot",), "pivotcycles.com"),
-    ("Renthal", ("Renthal",), "renthal.com"),
-    ("Reynolds", ("Reynolds",), "reynoldscycling.com"),
-    ("RockShox", ("RockShox",), "rockshox.com"),
-    ("Santa Cruz", ("Santa Cruz",), "santacruzbicycles.com"),
-    ("Schwalbe", ("Schwalbe",), "schwalbetires.com"),
-    ("SDG", ("SDG",), "sdgcomponents.com"),
-    ("Shimano", ("Shimano",), "bike.shimano.com"),
-    ("Specialized", ("Specialized",), "specialized.com"),
-    ("SR Suntour", ("SR Suntour",), "srsuntour.com"),
-    ("SRAM", ("SRAM",), "sram.com"),
-    ("The Gravity Cartel", ("The gravity Cartel",), "thegravitycartel.com"),
-    ("Trek", ("Trek",), "trekbikes.com"),
-    ("TRP", ("TRP",), "trpcycling.com"),
-    ("WTB", ("WTB",), "wtb.com"),
-    ("Zerode", ("Zerode",), "zerodebikes.com"),
-]
-
 def build_brands_directory(riders):
-    recorded = collect_brands(riders)
+    del riders
     with open(BRAND_LOGOS_PATH, encoding="utf-8") as logo_source:
         logo_data = json.load(logo_source)
-    logos = []
-    for display_name, aliases, _domain in BRAND_LOGO_DOMAINS:
-        if not any(norm_product_text(alias) in recorded for alias in aliases):
-            continue
-        logo_key = unicodedata.normalize("NFKD", display_name).encode("ascii", "ignore").decode("ascii")
-        logo_key = re.sub(r"[^a-z0-9]+", "-", logo_key.lower()).strip("-")
-        asset = logo_data.get(logo_key)
-        if asset:
-            logos.append({"name": display_name, "src": f'data:{asset["mime"]};base64,{asset["data"]}'})
+    logos = sorted(logo_data.get("logos", []), key=lambda item: norm_product_text(item.get("name", "")))
     cards = "".join(
-        f'<div class="brand-logo"><img src="{brand["src"]}" alt="{esc_attr(brand["name"])}" loading="lazy" width="240" height="120"></div>'
+        f'<div class="brand-logo"><img src="data:{brand["mime"]};base64,{brand["data"]}" alt="{esc_attr(brand["name"])}" loading="lazy" width="240" height="120"></div>'
         for brand in logos
     )
     path = "/brands.html"

@@ -609,7 +609,7 @@ def build_editorial_page(slug, title, description, label, lead, sections):
     html += f'''<main><article>
 <header class="guide-hero"><div class="wrap"><div class="label">{esc(label)}</div><h1>{esc(title)}</h1><p class="lead">{esc(lead)}</p><div class="guide-meta"><span>{SITE_NAME}</span><time datetime="{SITE_UPDATED}">Updated {SITE_UPDATED_LONG}</time></div></div></header>
 <div class="wrap">{breadcrumb_html([("Home", "./"), (title, path.lstrip('/'))])}</div><div class="wrap guide-layout"><div class="guide-content">{"".join(body)}</div>
-<aside class="guide-sidebar"><div class="guide-card"><h2>Explore</h2><a href="riders.html#grid">Rider directory</a><a href="equipment.html">Equipment database</a><a href="competitions/{CURRENT_COMPETITION['id']}/standings.html">2026 standings</a><a href="guides/en/">Downhill setup guide</a></div></aside></div>
+<aside class="guide-sidebar"><div class="guide-card"><h2>Explore</h2><a href="riders.html#grid">Rider directory</a><a href="equipment.html">Equipment database</a><a href="standings.html">All competition standings</a><a href="guides/en/">Downhill setup guide</a></div></aside></div>
 </article></main>'''
     html += footer_html("")
     return html
@@ -969,8 +969,8 @@ def build_index(riders, women_count, men_count):
     </div>
     <div class="ticker-wrap">
       <div class="ticker-track">
-        <a href="riders.html#grid"><b>Rider</b> Profiles</a><span class="dot">·</span><a href="#equipment"><b>Pro</b> Setups</a><span class="dot">·</span><a href="competitions/{CURRENT_COMPETITION['id']}/standings.html"><b>Championship</b> Standings</a><span class="dot">·</span><a href="standings.html"><b>Round</b> Results</a><span class="dot">·</span><a href="#rankings"><b>Check</b> Rankings</a><span class="dot">·</span><a href="#equipment"><b>Equipment</b> Details</a><span class="dot">·</span><a href="#equipment"><b>Shop</b> the Gear</a><span class="dot">·</span>
-        <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="competitions/{CURRENT_COMPETITION['id']}/standings.html" aria-hidden="true" tabindex="-1"><b>Championship</b> Standings</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>Round</b> Results</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
+        <a href="riders.html#grid"><b>Rider</b> Profiles</a><span class="dot">·</span><a href="#equipment"><b>Pro</b> Setups</a><span class="dot">·</span><a href="standings.html"><b>All</b> Standings</a><span class="dot">·</span><a href="#rankings"><b>Check</b> Rankings</a><span class="dot">·</span><a href="#equipment"><b>Equipment</b> Details</a><span class="dot">·</span><a href="#equipment"><b>Shop</b> the Gear</a><span class="dot">·</span>
+        <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>All</b> Standings</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
       </div>
     </div>
   </div>
@@ -1040,8 +1040,16 @@ def build_standings(riders):
     breakdown, and a team table. Events come from the data so a new round on the
     sheet adds its column on the next build."""
     prefix = ""
-    competitions = sorted({h.get("category") for r in riders
-                           for h in r.get("competition_history") or [] if h.get("category")})
+    competition_names = {h.get("category") for r in riders
+                         for h in r.get("competition_history") or [] if h.get("category")}
+    competitions = sorted(
+        competition_names,
+        key=lambda comp: (
+            -sum(1 for rider in riders for result in rider.get("competition_history") or []
+                 if result.get("category") == comp),
+            norm_product_text(comp),
+        ),
+    )
 
     def events_for(comp):
         """Rounds in season order.
@@ -1195,27 +1203,17 @@ def build_standings(riders):
         f'<button class="filter-btn{" active" if i == 0 else ""}" data-standings-comp="{esc(c)}">{esc(c)}</button>'
         for i, c in enumerate(competitions)))
 
-    primary_comp = competitions[0] if competitions else ""
-    primary_events = events_for(primary_comp) if primary_comp else []
-    scored_riders = [r for r in riders if sum(v or 0 for v in points_map(r, primary_comp).values())]
-    def leader_for(group):
-        """Same ordering as the table below — on equal points the alphabetical
-        winner is not the leader."""
-        ranked = [(sum(v or 0 for v in points_map(r, primary_comp).values()), r)
-                  for r in riders if r.get("gender_category") == group]
-        ranked = [entry for entry in ranked if entry[0]]
-        if not ranked:
-            return (0, {"display_name": "—"})
-        return min(ranked, key=lambda entry: season_rank_key(entry[1]))
-    men_lead_pts, men_lead = leader_for("Men Elite")
-    women_lead_pts, women_lead = leader_for("Women Elite")
-    latest_round = primary_events[-1] if primary_events else "Season start"
+    all_events = {comp: events_for(comp) for comp in competitions}
+    recorded_events = sum(len(events) for events in all_events.values())
+    scored_riders = [r for r in riders if any(
+        (result.get("points") or 0) > 0 for result in r.get("competition_history") or []
+    )]
 
-    html = head(f"2026 UCI Downhill Results by Round | {SITE_NAME}",
-                "Round-by-round UCI MTB World Cup downhill results for 2026, with every tracked rider, finishing position and cumulative points across the season.",
+    html = head(f"Mountain Bike Standings 2026 | All Competitions | {SITE_NAME}",
+                "Compare 2026 downhill standings and results across every competition tracked by RidersFanatics, including UCI World Series and Red Bull Cerro Abajo.",
                 prefix, body_class="standings-page", canonical_path="/standings.html",
                 schemas=[
-                    {"@context": "https://schema.org", "@type": "CollectionPage", "name": "2026 UCI MTB World Cup downhill results by round", "url": absolute_url("/standings.html"), "description": "Round-by-round World Cup downhill results and cumulative points for men, women and teams.", "dateModified": SITE_UPDATED},
+                    {"@context": "https://schema.org", "@type": "CollectionPage", "name": "2026 mountain bike standings across all tracked competitions", "url": absolute_url("/standings.html"), "description": "A competition-by-competition hub for downhill results and standings tracked by RidersFanatics.", "dateModified": SITE_UPDATED},
                     breadcrumb_schema([("Home", "/"), ("Standings", "/standings.html")]),
                 ])
     html += header_html(prefix, active="standings")
@@ -1223,18 +1221,19 @@ def build_standings(riders):
 <main id="main-content">
 <section class="hero standings-hero">
   <div class="wrap hero-inner">
-    <div class="label">Season 2026 · Updated after round {len(primary_events)} · {esc(latest_round)}</div>
-    <h1>Results by round.</h1>
+    <div class="label">Season 2026 · {len(competitions)} competitions tracked</div>
+    <h1>All competition standings.</h1>
+    <p class="sub">Choose a competition, then compare its Men, Women and Team rankings whenever those categories are available.</p>
   </div>
 </section>
 
 <section class="section standings-section" id="standings">
   <div class="wrap">
     <div class="standings-overview" aria-label="Season overview">
-      <div><strong>{len(primary_events)}</strong><span>Rounds completed</span></div>
+      <div><strong>{len(competitions)}</strong><span>Competitions tracked</span></div>
+      <div><strong>{recorded_events}</strong><span>Events recorded</span></div>
       <div><strong>{len(scored_riders)}</strong><span>Riders scored</span></div>
-      <div><strong>{esc(men_lead['display_name'])}</strong><span>Men leader · {men_lead_pts} pts</span></div>
-      <div><strong>{esc(women_lead['display_name'])}</strong><span>Women leader · {women_lead_pts} pts</span></div>
+      <div><strong>Men · Women · Teams</strong><span>Available rankings</span></div>
     </div>
     <div class="standings-toolbar">
       <div>
@@ -2131,7 +2130,7 @@ def build_rankings_section(riders):
         <div class="label">Current competition · Season {CURRENT_COMPETITION['season']}</div>
         <h2>DH Rankings</h2>
       </div>
-      <a class="see-all" href="competitions/{CURRENT_COMPETITION['id']}/standings.html">View overall standings →</a>
+      <a class="see-all" href="standings.html">View all competition standings →</a>
     </div>
     <div class="rankings-grid">
       <div class="ranking-col">

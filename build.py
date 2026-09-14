@@ -45,7 +45,6 @@ IMG_DIR = os.path.join(ROOT, "assets", "img", "riders")
 ACTION_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-action")
 EQUIP_IMG_DIR = os.path.join(ROOT, "assets", "img", "equipment")
 BRAND_IMG_DIR = os.path.join(ROOT, "assets", "img", "brands")
-COMPETITION_IMG_DIR = os.path.join(ROOT, "assets", "img", "competitions")
 REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
 
 SITE_NAME = "RidersFanatics"
@@ -73,7 +72,6 @@ COMPETITIONS_PATH = os.environ.get(
 )
 ADS_PATH = os.path.join(ROOT, "data", "ads.json")
 BRAND_LOGOS_PATH = os.path.join(ROOT, "data", "brand-logos.json")
-COMPETITION_LOGOS_PATH = os.path.join(ROOT, "data", "competition-logos.json")
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
@@ -1630,35 +1628,9 @@ def build_competition_standings(riders, competition):
     html += footer_html("../../")
     return html
 
-def load_competition_logos():
-    with open(COMPETITION_LOGOS_PATH, encoding="utf-8") as logo_source:
-        logo_data = json.load(logo_source)
-    os.makedirs(COMPETITION_IMG_DIR, exist_ok=True)
-    logo_assets = {}
-    for logo in logo_data.get("logos", []):
-        logo_key = logo.get("key", "")
-        if not re.fullmatch(r"[a-z0-9-]+", logo_key):
-            continue
-        logo_bytes = base64.b64decode(logo["data"], validate=True)
-        logo_path = os.path.join(COMPETITION_IMG_DIR, f"{logo_key}.webp")
-        current_logo = None
-        if os.path.exists(logo_path):
-            with open(logo_path, "rb") as logo_file:
-                current_logo = logo_file.read()
-        if current_logo != logo_bytes:
-            with open(logo_path, "wb") as logo_file:
-                logo_file.write(logo_bytes)
-        logo_assets[logo_key] = {
-            "src": f"assets/img/competitions/{logo_key}.webp",
-            "name": logo.get("name") or logo_key,
-        }
-    return logo_assets
-
-
 def build_competitions_hub(riders):
     cards = []
     item_list = []
-    competition_logos = load_competition_logos()
     for position, competition in enumerate(COMPETITIONS, 1):
         stats = competition_stats(riders, competition)
         detail_path = f"/competitions/{competition['id']}.html"
@@ -1667,17 +1639,8 @@ def build_competitions_hub(riders):
             if is_red_bull_cerro_abajo(competition)
             else "Explore the season context, completed rounds, tracked riders and links to the live standings and equipment database."
         )
-        logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else competition["id"]
-        logo = competition_logos.get(logo_key)
-        logo_html = (
-            f'<div class="competition-card-logo"><img src="{logo["src"]}" alt="{esc_attr(logo["name"])}" '
-            'loading="eager" decoding="async"></div>'
-            if logo else ""
-        )
-        card_class = "competition-card has-logo" if logo else "competition-card"
-        cards.append(f'''<article class="{card_class}">
+        cards.append(f'''<article class="competition-card">
           <div class="competition-card-top"><span class="competition-status">Tracking now</span><span>{competition['season']}</span></div>
-          {logo_html}
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
           <h2>{esc(competition['name'])}</h2>
           <p>{esc(card_description)}</p>
@@ -1712,7 +1675,10 @@ def build_competitions_hub(riders):
     )
     html += header_html("", active="competitions")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competition Tracked</h1><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
+<section class="competition-hero"><div class="wrap"><div class="label">Series · Seasons · Disciplines</div><h1>Choose a competition.</h1><p>RidersFanatics is built to follow more than one championship. Select the series you want, then move between riders, results and equipment without mixing seasons.</p></div></section>
+<div class="wrap">{breadcrumb_html([("Home", "./"), ("Competitions", "competitions.html")])}</div>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Currently tracked</div><h2>Competition database</h2></div><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div>
+<div class="competition-note"><strong>Built for expansion</strong><p>New winter, bike and action-sport competitions can be added as separate datasets. The RidersFanatics brand, rider directory and equipment catalogue remain shared.</p></div></div></section>
 </main>'''
     html += footer_html("")
     return html

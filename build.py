@@ -1729,8 +1729,13 @@ def load_competition_logos():
         logo_key = logo.get("key", "")
         if not re.fullmatch(r"[a-z0-9-]+", logo_key):
             continue
+        logo_extension = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+        }.get(logo.get("mime"), "webp")
         logo_bytes = base64.b64decode(logo["data"], validate=True)
-        logo_path = os.path.join(COMPETITION_IMG_DIR, f"{logo_key}.webp")
+        logo_path = os.path.join(COMPETITION_IMG_DIR, f"{logo_key}.{logo_extension}")
         current_logo = None
         if os.path.exists(logo_path):
             with open(logo_path, "rb") as logo_file:
@@ -1739,7 +1744,7 @@ def load_competition_logos():
             with open(logo_path, "wb") as logo_file:
                 logo_file.write(logo_bytes)
         logo_assets[logo_key] = {
-            "src": f"assets/img/competitions/{logo_key}.webp",
+            "src": f"assets/img/competitions/{logo_key}.{logo_extension}",
             "name": logo.get("name") or logo_key,
         }
     return logo_assets

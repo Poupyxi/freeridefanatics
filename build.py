@@ -1142,13 +1142,22 @@ def build_standings(riders):
         return rows, len(entries)
 
     def team_rows(comp, events):
-        totals, members = {}, {}
+        del events
+        scored_entries = []
         for r in riders:
-            team = r.get("team") or "Privateer"
             pts = points_map(r, comp)
             total = sum(v for v in pts.values() if v)
-            if not total:
-                continue
+            if total:
+                scored_entries.append((r, total))
+        team_entries = [
+            (r, total) for r, total in scored_entries
+            if (r.get("team") or "").strip().lower() not in {"", "privateer"}
+        ]
+        if not scored_entries or len(team_entries) * 2 < len(scored_entries):
+            return [], 0
+        totals, members = {}, {}
+        for r, total in team_entries:
+            team = r["team"].strip()
             totals[team] = totals.get(team, 0) + total
             members.setdefault(team, []).append(r["display_name"])
         order = sorted(totals.items(), key=lambda x: (-x[1], x[0]))

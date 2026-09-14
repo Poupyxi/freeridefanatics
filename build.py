@@ -78,7 +78,18 @@ with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
 def visible_status(item):
     return item.get("status") == "published" or IS_PREPROD
 
-COMPETITIONS = [item for item in COMPETITION_CATALOG.get("series", []) if visible_status(item)]
+# New Notion competitions are staged on preproduction first. Production only
+# exposes series that have been explicitly promoted through this allowlist.
+PRODUCTION_COMPETITION_IDS = {
+    item.strip() for item in os.environ.get(
+        "RF_PRODUCTION_COMPETITION_IDS",
+        "uci-mtb-world-cup-dh-2026,red-bull-cerro-abajo-2026",
+    ).split(",") if item.strip()
+}
+COMPETITIONS = [
+    item for item in COMPETITION_CATALOG.get("series", [])
+    if visible_status(item) and (IS_PREPROD or item.get("id") in PRODUCTION_COMPETITION_IDS)
+]
 ORGANIZATIONS = [item for item in COMPETITION_CATALOG.get("organizations", []) if visible_status(item)]
 CURRENT_COMPETITION = COMPETITIONS[0]
 with open(ADS_PATH, encoding="utf-8") as ads_source:

@@ -1150,11 +1150,12 @@ def build_standings(riders):
             if r.get("gender_category") != group:
                 continue
             pts = points_map(r, comp)
+            results = result_map(r, comp)
             total = sum(v for v in pts.values() if v)
-            if not total:
+            if not total and not results:
                 continue
-            entries.append((total, r, pts, result_map(r, comp)))
-        entries.sort(key=lambda e: season_rank_key(e[1]))
+            entries.append((total, r, pts, results))
+        entries.sort(key=lambda e: competition_rank_key(e[1], comp))
 
         rows = []
         for i, (total, r, pts, res) in enumerate(entries, start=1):
@@ -1185,7 +1186,7 @@ def build_standings(riders):
         for r in riders:
             pts = points_map(r, comp)
             total = sum(v for v in pts.values() if v)
-            if total:
+            if total or result_map(r, comp):
                 scored_entries.append((r, total))
         team_entries = [
             (r, total) for r, total in scored_entries
@@ -1353,7 +1354,7 @@ def competition_stats(riders, competition):
     for rider in riders:
         points = sum((h.get("points") or 0) for h in rider.get("competition_history") or []
                      if h.get("category") == name)
-        if points:
+        if competition_has_result(rider, name):
             scored.append((rider, points))
     leaders = {}
     for category in ("Men Elite", "Women Elite"):
@@ -1369,6 +1370,13 @@ def competition_stats(riders, competition):
 def competition_rider_points(rider, competition_name):
     return sum((result.get("points") or 0) for result in rider.get("competition_history") or []
                if result.get("category") == competition_name)
+
+def competition_has_result(rider, competition_name):
+    """A placing remains rankable even when no time or points are recorded."""
+    return any(
+        result.get("category") == competition_name
+        for result in rider.get("competition_history") or []
+    )
 
 def competition_rank_key(rider, competition_name):
     """Rank a rider using results from one competition only."""
@@ -1650,7 +1658,7 @@ def build_competition_standings(riders, competition):
         categories[category] = sorted(
             [rider for rider in riders
              if rider.get("gender_category") == category
-             and competition_rider_points(rider, name) > 0],
+             and competition_has_result(rider, name)],
             key=lambda rider: competition_rank_key(rider, name),
         )
 
@@ -1929,7 +1937,7 @@ def season_ranking_selector(riders, competition):
         categories[category] = sorted(
             [rider for rider in riders
              if rider.get("gender_category") == category
-             and competition_rider_points(rider, name) > 0],
+             and competition_has_result(rider, name)],
             key=lambda rider: competition_rank_key(rider, name),
         )
 

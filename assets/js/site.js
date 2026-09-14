@@ -333,8 +333,31 @@
     }
 
     function render(){
-      var group = activeOf(groupBar, 'data-standings-group');
       var comp = activeOf(compBar, 'data-standings-comp');
+      if(groupBar && comp){
+        var availableGroups = blocks.filter(function(block){
+          return block.getAttribute('data-competition') === comp;
+        }).map(function(block){
+          return block.getAttribute('data-standings');
+        });
+        var groupButtons = Array.prototype.slice.call(groupBar.querySelectorAll('.filter-btn'));
+        groupButtons.forEach(function(button){
+          button.hidden = availableGroups.indexOf(button.getAttribute('data-standings-group')) === -1;
+        });
+        var activeGroup = groupBar.querySelector('.filter-btn.active');
+        if(!activeGroup || activeGroup.hidden){
+          groupButtons.forEach(function(button){
+            button.classList.remove('active');
+            button.setAttribute('aria-selected', 'false');
+          });
+          var firstAvailable = groupButtons.find(function(button){ return !button.hidden; });
+          if(firstAvailable){
+            firstAvailable.classList.add('active');
+            firstAvailable.setAttribute('aria-selected', 'true');
+          }
+        }
+      }
+      var group = activeOf(groupBar, 'data-standings-group');
       var term = (searchInput && searchInput.value || '').trim().toLowerCase();
       blocks.forEach(function(b){
         var okGroup = !group || b.getAttribute('data-standings') === group;

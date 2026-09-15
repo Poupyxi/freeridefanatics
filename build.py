@@ -259,7 +259,8 @@ def has_photo(slug):
                 width, height = image.size
         except Exception:
             width = height = 0
-        candidates.append((width * height, -preference, filename))
+        quality_score = width * height or os.path.getsize(path)
+        candidates.append((quality_score, -preference, filename))
     return max(candidates)[2] if candidates else None
 
 def sync_drive_rider_portraits(riders):

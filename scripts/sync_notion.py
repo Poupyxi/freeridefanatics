@@ -277,7 +277,7 @@ def export(client: Notion, baseline_path: Path):
         event_id = next((identifier for identifier in event_ids if identifier in events), None)
         season_id = event_seasons.get(event_id)
         phase = value(item, "Sélectionner")
-        if season_id and phase in {"Final", "Qualifier"} and value(item, "Type") == "Downhill":
+        if season_id and value(item, "Type") == "Downhill":
             races[page_id(item.get("id"))] = {
                 "event": events[event_id]["name"],
                 "date": events[event_id]["date"],
@@ -285,6 +285,19 @@ def export(client: Notion, baseline_path: Path):
                 "phase": phase,
                 "competition": seasons[season_id]["name"],
             }
+
+    # Participation is independent from a timed/point-scoring result. This is
+    # especially important for invitational seasons whose entry list can be
+    # complete in Notion before timing and placings are published.
+    participations_by_rider = {}
+    for item in pages["scoring"]:
+        rider_ids = value(item, "🚻 Riders") or []
+        race_ids = value(item, "🏁 Race") or []
+        race = races.get(race_ids[0]) if race_ids else None
+        if race is None:
+            continue
+        for rider_id in rider_ids:
+            participations_by_rider.setdefault(rider_id, set()).add(race["competition"])
 
     # Notion stores final and qualifying points on separate Scoring rows.  The
     # public site expects one row per rider and event, so combine both point
@@ -307,7 +320,8 @@ def export(client: Notion, baseline_path: Path):
             and race is not None
             and not race["competition"].casefold().startswith("uci")
         )
-        if rider_id and race is not None and (has_points or has_invitational_place):
+        valid_phase = race is not None and race["phase"] in {"Final", "Qualifier"}
+        if rider_id and valid_phase and (has_points or has_invitational_place):
             key = (rider_id, race["competition"], race["event"], race["gender"])
             year_match = re.search(r"\b(20\d{2})\b", race["competition"])
             result = combined_results.setdefault(key, {
@@ -367,7 +381,7 @@ def export(client: Notion, baseline_path: Path):
     riders = []
     for item in pages["riders"]:
         identifier = page_id(item.get("id"))
-        if identifier not in result_rows:
+        if identifier not in result_rows and identifier not in participations_by_rider:
             continue
         name = value(item, "First Name") or ""
         handle = instagram_handle(value(item, "Instagram"))
@@ -397,6 +411,7 @@ def export(client: Notion, baseline_path: Path):
             "team": team or base.get("team"),
             "bio": value(item, "Biographie et principaux résultats") or base.get("bio") or "",
             "competition_history": history,
+            "competition_participation": sorted(participations_by_rider.get(identifier, set())),
             "equipment": equipment_by_rider.get(identifier, base.get("equipment") or []),
             "season": 2026,
         })
@@ -426,6 +441,9 @@ def export(client: Notion, baseline_path: Path):
         current["competition_history"] = sorted(
             histories.values(), key=lambda row: (row.get("year") or 0, row.get("event") or "")
         )
+        current["competition_participation"] = sorted(set(
+            current.get("competition_participation", []) + rider.get("competition_participation", [])
+        ))
         equipment_rows = {}
         for part in current.get("equipment", []) + rider.get("equipment", []):
             key = (part.get("category"), part.get("brand"), part.get("model_detail"))

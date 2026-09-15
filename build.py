@@ -242,11 +242,21 @@ def bio_bullets(bio):
     return parts
 
 def has_photo(slug):
-    """Prefer the current PictureRiders WebP, then fall back to PPRiders."""
-    for ext in ("webp", "jpg", "jpeg", "png"):
-        if os.path.exists(os.path.join(IMG_DIR, f"{slug}.{ext}")):
-            return f"{slug}.{ext}"
-    return None
+    """Return the sharpest available portrait instead of a low-res thumbnail."""
+    candidates = []
+    for preference, ext in enumerate(("webp", "jpg", "jpeg", "png")):
+        filename = f"{slug}.{ext}"
+        path = os.path.join(IMG_DIR, filename)
+        if not os.path.exists(path):
+            continue
+        try:
+            from PIL import Image
+            with Image.open(path) as image:
+                width, height = image.size
+        except Exception:
+            width = height = 0
+        candidates.append((width * height, -preference, filename))
+    return max(candidates)[2] if candidates else None
 
 def equip_image_slug(category, brand, main_model):
     """Filename stem for an equipment photo, e.g. 'fork-fox-40-factory'.

@@ -42,6 +42,7 @@ RIDERS_DIR = os.path.join(ROOT, "riders")
 EQUIPMENT_DIR = os.path.join(ROOT, "equipment")
 COMPETITIONS_DIR = os.path.join(ROOT, "competitions")
 IMG_DIR = os.path.join(ROOT, "assets", "img", "riders")
+DRIVE_RIDER_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-drive")
 ACTION_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-action")
 EQUIP_IMG_DIR = os.path.join(ROOT, "assets", "img", "equipment")
 BRAND_IMG_DIR = os.path.join(ROOT, "assets", "img", "brands")
@@ -244,11 +245,45 @@ def bio_bullets(bio):
     return parts
 
 def has_photo(slug):
-    """Prefer the current PictureRiders WebP, then fall back to PPRiders."""
-    for ext in ("webp", "jpg", "jpeg", "png"):
-        if os.path.exists(os.path.join(IMG_DIR, f"{slug}.{ext}")):
-            return f"{slug}.{ext}"
-    return None
+    """Return the sharpest available portrait instead of a low-res thumbnail."""
+    candidates = []
+    filenames = [f"{slug}.{ext}" for ext in ("webp", "jpg", "jpeg", "png")]
+    filenames += [f"{slug}-drive.{ext}" for ext in ("webp", "jpg", "jpeg", "png")]
+    for preference, filename in enumerate(filenames):
+        path = os.path.join(IMG_DIR, filename)
+        if not os.path.exists(path):
+            continue
+        try:
+            from PIL import Image
+            with Image.open(path) as image:
+                width, height = image.size
+        except Exception:
+            width = height = 0
+        candidates.append((width * height, -preference, filename))
+    return max(candidates)[2] if candidates else None
+
+def sync_drive_rider_portraits(riders):
+    """Match Drive portraits to riders by their stable Instagram handle."""
+    if not os.path.isdir(DRIVE_RIDER_IMG_DIR):
+        return 0
+    sources = {}
+    for filename in os.listdir(DRIVE_RIDER_IMG_DIR):
+        stem, ext = os.path.splitext(filename)
+        if ext.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
+            continue
+        sources[stem.casefold()] = os.path.join(DRIVE_RIDER_IMG_DIR, filename)
+    matched = 0
+    for rider in riders:
+        handle = (rider.get("instagram") or "").strip().lstrip("@").casefold()
+        source = sources.get(handle)
+        if not source:
+            continue
+        extension = os.path.splitext(source)[1].lower()
+        destination = os.path.join(IMG_DIR, f"{rider['slug']}-drive{extension}")
+        if not os.path.exists(destination) or os.path.getmtime(destination) < os.path.getmtime(source):
+            shutil.copy2(source, destination)
+        matched += 1
+    return matched
 
 def equip_image_slug(category, brand, main_model):
     """Filename stem for an equipment photo, e.g. 'fork-fox-40-factory'.
@@ -3097,6 +3132,7 @@ def main():
     os.makedirs(COMPETITIONS_DIR, exist_ok=True)
     os.makedirs(IMG_DIR, exist_ok=True)
     os.makedirs(EQUIP_IMG_DIR, exist_ok=True)
+    drive_portrait_count = sync_drive_rider_portraits(riders)
 
     # Remove generated organization drafts that are not visible in this build.
     # This makes a production build safe even after a previous preprod build.
@@ -3214,7 +3250,7 @@ def main():
     ensure_accessibility_landmarks()
     run_image_optimizer()
 
-    print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men).")
+    print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men; {drive_portrait_count} Drive portraits matched).")
     print("newsletter:  Brevo single-opt-in form embedded.")
 
 if __name__ == "__main__":

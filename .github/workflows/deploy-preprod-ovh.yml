@@ -52,9 +52,6 @@ jobs:
           grep -q 'uci-events-banner' competitions/uci-mtb-world-cup-dh-2026.html
           grep -q 'uci-iconic-tour.js?v=4' competitions/uci-mtb-world-cup-dh-2026.html
           ! grep -qi 'Recorded events' competitions/uci-mtb-world-cup-dh-2026.html
-          test -f competitions/project-17/riders.html
-          grep -q 'data-rider-grid' competitions/project-17/riders.html
-          grep -q 'class="rider-card reveal"' competitions/project-17/riders.html
 
       - name: Prepare isolated public files
         env:
@@ -63,6 +60,9 @@ jobs:
           test -n "$PREPROD_AUTH_FILE"
           mkdir -p "$RUNNER_TEMP/public"
           deploy/build-preprod-variants.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" "$RUNNER_TEMP/source-variants"
+          test -f "$RUNNER_TEMP/public/competitions/project-17/riders.html"
+          grep -q 'data-rider-grid' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
+          grep -q 'class="rider-card reveal"' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
           ! test -f "$RUNNER_TEMP/public/contact-submit.php"
           test -f "$RUNNER_TEMP/public/google/index.html"
@@ -113,7 +113,7 @@ jobs:
           grep -q 'Google Sheets' <<< "$google_html"
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion/ > /dev/null
           source_status="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/data-source-status.txt)"
-          grep -q '^active=google$' <<< "$source_status"
+          grep -q '^active=notion$' <<< "$source_status"
           page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
           grep -q 'uci-events-banner' <<< "$page_html"
           grep -q 'uci-iconic-tour.js?v=4' <<< "$page_html"

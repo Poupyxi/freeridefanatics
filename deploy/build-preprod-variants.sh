@@ -49,6 +49,9 @@ if [[ -f "$NOTION_SNAPSHOT" ]]; then
   mkdir -p "$PUBLIC_DIR/notion"
   rsync -a --delete "$WORK_DIR/notion-public/" "$PUBLIC_DIR/notion/"
   rm -f "$PUBLIC_DIR/notion/.htaccess"
+  # Notion is the active preproduction dataset. Keep the isolated /google/
+  # snapshot for rollback, while serving the validated Notion build at root.
+  rsync -a "$WORK_DIR/notion-public/" "$PUBLIC_DIR/"
   if [[ -f "$SOURCE_DIR/data/notion/sync-metadata.json" ]]; then
     cp "$SOURCE_DIR/data/notion/sync-metadata.json" "$PUBLIC_DIR/notion-sync-metadata.json"
     notion_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$SOURCE_DIR/data/notion/sync-metadata.json")"
@@ -63,6 +66,10 @@ HTML
   notion_state="unavailable"
 fi
 
-printf 'active=google\ngoogle=ready\nnotion=%s\n' "$notion_state" > "$PUBLIC_DIR/data-source-status.txt"
+active_source="google"
+if [[ "$notion_state" == "ready" ]]; then
+  active_source="notion"
+fi
+printf 'active=%s\ngoogle=ready\nnotion=%s\n' "$active_source" "$notion_state" > "$PUBLIC_DIR/data-source-status.txt"
 
 echo "Preproduction variants built: google=ready notion=$notion_state"

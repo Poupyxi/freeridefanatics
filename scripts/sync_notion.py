@@ -392,7 +392,7 @@ def export(client: Notion, baseline_path: Path):
         country = next((countries.get(country_id) for country_id in (value(item, "counrty") or []) if countries.get(country_id)), None)
         gender = value(item, "Gender")
         display_name = name.strip() or base.get("display_name") or base.get("name")
-        history = sorted(result_rows[identifier], key=lambda row: (row["_event_date"], row["event"]))
+        history = sorted(result_rows.get(identifier, []), key=lambda row: (row["_event_date"], row["event"]))
         for result in history:
             result.pop("_event_date", None)
         rider.update({

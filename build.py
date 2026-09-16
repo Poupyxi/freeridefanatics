@@ -1845,11 +1845,7 @@ def build_competitions_hub(riders):
     for position, competition in enumerate(COMPETITIONS, 1):
         stats = competition_stats(riders, competition)
         detail_path = f"/competitions/{competition['id']}.html"
-        card_description = (
-            "Follow Red Bull Cerro Abajo 2026 results and rankings across Valparaiso, Genova and Stuttgart, with every recorded rider linked to a profile."
-            if is_red_bull_cerro_abajo(competition)
-            else ""
-        )
+        card_description = ""
         logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else competition["id"]
         logo = competition_logos.get(logo_key)
         logo_html = (

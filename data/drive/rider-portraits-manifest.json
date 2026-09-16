@@ -2,12 +2,12 @@
   "folder_id": "1LzrEeBh6hV6svXexhV4VkamQcto2pw1v",
   "last_manual_sync": "2026-09-16T04:50:00+02:00",
   "files": {
-    "@vaeaverbeeck.jpg": {
+    "vaeaverbeeck.jpg": {
       "drive_id": "1nP7zR7zhwtFC9UJTu4TnNxmXFYUGe9AB",
       "modified_time": "2026-09-16T02:47:37.000Z",
       "sha256": "51c3e2d3efab8f6ddb5af9901d7d00ffe45b83472dbe4de7643f2a3197bfb272"
     },
-    "@zoe.witwicki.jpg": {
+    "zoe.witwicki.jpg": {
       "drive_id": "1CjIaUV2bBuijCR-gqK9UeEKC0Alb00x5",
       "modified_time": "2026-09-16T02:45:36.000Z",
       "sha256": "81a51b4e52c6d6c924e9362301bbbd907f9db7712500887d9d76681de37ea989"

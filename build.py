@@ -1805,6 +1805,29 @@ def competition_schedule_status(competition):
     return "Season in progress", "in-progress"
 
 
+def competition_featured_event(competition):
+    """Return the next dated race, or the latest race once the season has ended."""
+    dated_events = sorted(
+        (
+            event.get("date", "")[:10],
+            event,
+        )
+        for event in competition.get("events", [])
+        if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", (event.get("date") or "")[:10])
+    )
+    if not dated_events:
+        return None
+    today = os.environ.get("RF_TODAY", time.strftime("%Y-%m-%d"))
+    upcoming = [entry for entry in dated_events if entry[0] >= today]
+    date, event = upcoming[0] if upcoming else dated_events[-1]
+    return {
+        "label": "Next race" if upcoming else "Last race",
+        "date": date,
+        "date_label": time.strftime("%d %b %Y", time.strptime(date, "%Y-%m-%d")).lstrip("0"),
+        "location": event.get("location") or event.get("name") or "",
+    }
+
+
 def build_competitions_hub(riders):
     cards = []
     item_list = []
@@ -2006,6 +2029,18 @@ def build_competition_detail(riders, competition):
     if is_uci_dh:
         html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
     html += header_html("../", active="competitions")
+    competition_logos = load_competition_logos()
+    logo_key = "red-bull-cerro-abajo-2026" if is_red_bull else competition["id"]
+    season_logo = competition_logos.get(logo_key)
+    season_logo_html = (
+        f'<div class="competition-season-logo"><img src="../{season_logo["src"]}" '
+        f'alt="{esc_attr(season_logo["name"])}"></div>'
+        if season_logo else ""
+    )
+    featured_event = competition_featured_event(competition)
+    featured_event_html = ""
+    if featured_event:
+        featured_event_html = f'''<div class="competition-season-event"><span>{esc(featured_event["label"])}</span><strong>{esc(featured_event["location"])}</strong><time datetime="{esc_attr(featured_event["date"])}">{esc(featured_event["date_label"])}</time></div>'''
     if is_uci_dh:
         season_visual = '<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>'
     else:
@@ -2040,7 +2075,7 @@ def build_competition_detail(riders, competition):
     season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
     html += f'''<main>
-<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1>{hero_intro}{riders_cta}</div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1>{hero_intro}{riders_cta}</div>{featured_event_html}</div></section>
 {season_visual}
 {season_context}
 {season_ranking_selector(riders, competition)}

@@ -994,6 +994,16 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-hero p,.competition-detail-hero p{max-width:750px; color:#bdc1c5; font-size:18px; line-height:1.7;}
 .competition-detail-hero .hero-ctas{margin-top:32px;}
 .competition-detail-hero .btn:not(.btn-solid){border-color:#62666d; color:#fff;}
+.competition-season-hero{background:linear-gradient(135deg,#fff 0%,#f5f2ed 100%);border-bottom:1px solid var(--line);padding:48px 0;}
+.competition-season-hero-grid{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr) minmax(190px,260px);gap:42px;align-items:center;}
+.competition-season-logo{display:flex;align-items:center;justify-content:center;min-height:150px;padding:20px;background:#fff;border:1px solid rgba(21,22,26,.08);border-radius:22px;box-shadow:0 12px 30px rgba(21,22,26,.055);}
+.competition-season-logo img{display:block;max-width:100%;max-height:110px;width:auto;height:auto;object-fit:contain;}
+.competition-season-heading h1{font-family:var(--head);font-size:clamp(38px,5vw,68px);line-height:.94;text-transform:uppercase;margin:12px 0 0;}
+.competition-season-heading p{max-width:680px;margin:16px 0 0;color:var(--muted);line-height:1.6;}
+.competition-season-heading .hero-ctas{margin-top:20px;}
+.competition-season-event{display:flex;flex-direction:column;gap:7px;padding:20px 22px;background:rgba(255,255,255,.72);border:1px solid rgba(21,22,26,.08);border-radius:18px;}
+.competition-season-event span,.competition-season-event time{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+.competition-season-event strong{font-family:var(--head);font-size:25px;line-height:1.05;text-transform:uppercase;}
 .competition-grid{display:flex; flex-direction:column; gap:16px;}
 .competition-card{display:grid; grid-template-columns:140px minmax(0,1fr) auto; grid-template-rows:auto auto auto auto; column-gap:28px; align-items:center; min-height:0; padding:24px 26px; background:linear-gradient(135deg,#fff 0%,#fbfaf8 100%); border:1px solid rgba(21,22,26,.09); border-radius:22px; box-shadow:0 10px 30px rgba(21,22,26,.055); transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;}
 .competition-card:hover{transform:translateY(-2px);border-color:rgba(184,70,28,.24);box-shadow:0 16px 38px rgba(21,22,26,.09);}
@@ -1127,6 +1137,12 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .competition-card-logo img{max-height:68px;}
   .competition-card.has-logo .competition-sport{margin-top:0;}
   .competition-card .btn{margin-top:18px;}
+  .competition-season-hero{padding:28px 0 32px;}
+  .competition-season-hero-grid{grid-template-columns:1fr;gap:22px;}
+  .competition-season-logo{justify-content:flex-start;min-height:100px;padding:16px;}
+  .competition-season-logo img{max-height:78px;}
+  .competition-season-heading h1{font-size:clamp(32px,10vw,44px);}
+  .competition-season-event{padding:17px 18px;}
 }
 
 /* Keep the season overview immediately readable below the global navigation. */

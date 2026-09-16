@@ -1362,7 +1362,14 @@ def competition_events(riders, competition_name):
 def competition_stats(riders, competition):
     name = competition["name"]
     scored = []
+    participants = []
     for rider in riders:
+        is_participant = (
+            name in (rider.get("competition_participation") or [])
+            or competition_has_result(rider, name)
+        )
+        if is_participant:
+            participants.append(rider)
         points = sum((h.get("points") or 0) for h in rider.get("competition_history") or []
                      if h.get("category") == name)
         if competition_has_result(rider, name):
@@ -1374,7 +1381,8 @@ def competition_stats(riders, competition):
     return {
         "events": competition_events(riders, name),
         "scored": scored,
-        "teams": {rider.get("team") or "Privateer" for rider, _ in scored},
+        "participants": participants,
+        "teams": {rider.get("team").strip() for rider in participants if (rider.get("team") or "").strip()},
         "leaders": leaders,
     }
 
@@ -1790,13 +1798,22 @@ def build_competitions_hub(riders):
         )
         card_class = "competition-card has-logo" if logo else "competition-card"
         description_html = f'<p>{esc(card_description)}</p>' if card_description else ""
+        card_stats = [
+            (len(stats["events"]), "race", "races"),
+            (len(stats["participants"]), "rider", "riders"),
+            (len(stats["teams"]), "team", "teams"),
+        ]
+        stats_html = "".join(
+            f'<span><strong>{value}</strong> {singular if value == 1 else plural}</span>'
+            for value, singular, plural in card_stats if value > 0
+        )
         cards.append(f'''<article class="{card_class}">
           <div class="competition-card-top"><span class="competition-status">Tracking now</span><span>{competition['season']}</span></div>
           {logo_html}
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
           <h2>{esc(competition['name'])}</h2>
           {description_html}
-          <div class="competition-card-stats"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{len(stats['teams'])}</strong> teams</span></div>
+          {f'<div class="competition-card-stats">{stats_html}</div>' if stats_html else ''}
           <a class="btn btn-solid" href="competitions/{competition['id']}.html">Open competition</a>
         </article>''')
         item_list.append({"@type": "ListItem", "position": position,

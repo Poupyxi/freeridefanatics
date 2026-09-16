@@ -1779,7 +1779,7 @@ def build_competitions_hub(riders):
         card_description = (
             "Follow Red Bull Cerro Abajo 2026 results and rankings across Valparaiso, Genova and Stuttgart, with every recorded rider linked to a profile."
             if is_red_bull_cerro_abajo(competition)
-            else "Explore the season context, completed rounds, tracked riders and links to the live standings and equipment database."
+            else ""
         )
         logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else competition["id"]
         logo = competition_logos.get(logo_key)
@@ -1789,12 +1789,13 @@ def build_competitions_hub(riders):
             if logo else ""
         )
         card_class = "competition-card has-logo" if logo else "competition-card"
+        description_html = f'<p>{esc(card_description)}</p>' if card_description else ""
         cards.append(f'''<article class="{card_class}">
           <div class="competition-card-top"><span class="competition-status">Tracking now</span><span>{competition['season']}</span></div>
           {logo_html}
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
           <h2>{esc(competition['name'])}</h2>
-          <p>{esc(card_description)}</p>
+          {description_html}
           <div class="competition-card-stats"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{len(stats['teams'])}</strong> teams</span></div>
           <a class="btn btn-solid" href="competitions/{competition['id']}.html">Open competition</a>
         </article>''')

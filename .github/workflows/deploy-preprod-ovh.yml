@@ -44,6 +44,8 @@ jobs:
         run: |
           python3 build.py
           python3 tests/environment_visibility.py
+          ! grep -q '<section class="competition-hero"' competitions.html
+          ! grep -qi '<h1>Choose a competition' competitions.html
           grep -q 'Disallow: /' robots.txt
           grep -q 'noindex,nofollow,noarchive' index.html
           test -f competitions/red-bull/index.html

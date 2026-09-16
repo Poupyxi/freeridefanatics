@@ -1787,6 +1787,24 @@ def competition_latest_race_date(competition):
     return max(dates) if dates else ""
 
 
+def competition_schedule_status(competition):
+    """Describe the season state from its known race dates."""
+    dates = sorted(
+        event.get("date", "")[:10]
+        for event in competition.get("events", [])
+        if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", (event.get("date") or "")[:10])
+    )
+    if not dates:
+        return "On load", "loading"
+    today = os.environ.get("RF_TODAY", time.strftime("%Y-%m-%d"))
+    if today < dates[0]:
+        next_race = time.strftime("%d %b %Y", time.strptime(dates[0], "%Y-%m-%d")).lstrip("0")
+        return f"Coming soon · {next_race}", "soon"
+    if today > dates[-1]:
+        return "Ended", "ended"
+    return "Season in progress", "in-progress"
+
+
 def build_competitions_hub(riders):
     cards = []
     item_list = []
@@ -1811,6 +1829,7 @@ def build_competitions_hub(riders):
             if logo else ""
         )
         card_class = "competition-card has-logo" if logo else "competition-card"
+        status_label, status_class = competition_schedule_status(competition)
         description_html = f'<p>{esc(card_description)}</p>' if card_description else ""
         card_stats = [
             (len(stats["events"]), "race", "races"),
@@ -1823,7 +1842,7 @@ def build_competitions_hub(riders):
             if value > 0 and (singular != "team" or value >= 5)
         )
         cards.append(f'''<article class="{card_class}">
-          <div class="competition-card-top"><span class="competition-status">Tracking now</span><span>{competition['season']}</span></div>
+          <div class="competition-card-top"><span class="competition-status competition-status-{status_class}">{esc(status_label)}</span><span>{competition['season']}</span></div>
           {logo_html}
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
           <h2>{esc(competition['name'])}</h2>

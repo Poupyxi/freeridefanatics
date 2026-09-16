@@ -994,8 +994,9 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-hero p,.competition-detail-hero p{max-width:750px; color:#bdc1c5; font-size:18px; line-height:1.7;}
 .competition-detail-hero .hero-ctas{margin-top:32px;}
 .competition-detail-hero .btn:not(.btn-solid){border-color:#62666d; color:#fff;}
-.competition-grid{display:flex; flex-direction:column; gap:12px;}
-.competition-card{display:grid; grid-template-columns:140px minmax(0,1fr) auto; grid-template-rows:auto auto auto auto; column-gap:26px; align-items:center; min-height:0; padding:22px 24px; background:#fff; border:1px solid var(--line); box-shadow:0 8px 22px rgba(21,22,26,.04);}
+.competition-grid{display:flex; flex-direction:column; gap:16px;}
+.competition-card{display:grid; grid-template-columns:140px minmax(0,1fr) auto; grid-template-rows:auto auto auto auto; column-gap:28px; align-items:center; min-height:0; padding:24px 26px; background:linear-gradient(135deg,#fff 0%,#fbfaf8 100%); border:1px solid rgba(21,22,26,.09); border-radius:22px; box-shadow:0 10px 30px rgba(21,22,26,.055); transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;}
+.competition-card:hover{transform:translateY(-2px);border-color:rgba(184,70,28,.24);box-shadow:0 16px 38px rgba(21,22,26,.09);}
 .competition-card-top{width:100%; display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--muted);}
 .competition-card.has-logo .competition-card-top{grid-column:2 / 4;grid-row:1;}
 .competition-card-logo{display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1 / 5;width:100%;height:88px;margin:0;padding:0;background:transparent;border:0;}
@@ -1008,9 +1009,10 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-card h2{font-family:var(--head); font-size:clamp(26px,3vw,38px); line-height:1; text-transform:uppercase; margin:8px 0 10px;}
 .competition-card p{max-width:650px; color:var(--muted); line-height:1.65;}
 .competition-card.has-logo .competition-card-stats{grid-column:2;grid-row:4;}
-.competition-card-stats{display:flex; flex-wrap:wrap; gap:12px 18px; margin:10px 0 0; font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--muted);}
+.competition-card-stats{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--muted);}
+.competition-card-stats span{display:inline-flex;align-items:baseline;gap:5px;padding:8px 11px;background:#f2f0ec;border-radius:999px;}
 .competition-card-stats strong{color:var(--ink); font-size:15px;}
-.competition-card .btn{grid-column:3;grid-row:2 / 5;margin:0;white-space:nowrap;}
+.competition-card .btn{grid-column:3;grid-row:2 / 5;margin:0;white-space:nowrap;border-radius:999px;padding:13px 20px;}
 .season-race-calendar{padding-top:52px;padding-bottom:64px;background:var(--bg);}
 .season-race-list{border-top:1px solid var(--line);}
 .season-race-row{display:grid;grid-template-columns:64px minmax(260px,1fr) 170px 150px;gap:22px;align-items:center;min-height:122px;border-bottom:1px solid var(--line);transition:background .18s ease;}

@@ -1842,7 +1842,15 @@ def build_competitions_hub(riders):
     cards = []
     item_list = []
     competition_logos = load_competition_logos()
-    for position, competition in enumerate(COMPETITIONS, 1):
+    ordered_competitions = sorted(
+        COMPETITIONS,
+        key=lambda competition: (
+            bool(competition_latest_race_date(competition)),
+            competition_latest_race_date(competition),
+        ),
+        reverse=True,
+    )
+    for position, competition in enumerate(ordered_competitions, 1):
         stats = competition_stats(riders, competition)
         detail_path = f"/competitions/{competition['id']}.html"
         card_description = ""

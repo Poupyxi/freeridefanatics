@@ -1805,7 +1805,8 @@ def build_competitions_hub(riders):
         ]
         stats_html = "".join(
             f'<span><strong>{value}</strong> {singular if value == 1 else plural}</span>'
-            for value, singular, plural in card_stats if value > 0
+            for value, singular, plural in card_stats
+            if value > 0 and (singular != "team" or value >= 5)
         )
         cards.append(f'''<article class="{card_class}">
           <div class="competition-card-top"><span class="competition-status">Tracking now</span><span>{competition['season']}</span></div>

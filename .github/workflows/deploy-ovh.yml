@@ -70,6 +70,10 @@ jobs:
           ! grep -q 'Google Sheets' index.html
           test -f competitions/red-bull-cerro-abajo-2026.html
           grep -q 'Red Bull Cerro Abajo 2026' competitions.html
+          test -f competitions/project-17.html
+          test -f competitions/project-17/riders.html
+          grep -q 'Project 17' competitions.html
+          grep -q 'data-rider-grid' competitions/project-17/riders.html
 
       - name: Prepare public site files
         run: |
@@ -108,6 +112,10 @@ jobs:
             --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error --retry 5 \
             --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
+          curl --fail --silent --show-error --retry 5 \
+            --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
+          curl --fail --silent --show-error --retry 5 \
+            --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
           curl --silent --show-error --head https://ridersfanatics.com/ \

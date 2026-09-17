@@ -86,7 +86,7 @@ def visible_status(item):
 PRODUCTION_COMPETITION_IDS = {
     item.strip() for item in os.environ.get(
         "RF_PRODUCTION_COMPETITION_IDS",
-        "uci-mtb-world-cup-dh-2026,red-bull-cerro-abajo-2026",
+        "uci-mtb-world-cup-dh-2026,red-bull-cerro-abajo-2026,project-17",
     ).split(",") if item.strip()
 }
 COMPETITIONS = [

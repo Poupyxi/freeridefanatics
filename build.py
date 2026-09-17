@@ -222,6 +222,7 @@ EQUIPMENT_ALIASES = {
 
 BRAND_DISPLAY = {
     "5dev": "5DEV", "commencal": "Commençal", "enve": "ENVE",
+    "forbiden": "Forbidden", "forbidden": "Forbidden",
     "north shore billet": "North Shore Billet", "northshorebillet": "North Shore Billet",
     "ohlins": "Öhlins", "rockshox": "RockShox", "sram": "SRAM",
 }

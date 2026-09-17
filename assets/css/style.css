@@ -989,7 +989,9 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-season-heading p{max-width:680px;margin:16px 0 0;color:var(--muted);line-height:1.6;}
 .competition-season-heading .hero-ctas{margin-top:20px;}
 .competition-season-meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:18px;padding-top:13px;border-top:1px solid rgba(21,22,26,.13);font-family:var(--mono);font-size:10px;line-height:1.5;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
-.competition-season-meta a,.competition-season-meta strong{color:var(--ink);}
+.competition-season-meta a{color:var(--ink);font-weight:400;}
+.competition-season-meta a strong{color:var(--orange-dark);font-weight:700;}
+.competition-season-meta>span strong{color:var(--ink);}
 .competition-season-meta a:hover{color:var(--orange-dark);}
 .competition-season-event{display:flex;flex-direction:column;gap:7px;padding:20px 22px;background:rgba(255,255,255,.72);border:1px solid rgba(21,22,26,.08);border-radius:18px;}
 .competition-season-event span,.competition-season-event time{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}

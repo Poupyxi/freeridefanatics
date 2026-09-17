@@ -400,7 +400,12 @@ def export(client: Notion, baseline_path: Path):
     riders = []
     for item in pages["riders"]:
         identifier = page_id(item.get("id"))
-        if identifier not in result_rows and identifier not in participations_by_rider:
+        # A rider linked to a season through equipment must be published even
+        # before a timed result or participation row exists. Equipment-only
+        # entries are valid roster data and need a profile on the site.
+        if (identifier not in result_rows
+                and identifier not in participations_by_rider
+                and identifier not in equipment_by_rider):
             continue
         name = value(item, "First Name") or ""
         handle = instagram_handle(value(item, "Instagram"))

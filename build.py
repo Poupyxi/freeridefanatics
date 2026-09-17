@@ -2493,6 +2493,49 @@ DIRECTORY_GROUP_CONTENT = {
 def equipment_category_plural(category):
     return EQUIPMENT_CATEGORY_PLURALS.get(category, prettify_category(category) + "s")
 
+EQUIPMENT_DIRECTORY_LABELS = {
+    "Frame": "Frame",
+    "Fork": "Fork",
+    "RearShock": "Shox",
+}
+
+def equipment_directory_label(category):
+    return EQUIPMENT_DIRECTORY_LABELS.get(category, equipment_category_plural(category))
+
+def equipment_product_ranking(category, products):
+    """Rank the directory by unique rider adoption, then sporting presence."""
+    ranked = sorted(
+        products.values(),
+        key=lambda product: (
+            -len({rider["slug"] for rider in product["riders"]}),
+            -product["points"],
+            norm_product_text(product["brand"]),
+            norm_product_text(product["model"]),
+        ),
+    )
+    rows = []
+    for position, product in enumerate(ranked, 1):
+        title = " ".join([product["brand"], product["model"]]).strip()
+        rider_count = len({rider["slug"] for rider in product["riders"]})
+        rider_names = sorted({rider["display_name"] for rider in product["riders"]})
+        rider_preview = ", ".join(rider_names[:3])
+        if len(rider_names) > 3:
+            rider_preview += f" +{len(rider_names) - 3}"
+        photo = has_equip_photo(category, product["brand"], product["model"])
+        media = (
+            f'<img src="assets/img/equipment/{photo}" alt="{esc_attr(title)}" loading="lazy">'
+            if photo else
+            f'<span class="equipment-ranking-placeholder" aria-hidden="true">{position:02d}</span>'
+        )
+        rows.append(f'''<a class="equipment-directory-row" href="equipment/{equip_image_slug(category, '', '')}.html">
+          <span class="equipment-directory-rank">{position:02d}</span>
+          <span class="equipment-directory-media">{media}</span>
+          <span class="equipment-directory-product"><strong>{esc(title)}</strong><small>{esc(rider_preview)}</small></span>
+          <span class="equipment-directory-usage"><strong>{rider_count}</strong><small>rider{'s' if rider_count != 1 else ''}</small></span>
+          <span class="equipment-directory-arrow" aria-hidden="true">↗</span>
+        </a>''')
+    return "".join(rows)
+
 def equipment_category_card(category, products, index):
     label = equipment_category_plural(category)
     ranked = sorted(products.values(), key=lambda p: (-p["points"], -len(p["riders"]), p["brand"], p["model"]))
@@ -2530,24 +2573,23 @@ def build_equipment_directory(riders):
     by_cat = collect_equipment(riders)
     categories = [c for c in CAROUSEL_CATEGORY_ORDER if c in by_cat]
     categories += sorted(c for c in by_cat if c not in categories)
-    grouped_sections = []
-    running_index = 1
-    for group in DIRECTORY_GROUP_ORDER:
-        group_categories = [c for c in categories if DIRECTORY_GROUP_MAP.get(c) == group]
-        if not group_categories:
-            continue
-        group_title, group_description = DIRECTORY_GROUP_CONTENT[group]
-        cards = []
-        for category in group_categories:
-            cards.append(equipment_category_card(category, by_cat[category], running_index))
-            running_index += 1
-        group_id = re.sub(r"[^a-z0-9]+", "-", group.lower()).strip("-")
-        grouped_sections.append(f'''<section class="equipment-group" id="{group_id}"><div class="equipment-group-head"><div class="equipment-group-icon">{DIRECTORY_GROUP_ICONS[group]}</div><div><span class="label">{len(group_categories)} categories</span><h2>{esc(group_title)}</h2><p>{esc(group_description)}</p></div></div><div class="equipment-category-grid">{"".join(cards)}</div></section>''')
+    category_sections = []
+    for category in categories:
+        products = by_cat[category]
+        ranked_riders = {r["slug"] for p in products.values() for r in p["riders"]}
+        category_id = equip_image_slug(category, "", "")
+        category_sections.append(f'''<section class="equipment-directory-section" id="{category_id}">
+          <div class="equipment-directory-head"><div><span class="label">Most used by riders</span><h2>{esc(equipment_directory_label(category))}</h2></div><a href="equipment/{category_id}.html">View category →</a></div>
+          <div class="equipment-directory-scroll" tabindex="0" aria-label="All {esc_attr(equipment_directory_label(category))} references, ranked by rider usage">
+            {equipment_product_ranking(category, products)}
+          </div>
+          <p class="equipment-directory-summary">{len(products)} reference{'s' if len(products) != 1 else ''} · {len(ranked_riders)} rider{'s' if len(ranked_riders) != 1 else ''}</p>
+        </section>''')
     path = "/equipment.html"
     product_count = sum(len(by_cat[c]) for c in categories)
     group_nav = "".join(
-        f'<a href="#{re.sub(r"[^a-z0-9]+", "-", group.lower()).strip("-")}">{esc(DIRECTORY_GROUP_CONTENT[group][0])}</a>'
-        for group in DIRECTORY_GROUP_ORDER if any(DIRECTORY_GROUP_MAP.get(c) == group for c in categories)
+        f'<a href="#{equip_image_slug(category, "", "")}">{esc(equipment_directory_label(category))}</a>'
+        for category in categories
     )
     schema_items = [
         {"@type": "ListItem", "position": i, "name": equipment_category_plural(cat), "url": absolute_url(equipment_category_path(cat))}
@@ -2565,7 +2607,7 @@ def build_equipment_directory(riders):
     html += header_html("", active="equipment")
     html += f'''<main><section class="equipment-hero"><div class="wrap equipment-hero-layout"><div class="equipment-hero-copy"><div class="label">Professional race equipment · Verified setups</div><h1>Race equipment, <em>decoded.</em></h1><p>Explore what professional riders actually use. Every category connects products to riders, teams and results within the selected competition.</p><div class="hero-ctas"><a class="btn btn-solid" href="#equipment-catalogue">Browse categories</a><a class="btn equipment-compare-cta" href="compare.html">Open comparator</a></div><div class="equipment-hero-stats"><div><strong>{len(categories)}</strong><span>Categories</span></div><div><strong>{product_count}</strong><span>Products</span></div><div><strong>{len(riders)}</strong><span>Riders</span></div></div></div><div class="equipment-hero-visual" aria-label="Leading tracked equipment">{equipment_hero_visual(by_cat)}</div></div></section>
 <div class="wrap">{breadcrumb_html([("Home", "./"), ("Equipment", "equipment.html")])}</div>
-<section class="section equipment-catalogue" id="equipment-catalogue"><div class="wrap"><div class="equipment-catalogue-head"><div><div class="label">Equipment catalogue</div><h2>Explore the paddock.</h2><p>Choose a family, then open a category to see every tracked product and the riders using it.</p></div><a class="see-all" href="methodology.html">How rankings work →</a></div><nav class="equipment-group-nav" aria-label="Equipment families">{group_nav}</nav>{"".join(grouped_sections)}
+<section class="section equipment-catalogue" id="equipment-catalogue"><div class="wrap"><div class="equipment-catalogue-head"><div><div class="label">Equipment catalogue</div><h2>Most used equipment.</h2><p>Each category is ranked by the number of associated riders. The first three references are visible; scroll within a category to see the complete ranking.</p></div><a class="see-all" href="methodology.html">How rankings work →</a></div><nav class="equipment-group-nav" aria-label="Equipment categories">{group_nav}</nav>{"".join(category_sections)}
 <div class="equipment-compare-banner"><div><span class="label">Product comparator</span><h2>Build a side-by-side shortlist.</h2><p>Select two to four products from the same category and compare their tracked riders, teams and competition presence.</p></div><a class="btn btn-solid" href="compare.html">Start comparing</a></div>
 <div class="guide-callout"><strong>How to read these rankings</strong><p>Combined rider points describe competitive presence in the tracked field. They are not a laboratory comparison: sponsorship, rider count and team selection influence every total.</p></div></div></section></main>'''
     html += footer_html("")

@@ -441,18 +441,7 @@ def header_html(asset_prefix, active=""):
                 f'<strong>{esc(competition["short_name"])}</strong>'
                 f'<small>{esc(competition["discipline"])} · {competition["season"]}</small></a>'
             )
-    source_switcher = ""
-    if IS_PREPROD:
-        google_current = ' aria-current="true"' if DATA_SOURCE == "google" else ""
-        notion_current = ' aria-current="true"' if DATA_SOURCE == "notion" else ""
-        source_switcher = f'''<aside class="preprod-source-switcher" aria-label="Preproduction data source">
-  <span>Preprod data source</span>
-  <nav aria-label="Choose generated data source">
-    <a href="/google/"{google_current}>Google Sheets</a>
-    <a href="/notion/"{notion_current}>Notion</a>
-  </nav>
-</aside>'''
-    return f"""{source_switcher}<header>
+    return f"""<header>
   <div class="wrap nav-row">
     <a class="logo" href="{home_href}">
       <span class="mark">R</span>

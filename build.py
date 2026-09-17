@@ -1628,6 +1628,18 @@ def build_competition_riders(riders, competition):
     women = [rider for rider in participants if rider.get("gender_category") == "Women Elite"]
     cards = "\n".join(rider_card(rider, "../../") for rider in participants)
     description = f"All riders participating in {name}, with profiles, teams and countries."
+    competition_logos = load_competition_logos()
+    logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else cid
+    season_logo = competition_logos.get(logo_key)
+    season_logo_html = (
+        f'<div class="competition-season-logo"><img src="../../{season_logo["src"]}" '
+        f'alt="{esc_attr(season_logo["name"])}"></div>'
+        if season_logo else ""
+    )
+    featured_event = competition_featured_event(competition)
+    featured_event_html = ""
+    if featured_event:
+        featured_event_html = f'''<div class="competition-season-event"><span>{esc(featured_event["label"])}</span><strong>{esc(featured_event["location"])}</strong><time datetime="{esc_attr(featured_event["date"])}">{esc(featured_event["date_label"])}</time></div>'''
     html = head(
         f"{name} Riders | {SITE_NAME}", description, "../../",
         body_class="competition-riders-page", canonical_path=path,
@@ -1646,7 +1658,7 @@ def build_competition_riders(riders, competition):
     )
     html += header_html("../../", active="competitions")
     html += f'''<main id="main-content">
-<section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)} riders.</h1><p>{len(participants)} participant{'s' if len(participants) != 1 else ''} currently connected to this season.</p><div class="hero-ctas"><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>{len(participants)} athlete{'s' if len(participants) != 1 else ''} connected to this season.</p></div>{featured_event_html}</div></section>
 {competition_view_selector(competition, "athletes", "../")}
 <section class="section" id="grid"><div class="wrap">
 <div class="filters" aria-label="Filter season riders"><button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(participants)})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({len(men)})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Women Elite">Women ({len(women)})</button><label class="search-label"><span class="visually-hidden">Search riders</span><input class="search-input" type="search" placeholder="Search a rider, team, country..." data-search></label></div>

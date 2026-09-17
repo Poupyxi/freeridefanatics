@@ -300,10 +300,62 @@ def equip_image_slug(category, brand, main_model):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 def has_equip_photo(category, brand, main_model):
-    slug = equip_image_slug(category, brand, main_model)
-    for ext in ("jpg", "jpeg", "png", "webp"):
-        if os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{ext}")):
-            return f"{slug}.{ext}"
+    canonical_slug = equip_image_slug(category, brand, main_model)
+    raw_slug = re.sub(
+        r"[^a-z0-9]+", "-",
+        unicodedata.normalize("NFKD", f"{category} {brand} {main_model}")
+        .encode("ascii", "ignore").decode("ascii").lower(),
+    ).strip("-")
+
+    # Notion stores the commercial reference while Drive filenames can also
+    # contain a colour, tune, wheel position or model year. Try both the
+    # canonical site identity and the unmodified Notion identity first.
+    for slug in dict.fromkeys((raw_slug, canonical_slug)):
+        for ext in ("webp", "jpg", "jpeg", "png"):
+            if os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{ext}")):
+                return f"{slug}.{ext}"
+
+    # Resolve safe filename variants imported from Drive. A candidate is only
+    # accepted when it has the same category and brand and at least two model
+    # tokens overlap. This links e.g. `BoXXer Ultimate Electric Red` to the
+    # existing `BoXXer Ultimate` image without confusing neighbouring models.
+    desired = set(raw_slug.split("-"))
+    category_tokens = set(equip_image_slug(category, "", "").split("-"))
+    brand_tokens = set(re.sub(r"[^a-z0-9]+", "-", norm_product_text(brand)).split("-")) - {""}
+    model_tokens = set(re.sub(r"[^a-z0-9]+", "-", norm_product_text(main_model)).split("-")) - {""}
+    candidates_by_stem = {}
+    if os.path.isdir(EQUIP_IMG_DIR):
+        for filename in os.listdir(EQUIP_IMG_DIR):
+            stem, ext = os.path.splitext(filename)
+            if ext.lower() not in {".webp", ".jpg", ".jpeg", ".png"} or stem.endswith("-480"):
+                continue
+            tokens = set(stem.split("-"))
+            if not category_tokens.issubset(tokens) or not brand_tokens.issubset(tokens):
+                continue
+            candidate_model = tokens - category_tokens - brand_tokens
+            # Suspension variants with opposite spring technologies are not
+            # interchangeable product photos.
+            if (("air" in model_tokens and "coil" in candidate_model)
+                    or ("coil" in model_tokens and "air" in candidate_model)):
+                continue
+            overlap = candidate_model & model_tokens
+            if len(overlap) < min(2, len(model_tokens)):
+                continue
+            # Prefer the candidate that explains the greatest share of both
+            # names; extension preference keeps the modern WebP original.
+            coverage = len(overlap) / max(1, min(len(candidate_model), len(model_tokens)))
+            union_score = len(tokens & desired) / max(1, len(tokens | desired))
+            ext_score = {".webp": 3, ".jpg": 2, ".jpeg": 1, ".png": 0}[ext.lower()]
+            candidate = (coverage, union_score, ext_score, filename)
+            if stem not in candidates_by_stem or candidate > candidates_by_stem[stem]:
+                candidates_by_stem[stem] = candidate
+    candidates = list(candidates_by_stem.values())
+    if candidates:
+        candidates.sort(reverse=True)
+        best = candidates[0]
+        # Refuse ambiguous matches with an identical semantic score.
+        if len(candidates) == 1 or best[:2] != candidates[1][:2]:
+            return best[3]
     return None
 
 def tire_component_photos(brand, main_model):

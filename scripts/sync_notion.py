@@ -176,6 +176,18 @@ def instagram_handle(url: str | None) -> str | None:
     return url if url.startswith("@") else None
 
 
+def first_page_url(page) -> str | None:
+    """Return the first URL property attached to a Notion record."""
+    for name in ("Official URL", "Event URL", "URL", "Link", "Lien", "Website"):
+        candidate = value(page, name)
+        if isinstance(candidate, str) and candidate.strip().startswith(("https://", "http://")):
+            return candidate.strip()
+    for item in (page.get("properties") or {}).values():
+        if item.get("type") == "url" and item.get("url"):
+            return item["url"].strip()
+    return None
+
+
 def safe_int(value_):
     try:
         return int(float(value_))
@@ -247,6 +259,7 @@ def export(client: Notion, baseline_path: Path):
         page_id(item.get("id")): {
             "name": value(item, "Name competition"),
             "date": value(item, "Date") or "9999-12-31",
+            "source_url": first_page_url(item),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }

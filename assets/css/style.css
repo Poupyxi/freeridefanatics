@@ -409,6 +409,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .rider-card .country{font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--orange);}
 .rider-card h3{font-size:16px; font-weight:700; line-height:1.25;}
 .rider-card .team{font-size:12px; color:var(--muted);}
+.rider-card .instagram-handle{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--orange-dark);}
 
 /* ===== Rider detail page ===== */
 .back-link{
@@ -1028,6 +1029,7 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .season-race-main p{max-width:720px;margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.55;}
 .season-race-row>.competition-status{justify-self:start;white-space:nowrap;}
 .season-race-action{justify-self:end;text-align:right;}
+.season-race-action{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
 .season-race-link{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--orange-dark);border-bottom:1px solid currentColor;padding-bottom:4px;}
 .season-race-link:hover{color:var(--ink);}
 .competition-note{display:grid; grid-template-columns:220px 1fr; gap:30px; margin-top:28px; padding:28px; border:1px solid var(--line);}

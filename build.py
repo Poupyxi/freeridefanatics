@@ -951,6 +951,8 @@ def rider_card(r, asset_prefix=""):
     search_blob = " ".join([
         r.get("display_name",""), r.get("country") or "", r.get("team") or "", cat
     ]).lower()
+    handle = (r.get("instagram") or "").strip().lstrip("@")
+    instagram_html = f'<span class="instagram-handle">@{esc(handle)}</span>' if handle else ""
     return f"""<a class="rider-card reveal" href="{asset_prefix}riders/{r['slug']}.html" data-category="{cat}" data-search="{esc(search_blob)}">
         <div class="photo">
           {photo_html}
@@ -960,6 +962,7 @@ def rider_card(r, asset_prefix=""):
           <span class="country">{esc(r.get('country') or '—')}</span>
           <h3>{esc(r['display_name'])}</h3>
           <span class="team">{esc(r.get('team') or 'Privateer')}</span>
+          {instagram_html}
         </div>
       </a>"""
 
@@ -2071,8 +2074,13 @@ def build_competition_detail(riders, competition):
                 date_label = f"{start.tm_mday}–{end.tm_mday} {time.strftime('%b %Y', end)}"
             has_results = event_name in recorded_events
             status = "Results available" if has_results else "No results recorded"
-            action = (f'<a class="season-race-link" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results <span aria-hidden="true">→</span></a>'
-                      if has_results else '<span class="season-race-pending">Awaiting results</span>')
+            event_url = event.get("source_url") or (official_event or {}).get("official_url")
+            action_links = []
+            if has_results:
+                action_links.append(f'<a class="season-race-link" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results <span aria-hidden="true">→</span></a>')
+            if event_url:
+                action_links.append(f'<a class="season-race-link season-race-official" href="{esc_attr(event_url)}" rel="nofollow noopener" target="_blank">Event link <span aria-hidden="true">↗</span></a>')
+            action = "".join(action_links) or '<span class="season-race-pending">Awaiting results</span>'
             event_summary = f'<p>{esc(official_event["summary"])}</p>' if official_event else ""
             event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(event_name)}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)

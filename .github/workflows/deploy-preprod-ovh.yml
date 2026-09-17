@@ -65,6 +65,8 @@ jobs:
           test -f "$RUNNER_TEMP/public/competitions/project-17/riders.html"
           grep -q 'data-rider-grid' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
           grep -q 'class="rider-card reveal"' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
+          grep -q 'instagram-handle' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
+          grep -R -q 'season-race-official' "$RUNNER_TEMP/public/competitions"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
           ! test -f "$RUNNER_TEMP/public/contact-submit.php"
           ! test -d "$RUNNER_TEMP/public/google"

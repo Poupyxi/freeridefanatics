@@ -385,9 +385,21 @@ def export(client: Notion, baseline_path: Path):
     equipment_by_rider = {}
     primary_season_id = page_id(os.environ.get("NOTION_SEASON_PAGE_ID", PRIMARY_SEASON_PAGE_ID))
     for item in pages["equipment_links"]:
-        if primary_season_id not in set(value(item, "☀️ Saison") or []):
+        season_ids = set(value(item, "☀️ Saison") or [])
+        # New equipment links are sometimes created before their season field
+        # is filled in. Keep an explicitly different season isolated, but infer
+        # the active season for an untagged link when the related rider already
+        # participates in, or has a result for, that season. This prevents a
+        # complete rider setup from disappearing because only the link's season
+        # cell was left blank.
+        if season_ids and primary_season_id not in season_ids:
             continue
         rider_ids = value(item, "🚻 Riders") or []
+        if not season_ids:
+            rider_ids = [
+                rider_id for rider_id in rider_ids
+                if rider_id in result_rows or rider_id in participations_by_rider
+            ]
         product_ids = value(item, "Equipments") or []
         for rider_id in rider_ids:
             for product_id in product_ids:

@@ -176,15 +176,15 @@ def instagram_handle(url: str | None) -> str | None:
     return url if url.startswith("@") else None
 
 
-def first_page_url(page) -> str | None:
-    """Return the first URL property attached to a Notion record."""
-    for name in ("Official URL", "Event URL", "URL", "Link", "Lien", "Website"):
-        candidate = value(page, name)
-        if isinstance(candidate, str) and candidate.strip().startswith(("https://", "http://")):
-            return candidate.strip()
-    for item in (page.get("properties") or {}).values():
-        if item.get("type") == "url" and item.get("url"):
-            return item["url"].strip()
+def season_edition_count(page) -> int | None:
+    """Read an edition count regardless of the exact French/English label."""
+    for name in (page.get("properties") or {}):
+        normalized = slugify(name)
+        if "edition" not in normalized:
+            continue
+        count = safe_int(value(page, name))
+        if count is not None and count > 0:
+            return count
     return None
 
 
@@ -246,7 +246,12 @@ def export(client: Notion, baseline_path: Path):
         event_ids = value(item, "🏆 Event ") or []
         if not identifier or not name or not event_ids:
             continue
-        seasons[identifier] = {"name": name, "event_ids": event_ids}
+        seasons[identifier] = {
+            "name": name,
+            "event_ids": event_ids,
+            "instagram": instagram_handle(value(item, "Instagram")),
+            "edition_count": season_edition_count(item),
+        }
         for event_id in event_ids:
             event_seasons.setdefault(event_id, identifier)
     if not seasons:
@@ -259,7 +264,6 @@ def export(client: Notion, baseline_path: Path):
         page_id(item.get("id")): {
             "name": value(item, "Name competition"),
             "date": value(item, "Date") or "9999-12-31",
-            "source_url": first_page_url(item),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }
@@ -281,6 +285,8 @@ def export(client: Notion, baseline_path: Path):
             "season": int(year_match.group(1)) if year_match else 2026,
             "status": "published",
             "notion_page_id": identifier,
+            "instagram": season.get("instagram"),
+            "edition_count": season.get("edition_count"),
             "events": sorted(event_records, key=lambda event: (event["date"], event["name"])),
         })
 

@@ -409,7 +409,6 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .rider-card .country{font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--orange);}
 .rider-card h3{font-size:16px; font-weight:700; line-height:1.25;}
 .rider-card .team{font-size:12px; color:var(--muted);}
-.rider-card .instagram-handle{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--orange-dark);}
 
 /* ===== Rider detail page ===== */
 .back-link{
@@ -989,6 +988,9 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-season-heading h1{font-family:var(--head);font-size:clamp(38px,5vw,68px);line-height:.94;text-transform:uppercase;margin:12px 0 0;}
 .competition-season-heading p{max-width:680px;margin:16px 0 0;color:var(--muted);line-height:1.6;}
 .competition-season-heading .hero-ctas{margin-top:20px;}
+.competition-season-meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:18px;padding-top:13px;border-top:1px solid rgba(21,22,26,.13);font-family:var(--mono);font-size:10px;line-height:1.5;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+.competition-season-meta a,.competition-season-meta strong{color:var(--ink);}
+.competition-season-meta a:hover{color:var(--orange-dark);}
 .competition-season-event{display:flex;flex-direction:column;gap:7px;padding:20px 22px;background:rgba(255,255,255,.72);border:1px solid rgba(21,22,26,.08);border-radius:18px;}
 .competition-season-event span,.competition-season-event time{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
 .competition-season-event strong{font-family:var(--head);font-size:25px;line-height:1.05;text-transform:uppercase;}
@@ -1029,7 +1031,6 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .season-race-main p{max-width:720px;margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.55;}
 .season-race-row>.competition-status{justify-self:start;white-space:nowrap;}
 .season-race-action{justify-self:end;text-align:right;}
-.season-race-action{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
 .season-race-link{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--orange-dark);border-bottom:1px solid currentColor;padding-bottom:4px;}
 .season-race-link:hover{color:var(--ink);}
 .competition-note{display:grid; grid-template-columns:220px 1fr; gap:30px; margin-top:28px; padding:28px; border:1px solid var(--line);}

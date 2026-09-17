@@ -1610,6 +1610,15 @@ def competition_participants(riders, competition):
         or any(row.get("category") == name for row in (rider.get("competition_history") or []))
     ], key=lambda rider: (rider.get("display_name") or "").casefold())
 
+def competition_view_selector(competition, active, prefix=""):
+    cid = competition["id"]
+    athletes_href = f"{prefix}{cid}/riders.html"
+    standings_href = f"{prefix}{cid}.html#season-ranking"
+    return f'''<nav class="competition-view-switch" aria-label="Season view"><div class="wrap">
+      <a href="{athletes_href}"{' aria-current="page"' if active == 'athletes' else ''}>Athletes</a>
+      <a href="{standings_href}"{' aria-current="page"' if active == 'standings' else ''}>Standings</a>
+    </div></nav>'''
+
 def build_competition_riders(riders, competition):
     participants = competition_participants(riders, competition)
     name = competition["name"]
@@ -1638,6 +1647,7 @@ def build_competition_riders(riders, competition):
     html += header_html("../../", active="competitions")
     html += f'''<main id="main-content">
 <section class="competition-detail-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)} riders.</h1><p>{len(participants)} participant{'s' if len(participants) != 1 else ''} currently connected to this season.</p><div class="hero-ctas"><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
+{competition_view_selector(competition, "athletes", "../")}
 <section class="section" id="grid"><div class="wrap">
 <div class="filters" aria-label="Filter season riders"><button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(participants)})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({len(men)})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Women Elite">Women ({len(women)})</button><label class="search-label"><span class="visually-hidden">Search riders</span><input class="search-input" type="search" placeholder="Search a rider, team, country..." data-search></label></div>
 <div class="grid-riders" data-rider-grid>{cards}</div>
@@ -2069,13 +2079,11 @@ def build_competition_detail(riders, competition):
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "
                   "Each recorded result links directly to the rider profile.</p>"
                   if is_red_bull else "")
-    participants = competition_participants(riders, competition)
-    riders_cta = (f'<div class="hero-ctas"><a class="btn btn-solid" href="{competition["id"]}/riders.html">View all riders ({len(participants)})</a></div>'
-                  if competition["id"] == "project-17" else "")
     season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
     html += f'''<main>
-<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1>{hero_intro}{riders_cta}</div>{featured_event_html}</div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1>{hero_intro}</div>{featured_event_html}</div></section>
+{competition_view_selector(competition, "standings")}
 {season_visual}
 {season_context}
 {season_ranking_selector(riders, competition)}
@@ -3284,9 +3292,8 @@ def main():
             f.write(build_competition_detail(riders, competition))
         standings_dir = os.path.join(COMPETITIONS_DIR, competition["id"])
         os.makedirs(standings_dir, exist_ok=True)
-        if competition["id"] == "project-17":
-            with open(os.path.join(standings_dir, "riders.html"), "w", encoding="utf-8") as f:
-                f.write(build_competition_riders(riders, competition))
+        with open(os.path.join(standings_dir, "riders.html"), "w", encoding="utf-8") as f:
+            f.write(build_competition_riders(riders, competition))
         standings_file = os.path.join(standings_dir, "standings.html")
         if is_red_bull_cerro_abajo(competition):
             if os.path.exists(standings_file):

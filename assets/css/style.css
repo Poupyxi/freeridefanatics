@@ -1004,6 +1004,11 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-season-event{display:flex;flex-direction:column;gap:7px;padding:20px 22px;background:rgba(255,255,255,.72);border:1px solid rgba(21,22,26,.08);border-radius:18px;}
 .competition-season-event span,.competition-season-event time{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
 .competition-season-event strong{font-family:var(--head);font-size:25px;line-height:1.05;text-transform:uppercase;}
+.competition-view-switch{background:#fff;border-bottom:1px solid var(--line);}
+.competition-view-switch .wrap{display:flex;gap:8px;padding-top:16px;padding-bottom:16px;}
+.competition-view-switch a{display:inline-flex;align-items:center;justify-content:center;min-width:132px;padding:12px 20px;border:1px solid var(--line);border-radius:999px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);transition:background .18s ease,color .18s ease,border-color .18s ease;}
+.competition-view-switch a:hover{border-color:var(--ink);}
+.competition-view-switch a[aria-current="page"]{background:var(--ink);border-color:var(--ink);color:#fff;}
 .competition-grid{display:flex; flex-direction:column; gap:16px;}
 .competition-card{display:grid; grid-template-columns:140px minmax(0,1fr) auto; grid-template-rows:auto auto auto auto; column-gap:28px; align-items:center; min-height:0; padding:24px 26px; background:linear-gradient(135deg,#fff 0%,#fbfaf8 100%); border:1px solid rgba(21,22,26,.09); border-radius:22px; box-shadow:0 10px 30px rgba(21,22,26,.055); transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;}
 .competition-card:hover{transform:translateY(-2px);border-color:rgba(184,70,28,.24);box-shadow:0 16px 38px rgba(21,22,26,.09);}
@@ -1143,6 +1148,8 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .competition-season-logo img{max-height:78px;}
   .competition-season-heading h1{font-size:clamp(32px,10vw,44px);}
   .competition-season-event{padding:17px 18px;}
+  .competition-view-switch .wrap{overflow-x:auto;padding-top:13px;padding-bottom:13px;}
+  .competition-view-switch a{min-width:122px;padding:11px 17px;}
 }
 
 /* Keep the season overview immediately readable below the global navigation. */

@@ -119,12 +119,12 @@ jobs:
             --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 \
             --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
-          test "$(curl --silent --location --output /dev/null --write-out '%{url_effective}' \
-            https://ridersfanatics.com/competitions/uci/)" = \
-            'https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html'
-          test "$(curl --silent --location --output /dev/null --write-out '%{url_effective}' \
-            https://ridersfanatics.com/riders/facundo-descalzo.html)" = \
-            'https://ridersfanatics.com/riders/descalzo-facundo.html'
+          test "$(curl --silent --location --output /dev/null --write-out '%{http_code} %{url_effective}' \
+            https://ridersfanatics.com/competitions/uci/ | sed 's/:443\//\//')" = \
+            '200 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html'
+          test "$(curl --silent --location --output /dev/null --write-out '%{http_code} %{url_effective}' \
+            https://ridersfanatics.com/riders/facundo-descalzo.html | sed 's/:443\//\//')" = \
+            '200 https://ridersfanatics.com/riders/descalzo-facundo.html'
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
           curl --silent --show-error --head https://ridersfanatics.com/ \

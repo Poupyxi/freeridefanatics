@@ -11,6 +11,14 @@ IS_PREPROD = BUILD_ENV == "preprod"
 BASE = os.environ.get("RF_SITE_URL", "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com").rstrip("/")
 ROBOTS_META = "noindex,nofollow,noarchive" if IS_PREPROD else "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
 UPDATED = "2026-09-09"
+EN_UPDATED = "2026-09-22"
+DATA_UPDATED = UPDATED
+if os.environ.get("RF_DATA_SOURCE", "google").strip().lower() == "notion":
+    metadata_path = ROOT / "data" / "notion" / "sync-metadata.json"
+    if metadata_path.exists():
+        candidate = json.loads(metadata_path.read_text(encoding="utf-8")).get("generated_at", "")[:10]
+        if len(candidate) == 10 and candidate[4] == "-" and candidate[7] == "-":
+            DATA_UPDATED = candidate
 STANDINGS = "competitions/uci-mtb-world-cup-dh-2026/standings.html"
 
 LANGS = {
@@ -66,9 +74,11 @@ SEO_TITLES = {
 
 def page(lang, d):
     path = f"/guides/{lang}/"
+    guide_date = EN_UPDATED if lang == "en" else UPDATED
+    guide_updated_label = "Editorial guide · Updated 22 September 2026" if lang == "en" else d["updated"]
     alternates = "\n".join(f'<link rel="alternate" hreflang="{HREFLANG.get(code, code)}" href="{BASE}/guides/{code}/">' for code in ORDER)
     alternates += f'\n<link rel="alternate" hreflang="x-default" href="{BASE}/guides/en/">'
-    article = {"@context":"https://schema.org","@type":"Article","headline":d["title"],"description":d["meta"],"inLanguage":HREFLANG.get(lang, lang),"dateModified":UPDATED,"author":{"@type":"Organization","name":"RidersFanatics"},"publisher":{"@type":"Organization","name":"RidersFanatics"},"mainEntityOfPage":BASE+path}
+    article = {"@context":"https://schema.org","@type":"Article","headline":d["title"],"description":d["meta"],"inLanguage":HREFLANG.get(lang, lang),"dateModified":guide_date,"author":{"@type":"Organization","name":"RidersFanatics"},"publisher":{"@type":"Organization","name":"RidersFanatics"},"mainEntityOfPage":BASE+path}
     faq = {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in d["faq"]]}
     breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"RidersFanatics","item":BASE+"/"},{"@type":"ListItem","position":2,"name":d["title"],"item":BASE+path}]}
     sections = "\n".join(f'<section id="s{i}"><h2>{escape(h)}</h2>'+"".join(f'<p>{escape(p)}</p>' for p in ps)+"</section>" for i,(h,ps) in enumerate(d["sections"],1))
@@ -79,7 +89,12 @@ def page(lang, d):
     language_switcher = f'<details class="header-language"><summary aria-label="Change language"><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[lang]}</span><span>{active_lang}</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu">{header_langs}</div></details>'
     faqs = "".join(f'<details><summary>{escape(q)}</summary><p>{escape(a)}</p></details>' for q,a in d["faq"])
     if lang == "en":
-        hero = f'''<header class="guide-hero guide-hero-feature"><div class="wrap guide-hero-grid"><div class="guide-hero-copy"><div class="label">{escape(d["label"])}</div><h1>{escape(d["title"])}</h1><p class="lead">How professional downhill bikes are adjusted to the rider, track and race conditions.</p><div class="guide-hero-footer"><div class="hero-ctas guide-hero-actions"><a class="btn btn-solid" href="../../riders.html#grid">Explore rider setups</a><a class="btn" href="../../compare.html">Compare equipment</a></div><div class="guide-meta"><span>RidersFanatics</span><time datetime="{UPDATED}">Updated 10 August 2026</time></div></div></div></div></header>'''
+        sections += ('<section><h2>2026 rider examples</h2><p>Compare the documented equipment on '
+                     '<a href="../../riders/jackson-goldstone.html">Jackson Goldstone’s profile</a> and '
+                     '<a href="../../riders/max-alran.html">Max Alran’s profile</a>, then place their '
+                     '<a href="../../competitions/uci-mtb-world-cup-dh-2026/standings.html">race results in the UCI standings</a>.</p></section>')
+    if lang == "en":
+        hero = f'''<header class="guide-hero guide-hero-feature"><div class="wrap guide-hero-grid"><div class="guide-hero-copy"><div class="label">{escape(d["label"])}</div><h1>{escape(d["title"])}</h1><p class="lead">How professional downhill bikes are adjusted to the rider, track and race conditions.</p><div class="guide-hero-footer"><div class="hero-ctas guide-hero-actions"><a class="btn btn-solid" href="../../riders.html#grid">Explore rider setups</a><a class="btn" href="../../compare.html">Compare equipment</a></div><div class="guide-meta"><span>RidersFanatics</span><time datetime="{guide_date}">Updated 22 September 2026</time></div></div></div></div></header>'''
     else:
         hero = f'''<header class="guide-hero"><div class="wrap"><div class="label">{escape(d["label"])}</div><h1>{escape(d["title"])}</h1><p class="lead">{escape(d["lead"])}</p><div class="guide-meta"><span>RidersFanatics</span><time datetime="{UPDATED}">{escape(d["updated"])}</time><span>UCI MTB World Cup DH</span></div></div></header>'''
     return f'''<!DOCTYPE html>
@@ -94,7 +109,7 @@ def page(lang, d):
 <main id="main-content"><article>{hero}
 <div class="wrap guide-layout"><div class="guide-content">{sections}<section class="guide-faq"><h2>FAQ</h2>{faqs}</section><div class="guide-callout"><strong>RidersFanatics</strong><p>{escape(d["lead"])}</p></div><div class="hero-ctas"><a class="btn btn-solid" href="../../riders.html#grid">{escape(d["cta1"])}</a><a class="btn" href="../../{STANDINGS}">{escape(d["cta2"])}</a></div></div>
 <aside class="guide-sidebar" aria-label="{escape(d["toc"],quote=True)}"><div class="guide-card"><h2>{escape(d["toc"])}</h2>{toc}</div><div class="guide-card"><h2>{escape(d["langlabel"])}</h2><div class="language-list">{langs}</div></div></aside></div></article></main>
-<footer><div class="wrap footer-row"><a class="footer-logo" href="../../"><span class="mark">R</span>RIDERSFANATICS</a><nav class="footer-links" aria-label="Footer navigation"><a href="../../riders.html#grid">Riders</a><a href="../../competitions.html">Competitions</a><a href="../../equipment.html">Equipment</a><a href="../../brands.html">Brands</a><a href="../../contact.html">Contact</a><a href="../../privacy.html">Privacy</a></nav><span class="footer-copy">&copy; 2026 RidersFanatics</span></div><div class="wrap footer-updated">{escape(d["updated"])}</div></footer><script src="../../assets/js/site.js"></script></body></html>'''
+<footer><div class="wrap footer-row"><a class="footer-logo" href="../../"><span class="mark">R</span>RIDERSFANATICS</a><nav class="footer-links" aria-label="Footer navigation"><a href="../../riders.html#grid">Riders</a><a href="../../competitions.html">Competitions</a><a href="../../equipment.html">Equipment</a><a href="../../brands.html">Brands</a><a href="../../contact.html">Contact</a><a href="../../privacy.html">Privacy</a></nav><span class="footer-copy">&copy; 2026 RidersFanatics</span></div><div class="wrap footer-updated">{escape(guide_updated_label)}</div></footer><script src="../../assets/js/site.js"></script></body></html>'''
 
 for code in ORDER:
     target = ROOT / "guides" / code / "index.html"
@@ -109,7 +124,9 @@ pages += [ROOT / "guides" / code / "index.html" for code in ORDER]
 xml_rows = []
 for item in pages:
     rel = item.relative_to(ROOT).as_posix()
-    if rel == "competitions/red-bull-cerro-abajo-2026/standings.html":
+    if rel in {"competitions/red-bull-cerro-abajo-2026/standings.html", "competitions/uci/index.html"}:
+        continue
+    if rel.startswith("riders/") and '<meta name="robots" content="noindex,follow">' in item.read_text(encoding="utf-8"):
         continue
     if rel == "index.html":
         url = BASE + "/"
@@ -124,7 +141,8 @@ for item in pages:
         ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{BASE}/guides/en/"/>'
     else:
         links = ""
-    xml_rows.append(f"<url><loc>{url}</loc><lastmod>{UPDATED}</lastmod>{links}</url>")
+    lastmod = (EN_UPDATED if rel == "guides/en/index.html" else UPDATED) if rel.startswith("guides/") else DATA_UPDATED
+    xml_rows.append(f"<url><loc>{url}</loc><lastmod>{lastmod}</lastmod>{links}</url>")
 (ROOT / "sitemap.xml").write_text(
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '

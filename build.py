@@ -94,7 +94,7 @@ def visible_status(item):
 PRODUCTION_COMPETITION_IDS = {
     item.strip() for item in os.environ.get(
         "RF_PRODUCTION_COMPETITION_IDS",
-        "uci-mtb-world-cup-dh-2026,red-bull-cerro-abajo-2026,project-17",
+        "uci-mtb-world-cup-dh-2026,red-bull-cerro-abajo-2026,project-17,beyondgravity",
     ).split(",") if item.strip()
 }
 COMPETITIONS = [
@@ -2125,7 +2125,7 @@ def build_competition_detail(riders, competition):
     season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
     html += f'''<main>
-<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{season_meta}{hero_intro}</div>{featured_event_html}</div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{hero_intro}</div>{featured_event_html}</div></section>
 {competition_view_selector(competition, "standings")}
 {season_visual}
 {season_context}

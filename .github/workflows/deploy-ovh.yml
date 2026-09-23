@@ -74,6 +74,15 @@ jobs:
           test -f competitions/project-17/riders.html
           grep -q 'Project 17' competitions.html
           grep -q 'data-rider-grid' competitions/project-17/riders.html
+          test -f competitions/beyondgravity.html
+          test -f competitions/beyondgravity/riders.html
+          test -f assets/img/competitions/beyondgravity.jpg
+          test -f assets/img/competitions/uci-mtb-world-cup-dh-2026.png
+          grep -q 'Beyond Gravity 2027 at Maydena Bike Park' competitions/beyondgravity.html
+          grep -q 'Beyond Gravity</h1>' competitions/beyondgravity.html
+          grep -q 'competition-status competition-status-soon' competitions.html
+          grep -q 'assets/img/competitions/uci-mtb-world-cup-dh-2026.png' competitions.html
+          grep -q '<loc>https://ridersfanatics.com/competitions/beyondgravity.html</loc>' sitemap.xml
           test -f riders/descalzo-facundo.html
           grep -q 'Jackson Goldstone Bike Check 2026' riders/jackson-goldstone.html
           grep -q 'UCI Downhill World Cup 2026 Standings' competitions/uci-mtb-world-cup-dh-2026/standings.html
@@ -119,6 +128,11 @@ jobs:
             --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 \
             --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
+          curl --fail --silent --show-error --retry 5 \
+            --retry-delay 5 https://ridersfanatics.com/competitions/beyondgravity.html \
+            | grep -q 'Beyond Gravity 2027 at Maydena Bike Park'
+          curl --fail --silent --show-error --retry 5 \
+            --retry-delay 5 https://ridersfanatics.com/assets/img/competitions/beyondgravity.jpg > /dev/null
           test "$(curl --silent --location --output /dev/null --write-out '%{http_code} %{url_effective}' \
             https://ridersfanatics.com/competitions/uci/ | sed 's/:443\//\//')" = \
             '200 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html'

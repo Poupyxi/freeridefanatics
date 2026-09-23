@@ -1006,7 +1006,7 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-card.has-logo .competition-sport{grid-column:2;grid-row:2;margin-top:8px;}
 .competition-hub-title{margin:0;}
 .competition-status{color:#25774a;}
-.competition-status-soon{color:var(--orange-dark);}
+.competition-status-soon{color:#b42332;font-weight:700;}
 .competition-status-ended{color:#777b80;}
 .competition-status-loading{color:#486276;}
 .competition-sport{margin-top:54px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--orange-dark);}

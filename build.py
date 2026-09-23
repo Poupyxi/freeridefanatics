@@ -1620,12 +1620,19 @@ def competition_view_selector(competition, active, prefix=""):
 def build_competition_riders(riders, competition):
     participants = competition_participants(riders, competition)
     name = competition["name"]
+    display_name = competition_display_name(competition)
     cid = competition["id"]
     path = f"/competitions/{cid}/riders.html"
     men = [rider for rider in participants if rider.get("gender_category") == "Men Elite"]
     women = [rider for rider in participants if rider.get("gender_category") == "Women Elite"]
     cards = "\n".join(rider_card(rider, "../../") for rider in participants)
-    description = f"All riders participating in {name}, with profiles, teams and countries."
+    description = f"Riders connected to {display_name} {competition['season']}, with profiles, teams and countries."
+    if cid == "project-17":
+        page_title = f"Project 17 {competition['season']} Riders | Coast Gravity Park"
+    elif cid == "beyondgravity":
+        page_title = f"Beyond Gravity {competition['season']} Riders | Maydena Bike Park"
+    else:
+        page_title = f"{name} Riders | {SITE_NAME}"
     competition_logos = load_competition_logos()
     logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else cid
     season_logo = competition_logos.get(logo_key)
@@ -1639,11 +1646,11 @@ def build_competition_riders(riders, competition):
     if featured_event:
         featured_event_html = f'''<div class="competition-season-event"><span>{esc(featured_event["label"])}</span><strong>{esc(featured_event["location"])}</strong><time datetime="{esc_attr(featured_event["date"])}">{esc(featured_event["date_label"])}</time></div>'''
     html = head(
-        f"{name} Riders | {SITE_NAME}", description, "../../",
+        page_title, description, "../../",
         body_class="competition-riders-page", canonical_path=path,
         schemas=[{
             "@context": "https://schema.org", "@type": "CollectionPage",
-            "name": f"{name} riders", "description": description,
+            "name": f"{display_name} riders", "description": description,
             "url": absolute_url(path), "dateModified": SITE_UPDATED,
             "mainEntity": {"@type": "ItemList", "numberOfItems": len(participants),
                            "itemListElement": [
@@ -1656,7 +1663,7 @@ def build_competition_riders(riders, competition):
     )
     html += header_html("../../", active="competitions")
     html += f'''<main id="main-content">
-<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1><p>{len(participants)} athlete{'s' if len(participants) != 1 else ''} connected to this season.</p></div>{featured_event_html}</div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)} riders</h1><p>{len(participants)} athlete{'s' if len(participants) != 1 else ''} connected to this season.</p></div>{featured_event_html}</div></section>
 {competition_view_selector(competition, "athletes", "../")}
 <section class="section" id="grid"><div class="wrap">
 <div class="filters" aria-label="Filter season riders"><button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(participants)})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({len(men)})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Women Elite">Women ({len(women)})</button><label class="search-label"><span class="visually-hidden">Search riders</span><input class="search-input" type="search" placeholder="Search a rider, team, country..." data-search></label></div>
@@ -1853,6 +1860,10 @@ def competition_featured_event(competition):
         "location": event.get("location") or event.get("name") or "",
     }
 
+def competition_display_name(competition):
+    return "Beyond Gravity" if competition["id"] == "beyondgravity" else competition["name"]
+
+
 def build_competitions_hub(riders):
     cards = []
     item_list = []
@@ -1867,6 +1878,7 @@ def build_competitions_hub(riders):
     )
     for position, competition in enumerate(ordered_competitions, 1):
         stats = competition_stats(riders, competition)
+        display_name = competition_display_name(competition)
         detail_path = f"/competitions/{competition['id']}.html"
         card_description = ""
         logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else competition["id"]
@@ -1893,10 +1905,10 @@ def build_competitions_hub(riders):
           <div class="competition-card-top"><span class="competition-status competition-status-{status_class}">{esc(status_label)}</span><span>{competition['season']}</span></div>
           {logo_html}
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
-          <h2>{esc(competition['name'])}</h2>
+          <h2>{esc(display_name)}</h2>
           {description_html}
           {f'<div class="competition-card-stats">{stats_html}</div>' if stats_html else ''}
-          <a class="btn btn-solid" href="competitions/{competition['id']}.html">Open competition</a>
+          <a class="btn btn-solid" href="competitions/{competition['id']}.html">{esc('Explore ' + display_name) if competition['id'] in {'beyondgravity', 'project-17'} else 'Open competition'}</a>
         </article>''')
         item_list.append({"@type": "ListItem", "position": position,
                           "name": competition["name"], "url": absolute_url(detail_path)})
@@ -2028,8 +2040,10 @@ def build_competition_detail(riders, competition):
     stats = competition_stats(riders, competition)
     events = stats["events"]
     name = competition["name"]
+    display_name = competition_display_name(competition)
     path = f"/competitions/{competition['id']}.html"
     is_red_bull = is_red_bull_cerro_abajo(competition)
+    seo_context = ""
     if is_red_bull:
         page_title = f"Red Bull Cerro Abajo 2026 Results & Rankings | {SITE_NAME}"
         description = ("Red Bull Cerro Abajo 2026 results, rider rankings and race pages for "
@@ -2038,6 +2052,16 @@ def build_competition_detail(riders, competition):
         page_title = "UCI Downhill World Cup 2026 | Events & Standings"
         description = (f"UCI downhill World Cup 2026: explore {len(events)} recorded races, "
                        "season rankings and rider results by event.")
+    elif competition["id"] == "project-17":
+        page_title = f"Project 17 {competition['season']} at Coast Gravity Park | {SITE_NAME}"
+        description = (f"Project 17 {competition['season']} at Coast Gravity Park, British Columbia: "
+                       "explore the women's rider roster, event schedule and recorded rankings.")
+        seo_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>About Project 17</strong><div><p>Project 17 is a women's mountain bike progression event at Coast Gravity Park on British Columbia's Sunshine Coast. RidersFanatics connects the {competition['season']} event with participating rider profiles and any results recorded in its database.</p><p><a href="project-17/riders.html">Explore Project 17 riders →</a></p></div></div></div></section>''')
+    elif competition["id"] == "beyondgravity":
+        page_title = f"Beyond Gravity {competition['season']} at Maydena Bike Park | {SITE_NAME}"
+        description = (f"Beyond Gravity {competition['season']} at Maydena Bike Park, Tasmania: "
+                       "explore the event calendar, participating riders and rankings when available.")
+        seo_context = ('''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>About Beyond Gravity</strong><div><p>Beyond Gravity is a mountain bike event at Maydena Bike Park in Tasmania. Follow the event calendar and connected rider profiles here; results and rankings appear when they are recorded.</p><p><a href="beyondgravity/riders.html">Explore Beyond Gravity riders →</a> · <a href="https://www.maydenabikepark.com/event-calendar/" rel="nofollow noopener" target="_blank">Maydena Bike Park event calendar ↗</a></p></div></div></div></section>''')
     else:
         page_title = f"{name} | Riders & Events"
         description = f"{name} season overview: completed events, current leaders, rider profiles and links to overall standings and professional downhill equipment."
@@ -2045,13 +2069,13 @@ def build_competition_detail(riders, competition):
         page_title, description, "../",
         body_class="competition-detail-page", canonical_path=path,
         schemas=[
-            {"@context": "https://schema.org", "@type": "CollectionPage", "name": name,
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": display_name,
              "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
              "mainEntity": {"@type": "ItemList", "numberOfItems": len(events),
                             "itemListElement": [{"@type": "ListItem", "position": i,
                                                  "name": event}
                                                 for i, event in enumerate(events, 1)]}},
-            breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"), (name, path)]),
+            breadcrumb_schema([("Home", "/"), ("Competitions", "/competitions.html"), (display_name, path)]),
         ],
     )
     is_uci_dh = competition["id"] == "uci-mtb-world-cup-dh-2026"
@@ -2101,10 +2125,11 @@ def build_competition_detail(riders, competition):
     season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
     html += f'''<main>
-<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(name)}</h1>{hero_intro}</div>{featured_event_html}</div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{season_meta}{hero_intro}</div>{featured_event_html}</div></section>
 {competition_view_selector(competition, "standings")}
 {season_visual}
 {season_context}
+{seo_context}
 {season_ranking_selector(riders, competition)}
 </main>'''
     html += footer_html("../")

@@ -217,6 +217,18 @@ def competition_id(name: str) -> str:
     return slugify(name)
 
 
+def competition_year(name: str, event_records: list[dict]) -> int:
+    """Use the event year when a Notion season name does not include one."""
+    year_match = re.search(r"\b(20\d{2})\b", name)
+    if year_match:
+        return int(year_match.group(1))
+    event_years = sorted({
+        int(event["date"][:4]) for event in event_records
+        if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", (event.get("date") or "")[:10])
+    })
+    return event_years[0] if event_years else 2026
+
+
 def export(client: Notion, baseline_path: Path):
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
     baseline_by_slug = {item.get("slug"): item for item in baseline if item.get("slug")}
@@ -258,14 +270,13 @@ def export(client: Notion, baseline_path: Path):
     )
     for identifier, season in ordered_seasons:
         event_records = [events[event_id] for event_id in season["event_ids"] if event_id in events]
-        year_match = re.search(r"\b(20\d{2})\b", season["name"])
         competition_catalog["series"].append({
             "id": competition_id(season["name"]),
             "name": season["name"],
             "short_name": re.sub(r"\s+20\d{2}\s*$", "", season["name"]).strip(),
             "sport": "Mountain bike",
             "discipline": "Downhill",
-            "season": int(year_match.group(1)) if year_match else 2026,
+            "season": competition_year(season["name"], event_records),
             "status": "published",
             "notion_page_id": identifier,
             "events": sorted(event_records, key=lambda event: (event["date"], event["name"])),

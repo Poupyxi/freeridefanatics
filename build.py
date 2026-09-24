@@ -27,6 +27,7 @@ import subprocess
 import sys
 import time
 import unicodedata
+from urllib.parse import quote
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_SOURCE = os.environ.get("RF_DATA_SOURCE", "google").strip().lower()
@@ -48,6 +49,10 @@ EQUIP_IMG_DIR = os.path.join(ROOT, "assets", "img", "equipment")
 BRAND_IMG_DIR = os.path.join(ROOT, "assets", "img", "brands")
 COMPETITION_IMG_DIR = os.path.join(ROOT, "assets", "img", "competitions")
 REVEAL_IMG_DIR = os.path.join(EQUIP_IMG_DIR, "reveal")
+CONTRIBUTION_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSd-knDSwFdeEsrlA8VP9EwVw4HVhla7TMgQzWm55J6RGhb7fg/viewform"
+CONTRIBUTION_RIDER_ENTRY = "1833999901"  # Verified against the published form.
+with open(os.path.join(ROOT, "data", "contribution-form-riders.json"), encoding="utf-8") as form_riders_file:
+    CONTRIBUTION_FORM_RIDERS = json.load(form_riders_file)
 
 SITE_NAME = "RidersFanatics"
 BUILD_ENV = os.environ.get("RF_BUILD_ENV", "production").strip().lower()
@@ -404,6 +409,41 @@ def esc(s):
 def esc_attr(s):
     """Escape a value placed inside a double-quoted HTML attribute."""
     return esc(s).replace('"', "&quot;").replace("'", "&#39;")
+
+def contribution_form_rider(r):
+    """Return only a choice verified in the published Google Form."""
+    names = [
+        f"{r.get('last_name') or ''} {r.get('first_name') or ''}".strip(),
+        f"{r.get('first_name') or ''} {r.get('last_name') or ''}".strip(),
+        (r.get("display_name") or "").strip(),
+    ]
+    def normalized(value):
+        return " ".join("".join(char for char in unicodedata.normalize("NFKD", value).casefold() if not unicodedata.combining(char)).split())
+    for name in names:
+        matches = [choice for choice in CONTRIBUTION_FORM_RIDERS if normalized(choice) == normalized(name)]
+        if len(matches) == 1:
+            return matches[0]
+    return ""
+
+def rider_feedback_html(r):
+    if not IS_PREPROD:
+        return ""
+    selected_rider = contribution_form_rider(r)
+    form_url = CONTRIBUTION_FORM_URL + "?embedded=true" + (f"&amp;entry.{CONTRIBUTION_RIDER_ENTRY}={quote(selected_rider)}" if selected_rider else "")
+    return f'''<div class="rider-feedback" data-rider-feedback data-delay="3000">
+  <button class="rider-feedback-trigger" type="button" aria-label="Suggest an update for {esc_attr(r['display_name'])}" aria-haspopup="dialog" aria-controls="rider-feedback-dialog" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="rider-feedback-badge" aria-hidden="true"></span>
+  </button>
+  <div class="rider-feedback-backdrop" hidden></div>
+  <section class="rider-feedback-dialog" id="rider-feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="rider-feedback-title" hidden>
+    <div class="rider-feedback-header"><div><p>Help improve this profile</p><h2 id="rider-feedback-title">Suggest an update</h2></div><button class="rider-feedback-close" type="button" aria-label="Close form">&times;</button></div>
+    <p class="rider-feedback-note">Your suggestion will be reviewed before any change appears on the site.</p>
+    <iframe title="RidersFanatics contribution form" data-form-url="{form_url}" referrerpolicy="no-referrer" loading="lazy"></iframe>
+    <a class="rider-feedback-external" href="{form_url}" target="_blank" rel="noopener noreferrer">Open the form in a new tab ↗</a>
+  </section>
+</div>
+<script src="../assets/js/rider-feedback.js?v={BUILD_VERSION}" defer></script>
+'''
 
 # ---------------------------------------------------------------- shared partials
 
@@ -3261,6 +3301,7 @@ def build_rider_page(r, riders):
   </div>
 </main>
 """
+    html += rider_feedback_html(r)
     html += footer_html(prefix)
     return html
 

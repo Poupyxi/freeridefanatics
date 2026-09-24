@@ -54,6 +54,9 @@ jobs:
           grep -q 'uci-events-banner' competitions/uci-mtb-world-cup-dh-2026.html
           grep -q 'uci-iconic-tour.js?v=4' competitions/uci-mtb-world-cup-dh-2026.html
           ! grep -qi 'Recorded events' competitions/uci-mtb-world-cup-dh-2026.html
+          grep -q 'data-rider-feedback' riders/finn-iles.html
+          grep -q 'entry.1833999901=ILES%20Finn' riders/finn-iles.html
+          test -f assets/js/rider-feedback.js
 
       - name: Prepare isolated public files
         env:
@@ -73,6 +76,8 @@ jobs:
           test -f "$RUNNER_TEMP/public/assets/img/equipment/reveal/frame-forbidden-supernought-draw.svg"
           grep -q 'data-frame-reveal' "$RUNNER_TEMP/public/riders/bragg-cami.html"
           grep -q 'frame-forbidden-supernought-draw.svg' "$RUNNER_TEMP/public/riders/bragg-cami.html"
+          grep -q 'data-rider-feedback' "$RUNNER_TEMP/public/riders/bragg-cami.html"
+          grep -q 'frame-src https://docs.google.com' "$RUNNER_TEMP/public/.htaccess"
           grep -q 'competition-season-meta' "$RUNNER_TEMP/public/competitions/project-17.html"
           grep -q 'Instagram <strong>@' "$RUNNER_TEMP/public/competitions/project-17.html"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"

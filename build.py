@@ -1746,7 +1746,7 @@ def competition_view_selector(competition, active, prefix=""):
     cid = competition["id"]
     athletes_href = f"{prefix}{cid}/riders.html"
     standings_href = f"{prefix}{cid}.html#season-ranking"
-    return f'''<nav class="competition-view-switch" aria-label="Season view"><div class="wrap">
+    return f'''<nav class="competition-view-switch" aria-label="Competition views"><div class="wrap">
       <a href="{athletes_href}"{' aria-current="page"' if active == 'athletes' else ''}>Athletes</a>
       <a href="{standings_href}"{' aria-current="page"' if active == 'standings' else ''}>Standings</a>
     </div></nav>'''
@@ -2025,6 +2025,8 @@ def build_competitions_hub(riders):
         )
         card_class = "competition-card has-logo" if logo else "competition-card"
         status_label, status_class = competition_schedule_status(competition)
+        if competition["id"] == "redbull-2026" and status_label == "Season in progress":
+            status_label = "Events in progress"
         description_html = f'<p>{esc(card_description)}</p>' if card_description else ""
         card_stats = [
             (len(stats["events"]), "event", "events"),
@@ -2171,6 +2173,93 @@ def season_ranking_selector(riders, competition):
     rider_panels = "".join(rider_panel(category, label) for category, label in visible_categories)
     return f'''<section class="section clean-standings-section season-ranking-section" id="season-ranking"><div class="wrap"><div class="clean-standings-heading"><div><h2>Season ranking.</h2></div></div><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Season ranking category" data-standings-filters data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{rider_panels}{team_panel}</div></section>'''
 
+def redbull_event_ranking_selector(riders, competition):
+    """Rank each independent Red Bull event without combining its points."""
+    competition_name = competition["name"]
+    events = competition_page_events(riders, competition)
+    panels = []
+    available_groups = set()
+
+    def event_history(rider, event_name):
+        return [result for result in rider.get("competition_history") or []
+                if result.get("category") == competition_name and result.get("event") == event_name]
+
+    def event_points(rider, event_name):
+        return sum((result.get("points") or 0) for result in event_history(rider, event_name))
+
+    def event_rank_key(rider, event_name):
+        history = event_history(rider, event_name)
+        places = sorted(result["place"] for result in history if result.get("place"))
+        last = next((result.get("points") or 0 for result in reversed(history)
+                     if result.get("points")), 0)
+        return (-event_points(rider, event_name), places, -last, rider.get("display_name") or "")
+
+    def rider_panel(event_name, event_key, category, label, category_riders):
+        rows = []
+        for rank, rider in enumerate(category_riders, 1):
+            team = rider.get("team") or "Privateer"
+            nation = rider.get("country_code") or rider.get("country") or "—"
+            points = event_points(rider, event_name)
+            search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
+            rows.append(f'''<a class="clean-standing-row" href="../riders/{rider['slug']}.html" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span><b>{points}<small>pts</small></b></a>''')
+        return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{''.join(rows)}</div><p class="standings-empty" hidden>No {label.lower()} ranking is recorded for {esc(competition_event_label(event_name))} yet.</p></section>'''
+
+    for event_name in events:
+        event_key = competition_round_slug(event_name)
+        event_riders = [rider for rider in riders if event_history(rider, event_name)]
+        categories = {
+            category: sorted(
+                [rider for rider in event_riders if rider.get("gender_category") == category],
+                key=lambda rider: event_rank_key(rider, event_name),
+            )
+            for category in ("Men Elite", "Women Elite")
+        }
+        visible_categories = [
+            (category, label) for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
+            if categories[category]
+        ]
+        if not visible_categories:
+            visible_categories = [("Men Elite", "Men")]
+        for category, label in visible_categories:
+            available_groups.add(category)
+            panels.append(rider_panel(event_name, event_key, category, label, categories[category]))
+
+        team_riders_with_data = [
+            rider for rider in event_riders
+            if (rider.get("team") or "").strip().lower() not in {"", "privateer"}
+        ]
+        show_team_ranking = bool(event_riders) and len(team_riders_with_data) * 2 >= len(event_riders)
+        if show_team_ranking:
+            available_groups.add("Teams")
+            team_points, team_riders = {}, {}
+            for rider in team_riders_with_data:
+                team = rider["team"].strip()
+                team_points[team] = team_points.get(team, 0) + event_points(rider, event_name)
+                team_riders.setdefault(team, []).append(rider["display_name"])
+            team_rows = []
+            for rank, team in enumerate(sorted(team_points, key=lambda item: (-team_points[item], item.lower())), 1):
+                names = ", ".join(team_riders[team])
+                search = esc_attr(f"{team} {names}".lower())
+                team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
+            panels.append(f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is recorded for {esc(competition_event_label(event_name))} yet.</p></section>''')
+
+    event_buttons = "".join(
+        f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
+        f'data-standings-comp="{esc_attr(competition_round_slug(event_name))}" '
+        f'aria-selected="{"true" if index == 0 else "false"}">'
+        f'{esc(re.sub(r"\s+20\d{2}$", "", competition_event_label(event_name)).strip())}</button>'
+        for index, event_name in enumerate(events)
+    )
+    group_order = (("Men Elite", "Men"), ("Women Elite", "Women"), ("Teams", "Teams"))
+    group_buttons = "".join(
+        f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
+        f'data-standings-group="{group}" aria-selected="{"true" if index == 0 else "false"}">{label}</button>'
+        for index, (group, label) in enumerate(
+            [(group, label) for group, label in group_order if group in available_groups]
+        )
+    )
+    return f'''<section class="section clean-standings-section season-ranking-section" id="season-ranking"><div class="wrap"><div class="clean-standings-heading"><div><h2>Event ranking.</h2><p>Each event is ranked independently. Points are never combined across Red Bull events.</p></div></div><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Event</span><div class="filters" role="tablist" aria-label="Red Bull event" data-standings-comp-filters>{event_buttons}</div></div><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters data-filter-count="{len(available_groups)}">{group_buttons}</div></div></div>{''.join(panels)}</div></section>'''
+
 def build_competition_detail(riders, competition):
     stats = competition_stats(riders, competition)
     events = stats["events"]
@@ -2265,7 +2354,8 @@ def build_competition_detail(riders, competition):
             visible_event_name = re.sub(r"\s+20\d{2}$", "", competition_event_label(event_name)).strip()
             event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main">{event_logo_html}<div class="season-race-copy"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(visible_event_name)}</h2>{event_summary}</div></div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)
-        season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Event calendar · {competition['season']}</div><h2>{race_count} event{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
+        data_label = "Notion events" if competition["id"] == "redbull-2026" else "Notion season"
+        season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Event calendar · {competition['season']}</div><h2>{race_count} event{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">{data_label}</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "
                   "Each recorded result links directly to the rider profile.</p>"
                   if is_red_bull else "")
@@ -2286,13 +2376,16 @@ def build_competition_detail(riders, competition):
     season_meta = f'<div class="competition-season-meta">{"".join(season_meta_items)}</div>'
     season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
+    ranking_section = (redbull_event_ranking_selector(riders, competition)
+                       if competition["id"] == "redbull-2026"
+                       else season_ranking_selector(riders, competition))
     html += f'''<main>
 <section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{season_meta}{hero_intro}</div>{featured_event_html}</div></section>
 {competition_view_selector(competition, "standings")}
 {season_visual}
 {season_context}
 {seo_context}
-{season_ranking_selector(riders, competition)}
+{ranking_section}
 </main>'''
     html += footer_html("../")
     if is_uci_dh:

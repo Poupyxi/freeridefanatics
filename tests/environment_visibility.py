@@ -8,6 +8,7 @@ environment = os.environ.get("RF_BUILD_ENV", "production")
 home = (root / "index.html").read_text(encoding="utf-8")
 robots = (root / "robots.txt").read_text(encoding="utf-8")
 ads = (root / "ads.txt").read_text(encoding="utf-8")
+finn = (root / "riders" / "finn-iles.html").read_text(encoding="utf-8")
 red_bull = root / "competitions" / "red-bull"
 assert (root / "advertise.html").is_file()
 assert (root / "assets" / "js" / "promo-pool.js").is_file()
@@ -19,6 +20,9 @@ assert "Top 1 Women · Last race" in home
 assert "Common equipment" in home
 assert "Top 1 Men · Last race" in home
 assert 'class="direct-ad-shell"' in home
+assert 'data-rider-feedback' in finn
+assert 'entry.1833999901=ILES%20Finn' in finn
+assert (root / "assets" / "js" / "rider-feedback.js").is_file()
 
 if environment == "preprod":
     assert red_bull.joinpath("index.html").is_file()

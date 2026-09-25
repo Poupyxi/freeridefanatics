@@ -1508,10 +1508,16 @@ def is_red_bull_cerro_abajo(competition):
     return competition.get("id") == "red-bull-cerro-abajo-2026"
 
 def competition_logo_key(competition):
-    # The existing Drive asset also represents the new RedBull parent season.
-    if competition["id"] in {"red-bull-cerro-abajo-2026", "redbull-2026"}:
+    if competition["id"] == "red-bull-cerro-abajo-2026":
         return "red-bull-cerro-abajo-2026"
     return competition["id"]
+
+def redbull_event_logo_key(event):
+    return {
+        "ceroabajo-2026": "red-bull-cerro-abajo-2026",
+        "rampage-2026": "redbull-rampage-2026",
+        "hardline-2026": "redbull-hardline-2026",
+    }.get(competition_round_slug(event))
 
 def competition_event_label(event):
     label = " ".join(event.split())
@@ -1713,7 +1719,11 @@ def build_competition_round(riders, competition, event, round_number, events):
                            f'<div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters '
                            f'data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{result_tables}{team_table}'
                            f'</div></section>')
-    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Event {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_event)}</h1>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
+    event_logo = (load_competition_logos().get(redbull_event_logo_key(event))
+                  if cid == "redbull-2026" else None)
+    event_logo_html = (f'<div class="redbull-event-logo"><img src="../../../{event_logo["src"]}" '
+                       f'alt="{esc_attr(event_logo["name"])}"></div>' if event_logo else "")
+    html += f'''<main><section class="round-hero"><div class="wrap">{event_logo_html}<div class="label">Event {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_event)}</h1>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
 {results_section}
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''
@@ -1900,6 +1910,9 @@ def build_competition_standings(riders, competition):
 def load_competition_logos():
     with open(COMPETITION_LOGOS_PATH, encoding="utf-8") as logo_source:
         logo_data = json.load(logo_source)
+    redbull_logos_path = os.path.join(ROOT, "data", "redbull-logos.json")
+    with open(redbull_logos_path, encoding="utf-8") as logo_source:
+        logo_data["logos"].extend(json.load(logo_source)["logos"])
     os.makedirs(COMPETITION_IMG_DIR, exist_ok=True)
     logo_assets = {}
     for logo in logo_data.get("logos", []):
@@ -1910,6 +1923,7 @@ def load_competition_logos():
             "image/jpeg": "jpg",
             "image/png": "png",
             "image/webp": "webp",
+            "image/avif": "avif",
         }.get(logo.get("mime"), "webp")
         logo_bytes = base64.b64decode(logo["data"], validate=True)
         logo_path = os.path.join(COMPETITION_IMG_DIR, f"{logo_key}.{logo_extension}")
@@ -2243,7 +2257,11 @@ def build_competition_detail(riders, competition):
                       if has_results or competition["id"] == "redbull-2026"
                       else '<span class="season-race-pending">Awaiting results</span>')
             event_summary = f'<p>{esc(official_event["summary"])}</p>' if official_event else ""
-            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(competition_event_label(event_name))}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
+            event_logo_key = redbull_event_logo_key(event_name) if competition["id"] == "redbull-2026" else None
+            event_logo = competition_logos.get(event_logo_key) if event_logo_key else None
+            event_logo_html = (f'<img class="season-race-logo" src="../{event_logo["src"]}" '
+                               f'alt="{esc_attr(event_logo["name"])}" loading="lazy">' if event_logo else "")
+            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main">{event_logo_html}<time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(competition_event_label(event_name))}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)
         season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Race calendar · {competition['season']}</div><h2>{race_count} race{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "

@@ -2220,7 +2220,8 @@ def build_competition_detail(riders, competition):
             event_logo = competition_logos.get(event_logo_key) if event_logo_key else None
             event_logo_html = (f'<img class="season-race-logo" src="../{event_logo["src"]}" '
                                f'alt="{esc_attr(event_logo["name"])}" loading="lazy">' if event_logo else "")
-            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main">{event_logo_html}<time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(competition_event_label(event_name))}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
+            visible_event_name = re.sub(r"\s+20\d{2}$", "", competition_event_label(event_name)).strip()
+            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main">{event_logo_html}<div class="season-race-copy"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(visible_event_name)}</h2>{event_summary}</div></div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)
         season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Event calendar · {competition['season']}</div><h2>{race_count} event{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "

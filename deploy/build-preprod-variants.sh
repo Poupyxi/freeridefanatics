@@ -32,6 +32,10 @@ rsync -a --exclude='.git' "$SOURCE_DIR/" "$WORK_DIR/notion-build/"
   python3 build.py
 )
 
+test -f "$WORK_DIR/notion-build/competitions/redbull-2026.html"
+test -f "$WORK_DIR/notion-build/competitions/redbull-2026/rounds/ceroabajo-2026.html"
+test -f "$WORK_DIR/notion-build/competitions/redbull-2026/rounds/rampage-2026.html"
+test -f "$WORK_DIR/notion-build/competitions/redbull-2026/rounds/hardline-2026.html"
 test -f "$WORK_DIR/notion-build/competitions/project-17/riders.html"
 grep -q 'Project 17' "$WORK_DIR/notion-build/competitions.html"
 "$WORK_DIR/notion-build/deploy/publish-static.sh" "$WORK_DIR/notion-build" "$WORK_DIR/notion-public" preprod

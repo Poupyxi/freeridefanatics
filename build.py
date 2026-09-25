@@ -1723,7 +1723,8 @@ def build_competition_round(riders, competition, event, round_number, events):
                   if cid == "redbull-2026" else None)
     event_logo_html = (f'<div class="redbull-event-logo"><img src="../../../{event_logo["src"]}" '
                        f'alt="{esc_attr(event_logo["name"])}"></div>' if event_logo else "")
-    html += f'''<main><section class="round-hero"><div class="wrap">{event_logo_html}<div class="label">Event {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_event)}</h1>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
+    visible_event_name = re.sub(r"\s+20\d{2}$", "", display_event).strip()
+    html += f'''<main><section class="round-hero"><div class="wrap"><div class="round-event-identity">{event_logo_html}<div class="round-event-copy"><div class="label">Event {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(visible_event_name)}</h1></div></div>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
 {results_section}
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''
@@ -1970,7 +1971,7 @@ def competition_schedule_status(competition):
 
 
 def competition_featured_event(competition):
-    """Return the next dated race, or the latest race once the season has ended."""
+    """Return the next dated event, or the latest event once the season has ended."""
     dated_events = sorted(
         (
             event.get("date", "")[:10],
@@ -1985,7 +1986,7 @@ def competition_featured_event(competition):
     upcoming = [entry for entry in dated_events if entry[0] >= today]
     date, event = upcoming[0] if upcoming else dated_events[-1]
     return {
-        "label": "Next race" if upcoming else "Last race",
+        "label": "Next event" if upcoming else "Last event",
         "date": date,
         "date_label": time.strftime("%d %b %Y", time.strptime(date, "%Y-%m-%d")).lstrip("0"),
         "location": event.get("location") or event.get("name") or "",
@@ -2026,7 +2027,7 @@ def build_competitions_hub(riders):
         status_label, status_class = competition_schedule_status(competition)
         description_html = f'<p>{esc(card_description)}</p>' if card_description else ""
         card_stats = [
-            (len(stats["events"]), "race", "races"),
+            (len(stats["events"]), "event", "events"),
             (len(stats["participants"]), "rider", "riders"),
             (len(stats["teams"]), "team", "teams"),
         ]
@@ -2263,7 +2264,7 @@ def build_competition_detail(riders, competition):
                                f'alt="{esc_attr(event_logo["name"])}" loading="lazy">' if event_logo else "")
             event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main">{event_logo_html}<time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(competition_event_label(event_name))}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)
-        season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Race calendar · {competition['season']}</div><h2>{race_count} race{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
+        season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Event calendar · {competition['season']}</div><h2>{race_count} event{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "
                   "Each recorded result links directly to the rider profile.</p>"
                   if is_red_bull else "")

@@ -181,7 +181,8 @@ jobs:
           python3 tests/environment_visibility.py
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html
-          test -f competitions/red-bull-cerro-abajo-2026.html
+          test -f competitions/redbull-2026.html
+          test -f competitions/redbull-2026/rounds/ceroabajo-2026.html
 
       - name: Prepare public site files
         if: steps.production-change.outputs.changed == 'true'

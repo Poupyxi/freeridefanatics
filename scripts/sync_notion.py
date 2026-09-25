@@ -211,21 +211,28 @@ def display_birth(birth: str | None) -> str | None:
 
 
 def competition_id(name: str) -> str:
-    """Keep the established UCI URL stable while allowing new Notion seasons."""
-    if slugify(name) == "uci-world-series-2026":
-        return "uci-mtb-world-cup-dh-2026"
-    return slugify(name)
+    """Keep established season URLs stable when Notion titles gain a year."""
+    slug = slugify(name)
+    return {
+        "uci-world-series-2026": "uci-mtb-world-cup-dh-2026",
+        "project-17-2026": "project-17",
+        "beyondgravity-2026": "beyondgravity",
+    }.get(slug, slug)
 
 
 def competition_year(name: str, event_records: list[dict]) -> int:
     """Use the event year when a Notion season name does not include one."""
-    year_match = re.search(r"\b(20\d{2})\b", name)
-    if year_match:
-        return int(year_match.group(1))
     event_years = sorted({
         int(event["date"][:4]) for event in event_records
         if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", (event.get("date") or "")[:10])
     })
+    # BeyondGravity's dated race is in 2027 even though its Notion title says
+    # 2026. Keep the existing public season label aligned with the event date.
+    if slugify(name) == "beyondgravity-2026" and len(event_years) == 1:
+        return event_years[0]
+    year_match = re.search(r"\b(20\d{2})\b", name)
+    if year_match:
+        return int(year_match.group(1))
     return event_years[0] if event_years else 2026
 
 

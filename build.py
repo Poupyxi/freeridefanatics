@@ -99,7 +99,7 @@ def visible_status(item):
 PRODUCTION_COMPETITION_IDS = {
     item.strip() for item in os.environ.get(
         "RF_PRODUCTION_COMPETITION_IDS",
-        "uci-mtb-world-cup-dh-2026,red-bull-cerro-abajo-2026,project-17,beyondgravity",
+        "uci-mtb-world-cup-dh-2026,redbull-2026,project-17,beyondgravity",
     ).split(",") if item.strip()
 }
 COMPETITIONS = [
@@ -1397,6 +1397,14 @@ def competition_events(riders, competition_name):
                 ready.append(following)
     return order if len(order) == len(seen) else seen
 
+def competition_page_events(riders, competition):
+    """Show all scheduled RedBull events, including those without results yet."""
+    recorded = competition_events(riders, competition["name"])
+    if competition["id"] != "redbull-2026":
+        return recorded
+    scheduled = [event.get("name") for event in competition.get("events", []) if event.get("name")]
+    return list(dict.fromkeys(scheduled + recorded))
+
 def competition_stats(riders, competition):
     name = competition["name"]
     scored = []
@@ -1417,7 +1425,7 @@ def competition_stats(riders, competition):
         category_riders = [rider for rider, _ in scored if rider.get("gender_category") == category]
         leaders[category] = min(category_riders, key=lambda rider: competition_rank_key(rider, name)) if category_riders else None
     return {
-        "events": competition_events(riders, name),
+        "events": competition_page_events(riders, competition),
         "scored": scored,
         "participants": participants,
         "teams": {rider.get("team").strip() for rider in participants if (rider.get("team") or "").strip()},
@@ -1451,6 +1459,16 @@ def competition_round_slug(event):
 
 def is_red_bull_cerro_abajo(competition):
     return competition.get("id") == "red-bull-cerro-abajo-2026"
+
+def competition_logo_key(competition):
+    # The existing Drive asset also represents the new RedBull parent season.
+    if competition["id"] in {"red-bull-cerro-abajo-2026", "redbull-2026"}:
+        return "red-bull-cerro-abajo-2026"
+    return competition["id"]
+
+def competition_event_label(event):
+    label = " ".join(event.split())
+    return re.sub(r"\bCero\s*Abajo\b", "Cerro Abajo", label, flags=re.IGNORECASE)
 
 RED_BULL_CERRO_ABAJO_EVENTS = {
     "valparaiso": {
@@ -1489,11 +1507,13 @@ def red_bull_event_info(event):
     return RED_BULL_CERRO_ABAJO_EVENTS.get(competition_round_slug(event))
 
 def build_competition_round(riders, competition, event, round_number, events):
-    """One crawlable result page per recorded round, generated from rider history."""
+    """One crawlable page per recorded round or scheduled RedBull event."""
     name = competition["name"]
     cid = competition["id"]
     slug = competition_round_slug(event)
     path = f"/competitions/{cid}/rounds/{slug}.html"
+    display_event = competition_event_label(event)
+    scheduled_event = next((item for item in competition.get("events", []) if item.get("name") == event), {})
     official_event = red_bull_event_info(event) if is_red_bull_cerro_abajo(competition) else None
 
     categories = {}
@@ -1577,10 +1597,10 @@ def build_competition_round(riders, competition, event, round_number, events):
     next_link = ""
     if round_number > 1:
         previous = events[round_number - 2]
-        previous_link = f'<a href="{competition_round_slug(previous)}.html"><span>Previous round</span><strong>{esc(previous)}</strong></a>'
+        previous_link = f'<a href="{competition_round_slug(previous)}.html"><span>Previous round</span><strong>{esc(competition_event_label(previous))}</strong></a>'
     if round_number < len(events):
         following = events[round_number]
-        next_link = f'<a href="{competition_round_slug(following)}.html"><span>Next round</span><strong>{esc(following)}</strong></a>'
+        next_link = f'<a href="{competition_round_slug(following)}.html"><span>Next round</span><strong>{esc(competition_event_label(following))}</strong></a>'
 
     item_list = [
         {"@type": "ListItem", "position": position, "name": rider["display_name"],
@@ -1590,17 +1610,21 @@ def build_competition_round(riders, competition, event, round_number, events):
     category_description = " and ".join(label for _, label in visible_categories) or "rider"
     team_description = ", teams" if show_team_ranking else ""
     has_points = any(result.get("points") is not None for _, result in all_entries)
-    if is_red_bull_cerro_abajo(competition):
+    if cid == "redbull-2026" and not all_entries:
+        page_title = f"Red Bull {display_event} | 2026 Event & Riders | {SITE_NAME}"
+        description = (f"Red Bull {display_event} is scheduled for {scheduled_event.get('date') or '2026'}. "
+                       "Explore the event now; rider results will appear when verified.")
+    elif is_red_bull_cerro_abajo(competition):
         page_title = f"{event} Red Bull Cerro Abajo 2026 Results | {SITE_NAME}"
         recorded_data = "recorded placings and points" if has_points else "the recorded finishing order"
         description = (f"{event} results from Red Bull Cerro Abajo 2026: {category_description} results with "
                        f"{recorded_data}{team_description}, linked to rider profiles in RidersFanatics.")
     else:
-        page_title = f"{event} Downhill Results | {competition['season']} {SITE_NAME}"
+        page_title = f"{display_event} Downhill Results | {competition['season']} {SITE_NAME}"
         points_copy = ", points" if has_points else ""
         description = f"{event} downhill results from the {name}: {category_description} placings{points_copy}{team_description} and linked rider profiles."
     schemas = [
-        {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{event} {name} results",
+        {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{display_event} {name} {'results' if all_entries else 'event'}",
          "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
          "isPartOf": {"@type": "CollectionPage", "name": name,
                       "url": absolute_url(f"/competitions/{cid}.html")},
@@ -1630,8 +1654,20 @@ def build_competition_round(riders, competition, event, round_number, events):
     html += header_html("../../../", active="competitions")
     official_source = (f'''<p class="round-official-source"><a href="{esc_attr(official_event['official_url'])}" rel="nofollow noopener" target="_blank">Official event information <span aria-hidden="true">↗</span></a></p>'''
                        if official_event else "")
-    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Round {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(event)}</h1>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
-<section class="section round-results-section"><div class="wrap"><div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span><div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{result_tables}{team_table}</div></section>
+    if not all_entries and cid == "redbull-2026":
+        event_date = scheduled_event.get("date") or ""
+        date_line = f'<p><time datetime="{esc_attr(event_date)}">{esc(event_date)}</time></p>' if event_date else ""
+        results_section = (f'<section class="section round-results-section"><div class="wrap">'
+                           f'<h2>Results to come</h2>{date_line}<p>No verified rider results are recorded for this event yet.</p>'
+                           f'</div></section>')
+    else:
+        results_section = (f'<section class="section round-results-section"><div class="wrap">'
+                           f'<div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span>'
+                           f'<div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters '
+                           f'data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{result_tables}{team_table}'
+                           f'</div></section>')
+    html += f'''<main><section class="round-hero"><div class="wrap"><div class="label">Event {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_event)}</h1>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
+{results_section}
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''
     html += footer_html("../../../")
@@ -1674,7 +1710,7 @@ def build_competition_riders(riders, competition):
     else:
         page_title = f"{name} Riders | {SITE_NAME}"
     competition_logos = load_competition_logos()
-    logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else cid
+    logo_key = competition_logo_key(competition)
     season_logo = competition_logos.get(logo_key)
     season_logo_html = (
         f'<div class="competition-season-logo"><img src="../../{season_logo["src"]}" '
@@ -1901,7 +1937,9 @@ def competition_featured_event(competition):
     }
 
 def competition_display_name(competition):
-    return "Beyond Gravity" if competition["id"] == "beyondgravity" else competition["name"]
+    return {"beyondgravity": "Beyond Gravity", "redbull-2026": "Red Bull"}.get(
+        competition["id"], competition["name"]
+    )
 
 
 def build_competitions_hub(riders):
@@ -1921,7 +1959,7 @@ def build_competitions_hub(riders):
         display_name = competition_display_name(competition)
         detail_path = f"/competitions/{competition['id']}.html"
         card_description = ""
-        logo_key = "red-bull-cerro-abajo-2026" if is_red_bull_cerro_abajo(competition) else competition["id"]
+        logo_key = competition_logo_key(competition)
         logo = competition_logos.get(logo_key)
         logo_html = (
             f'<div class="competition-card-logo"><img src="{logo["src"]}" alt="{esc_attr(logo["name"])}" '
@@ -2088,6 +2126,10 @@ def build_competition_detail(riders, competition):
         page_title = f"Red Bull Cerro Abajo 2026 Results & Rankings | {SITE_NAME}"
         description = ("Red Bull Cerro Abajo 2026 results, rider rankings and race pages for "
                        "Valparaiso, Genova and Stuttgart, independently tracked by RidersFanatics.")
+    elif competition["id"] == "redbull-2026":
+        page_title = f"Red Bull 2026 | Cerro Abajo, Rampage & Hardline | {SITE_NAME}"
+        description = ("Explore the Red Bull 2026 season: Cerro Abajo results and the upcoming "
+                       "Rampage and Hardline events, with connected rider profiles and standings.")
     elif competition["id"] == "uci-mtb-world-cup-dh-2026":
         page_title = "UCI Downhill World Cup 2026 | Events & Standings"
         description = (f"UCI downhill World Cup 2026: explore {len(events)} recorded races, "
@@ -2123,7 +2165,7 @@ def build_competition_detail(riders, competition):
         html = html.replace('</head>', '<link rel="stylesheet" href="../assets/css/uci-tour.css?v=4">\n</head>')
     html += header_html("../", active="competitions")
     competition_logos = load_competition_logos()
-    logo_key = "red-bull-cerro-abajo-2026" if is_red_bull else competition["id"]
+    logo_key = competition_logo_key(competition)
     season_logo = competition_logos.get(logo_key)
     season_logo_html = (
         f'<div class="competition-season-logo"><img src="../{season_logo["src"]}" '
@@ -2137,7 +2179,7 @@ def build_competition_detail(riders, competition):
     if is_uci_dh:
         season_visual = '<section class="uci-events-banner uci-tour-in-header" id="events" aria-label="2026 UCI Downhill World Cup events"><uci-iconic-tour></uci-iconic-tour></section>'
     else:
-        recorded_events = set(events)
+        recorded_events = set(competition_events(riders, name))
         event_rows = []
         for position, event in enumerate(competition.get("events", []), 1):
             event_name = event.get("name") or "Event"
@@ -2153,10 +2195,13 @@ def build_competition_detail(riders, competition):
                 date_label = f"{start.tm_mday}–{end.tm_mday} {time.strftime('%b %Y', end)}"
             has_results = event_name in recorded_events
             status = "Results available" if has_results else "No results recorded"
-            action = (f'<a class="season-race-link" href="{competition["id"]}/rounds/{competition_round_slug(event_name)}.html">View results <span aria-hidden="true">→</span></a>'
-                      if has_results else '<span class="season-race-pending">Awaiting results</span>')
+            event_href = f'{competition["id"]}/rounds/{competition_round_slug(event_name)}.html'
+            action = (f'<a class="season-race-link" href="{event_href}">'
+                      f'{"View results" if has_results else "View event"} <span aria-hidden="true">→</span></a>'
+                      if has_results or competition["id"] == "redbull-2026"
+                      else '<span class="season-race-pending">Awaiting results</span>')
             event_summary = f'<p>{esc(official_event["summary"])}</p>' if official_event else ""
-            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(event_name)}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
+            event_rows.append(f'''<article class="season-race-row"><span class="season-race-index">{position:02d}</span><div class="season-race-main"><time datetime="{esc_attr(event_date)}">{esc(date_label)}</time><h2>{esc(competition_event_label(event_name))}</h2>{event_summary}</div><span class="competition-status">{esc(status)}</span><div class="season-race-action">{action}</div></article>''')
         race_count = len(event_rows)
         season_visual = f'''<section class="section season-race-calendar" id="events"><div class="wrap"><div class="section-head"><div><div class="label">Race calendar · {competition['season']}</div><h2>{race_count} race{'s' if race_count != 1 else ''}.</h2></div><span class="see-all">Notion season</span></div><div class="season-race-list">{"".join(event_rows)}</div></div></section>'''
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "
@@ -3401,7 +3446,7 @@ def main():
         else:
             with open(standings_file, "w", encoding="utf-8") as f:
                 f.write(build_competition_standings(riders, competition))
-        events = competition_events(riders, competition["name"])
+        events = competition_page_events(riders, competition)
         rounds_dir = os.path.join(standings_dir, "rounds")
         os.makedirs(rounds_dir, exist_ok=True)
         for round_number, event in enumerate(events, 1):

@@ -43,7 +43,7 @@ if [[ -f "$NOTION_SNAPSHOT" ]]; then
     RF_SKIP_IMAGE_OPTIMIZER="${RF_SKIP_IMAGE_OPTIMIZER:-1}" \
     python3 build.py
   )
-  test -f "$WORK_DIR/notion-build/competitions/red-bull-cerro-abajo-2026.html"
+  test -f "$WORK_DIR/notion-build/competitions/redbull-2026.html"
   grep -q 'Red Bull Cerro Abajo 2026' "$WORK_DIR/notion-build/competitions.html"
   "$WORK_DIR/notion-build/deploy/publish-static.sh" "$WORK_DIR/notion-build" "$WORK_DIR/notion-public" preprod
   mkdir -p "$PUBLIC_DIR/notion"

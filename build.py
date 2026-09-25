@@ -429,7 +429,9 @@ def rider_feedback_html(r):
     if not IS_PREPROD:
         return ""
     selected_rider = contribution_form_rider(r)
-    form_url = CONTRIBUTION_FORM_URL + "?embedded=true" + (f"&amp;entry.{CONTRIBUTION_RIDER_ENTRY}={quote(selected_rider)}" if selected_rider else "")
+    rider_prefill = f"&amp;entry.{CONTRIBUTION_RIDER_ENTRY}={quote(selected_rider)}" if selected_rider else ""
+    form_url = CONTRIBUTION_FORM_URL + "?embedded=true" + rider_prefill
+    external_url = CONTRIBUTION_FORM_URL + "?usp=dialog" + rider_prefill
     return f'''<div class="rider-feedback" data-rider-feedback data-delay="3000">
   <button class="rider-feedback-trigger" type="button" aria-label="Suggest an update for {esc_attr(r['display_name'])}" aria-haspopup="dialog" aria-controls="rider-feedback-dialog" hidden>
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="rider-feedback-badge" aria-hidden="true"></span>
@@ -439,7 +441,7 @@ def rider_feedback_html(r):
     <div class="rider-feedback-header"><div><p>Help improve this profile</p><h2 id="rider-feedback-title">Suggest an update</h2></div><button class="rider-feedback-close" type="button" aria-label="Close form">&times;</button></div>
     <p class="rider-feedback-note">Your suggestion will be reviewed before any change appears on the site.</p>
     <iframe title="RidersFanatics contribution form" data-form-url="{form_url}" referrerpolicy="no-referrer" loading="lazy"></iframe>
-    <a class="rider-feedback-external" href="{form_url}" target="_blank" rel="noopener noreferrer">Open the form in a new tab ↗</a>
+    <a class="rider-feedback-external" href="{external_url}" target="_blank" rel="noopener noreferrer">Open the form in a new tab ↗</a>
   </section>
 </div>
 <script src="../assets/js/rider-feedback.js?v={BUILD_VERSION}" defer></script>

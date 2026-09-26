@@ -163,6 +163,15 @@ def value(page, name):
     return raw
 
 
+def first_value(page, *names):
+    """Return the first populated property across current and legacy names."""
+    for name in names:
+        result = value(page, name)
+        if result not in (None, "", []):
+            return result
+    return None
+
+
 def title_map(pages, title_property):
     return {page_id(item.get("id")): value(item, title_property) for item in pages}
 
@@ -294,12 +303,14 @@ def export(client: Notion, baseline_path: Path):
         event_ids = value(item, "🏆 Event ") or []
         event_id = next((identifier for identifier in event_ids if identifier in events), None)
         season_id = event_seasons.get(event_id)
-        phase = value(item, "Sélectionner")
+        # These fields were renamed in Notion in September 2026. Keep the
+        # legacy labels as fallbacks so a gradual schema migration stays safe.
+        phase = first_value(item, "Stage", "Sélectionner")
         if season_id and value(item, "Type") == "Downhill":
             races[page_id(item.get("id"))] = {
                 "event": events[event_id]["name"],
                 "date": events[event_id]["date"],
-                "gender": value(item, "Sélectionner 1"),
+                "gender": first_value(item, "Gender", "Sélectionner 1"),
                 "phase": phase,
                 "competition": seasons[season_id]["name"],
             }
@@ -370,6 +381,12 @@ def export(client: Notion, baseline_path: Path):
         if not result.pop("_has_points", False):
             result["points"] = None
         result_rows.setdefault(rider_id, []).append(result)
+
+    if pages["scoring"] and not result_rows:
+        raise RuntimeError(
+            f"Notion returned {len(pages['scoring'])} Scoring rows but none could be exported; "
+            "check the Race stage/gender property mappings before publishing"
+        )
 
     equipment = {}
     for item in pages["equipment"]:

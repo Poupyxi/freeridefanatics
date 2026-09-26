@@ -280,15 +280,22 @@ def sync_drive_rider_portraits(riders):
     """Match Drive portraits to riders by their stable Instagram handle."""
     if not os.path.isdir(DRIVE_RIDER_IMG_DIR):
         return 0
+
+    def handle_key(value):
+        # Instagram handles are frequently written with different cosmetic
+        # separators in Notion and Drive (`name.rider` vs `name_rider`).
+        # The letters and digits are the stable identity.
+        return re.sub(r"[^a-z0-9]", "", (value or "").casefold().lstrip("@"))
+
     sources = {}
     for filename in os.listdir(DRIVE_RIDER_IMG_DIR):
         stem, ext = os.path.splitext(filename)
         if ext.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue
-        sources[stem.casefold()] = os.path.join(DRIVE_RIDER_IMG_DIR, filename)
+        sources[handle_key(stem)] = os.path.join(DRIVE_RIDER_IMG_DIR, filename)
     matched = 0
     for rider in riders:
-        handle = (rider.get("instagram") or "").strip().lstrip("@").casefold()
+        handle = handle_key(rider.get("instagram"))
         source = sources.get(handle)
         if not source:
             continue

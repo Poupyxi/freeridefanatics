@@ -69,7 +69,7 @@ jobs:
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html
           test -f competitions/redbull-2026.html
-          test -f competitions/redbull-2026/rounds/ceroabajo-2026.html
+          test -f competitions/redbull-2026/rounds/cerroabajo-2026.html
           test -f competitions/redbull-2026/rounds/rampage-2026.html
           test -f competitions/redbull-2026/rounds/hardline-2026.html
           grep -q 'Red Bull</h2>' competitions.html

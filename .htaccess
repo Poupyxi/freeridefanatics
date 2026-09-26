@@ -10,8 +10,9 @@ RewriteRule ^index\.html$ https://ridersfanatics.com/ [R=301,L,NE]
 RewriteRule ^competitions/uci(?:/index\.html|/?)$ /competitions/uci-mtb-world-cup-dh-2026.html [R=301,L,NE,QSD]
 RewriteRule ^riders/facundo-descalzo\.html$ /riders/descalzo-facundo.html [R=301,L,NE]
 # Cerro Abajo is now an event within the Red Bull 2026 parent season.
-RewriteRule ^competitions/red-bull-cerro-abajo-2026\.html$ /competitions/redbull-2026/rounds/ceroabajo-2026.html [R=301,L,NE]
-RewriteRule ^competitions/red-bull-cerro-abajo-2026/.*$ /competitions/redbull-2026/rounds/ceroabajo-2026.html [R=301,L,NE]
+RewriteRule ^competitions/red-bull-cerro-abajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
+RewriteRule ^competitions/red-bull-cerro-abajo-2026/.*$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
+RewriteRule ^competitions/redbull-2026/rounds/ceroabajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
 # Retire the old crawlable rider filters while preserving the selected view
 # for visitors. Fragments never create separate URLs in Google's index.
 RewriteCond %{QUERY_STRING} (^|&)filter=Men(?:\+|%20)Elite(?:&|$) [NC]

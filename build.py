@@ -1468,6 +1468,7 @@ def competition_logo_key(competition):
 def redbull_event_logo_key(event):
     return {
         "ceroabajo-2026": "red-bull-cerro-abajo-2026",
+        "cerroabajo-2026": "red-bull-cerro-abajo-2026",
         "rampage-2026": "redbull-rampage-2026",
         "hardline-2026": "redbull-hardline-2026",
     }.get(competition_round_slug(event))

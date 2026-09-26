@@ -9,8 +9,9 @@ Require valid-user
 RewriteEngine On
 RewriteRule ^contact-submit\.php$ - [R=404,L]
 # Preserve the former Cerro Abajo URLs after promoting Red Bull to a season.
-RewriteRule ^competitions/red-bull-cerro-abajo-2026\.html$ /competitions/redbull-2026/rounds/ceroabajo-2026.html [R=301,L,NE]
-RewriteRule ^competitions/red-bull-cerro-abajo-2026/.*$ /competitions/redbull-2026/rounds/ceroabajo-2026.html [R=301,L,NE]
+RewriteRule ^competitions/red-bull-cerro-abajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
+RewriteRule ^competitions/red-bull-cerro-abajo-2026/.*$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
+RewriteRule ^competitions/redbull-2026/rounds/ceroabajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
 # Translation catalogs are the only JSON files intentionally served publicly.
 RewriteCond %{REQUEST_URI} !^/assets/i18n/(?:de|es|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn)\.json$ [NC]
 RewriteRule \.json$ - [F,L,NC]

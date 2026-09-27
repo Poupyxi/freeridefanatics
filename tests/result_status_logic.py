@@ -52,6 +52,14 @@ class ResultStatusTests(unittest.TestCase):
     def test_empty_roster_row_has_no_invented_status(self):
         self.assertIsNone(sync_notion.scoring_status(scoring_row()))
 
+    def test_all_qualifier_statuses_count_as_participation(self):
+        for status in ("Finisher", "DNF", "DNS", "DSQ"):
+            with self.subTest(status=status):
+                self.assertTrue(sync_notion.scoring_counts_as_participation("Qualifier", status))
+
+    def test_final_only_dns_is_not_a_participation(self):
+        self.assertFalse(sync_notion.scoring_counts_as_participation("Final", "DNS"))
+
     def test_dns_is_visible_but_not_a_participation_or_ranking(self):
         dns = {"status": "DNS", "result": "DNS", "place": None,
                "points": None, "participated": False}

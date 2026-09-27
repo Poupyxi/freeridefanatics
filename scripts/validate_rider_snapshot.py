@@ -33,5 +33,7 @@ for index, rider in enumerate(riders, 1):
         fail(f"{slug}: results must be an array")
     if not isinstance(rider.get("equipment") or [], list):
         fail(f"{slug}: equipment must be an array")
+    if "photo_url" in rider:
+        fail(f"{slug}: photos must come from Google Drive, not the data snapshot")
 
 print(f"Valid rider snapshot: {len(riders)} riders from {path}")

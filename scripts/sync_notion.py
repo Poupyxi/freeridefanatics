@@ -2,9 +2,9 @@
 """Export the read-only RidersFanatics Notion model to the site data contract.
 
 The exporter never writes to Notion. It queries the connected data sources,
-keeps recorded downhill results (including non-finish statuses), combines
-final and qualifying points for each event, and merges the result with the
-current Google snapshot so profile fields and photos remain stable.
+keeps recorded downhill results (including non-finish statuses), and combines
+final and qualifying points for each event. Notion is the only structured-data
+source; Google Drive portraits are matched later by ``build.py``.
 """
 from __future__ import annotations
 
@@ -300,14 +300,7 @@ def competition_year(name: str, event_records: list[dict]) -> int:
     return event_years[0] if event_years else 2026
 
 
-def export(client: Notion, baseline_path: Path):
-    baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
-    baseline_by_slug = {item.get("slug"): item for item in baseline if item.get("slug")}
-    baseline_by_handle = {
-        (item.get("instagram") or "").lower().lstrip("@"): item
-        for item in baseline if item.get("instagram")
-    }
-
+def export(client: Notion):
     pages = {name: client.query(source_id) for name, source_id in DATA_SOURCES.items()}
     seasons = {}
     event_seasons = {}
@@ -512,36 +505,40 @@ def export(client: Notion, baseline_path: Path):
             continue
         name = value(item, "First Name") or ""
         handle = instagram_handle(value(item, "Instagram"))
-        base = baseline_by_handle.get((handle or "").lower().lstrip("@")) or baseline_by_slug.get(slugify(name)) or {}
-        rider = dict(base)
         birth = value(item, "Date of Birth")
-        team = next((teams.get(team_id) for team_id in (value(item, "Team") or []) if teams.get(team_id)), None)
-        country = next((countries.get(country_id) for country_id in (value(item, "counrty") or []) if countries.get(country_id)), None)
+        team_ids = first_value(item, "Team", "team") or []
+        team = next((teams.get(team_id) for team_id in team_ids if teams.get(team_id)), None)
+        # The live Notion relation is named ``country``. Keep aliases only for
+        # harmless schema renames; every value still comes from Notion.
+        country_ids = first_value(item, "country", "Country", "counrty") or []
+        country = next((countries.get(country_id) for country_id in country_ids if countries.get(country_id)), None)
         gender = value(item, "Gender")
-        display_name = name.strip() or base.get("display_name") or base.get("name")
+        display_name = name.strip()
+        if not display_name:
+            continue
         history = sorted(result_rows.get(identifier, []), key=lambda row: (row["_event_date"], row["event"]))
         for result in history:
             result.pop("_event_date", None)
-        rider.update({
+        rider = {
             "name": display_name,
             "first_name": display_name.split()[0] if display_name else "",
             "last_name": " ".join(display_name.split()[1:]) if display_name else "",
             "display_name": display_name,
-            "slug": base.get("slug") or slugify(display_name),
+            "slug": slugify(display_name),
             "gender_category": "Women Elite" if gender == "Women" else "Men Elite",
-            "discipline": "Professional Downhill (DH)",
-            "country": country or base.get("country"),
-            "hometown": value(item, "Hometown") or base.get("hometown"),
-            "date_of_birth": display_birth(birth) or base.get("date_of_birth"),
-            "age": age_from_birth(birth) if birth else base.get("age"),
-            "instagram": handle or base.get("instagram"),
-            "team": team or base.get("team"),
-            "bio": value(item, "Biographie et principaux résultats") or base.get("bio") or "",
+            "discipline": value(item, "Disciplines") or "",
+            "country": country,
+            "hometown": value(item, "Hometown"),
+            "date_of_birth": display_birth(birth),
+            "age": age_from_birth(birth) if birth else None,
+            "instagram": handle,
+            "team": team,
+            "bio": value(item, "Biographie et principaux résultats") or "",
             "competition_history": history,
             "competition_participation": sorted(participations_by_rider.get(identifier, set())),
-            "equipment": equipment_by_rider.get(identifier, base.get("equipment") or []),
+            "equipment": equipment_by_rider.get(identifier, []),
             "season": 2026,
-        })
+        }
         frame = next((part for part in rider["equipment"] if part.get("category") == "Frame"), None)
         if frame:
             rider["bike"] = {"brand": frame.get("brand") or "", "model": frame.get("model_detail") or ""}
@@ -602,7 +599,6 @@ def export(client: Notion, baseline_path: Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline", type=Path, default=ROOT / "data" / "riders.json")
     parser.add_argument("--output", type=Path, default=ROOT / "data" / "notion" / "riders.json")
     parser.add_argument("--competitions-output", type=Path, default=ROOT / "data" / "notion" / "competitions.json")
     parser.add_argument("--metadata", type=Path, default=ROOT / "data" / "notion" / "sync-metadata.json")
@@ -611,7 +607,7 @@ def main():
     if not token:
         raise SystemExit("NOTION_TOKEN is required")
 
-    riders, competitions, counts = export(Notion(token), args.baseline)
+    riders, competitions, counts = export(Notion(token))
     serialized = json.dumps(riders, ensure_ascii=False, indent=2) + "\n"
     digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -624,6 +620,8 @@ def main():
     )
     args.metadata.write_text(json.dumps({
         "source": "notion-read-only",
+        "profile_data_source": "notion-only",
+        "image_source": "google-drive-only",
         "notion_api_version": NOTION_VERSION,
         "season_data_source_id": DATA_SOURCES["seasons"],
         "seasons": len(competitions["series"]),

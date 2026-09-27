@@ -162,21 +162,42 @@ class UciIconicTour extends HTMLElement {
         </g></svg>
       <button aria-label="Révéler l’étape 9"></button>
     </section></div>`;
-    const resultPages = [
-      'uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may.html',
-      'uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may.html',
-      'uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june.html',
-      'uci-mtb-world-cup-dh-2026/rounds/switzerland-june.html',
-      null,
-      null,
-      'uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july.html',
-      null,
-      'uci-mtb-world-cup-dh-2026/rounds/andorra-july.html'
+    const chronologicalOrder = [
+      'Mona Yongpyong',
+      'Loudenvielle',
+      'Leogang',
+      'Lenzerheide',
+      'La Thuile',
+      'Pal Arinsal',
+      'Les Gets',
+      'Whistler',
+      'Lake Placid'
     ];
+    const tour = root.querySelector('.tour');
+    const stagesByName = new Map(
+      [...tour.querySelectorAll('.stage')].map(stage => [stage.querySelector('h2').textContent, stage])
+    );
+    chronologicalOrder.forEach((name, index) => {
+      const stage = stagesByName.get(name);
+      if(!stage) return;
+      stage.querySelector('.number').textContent = `Event ${String(index + 1).padStart(2, '0')}`;
+      tour.appendChild(stage);
+    });
+    const resultPages = {
+      'Mona Yongpyong': 'uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may.html',
+      'Loudenvielle': 'uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may.html',
+      'Leogang': 'uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june.html',
+      'Lenzerheide': 'uci-mtb-world-cup-dh-2026/rounds/switzerland-june.html',
+      'La Thuile': 'uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july.html',
+      'Pal Arinsal': 'uci-mtb-world-cup-dh-2026/rounds/andorra-july.html',
+      'Les Gets': 'uci-mtb-world-cup-dh-2026/rounds/les-gets.html',
+      'Whistler': 'uci-mtb-world-cup-dh-2026/rounds/whistler.html'
+    };
     root.querySelectorAll('.stage').forEach((stage, index) => {
       const svg = stage.querySelector('svg');
       const button = stage.querySelector('button');
-      const resultPage = resultPages[index];
+      const stageName = stage.querySelector('h2').textContent;
+      const resultPage = resultPages[stageName];
       svg.querySelectorAll('.ghost').forEach(path => {
         const active = path.cloneNode();
         active.classList.remove('ghost');

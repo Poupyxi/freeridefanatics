@@ -29,6 +29,7 @@ jobs:
           test -n "$NOTION_TOKEN" || { echo "NOTION_TOKEN is missing." >&2; exit 1; }
           python3 scripts/sync_notion.py
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 tests/notion_only_source.py
 
       - name: Pass the validated snapshot to the production build
         uses: actions/upload-artifact@v4
@@ -64,6 +65,7 @@ jobs:
           RF_COMPETITIONS_PATH: data/notion/competitions.json
         run: |
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 tests/notion_only_source.py
           python3 build.py
           python3 tests/environment_visibility.py
           ! grep -q 'preprod-source-switcher' index.html

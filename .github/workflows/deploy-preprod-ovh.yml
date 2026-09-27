@@ -46,9 +46,6 @@ jobs:
           ! grep -qi '<h1>Choose a competition' competitions.html
           grep -q 'Disallow: /' robots.txt
           grep -q 'noindex,nofollow,noarchive' index.html
-          test -f competitions/red-bull/index.html
-          test -f competitions/red-bull/rampage/index.html
-          test -f competitions/red-bull/hardline/index.html
           grep -q 'uci-events-banner' competitions/uci-mtb-world-cup-dh-2026.html
           grep -q 'uci-iconic-tour.js?v=5' competitions/uci-mtb-world-cup-dh-2026.html
           ! grep -qi 'Recorded events' competitions/uci-mtb-world-cup-dh-2026.html

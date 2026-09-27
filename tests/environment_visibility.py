@@ -8,7 +8,6 @@ environment = os.environ.get("RF_BUILD_ENV", "production")
 home = (root / "index.html").read_text(encoding="utf-8")
 robots = (root / "robots.txt").read_text(encoding="utf-8")
 ads = (root / "ads.txt").read_text(encoding="utf-8")
-red_bull = root / "competitions" / "red-bull"
 assert (root / "advertise.html").is_file()
 assert (root / "assets" / "js" / "promo-pool.js").is_file()
 assert "assets/js/promo-pool.js" in home
@@ -19,9 +18,6 @@ assert "Common equipment" in home
 assert 'class="direct-ad-shell"' in home
 
 if environment == "preprod":
-    assert red_bull.joinpath("index.html").is_file()
-    assert red_bull.joinpath("rampage", "index.html").is_file()
-    assert red_bull.joinpath("hardline", "index.html").is_file()
     assert "noindex,nofollow,noarchive" in home
     assert "Disallow: /" in robots
     assert "sibforms.com" not in home

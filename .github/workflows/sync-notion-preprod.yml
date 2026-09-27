@@ -87,10 +87,10 @@ jobs:
         run: |
           test -n "$PREPROD_AUTH_FILE"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
-          test -f "$RUNNER_TEMP/public/google/index.html"
-          test -f "$RUNNER_TEMP/public/notion/index.html"
+          test -f "$RUNNER_TEMP/public/index.html"
+          test -f "$RUNNER_TEMP/public/riders.html"
           test -f "$RUNNER_TEMP/public/notion-data-version.txt"
-          grep -q '^notion=ready$' "$RUNNER_TEMP/public/data-source-status.txt"
+          test -f "$RUNNER_TEMP/public/notion-sync-metadata.json"
 
       - name: Install publishing and authentication tools
         if: steps.change.outputs.changed == 'true'
@@ -128,10 +128,9 @@ jobs:
             sleep 15
           done
           test "$status" = "401"
-          status_text="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/data-source-status.txt)"
-          grep -q '^active=google$' <<< "$status_text"
-          grep -q '^notion=ready$' <<< "$status_text"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion/ | grep -q 'Notion'
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/ > /dev/null
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/riders.html > /dev/null
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion-data-version.txt > /dev/null
 
   deploy-production:
     needs: sync-and-deploy

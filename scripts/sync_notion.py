@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Export the read-only RidersFanatics Notion model to the site data contract.
 
-The exporter never writes to Notion.  It queries the connected data sources,
-keeps 2026 UCI downhill results with at least one point, combines final and
-qualifying points for each event, and merges the result with the current Google
-snapshot so profile fields and photos remain stable during the migration.
+The exporter never writes to Notion. It queries the connected data sources,
+keeps recorded downhill results (including non-finish statuses), combines
+final and qualifying points for each event, and merges the result with the
+current Google snapshot so profile fields and photos remain stable.
 """
 from __future__ import annotations
 
@@ -62,6 +62,17 @@ CATEGORY_MAP = {
     "Helmet": "Helmet",
     "Protection": "Protection",
     "Goggles": "Goggles",
+}
+
+RESULT_STATUS_ALIASES = {
+    "FINISHER": "Finisher",
+    "FINISHED": "Finisher",
+    "FIN": "Finisher",
+    "DNF": "DNF",
+    "DNS": "DNS",
+    "DSQ": "DSQ",
+    "DQ": "DSQ",
+    "DISQUALIFIED": "DSQ",
 }
 
 
@@ -190,6 +201,33 @@ def safe_int(value_):
         return int(float(value_))
     except (TypeError, ValueError):
         return None
+
+
+def normalize_result_status(value_) -> str | None:
+    """Return the canonical race status stored by the public data contract."""
+    if value_ is None:
+        return None
+    normalized = re.sub(r"[^A-Z]+", "", str(value_).upper())
+    return RESULT_STATUS_ALIASES.get(normalized)
+
+
+def scoring_status(item, place: int | None = None) -> str | None:
+    """Read an explicit status, or infer a finisher from a place/time value.
+
+    The current Notion database stores statuses in ``Time``. Supporting common
+    dedicated property names keeps the exporter compatible with a later schema
+    cleanup without requiring a simultaneous site migration.
+    """
+    explicit = first_value(item, "Status", "Result", "Résultat")
+    time_value = value(item, "Time")
+    status = normalize_result_status(explicit) or normalize_result_status(time_value)
+    if status:
+        return status
+    if place is not None:
+        return "Finisher"
+    if isinstance(time_value, str) and re.fullmatch(r"\d{1,2}:\d{2}(?:\.\d+)?", time_value.strip()):
+        return "Finisher"
+    return None
 
 
 def ordinal(number: int | None) -> str | None:
@@ -325,6 +363,11 @@ def export(client: Notion, baseline_path: Path):
         race = races.get(race_ids[0]) if race_ids else None
         if race is None:
             continue
+        place = safe_int(value(item, "Place"))
+        # DNS is an entry-list/result fact, but the rider did not actually
+        # start. Finisher, DNF and DSQ all count as a participation.
+        if scoring_status(item, place) == "DNS":
+            continue
         for rider_id in rider_ids:
             participations_by_rider.setdefault(rider_id, set()).add(race["competition"])
 
@@ -339,6 +382,11 @@ def export(client: Notion, baseline_path: Path):
         race_id = race_ids[0] if race_ids else None
         points = safe_int(value(item, "points"))
         place = safe_int(value(item, "Place"))
+        status = scoring_status(item, place)
+        raw_time = value(item, "Time")
+        race_time = (raw_time.strip() if isinstance(raw_time, str)
+                     and normalize_result_status(raw_time) is None and raw_time.strip()
+                     else None)
         race = races.get(race_id)
         has_points = points is not None and points >= 1
         # Invitational Red Bull races publish an official finishing order but
@@ -350,7 +398,8 @@ def export(client: Notion, baseline_path: Path):
             and not race["competition"].casefold().startswith("uci")
         )
         valid_phase = race is not None and race["phase"] in {"Final", "Qualifier"}
-        if rider_id and valid_phase and (has_points or has_invitational_place):
+        has_recorded_result = status is not None or place is not None
+        if rider_id and valid_phase and (has_points or has_invitational_place or has_recorded_result):
             key = (rider_id, race["competition"], race["event"], race["gender"])
             year_match = re.search(r"\b(20\d{2})\b", race["competition"])
             result = combined_results.setdefault(key, {
@@ -358,6 +407,9 @@ def export(client: Notion, baseline_path: Path):
                 "event": race["event"],
                 "category": race["competition"],
                 "result": None,
+                "status": None,
+                "time": None,
+                "participated": False,
                 "place": None,
                 "points": 0,
                 "_event_date": race["date"],
@@ -367,13 +419,20 @@ def export(client: Notion, baseline_path: Path):
             if has_points:
                 result["points"] += points
                 result["_has_points"] = True
+            if status != "DNS":
+                result["participated"] = True
             if race["phase"] == "Final":
                 result["place"] = place
-                result["result"] = ordinal(place)
+                result["status"] = status
+                result["time"] = race_time
+                result["result"] = ordinal(place) if place is not None else status
                 result["_has_final"] = True
             elif not result["_has_final"]:
                 result["place"] = place
-                result["result"] = f"Q1 {ordinal(place)}" if place is not None else "Q1"
+                result["status"] = status
+                result["time"] = race_time
+                qualifier_result = ordinal(place) if place is not None else status
+                result["result"] = f"Q1 {qualifier_result}" if qualifier_result else "Q1"
 
     result_rows = {}
     for (rider_id, _competition, _event, _gender), result in combined_results.items():

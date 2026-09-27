@@ -179,6 +179,39 @@ def history_place(h):
         return None  # DNS / DNF / DSQ — no position to show
     return placing_from_points(h.get("category") or "Other", h.get("points"))
 
+RESULT_STATUS_ALIASES = {
+    "FINISHER": "Finisher", "FINISHED": "Finisher", "FIN": "Finisher",
+    "DNF": "DNF", "DNS": "DNS", "DSQ": "DSQ", "DQ": "DSQ",
+    "DISQUALIFIED": "DSQ",
+}
+RESULT_STATUS_ORDER = {"Finisher": 1, "DNF": 2, "DSQ": 3, "DNS": 4}
+
+def result_status(result):
+    value = result.get("status")
+    if not value:
+        label = str(result.get("result") or "").upper()
+        value = next((token for token in ("DNF", "DNS", "DSQ", "DQ", "FINISHER")
+                      if re.search(rf"\b{token}\b", label)), None)
+    normalized = re.sub(r"[^A-Z]+", "", str(value or "").upper())
+    return RESULT_STATUS_ALIASES.get(normalized)
+
+def result_counts_as_start(result):
+    """DNS is not a start; a prior qualifier can still mark participation."""
+    if "participated" in result:
+        return bool(result.get("participated"))
+    return result_status(result) != "DNS"
+
+def result_is_rankable(result):
+    return history_place(result) is not None or (result.get("points") or 0) > 0
+
+def round_result_sort_key(pair):
+    rider, result = pair
+    place = history_place(result)
+    status = result_status(result)
+    bucket = 0 if place is not None else RESULT_STATUS_ORDER.get(status, 5)
+    return (bucket, place or 9999, -(result.get("points") or 0),
+            rider.get("display_name") or "")
+
 def ordinal(n):
     if n is None:
         return None
@@ -1419,13 +1452,13 @@ def competition_stats(riders, competition):
     for rider in riders:
         is_participant = (
             name in (rider.get("competition_participation") or [])
-            or competition_has_result(rider, name)
+            or competition_has_participation(rider, name)
         )
         if is_participant:
             participants.append(rider)
         points = sum((h.get("points") or 0) for h in rider.get("competition_history") or []
                      if h.get("category") == name)
-        if competition_has_result(rider, name):
+        if competition_has_rankable_result(rider, name):
             scored.append((rider, points))
     leaders = {}
     for category in ("Men Elite", "Women Elite"):
@@ -1444,9 +1477,21 @@ def competition_rider_points(rider, competition_name):
                if result.get("category") == competition_name)
 
 def competition_has_result(rider, competition_name):
-    """A placing remains rankable even when no time or points are recorded."""
+    """The event page includes finishers and non-finish statuses alike."""
     return any(
         result.get("category") == competition_name
+        for result in rider.get("competition_history") or []
+    )
+
+def competition_has_participation(rider, competition_name):
+    return any(
+        result.get("category") == competition_name and result_counts_as_start(result)
+        for result in rider.get("competition_history") or []
+    )
+
+def competition_has_rankable_result(rider, competition_name):
+    return any(
+        result.get("category") == competition_name and result_is_rankable(result)
         for result in rider.get("competition_history") or []
     )
 
@@ -1541,12 +1586,7 @@ def build_competition_round(riders, competition, event, round_number, events):
                            if item.get("category") == name and item.get("event") == event), None)
             if result:
                 entries.append((rider, result))
-        entries.sort(key=lambda pair: (
-            history_place(pair[1]) is None,
-            history_place(pair[1]) or 9999,
-            -(pair[1].get("points") or 0),
-            pair[0].get("display_name") or "",
-        ))
+        entries.sort(key=round_result_sort_key)
         categories[category] = entries
         all_entries.extend(entries)
 
@@ -1566,6 +1606,7 @@ def build_competition_round(riders, competition, event, round_number, events):
 
     team_entries = [
         (rider, result) for rider, result in all_entries
+        if result_counts_as_start(result)
         if (rider.get("team") or "").strip().lower() not in {"", "privateer"}
     ]
     show_team_ranking = bool(all_entries) and len(team_entries) * 2 >= len(all_entries)
@@ -1585,8 +1626,9 @@ def build_competition_round(riders, competition, event, round_number, events):
 
     hero_leaders = []
     for category, label in (("Men Elite", "Men winner"), ("Women Elite", "Women winner")):
-        if categories[category]:
-            rider, result = categories[category][0]
+        placed_results = [entry for entry in categories[category] if history_place(entry[1]) is not None]
+        if placed_results:
+            rider, result = placed_results[0]
             result_label = result.get("result") or ordinal(history_place(result)) or "1st"
             hero_leaders.append(f'''<a href="../../../riders/{rider['slug']}.html"><span>{label}</span><strong>{esc(rider['display_name'])}</strong><small>{esc(result_label)}</small></a>''')
     if show_team_ranking and event_teams:
@@ -1700,7 +1742,7 @@ def competition_participants(riders, competition):
     return sorted([
         rider for rider in riders
         if name in (rider.get("competition_participation") or [])
-        or any(row.get("category") == name for row in (rider.get("competition_history") or []))
+        or competition_has_participation(rider, name)
     ], key=lambda rider: (rider.get("display_name") or "").casefold())
 
 def competition_view_selector(competition, active, prefix=""):
@@ -1777,7 +1819,7 @@ def build_competition_standings(riders, competition):
         categories[category] = sorted(
             [rider for rider in riders
              if rider.get("gender_category") == category
-             and competition_has_result(rider, name)],
+             and competition_has_rankable_result(rider, name)],
             key=lambda rider: competition_rank_key(rider, name),
         )
 
@@ -2091,7 +2133,7 @@ def season_ranking_selector(riders, competition):
         categories[category] = sorted(
             [rider for rider in riders
              if rider.get("gender_category") == category
-             and competition_has_result(rider, name)],
+             and competition_has_rankable_result(rider, name)],
             key=lambda rider: competition_rank_key(rider, name),
         )
 
@@ -2172,7 +2214,9 @@ def redbull_event_ranking_selector(riders, competition):
 
     for event_name in events:
         event_key = competition_round_slug(event_name)
-        event_riders = [rider for rider in riders if event_history(rider, event_name)]
+        event_riders = [rider for rider in riders
+                        if any(result_is_rankable(result)
+                               for result in event_history(rider, event_name))]
         categories = {
             category: sorted(
                 [rider for rider in event_riders if rider.get("gender_category") == category],

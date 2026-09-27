@@ -26,6 +26,8 @@ from pathlib import Path
 API_ROOT = "https://api.notion.com/v1"
 NOTION_VERSION = "2026-03-11"
 ROOT = Path(__file__).resolve().parents[1]
+ROUTE_SLUGS_PATH = ROOT / "data" / "rider-routes.json"
+ROUTE_SLUGS_BY_HANDLE = json.loads(ROUTE_SLUGS_PATH.read_text(encoding="utf-8"))
 
 DATA_SOURCES = {
     "seasons": "3c99cf6b-f148-80f4-a3ad-000b1635fee6",
@@ -516,6 +518,7 @@ def export(client: Notion):
         display_name = name.strip()
         if not display_name:
             continue
+        route_handle = (handle or "").lower().lstrip("@")
         history = sorted(result_rows.get(identifier, []), key=lambda row: (row["_event_date"], row["event"]))
         for result in history:
             result.pop("_event_date", None)
@@ -524,7 +527,10 @@ def export(client: Notion):
             "first_name": display_name.split()[0] if display_name else "",
             "last_name": " ".join(display_name.split()[1:]) if display_name else "",
             "display_name": display_name,
-            "slug": slugify(display_name),
+            # Preserve established public URLs without importing any profile
+            # content from the former Google Sheet. New riders still receive a
+            # deterministic slug generated exclusively from their Notion name.
+            "slug": ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(display_name),
             "gender_category": "Women Elite" if gender == "Women" else "Men Elite",
             "discipline": value(item, "Disciplines") or "",
             "country": country,

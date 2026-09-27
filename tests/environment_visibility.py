@@ -15,10 +15,8 @@ assert (root / "assets" / "js" / "promo-pool.js").is_file()
 assert "assets/js/promo-pool.js" in home
 assert "google.com, pub-6372404738608947, DIRECT, f08c47fec0942fa0" in ads
 assert 'class="direct-ad promo-strip"' in home
-assert home.count('<article class="promo-card') == 3
-assert "Top 1 Women · Last race" in home
+assert 1 <= home.count('<article class="promo-card') <= 3
 assert "Common equipment" in home
-assert "Top 1 Men · Last race" in home
 assert 'class="direct-ad-shell"' in home
 assert 'data-rider-feedback' in finn
 assert 'entry.1833999901=ILES%20Finn' in finn

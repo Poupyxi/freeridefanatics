@@ -33,7 +33,7 @@ rsync -a --exclude='.git' "$SOURCE_DIR/" "$WORK_DIR/notion-build/"
 )
 
 test -f "$WORK_DIR/notion-build/competitions/redbull-2026.html"
-test -f "$WORK_DIR/notion-build/competitions/redbull-2026/rounds/ceroabajo-2026.html"
+test -f "$WORK_DIR/notion-build/competitions/redbull-2026/rounds/cerroabajo-2026.html"
 test -f "$WORK_DIR/notion-build/competitions/redbull-2026/rounds/rampage-2026.html"
 test -f "$WORK_DIR/notion-build/competitions/redbull-2026/rounds/hardline-2026.html"
 test -f "$WORK_DIR/notion-build/competitions/project-17/riders.html"

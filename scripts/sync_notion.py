@@ -174,6 +174,15 @@ def value(page, name):
     return raw
 
 
+def first_value(page, *names):
+    """Return the first populated property across current and legacy names."""
+    for name in names:
+        result = value(page, name)
+        if result not in (None, "", []):
+            return result
+    return None
+
+
 def title_map(pages, title_property):
     return {page_id(item.get("id")): value(item, title_property) for item in pages}
 

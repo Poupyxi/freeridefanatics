@@ -54,9 +54,10 @@ jobs:
           test -n "$PREPROD_AUTH_FILE"
           mkdir -p "$RUNNER_TEMP/public"
           deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" preprod
-          cp data/notion/sync-metadata.json "$RUNNER_TEMP/public/notion-sync-metadata.json"
           python3 -c 'import json; print(json.load(open("data/notion/sync-metadata.json"))["sha256"])' \
             > "$RUNNER_TEMP/public/notion-data-version.txt"
+          printf 'profile_data_source=notion-only\nimage_source=google-drive-only\n' \
+            > "$RUNNER_TEMP/public/data-source-status.txt"
           test -f "$RUNNER_TEMP/public/competitions/project-17/riders.html"
           grep -q 'data-rider-grid' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
           grep -q 'class="rider-card reveal"' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
@@ -124,7 +125,9 @@ jobs:
           ! grep -q 'preprod-source-switcher' <<< "$index_html"
           ! grep -q 'Google Sheets' <<< "$index_html"
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/google/)" = "404"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion-sync-metadata.json | grep -q '"profile_data_source": "notion-only"'
+          source_status="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/data-source-status.txt)"
+          grep -q '^profile_data_source=notion-only$' <<< "$source_status"
+          grep -q '^image_source=google-drive-only$' <<< "$source_status"
           page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
           grep -q 'uci-events-banner' <<< "$page_html"
           grep -q 'uci-iconic-tour.js?v=5' <<< "$page_html"

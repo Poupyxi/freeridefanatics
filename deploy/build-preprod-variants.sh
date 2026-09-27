@@ -44,7 +44,7 @@ if [[ -f "$NOTION_SNAPSHOT" ]]; then
     python3 build.py
   )
   test -f "$WORK_DIR/notion-build/competitions/redbull-2026.html"
-  grep -q 'Red Bull Cerro Abajo 2026' "$WORK_DIR/notion-build/competitions.html"
+  grep -q 'RedBull 2026' "$WORK_DIR/notion-build/competitions.html"
   "$WORK_DIR/notion-build/deploy/publish-static.sh" "$WORK_DIR/notion-build" "$WORK_DIR/notion-public" preprod
   mkdir -p "$PUBLIC_DIR/notion"
   rsync -a --delete "$WORK_DIR/notion-public/" "$PUBLIC_DIR/notion/"

@@ -14,7 +14,7 @@ class UciIconicTour extends HTMLElement {
     .stage:hover .draw,.stage.active .draw{stroke-dashoffset:0}
     .s7 .ghost,.s7 .draw{filter:url(#rough7)}.s8 .ghost,.s8 .draw{filter:url(#rough8)}.s9 .ghost,.s9 .draw{filter:url(#rough9)}
     .tour:has(section:nth-of-type(7):hover) .hover-7,.tour:has(section:nth-of-type(7).active) .hover-7,.tour:has(section:nth-of-type(8):hover) .hover-8,.tour:has(section:nth-of-type(8).active) .hover-8,.tour:has(section:nth-of-type(9):hover) .hover-9,.tour:has(section:nth-of-type(9).active) .hover-9{stroke-dashoffset:0}
-    .stage button{position:absolute;z-index:4;inset:0;width:100%;border:0;background:transparent;cursor:inherit}
+    .stage button,.stage .stage-link{position:absolute;z-index:4;inset:0;width:100%;border:0;background:transparent;cursor:inherit}
     @media(min-width:821px) and (max-width:1500px){.head{left:16px;right:10px}h2{font-size:clamp(17px,1.65vw,26px)}}
     @media(max-width:820px){.tour{width:2340px;height:300px}.stage{height:300px}}
     @media(prefers-reduced-motion:reduce){.draw{transition:none;stroke-dashoffset:0}}</style><div class="tour"><!-- Une seule silhouette extérieure continue pour les neuf étapes -->
@@ -206,8 +206,11 @@ class UciIconicTour extends HTMLElement {
       });
       if(resultPage){
         stage.classList.add('has-results');
-        button.setAttribute('aria-label', `View ${stage.querySelector('h2').textContent} event results`);
-        button.addEventListener('click', () => window.location.assign(resultPage));
+        const link = document.createElement('a');
+        link.className = 'stage-link';
+        link.href = resultPage;
+        link.setAttribute('aria-label', `View ${stage.querySelector('h2').textContent} event results`);
+        button.replaceWith(link);
       } else {
         button.setAttribute('aria-label', `${stage.querySelector('h2').textContent}: results not available yet`);
         button.addEventListener('click', () => stage.classList.toggle('active'));

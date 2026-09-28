@@ -2435,7 +2435,7 @@ def build_competition_detail(riders, competition):
     if is_uci_dh:
         html = html.replace(
             '<script src="../assets/js/site.js',
-            '<script src="../assets/js/uci-iconic-tour.js?v=5"></script>\n<script src="../assets/js/site.js',
+            '<script src="../assets/js/uci-iconic-tour.js?v=6"></script>\n<script src="../assets/js/site.js',
         )
     return html
 

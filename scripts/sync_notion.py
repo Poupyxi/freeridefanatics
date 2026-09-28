@@ -339,6 +339,12 @@ def competition_year(name: str, event_records: list[dict]) -> int:
     return event_years[0] if event_years else 2026
 
 
+def event_location(page) -> str:
+    """Read a plain-text event location without exposing relation identifiers."""
+    candidate = first_value(page, "Location", "Lieu", "location")
+    return candidate.strip() if isinstance(candidate, str) else ""
+
+
 def export(client: Notion):
     pages = {name: client.query(source_id) for name, source_id in DATA_SOURCES.items()}
     seasons = {}
@@ -367,6 +373,7 @@ def export(client: Notion):
         page_id(item.get("id")): {
             "name": value(item, "Name competition"),
             "date": value(item, "Date") or "9999-12-31",
+            "location": event_location(item),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }

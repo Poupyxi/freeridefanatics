@@ -47,6 +47,8 @@ jobs:
           test -f competitions/uci-mtb-world-cup-dh-2026.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html
+          grep -q 'Coming soon' competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html
           test -f riders/finn-iles.html
 
       - name: Prepare isolated public files
@@ -125,6 +127,7 @@ jobs:
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null
           curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html > /dev/null
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html | grep -q 'Coming soon'
           index_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/)"
           ! grep -q 'preprod-source-switcher' <<< "$index_html"
           ! grep -q 'Google Sheets' <<< "$index_html"
@@ -134,10 +137,10 @@ jobs:
           grep -q '^image_source=google-drive-only$' <<< "$source_status"
           page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
           grep -q 'uci-events-banner' <<< "$page_html"
-          grep -q 'uci-iconic-tour.js?v=6' <<< "$page_html"
+          grep -q 'uci-iconic-tour.js?v=7' <<< "$page_html"
           ! grep -qi 'Recorded events' <<< "$page_html"
           project_riders_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/project-17/riders.html)"
           grep -q 'data-rider-grid' <<< "$project_riders_html"
           grep -q 'class="rider-card reveal"' <<< "$project_riders_html"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=6 | grep -q 'customElements.define'
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=7 | grep -q 'lake-placid.html'
           curl --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'

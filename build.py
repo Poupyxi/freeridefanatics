@@ -1480,7 +1480,7 @@ def competition_events(riders, competition_name):
 def competition_page_events(riders, competition):
     """Show all scheduled RedBull events, including those without results yet."""
     recorded = competition_events(riders, competition["name"])
-    if competition["id"] != "redbull-2026":
+    if competition["id"] != "redbull-2026" and not IS_PREPROD:
         return recorded
     scheduled = [event.get("name") for event in competition.get("events", []) if event.get("name")]
     return list(dict.fromkeys(scheduled + recorded))
@@ -1663,6 +1663,9 @@ def build_competition_round(riders, competition, event, round_number, events):
     path = f"/competitions/{cid}/rounds/{slug}.html"
     display_event = competition_event_label(event)
     scheduled_event = next((item for item in competition.get("events", []) if item.get("name") == event), {})
+    scheduled_date = scheduled_event.get("date") or ""
+    if scheduled_date.startswith("9999-"):
+        scheduled_date = ""
     official_event = red_bull_event_info(event) if is_red_bull_cerro_abajo(competition) else None
 
     categories = {}
@@ -1762,8 +1765,12 @@ def build_competition_round(riders, competition, event, round_number, events):
     )
     if cid == "redbull-2026" and not all_entries:
         page_title = f"Red Bull {display_event} | 2026 Event & Riders | {SITE_NAME}"
-        description = (f"Red Bull {display_event} is scheduled for {scheduled_event.get('date') or '2026'}. "
+        description = (f"Red Bull {display_event} is scheduled for {scheduled_date or '2026'}. "
                        "Explore the event now; rider results will appear when verified.")
+    elif not all_entries:
+        page_title = f"{display_event} 2026 | Upcoming UCI Downhill Event"
+        description = (f"{display_event} 2026 UCI downhill event preview: date, location and event information. "
+                       "Verified riders and results will appear when available.")
     elif is_red_bull_cerro_abajo(competition):
         page_title = f"{event} Red Bull Cerro Abajo 2026 Results | {SITE_NAME}"
         recorded_data = "recorded placings and points" if has_points else "the recorded finishing order"
@@ -1799,12 +1806,12 @@ def build_competition_round(riders, competition, event, round_number, events):
                                      "addressCountry": official_event["country_code"]}},
             "url": absolute_url(path), "sameAs": official_event["official_url"],
         })
-    scheduled_date = scheduled_event.get("date")
     scheduled_location = scheduled_event.get("location")
-    if focused_seo and scheduled_date and scheduled_location and not official_event:
+    if scheduled_date and scheduled_location and not official_event:
         schemas.append({
             "@context": "https://schema.org", "@type": "SportsEvent",
-            "name": focused_seo["heading"], "description": focused_seo["copy"],
+            "name": focused_seo["heading"] if focused_seo else f"{display_event} {competition['season']}",
+            "description": focused_seo["copy"] if focused_seo else description,
             "startDate": scheduled_date,
             "eventStatus": ("https://schema.org/EventCompleted" if all_entries
                             else "https://schema.org/EventScheduled"),
@@ -1825,11 +1832,15 @@ def build_competition_round(riders, competition, event, round_number, events):
     html += header_html("../../../", active="competitions")
     official_source = (f'''<p class="round-official-source"><a href="{esc_attr(official_event['official_url'])}" rel="nofollow noopener" target="_blank">Official event information <span aria-hidden="true">↗</span></a></p>'''
                        if official_event else "")
-    if not all_entries and cid == "redbull-2026":
-        event_date = scheduled_event.get("date") or ""
+    if not all_entries:
+        event_date = scheduled_date
+        event_location = scheduled_event.get("location") or ""
         date_line = f'<p><time datetime="{esc_attr(event_date)}">{esc(event_date)}</time></p>' if event_date else ""
+        location_line = f'<p>{esc(event_location)}</p>' if event_location else ""
         results_section = (f'<section class="section round-results-section"><div class="wrap">'
-                           f'<h2>Results to come</h2>{date_line}<p>No verified rider results are recorded for this event yet.</p>'
+                           f'<div class="label">Coming soon</div><h2>Event information</h2>{date_line}{location_line}'
+                           f'<p>No verified rider results are recorded yet. This page will be updated automatically when Notion receives the participant list or results.</p>'
+                           f'<p><a href="../../{cid}.html">Back to the competition calendar →</a></p>'
                            f'</div></section>')
     else:
         results_section = (f'<section class="section round-results-section"><div class="wrap">'
@@ -2515,7 +2526,7 @@ def build_competition_detail(riders, competition):
     if is_uci_dh:
         html = html.replace(
             '<script src="../assets/js/site.js',
-            '<script src="../assets/js/uci-iconic-tour.js?v=6"></script>\n<script src="../assets/js/site.js',
+            '<script src="../assets/js/uci-iconic-tour.js?v=7"></script>\n<script src="../assets/js/site.js',
         )
     return html
 

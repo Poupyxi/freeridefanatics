@@ -191,7 +191,8 @@ class UciIconicTour extends HTMLElement {
       'La Thuile': 'uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july.html',
       'Pal Arinsal': 'uci-mtb-world-cup-dh-2026/rounds/andorra-july.html',
       'Les Gets': 'uci-mtb-world-cup-dh-2026/rounds/les-gets.html',
-      'Whistler': 'uci-mtb-world-cup-dh-2026/rounds/whistler.html'
+      'Whistler': 'uci-mtb-world-cup-dh-2026/rounds/whistler.html',
+      'Lake Placid': 'uci-mtb-world-cup-dh-2026/rounds/lake-placid.html'
     };
     root.querySelectorAll('.stage').forEach((stage, index) => {
       const svg = stage.querySelector('svg');
@@ -209,7 +210,7 @@ class UciIconicTour extends HTMLElement {
         const link = document.createElement('a');
         link.className = 'stage-link';
         link.href = resultPage;
-        link.setAttribute('aria-label', `View ${stage.querySelector('h2').textContent} event results`);
+        link.setAttribute('aria-label', `View ${stage.querySelector('h2').textContent} event page`);
         button.replaceWith(link);
       } else {
         button.setAttribute('aria-label', `${stage.querySelector('h2').textContent}: results not available yet`);

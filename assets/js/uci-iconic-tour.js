@@ -184,15 +184,15 @@ class UciIconicTour extends HTMLElement {
       tour.appendChild(stage);
     });
     const resultPages = {
-      'Mona Yongpyong': 'uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may.html',
-      'Loudenvielle': 'uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may.html',
-      'Leogang': 'uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june.html',
-      'Lenzerheide': 'uci-mtb-world-cup-dh-2026/rounds/switzerland-june.html',
-      'La Thuile': 'uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july.html',
-      'Pal Arinsal': 'uci-mtb-world-cup-dh-2026/rounds/andorra-july.html',
-      'Les Gets': 'uci-mtb-world-cup-dh-2026/rounds/les-gets.html',
-      'Whistler': 'uci-mtb-world-cup-dh-2026/rounds/whistler.html',
-      'Lake Placid': 'uci-mtb-world-cup-dh-2026/rounds/lake-placid.html'
+      'Mona Yongpyong': '/competitions/uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may.html',
+      'Loudenvielle': '/competitions/uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may.html',
+      'Leogang': '/competitions/uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june.html',
+      'Lenzerheide': '/competitions/uci-mtb-world-cup-dh-2026/rounds/switzerland-june.html',
+      'La Thuile': '/competitions/uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july.html',
+      'Pal Arinsal': '/competitions/uci-mtb-world-cup-dh-2026/rounds/andorra-july.html',
+      'Les Gets': '/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html',
+      'Whistler': '/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html',
+      'Lake Placid': '/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html'
     };
     root.querySelectorAll('.stage').forEach((stage, index) => {
       const svg = stage.querySelector('svg');

@@ -28,6 +28,14 @@ NOTION_VERSION = "2026-03-11"
 ROOT = Path(__file__).resolve().parents[1]
 ROUTE_SLUGS_PATH = ROOT / "data" / "rider-routes.json"
 ROUTE_SLUGS_BY_HANDLE = json.loads(ROUTE_SLUGS_PATH.read_text(encoding="utf-8"))
+PRIORITY_PUBLIC_NAMES = {
+    "valentina-holl": "Valentina Höll",
+    "gracey-hemstreet": "Gracey Hemstreet",
+    "lisa-bouladou": "Lisa Bouladou",
+    "asa-vermette": "Asa Vermette",
+    "amaury-pierron": "Amaury Pierron",
+    "max-alran": "Max Alran",
+}
 
 DATA_SOURCES = {
     "seasons": "3c99cf6b-f148-80f4-a3ad-000b1635fee6",
@@ -208,6 +216,35 @@ def season_edition_count(page) -> int | None:
         if count is not None and count > 0:
             return count
     return None
+
+
+def display_rider_name(value_: str | None) -> str:
+    """Convert Notion's common ``SURNAME Firstname`` format for public pages.
+
+    The source title remains authoritative and the public route is kept stable;
+    this only normalizes the human-readable name used in headings and metadata.
+    """
+    raw = " ".join((value_ or "").split())
+    tokens = raw.split()
+    if len(tokens) < 2:
+        return raw
+
+    def is_upper_name_token(token):
+        letters = "".join(character for character in token if character.isalpha())
+        return bool(letters) and letters == letters.upper()
+
+    leading_surname = 0
+    for token in tokens:
+        if not is_upper_name_token(token):
+            break
+        leading_surname += 1
+    if not leading_surname or leading_surname == len(tokens):
+        return raw
+
+    surname = " ".join(token.title() for token in tokens[:leading_surname])
+    surname = surname.replace("O' ", "O'")
+    given_names = " ".join(tokens[leading_surname:])
+    return f"{given_names} {surname}".strip()
 
 
 def safe_int(value_):
@@ -508,10 +545,12 @@ def export(client: Notion):
         country_ids = first_value(item, "country", "Country", "counrty") or []
         country = next((countries.get(country_id) for country_id in country_ids if countries.get(country_id)), None)
         gender = value(item, "Gender")
-        display_name = name.strip()
+        raw_name = name.strip()
+        route_handle = (handle or "").lower().lstrip("@")
+        public_slug = ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(raw_name)
+        display_name = PRIORITY_PUBLIC_NAMES.get(public_slug, display_rider_name(raw_name))
         if not display_name:
             continue
-        route_handle = (handle or "").lower().lstrip("@")
         history = sorted(result_rows.get(identifier, []), key=lambda row: (row["_event_date"], row["event"]))
         for result in history:
             result.pop("_event_date", None)
@@ -523,7 +562,7 @@ def export(client: Notion):
             # Preserve established public URLs without importing any profile
             # content from the former Google Sheet. New riders still receive a
             # deterministic slug generated exclusively from their Notion name.
-            "slug": ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(display_name),
+            "slug": public_slug,
             "gender_category": "Women Elite" if gender == "Women" else "Men Elite",
             "discipline": value(item, "Disciplines") or "",
             "country": country,

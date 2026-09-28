@@ -523,11 +523,11 @@ def export(client: Notion):
         country = next((countries.get(country_id) for country_id in country_ids if countries.get(country_id)), None)
         gender = value(item, "Gender")
         raw_name = name.strip()
+        route_handle = (handle or "").lower().lstrip("@")
         public_slug = ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(raw_name)
         display_name = PRIORITY_PUBLIC_NAMES.get(public_slug, display_rider_name(raw_name))
         if not display_name:
             continue
-        route_handle = (handle or "").lower().lstrip("@")
         history = sorted(result_rows.get(identifier, []), key=lambda row: (row["_event_date"], row["event"]))
         for result in history:
             result.pop("_event_date", None)

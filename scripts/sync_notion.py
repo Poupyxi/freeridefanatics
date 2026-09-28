@@ -475,8 +475,6 @@ def export(client: Notion):
     riders = []
     for item in pages["riders"]:
         identifier = page_id(item.get("id"))
-        if identifier not in result_rows and identifier not in participations_by_rider:
-            continue
         name = value(item, "First Name") or ""
         handle = instagram_handle(value(item, "Instagram"))
         birth = value(item, "Date of Birth")
@@ -557,7 +555,7 @@ def export(client: Notion):
     riders = list(riders_by_slug.values())
 
     if not riders:
-        raise RuntimeError("No rider with a 2026 UCI downhill result of at least one point was exported")
+        raise RuntimeError("No rider was exported from the Notion Riders database")
     minimum_riders = int(os.environ.get("NOTION_MIN_RIDERS", "40"))
     if len(riders) < minimum_riders:
         raise RuntimeError(f"Only {len(riders)} riders were exported; safety minimum is {minimum_riders}")

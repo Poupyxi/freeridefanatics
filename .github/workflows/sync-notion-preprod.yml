@@ -184,6 +184,8 @@ jobs:
           ! grep -q 'Google Sheets' index.html
           test -f competitions/redbull-2026.html
           test -f competitions/redbull-2026/rounds/cerroabajo-2026.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
 
       - name: Prepare public site files
         if: steps.production-change.outputs.changed == 'true'
@@ -222,3 +224,5 @@ jobs:
         run: |
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/ > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html > /dev/null

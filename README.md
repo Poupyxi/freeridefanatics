@@ -107,10 +107,10 @@ overwritten on every build.
 
 ### Automatic OVH deployment
 
-Production currently uses OVH shared Web Hosting. The GitHub Actions workflow
-`.github/workflows/deploy-ovh.yml` publishes every new `main` commit over SFTP
-to `/home/ridersi/www`. Credentials live only in encrypted GitHub Actions
-secrets. This is the active production deployment path.
+Production uses OVH shared Web Hosting. `Update Preprod` refreshes the protected
+preview from Notion and Google Drive. `Preprod to Prod` is manual-only and
+promotes the exact revision, data snapshot and image snapshot already validated
+on preproduction to `/home/ridersi/www`.
 
 The systemd timer below is an alternative for a future full VPS; it is not
 required on OVH shared hosting.
@@ -129,27 +129,21 @@ disable Brevo signup and omit the PHP contact endpoint. Apache Basic Auth is
 applied with `deploy/preprod.htaccess`; credentials and the absolute htpasswd
 path live only in the GitHub `preproduction` environment.
 
-Required preproduction secrets are `OVH_SFTP_HOST`, `OVH_SFTP_PORT`,
+Required preproduction secrets are `NOTION_TOKEN`,
+`GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON`, `OVH_SFTP_HOST`, `OVH_SFTP_PORT`,
 `OVH_SFTP_USER`, `OVH_SFTP_PASSWORD`, `OVH_REMOTE_DIR`, `OVH_AUTH_FILE`,
 `PREPROD_BASIC_USER` and `PREPROD_BASIC_PASSWORD`. The remote directory must
-never be `/home/ridersi/www`.
+never be `/home/ridersi/www`. Set the preproduction environment variable
+`GOOGLE_DRIVE_IMAGE_FOLDER_ID` to the root image-library folder and share that
+folder with the service account email as Viewer. The Drive scope is read-only.
 
-Preproduction uses isolated data-source variants. The stable Google Sheets
-build is published both at `/` and `/google/`. A read-only Notion snapshot,
-when present at `data/notion/riders.json`, is validated and published at
-`/notion/`. Until that snapshot exists and passes validation, `/notion/`
-shows a safe unavailable state and cannot replace the Google build. Generated
-preproduction pages include a source selector; production pages never do.
+### Read-only Notion and Google Drive sync
 
-### Daily read-only Notion sync
-
-Preproduction queries the 2026 Notion data twice a day, at 06:00 and 18:00 UTC.
-The workflow reads Notion
-through an integration with content-read permission only; it never creates,
-updates or deletes a Notion page. It exports only UCI downhill finals with at
-least one point, validates the generated rider snapshot and compares its hash
-with the version already on OVH. An unchanged snapshot is not redeployed, and
-an invalid or unavailable export cannot replace the last valid preview.
+Preproduction checks Notion and the Drive image library every 15 minutes. Both
+integrations are read-only. The workflow imports rider portraits, action shots
+and equipment images, then compares the generated data and image hashes with
+the versions already on OVH. An unchanged snapshot is not redeployed, and an
+invalid or unavailable source cannot replace the last valid preview.
 
 The Notion public API queries data sources rather than UI views. Equivalent
 filters are therefore enforced in `scripts/sync_notion.py`. Add the integration

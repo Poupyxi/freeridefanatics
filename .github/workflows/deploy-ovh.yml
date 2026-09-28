@@ -13,7 +13,7 @@ permissions:
 jobs:
   validate-preprod:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     environment: preproduction
     outputs:
       source_sha: ${{ steps.source.outputs.sha }}
@@ -21,6 +21,7 @@ jobs:
       RF_DATA_SOURCE: notion
       RF_DATA_PATH: data/notion/riders.json
       RF_COMPETITIONS_PATH: data/notion/competitions.json
+      GOOGLE_DRIVE_IMAGE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_IMAGE_FOLDER_ID }}
 
     steps:
       - name: Check out the preproduction revision
@@ -47,6 +48,28 @@ jobs:
           python3 tests/result_status_logic.py
           python3 tests/rider_name_normalization.py
           python3 tests/seo_priority_content.py
+
+      - name: Install read-only Google Drive image support
+        run: python3 -m pip install --disable-pip-version-check -r requirements-drive.txt
+
+      - name: Synchronize and prepare Google Drive images
+        env:
+          GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          RF_IMAGE_LIBRARY: ${{ runner.temp }}/freeride-images
+        run: |
+          set -euo pipefail
+          test -n "$GOOGLE_DRIVE_IMAGE_FOLDER_ID"
+          test -n "$GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON"
+          python3 scripts/sync_drive_images.py \
+            --output "$RF_IMAGE_LIBRARY" \
+            --manifest data/drive/live-image-manifest.json
+          python3 tests/drive_image_sync.py
+          python3 import_images.py --force --no-build
+          python3 scripts/image_snapshot_hash.py \
+            assets/img/riders assets/img/riders-action assets/img/equipment \
+            > data/drive/live-images-version.txt
+          test -s data/drive/live-image-manifest.json
+          test -s data/drive/live-images-version.txt
 
       - name: Confirm this revision and data are live in preproduction
         env:
@@ -76,11 +99,27 @@ jobs:
             exit 1
           }
 
+          local_images_version="$(cat data/drive/live-images-version.txt)"
+          live_images_version="$(curl --fail --silent --show-error --retry 3 \
+            --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
+            https://preprod.ridersfanatics.com/drive-images-version.txt)"
+          test "$local_images_version" = "$live_images_version" || {
+            echo "The current Google Drive images have not yet been validated in preproduction." >&2
+            echo "Wait for the preproduction action, then retry this promotion." >&2
+            exit 1
+          }
+
       - name: Pass the validated preproduction snapshot to the production build
         uses: actions/upload-artifact@v4
         with:
-          name: notion-production-snapshot
-          path: data/notion/
+          name: validated-preproduction-snapshot
+          path: |
+            data/notion/
+            data/drive/live-image-manifest.json
+            data/drive/live-images-version.txt
+            assets/img/riders/
+            assets/img/riders-action/
+            assets/img/equipment/
           retention-days: 1
 
   deploy:
@@ -102,40 +141,21 @@ jobs:
         with:
           ref: ${{ needs.validate-preprod.outputs.source_sha }}
 
-      - name: Load the validated Notion snapshot
+      - name: Load the validated preproduction snapshot
         uses: actions/download-artifact@v4
         with:
-          name: notion-production-snapshot
-          path: data/notion
+          name: validated-preproduction-snapshot
+          path: .
 
       - name: Validate the production inputs
         run: |
           set -euo pipefail
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
           python3 tests/notion_only_source.py
-          test -d assets/img/riders-drive
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          portrait_dir = Path("assets/img/riders-drive")
-          portraits = {
-              path.stem.casefold()
-              for path in portrait_dir.iterdir()
-              if path.is_file() and path.suffix.casefold() in {".jpg", ".jpeg", ".png", ".webp"}
-          }
-          if not portraits:
-              raise SystemExit("No Google Drive portrait snapshot is available.")
-
-          riders = json.loads(Path("data/notion/riders.json").read_text(encoding="utf-8"))
-          matches = [
-              rider for rider in riders
-              if (rider.get("instagram") or "").strip().lstrip("@").casefold() in portraits
-          ]
-          if not matches:
-              raise SystemExit("No Notion rider matches the Google Drive portrait snapshot.")
-          print(f"Validated {len(portraits)} Drive portraits; {len(matches)} match current Notion riders.")
-          PY
+          test -s data/drive/live-image-manifest.json
+          test -s data/drive/live-images-version.txt
+          test "$(python3 scripts/image_snapshot_hash.py assets/img/riders assets/img/riders-action assets/img/equipment)" = \
+            "$(cat data/drive/live-images-version.txt)"
 
       - name: Build and verify production
         run: |
@@ -183,9 +203,11 @@ jobs:
           cp data/notion/sync-metadata.json "$RUNNER_TEMP/public/notion-sync-metadata.json"
           python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())' \
             > "$RUNNER_TEMP/public/notion-data-version.txt"
+          cp data/drive/live-images-version.txt "$RUNNER_TEMP/public/drive-images-version.txt"
 
           test -s "$RUNNER_TEMP/public/notion-sync-metadata.json"
           test -s "$RUNNER_TEMP/public/notion-data-version.txt"
+          test -s "$RUNNER_TEMP/public/drive-images-version.txt"
           test -f "$RUNNER_TEMP/public/index.html"
           test -f "$RUNNER_TEMP/public/riders.html"
           ! test -d "$RUNNER_TEMP/public/.git"
@@ -229,6 +251,7 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/ > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-images-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null

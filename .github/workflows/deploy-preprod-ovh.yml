@@ -130,10 +130,10 @@ jobs:
           grep -q '^image_source=google-drive-only$' <<< "$source_status"
           page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
           grep -q 'uci-events-banner' <<< "$page_html"
-          grep -q 'uci-iconic-tour.js?v=5' <<< "$page_html"
+          grep -q 'uci-iconic-tour.js?v=6' <<< "$page_html"
           ! grep -qi 'Recorded events' <<< "$page_html"
           project_riders_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/project-17/riders.html)"
           grep -q 'data-rider-grid' <<< "$project_riders_html"
           grep -q 'class="rider-card reveal"' <<< "$project_riders_html"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=5 | grep -q 'customElements.define'
+          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=6 | grep -q 'customElements.define'
           curl --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'

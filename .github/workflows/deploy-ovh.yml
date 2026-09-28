@@ -13,34 +13,160 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  notion-snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
+    environment: preproduction
+    env:
+      RF_DATA_SOURCE: notion
+      RF_DATA_PATH: data/notion/riders.json
+      RF_COMPETITIONS_PATH: data/notion/competitions.json
+
+    steps:
+      - name: Check out the production revision
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Read and validate Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$NOTION_TOKEN" || { echo "NOTION_TOKEN is required." >&2; exit 1; }
+          python3 scripts/sync_notion.py
+          test -s data/notion/riders.json
+          test -s data/notion/competitions.json
+          test -s data/notion/sync-metadata.json
+          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 tests/notion_only_source.py
+          python3 tests/result_status_logic.py
+          python3 tests/rider_name_normalization.py
+          python3 tests/seo_priority_content.py
+
+      - name: Pass the validated snapshot to the production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: notion-production-snapshot
+          path: data/notion/
+          retention-days: 1
+
+  deploy:
+    needs: notion-snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     environment: production
     env:
       RF_BUILD_ENV: production
+      RF_DATA_SOURCE: notion
+      RF_DATA_PATH: data/notion/riders.json
+      RF_COMPETITIONS_PATH: data/notion/competitions.json
       RF_SITE_URL: https://ridersfanatics.com
       RF_SKIP_IMAGE_OPTIMIZER: "1"
 
     steps:
       - name: Check out the production revision
         uses: actions/checkout@v4
+        with:
+          ref: main
 
-      - name: Build and verify production visibility
+      - name: Load the validated Notion snapshot
+        uses: actions/download-artifact@v4
+        with:
+          name: notion-production-snapshot
+          path: data/notion
+
+      - name: Validate the production inputs
         run: |
+          set -euo pipefail
+          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 tests/notion_only_source.py
+          test -d assets/img/riders-drive
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          portrait_dir = Path("assets/img/riders-drive")
+          portraits = {
+              path.stem.casefold()
+              for path in portrait_dir.iterdir()
+              if path.is_file() and path.suffix.casefold() in {".jpg", ".jpeg", ".png", ".webp"}
+          }
+          if not portraits:
+              raise SystemExit("No Google Drive portrait snapshot is available.")
+
+          riders = json.loads(Path("data/notion/riders.json").read_text(encoding="utf-8"))
+          matches = [
+              rider for rider in riders
+              if (rider.get("instagram") or "").strip().lstrip("@").casefold() in portraits
+          ]
+          if not matches:
+              raise SystemExit("No Notion rider matches the Google Drive portrait snapshot.")
+          print(f"Validated {len(portraits)} Drive portraits; {len(matches)} match current Notion riders.")
+          PY
+
+      - name: Build and verify production
+        run: |
+          set -euo pipefail
           python3 build.py
           python3 tests/environment_visibility.py
-          test ! -e competitions/red-bull
+          ! grep -q 'preprod-source-switcher' index.html
+          ! grep -q 'Google Sheets' index.html
+
+          test -f competitions/redbull-2026.html
+          test -f competitions/redbull-2026/rounds/cerroabajo-2026.html
+          test -f competitions/redbull-2026/rounds/rampage-2026.html
+          test -f competitions/redbull-2026/rounds/hardline-2026.html
+          grep -q 'Red Bull</h2>' competitions.html
+
+          test -f competitions/project-17.html
+          test -f competitions/project-17/riders.html
+          grep -q 'Project 17' competitions.html
+          grep -q 'data-rider-grid' competitions/project-17/riders.html
+
+          test -f competitions/beyondgravity.html
+          test -f competitions/beyondgravity/riders.html
+          test -f assets/img/competitions/beyondgravity.jpg
+          test -f assets/img/competitions/uci-mtb-world-cup-dh-2026.png
+          grep -q 'Beyond Gravity 2027 at Maydena Bike Park' competitions/beyondgravity.html
+          grep -q 'Beyond Gravity</h1>' competitions/beyondgravity.html
+          grep -q 'competition-status competition-status-soon' competitions.html
+          grep -q 'assets/img/competitions/uci-mtb-world-cup-dh-2026.png' competitions.html
+          grep -q '<loc>https://ridersfanatics.com/competitions/beyondgravity.html</loc>' sitemap.xml
+
+          test -f competitions/uci-mtb-world-cup-dh-2026.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/standings.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
+          grep -q 'UCI Downhill World Cup 2026 Standings' competitions/uci-mtb-world-cup-dh-2026/standings.html
+
+          test -f riders/descalzo-facundo.html
+          grep -q 'Jackson Goldstone Bike Check 2026' riders/jackson-goldstone.html
 
       - name: Prepare public site files
         run: |
+          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/public"
           deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" production
+          cp data/notion/sync-metadata.json "$RUNNER_TEMP/public/notion-sync-metadata.json"
+          python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())' \
+            > "$RUNNER_TEMP/public/notion-data-version.txt"
+
+          test -s "$RUNNER_TEMP/public/notion-sync-metadata.json"
+          test -s "$RUNNER_TEMP/public/notion-data-version.txt"
+          test -f "$RUNNER_TEMP/public/index.html"
+          test -f "$RUNNER_TEMP/public/riders.html"
+          ! test -d "$RUNNER_TEMP/public/.git"
+          ! test -d "$RUNNER_TEMP/public/tests"
+          ! test -d "$RUNNER_TEMP/public/scripts"
 
       - name: Install SFTP publishing client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
 
-      - name: Publish to OVH
+      - name: Publish only to the OVH production directory
         env:
           OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
           OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
@@ -48,6 +174,13 @@ jobs:
           OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
           OVH_REMOTE_DIR: ${{ secrets.OVH_REMOTE_DIR }}
         run: |
+          set -euo pipefail
+          case "$OVH_REMOTE_DIR" in
+            /home/ridersi/www|/home/ridersi/www/) ;;
+            *) echo "Unsafe production directory: $OVH_REMOTE_DIR" >&2; exit 2 ;;
+          esac
+          test -n "$OVH_SFTP_HOST" && test -n "$OVH_SFTP_PORT"
+          test -n "$OVH_SFTP_USER" && test -n "$OVH_SFTP_PASSWORD"
           lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
             "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" <<LFTP
           set sftp:auto-confirm yes
@@ -60,11 +193,23 @@ jobs:
 
       - name: Verify production
         run: |
-          curl --fail --silent --show-error --retry 5 \
-            --retry-delay 5 https://ridersfanatics.com/ > /dev/null
-          curl --fail --silent --show-error --retry 5 \
-            --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/ > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/beyondgravity.html | grep -q 'Beyond Gravity 2027 at Maydena Bike Park'
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/assets/img/competitions/beyondgravity.jpg > /dev/null
+          test "$(curl --silent --location --output /dev/null --write-out '%{http_code} %{url_effective}' \
+            https://ridersfanatics.com/competitions/uci/ | sed 's/:443\//\//')" = \
+            '200 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html'
+          test "$(curl --silent --location --output /dev/null --write-out '%{http_code} %{url_effective}' \
+            https://ridersfanatics.com/riders/facundo-descalzo.html | sed 's/:443\//\//')" = \
+            '200 https://ridersfanatics.com/riders/descalzo-facundo.html'
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
-          curl --silent --show-error --head https://ridersfanatics.com/ \
-            | grep -qi '^strict-transport-security:'
+          curl --silent --show-error --head https://ridersfanatics.com/ | grep -qi '^strict-transport-security:'

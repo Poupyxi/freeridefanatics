@@ -33,6 +33,15 @@ class DriveImageSyncTests(unittest.TestCase):
             with self.subTest(target=target), self.assertRaises(ValueError):
                 sync_drive_images.safe_output(target)
 
+    def test_public_mirror_requires_the_exact_generated_directory(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            accepted = root / "assets" / "img" / "drive-library"
+            self.assertEqual(sync_drive_images.safe_public_mirror(accepted), accepted.resolve())
+            for rejected in (root / "assets", root / "assets" / "img", root / "drive-library"):
+                with self.subTest(rejected=rejected), self.assertRaises(ValueError):
+                    sync_drive_images.safe_public_mirror(rejected)
+
 
 if __name__ == "__main__":
     unittest.main()

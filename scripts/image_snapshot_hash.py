@@ -6,7 +6,10 @@ import hashlib
 from pathlib import Path
 
 
-IMAGE_EXTENSIONS = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
+IMAGE_EXTENSIONS = {
+    ".avif", ".bmp", ".gif", ".heic", ".heif", ".jpeg", ".jpg",
+    ".png", ".svg", ".tif", ".tiff", ".webp",
+}
 
 
 def main():

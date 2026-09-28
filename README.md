@@ -145,6 +145,12 @@ and equipment images, then compares the generated data and image hashes with
 the versions already on OVH. An unchanged snapshot is not redeployed, and an
 invalid or unavailable source cannot replace the last valid preview.
 
+Every image found recursively under the configured Drive folder is also
+mirrored under `assets/img/drive-library/` for publication, even when its folder
+or filename does not yet match a rider, equipment item or competition component.
+Recognised `PPRiders`, `PictureRiders` and `Equipment` folders additionally feed
+the site's normal optimized image paths.
+
 The Notion public API queries data sources rather than UI views. Equivalent
 filters are therefore enforced in `scripts/sync_notion.py`. Add the integration
 secret as `NOTION_TOKEN` in the GitHub `preproduction` environment and share

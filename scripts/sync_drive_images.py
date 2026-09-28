@@ -10,14 +10,6 @@ import shutil
 from pathlib import Path
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
-IMAGE_MIMES = {
-    "image/avif",
-    "image/gif",
-    "image/jpeg",
-    "image/png",
-    "image/svg+xml",
-    "image/webp",
-}
 READ_ONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly"
 SAFE_SEGMENT = re.compile(r"[\\/\x00]")
 LIBRARY_SECTION_NAMES = {"ppriders", "pictureriders", "equipment"}
@@ -35,6 +27,15 @@ def safe_output(path: Path) -> Path:
     forbidden = {Path("/").resolve(), Path.home().resolve(), Path.cwd().resolve()}
     if resolved in forbidden or len(resolved.parts) < 3:
         raise ValueError(f"Unsafe synchronization target: {resolved}")
+    return resolved
+
+
+def safe_public_mirror(path: Path) -> Path:
+    resolved = path.expanduser().resolve()
+    if tuple(part.casefold() for part in resolved.parts[-3:]) != (
+        "assets", "img", "drive-library"
+    ):
+        raise ValueError(f"Drive mirror must end with assets/img/drive-library: {resolved}")
     return resolved
 
 
@@ -93,7 +94,15 @@ def sync_folder(service, folder_id: str, destination: Path, relative=Path(".")):
         name = safe_name(item.get("name"))
         folded = name.casefold()
         if folded in seen_names:
-            raise RuntimeError(f"Duplicate Drive name in {relative}: {name}")
+            path = Path(name)
+            suffix = f"--{item['id'][:8]}"
+            name = f"{path.stem}{suffix}{path.suffix}"
+            folded = name.casefold()
+            counter = 2
+            while folded in seen_names:
+                name = f"{path.stem}{suffix}-{counter}{path.suffix}"
+                folded = name.casefold()
+                counter += 1
         seen_names.add(folded)
         child_relative = relative / name
         child_path = destination / child_relative
@@ -101,7 +110,7 @@ def sync_folder(service, folder_id: str, destination: Path, relative=Path(".")):
         if mime == FOLDER_MIME:
             child_path.mkdir(parents=True, exist_ok=True)
             records.extend(sync_folder(service, item["id"], destination, child_relative))
-        elif mime in IMAGE_MIMES:
+        elif isinstance(mime, str) and mime.startswith("image/"):
             download_file(service, item["id"], child_path)
             digest = hashlib.sha256(child_path.read_bytes()).hexdigest()
             records.append({
@@ -126,6 +135,7 @@ def main():
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--public-mirror", type=Path)
     args = parser.parse_args()
     if not args.folder_id:
         raise SystemExit("GOOGLE_DRIVE_IMAGE_FOLDER_ID is required")
@@ -154,6 +164,12 @@ def main():
     if not records:
         raise SystemExit("No supported images were found in the Google Drive folder")
 
+    if args.public_mirror:
+        public_mirror = safe_public_mirror(args.public_mirror)
+        if public_mirror.exists():
+            shutil.rmtree(public_mirror)
+        shutil.copytree(output, public_mirror)
+
     manifest = {
         "source_folder_id": args.folder_id,
         "source_folder_name": metadata.get("name"),
@@ -164,6 +180,8 @@ def main():
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
     args.manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Downloaded {len(records)} Drive images from {metadata.get('name')!r} into {output}")
+    if args.public_mirror:
+        print(f"Mirrored every downloaded Drive image into {public_mirror}")
 
 
 if __name__ == "__main__":

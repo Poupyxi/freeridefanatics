@@ -70,11 +70,12 @@ jobs:
           test -n "$GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON"
           python3 scripts/sync_drive_images.py \
             --output "$RF_IMAGE_LIBRARY" \
-            --manifest data/drive/live-image-manifest.json
+            --manifest data/drive/live-image-manifest.json \
+            --public-mirror assets/img/drive-library
           python3 tests/drive_image_sync.py
           python3 import_images.py --force --no-build
           python3 scripts/image_snapshot_hash.py \
-            assets/img/riders assets/img/riders-action assets/img/equipment \
+            assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment \
             > data/drive/live-images-version.txt
           test -s data/drive/live-image-manifest.json
           test -s data/drive/live-images-version.txt

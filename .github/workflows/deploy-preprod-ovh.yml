@@ -1,4 +1,4 @@
-name: Deploy RidersFanatics preproduction to OVH
+name: Update Preprod
 
 on:
   push:
@@ -161,12 +161,14 @@ jobs:
           cp data/notion/sync-metadata.json "$RUNNER_TEMP/public/notion-sync-metadata.json"
           python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())' \
             > "$RUNNER_TEMP/public/notion-data-version.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/public/deployment-source-sha.txt"
           printf 'profile_data_source=notion-only\nimage_source=google-drive-only\n' \
             > "$RUNNER_TEMP/public/data-source-status.txt"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
 
           test -s "$RUNNER_TEMP/public/notion-sync-metadata.json"
           test -s "$RUNNER_TEMP/public/notion-data-version.txt"
+          test -s "$RUNNER_TEMP/public/deployment-source-sha.txt"
           test -s "$RUNNER_TEMP/public/data-source-status.txt"
           test -f "$RUNNER_TEMP/public/competitions/project-17/riders.html"
           grep -q 'data-rider-grid' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
@@ -249,6 +251,7 @@ jobs:
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' "${auth[@]}" https://preprod.ridersfanatics.com/)" = "200"
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/notion-data-version.txt > /dev/null
+          test "$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/deployment-source-sha.txt)" = "$(git rev-parse HEAD)"
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
           source_status="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/data-source-status.txt)"
           grep -q '^profile_data_source=notion-only$' <<< "$source_status"

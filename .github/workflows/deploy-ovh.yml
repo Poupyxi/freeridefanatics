@@ -1,8 +1,6 @@
-name: Deploy RidersFanatics to OVH
+name: Preprod to Prod
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -13,20 +11,26 @@ permissions:
   contents: read
 
 jobs:
-  notion-snapshot:
+  validate-preprod:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: preproduction
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
     env:
       RF_DATA_SOURCE: notion
       RF_DATA_PATH: data/notion/riders.json
       RF_COMPETITIONS_PATH: data/notion/competitions.json
 
     steps:
-      - name: Check out the production revision
+      - name: Check out the preproduction revision
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: preprod
+
+      - name: Record the exact preproduction revision
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Read and validate Notion
         env:
@@ -44,7 +48,35 @@ jobs:
           python3 tests/rider_name_normalization.py
           python3 tests/seo_priority_content.py
 
-      - name: Pass the validated snapshot to the production build
+      - name: Confirm this revision and data are live in preproduction
+        env:
+          PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
+          PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
+
+          local_source="$(git rev-parse HEAD)"
+          live_source="$(curl --fail --silent --show-error --retry 3 \
+            --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
+            https://preprod.ridersfanatics.com/deployment-source-sha.txt)"
+          test "$local_source" = "$live_source" || {
+            echo "Preproduction is not currently serving revision $local_source." >&2
+            echo "Published revision: $live_source" >&2
+            exit 1
+          }
+
+          local_version="$(python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())')"
+          live_version="$(curl --fail --silent --show-error --retry 3 \
+            --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
+            https://preprod.ridersfanatics.com/notion-data-version.txt)"
+          test "$local_version" = "$live_version" || {
+            echo "The current Notion snapshot has not yet been validated in preproduction." >&2
+            echo "Wait for the preproduction action, then retry this promotion." >&2
+            exit 1
+          }
+
+      - name: Pass the validated preproduction snapshot to the production build
         uses: actions/upload-artifact@v4
         with:
           name: notion-production-snapshot
@@ -52,7 +84,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: notion-snapshot
+    needs: validate-preprod
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: production
@@ -65,10 +97,10 @@ jobs:
       RF_SKIP_IMAGE_OPTIMIZER: "1"
 
     steps:
-      - name: Check out the production revision
+      - name: Check out the exact validated preproduction revision
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ needs.validate-preprod.outputs.source_sha }}
 
       - name: Load the validated Notion snapshot
         uses: actions/download-artifact@v4

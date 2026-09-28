@@ -1568,6 +1568,57 @@ def competition_event_label(event):
     label = " ".join(event.split())
     return re.sub(r"\bCero\s*Abajo\b", "Cerro Abajo", label, flags=re.IGNORECASE)
 
+
+def priority_round_seo(competition, event, rider_count, category_description,
+                       has_points, show_team_ranking):
+    """Return focused search copy for the event pages with the strongest intent."""
+    slug = competition_round_slug(event)
+    teams = ", team standings" if show_team_ranking else ""
+    points = ", points" if has_points else ""
+    if competition.get("id") == "uci-mtb-world-cup-dh-2026" and slug == "whistler":
+        return {
+            "title": "UCI Downhill Whistler 2026 Results | Riders & Rankings",
+            "description": (
+                f"Whistler UCI Downhill World Cup 2026 results: {category_description} placings"
+                f"{points}{teams} and {rider_count} linked rider profiles."
+            ),
+            "heading": "Whistler UCI Downhill World Cup 2026",
+            "copy": (
+                f"Explore the Whistler downhill results for the 2026 UCI mountain bike season. "
+                f"This event page connects {rider_count} recorded riders with their finishing "
+                "positions, points, teams, season profiles and documented bike equipment."
+            ),
+        }
+    if competition.get("id") == "redbull-2026" and "hardline" in slug:
+        return {
+            "title": "Red Bull Hardline 2026 | Riders, Results & Rankings",
+            "description": (
+                f"Red Bull Hardline 2026 riders and results: {category_description} rankings"
+                f"{points}{teams}, event information and {rider_count} linked athlete profiles."
+            ),
+            "heading": "Red Bull Hardline 2026 riders and results",
+            "copy": (
+                "Follow the Red Bull Hardline 2026 rider field, event status and verified results. "
+                "Every recorded athlete links to a RidersFanatics profile with race history and "
+                "documented mountain bike equipment."
+            ),
+        }
+    if competition.get("id") == "redbull-2026" and "rampage" in slug:
+        return {
+            "title": "Red Bull Rampage 2026 | Riders, Results & Rankings",
+            "description": (
+                f"Red Bull Rampage 2026 riders and results: {category_description} rankings"
+                f"{points}{teams}, event information and {rider_count} linked athlete profiles."
+            ),
+            "heading": "Red Bull Rampage 2026 riders and results",
+            "copy": (
+                "Follow the Red Bull Rampage 2026 rider field, event status and verified results. "
+                "Connected rider profiles provide race history and documented freeride bike "
+                "equipment as information becomes available."
+            ),
+        }
+    return None
+
 RED_BULL_CERRO_ABAJO_EVENTS = {
     "valparaiso": {
         "display_name": "Valparaíso",
@@ -1705,6 +1756,10 @@ def build_competition_round(riders, competition, event, round_number, events):
     category_description = " and ".join(label for _, label in visible_categories) or "rider"
     team_description = ", teams" if show_team_ranking else ""
     has_points = any(result.get("points") is not None for _, result in all_entries)
+    focused_seo = priority_round_seo(
+        competition, event, len(all_entries), category_description,
+        has_points, show_team_ranking,
+    )
     if cid == "redbull-2026" and not all_entries:
         page_title = f"Red Bull {display_event} | 2026 Event & Riders | {SITE_NAME}"
         description = (f"Red Bull {display_event} is scheduled for {scheduled_event.get('date') or '2026'}. "
@@ -1718,6 +1773,9 @@ def build_competition_round(riders, competition, event, round_number, events):
         page_title = f"{display_event} Downhill Results | {competition['season']} {SITE_NAME}"
         points_copy = ", points" if has_points else ""
         description = f"{event} downhill results from the {name}: {category_description} placings{points_copy}{team_description} and linked rider profiles."
+    if focused_seo:
+        page_title = focused_seo["title"]
+        description = focused_seo["description"]
     schemas = [
         {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{display_event} {name} {'results' if all_entries else 'event'}",
          "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
@@ -1740,6 +1798,24 @@ def build_competition_round(riders, competition, event, round_number, events):
                                      "addressLocality": official_event["city"],
                                      "addressCountry": official_event["country_code"]}},
             "url": absolute_url(path), "sameAs": official_event["official_url"],
+        })
+    scheduled_date = scheduled_event.get("date")
+    scheduled_location = scheduled_event.get("location")
+    if focused_seo and scheduled_date and scheduled_location and not official_event:
+        schemas.append({
+            "@context": "https://schema.org", "@type": "SportsEvent",
+            "name": focused_seo["heading"], "description": focused_seo["copy"],
+            "startDate": scheduled_date,
+            "eventStatus": ("https://schema.org/EventCompleted" if all_entries
+                            else "https://schema.org/EventScheduled"),
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "location": {"@type": "Place", "name": scheduled_location},
+            "url": absolute_url(path),
+            "competitor": [
+                {"@type": "Person", "name": rider["display_name"],
+                 "url": absolute_url(f"/riders/{rider['slug']}.html")}
+                for rider, _ in all_entries[:12]
+            ],
         })
     html = head(
         page_title, description, "../../../",
@@ -1766,8 +1842,12 @@ def build_competition_round(riders, competition, event, round_number, events):
     event_logo_html = (f'<div class="redbull-event-logo"><img src="../../../{event_logo["src"]}" '
                        f'alt="{esc_attr(event_logo["name"])}"></div>' if event_logo else "")
     visible_event_name = re.sub(r"\s+20\d{2}$", "", display_event).strip()
+    seo_context = ""
+    if focused_seo:
+        seo_context = f'''<section class="section round-seo-context"><div class="wrap"><div class="competition-note"><strong>{esc(focused_seo['heading'])}</strong><div><p>{esc(focused_seo['copy'])}</p><p><a href="../../../riders.html#grid">Explore the rider directory →</a> · <a href="../../../equipment.html">Compare rider equipment →</a></p></div></div></div></section>'''
     html += f'''<main><section class="round-hero"><div class="wrap"><div class="round-event-identity">{event_logo_html}<div class="round-event-copy"><div class="label">Event {round_number:02d} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(visible_event_name)}</h1></div></div>{official_source}<div class="round-hero-leaders">{''.join(hero_leaders)}</div></div></section>
 {results_section}
+{seo_context}
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''
     html += footer_html("../../../")
@@ -3317,16 +3397,96 @@ def rider_editorial(r, riders):
     setup += " These entries describe the documented race platform; settings, compounds and prototype internals can change by event."
     return rank, season, setup, best_place
 
+
+def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts):
+    """Build unique, query-led titles and descriptions for every rider profile."""
+    name = rider["display_name"]
+    team = rider.get("team") or ""
+    points = rider_total_points(rider)
+    frame = highlight_parts[0] if highlight_parts else ""
+    if equipment and history:
+        title = f"{name} Bike Check 2026 | DH Results & Equipment"
+    elif history:
+        title = f"{name} 2026 Downhill Results, Ranking & Profile"
+    elif equipment:
+        title = f"{name} Bike Check 2026 | Mountain Bike Equipment"
+    else:
+        title = f"{name} Downhill Rider Profile | {SITE_NAME}"
+
+    details = []
+    if team:
+        details.append(team)
+    if frame:
+        details.append(frame)
+    if history:
+        ranking = f"ranked {ordinal(category_rank)}" if category_rank else "season results"
+        details.append(f"{ranking} with {points} tracked points")
+    if equipment:
+        details.append(f"{len(equipment)} documented bike components")
+    description = f"{name} 2026 downhill rider profile: " + ", ".join(details) + "."
+    if not details:
+        description = f"{name} downhill rider profile, biography, race participation and equipment updates on RidersFanatics."
+
+    priority_titles = {
+        "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",
+        "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026 | Results & Setup",
+        "lisa-bouladou": "Lisa Bouladou 2026 | DH Results & Bike Check",
+        "asa-vermette": "Asa Vermette Bike Check 2026 | Results & Equipment",
+        "amaury-pierron": "Amaury Pierron Bike Check 2026 | UCI DH Results",
+        "max-alran": "Max Alran Bike Check 2026 | UCI DH Results",
+        "jackson-goldstone": "Jackson Goldstone Bike Check 2026 | UCI DH Results",
+        "jordan-williams": "Jordan Williams Bike Check 2026 | Setup & Results",
+        "anna-newkirk": "Anna Newkirk Bike Check 2026 | DH Results & Setup",
+        "gloria-scarsi": "Gloria Scarsi Bike Check 2026 | DH Results & Setup",
+        "sacha-earnest": "Sacha Earnest Bike Check 2026 | DH Results & Setup",
+    }
+    return priority_titles.get(rider.get("slug"), title), description
+
+
+def rider_competition_context(rider):
+    """Add crawlable contextual links from a rider profile to recorded seasons/events."""
+    links = []
+    seen = set()
+    for result in reversed(rider.get("competition_history") or []):
+        competition = next(
+            (item for item in COMPETITIONS if item.get("name") == result.get("category")),
+            None,
+        )
+        if not competition:
+            continue
+        competition_key = (competition["id"], "season")
+        if competition_key not in seen:
+            links.append((
+                f"../competitions/{competition['id']}.html",
+                f"{competition_display_name(competition)} {competition.get('season', '')}".strip(),
+            ))
+            seen.add(competition_key)
+        if result.get("event"):
+            event_key = (competition["id"], result["event"])
+            if event_key not in seen:
+                links.append((
+                    f"../competitions/{competition['id']}/rounds/{competition_round_slug(result['event'])}.html",
+                    f"{competition_event_label(result['event'])} results",
+                ))
+                seen.add(event_key)
+        if len(links) >= 3:
+            break
+    if not links:
+        return ""
+    rendered = " · ".join(f'<a href="{esc_attr(url)}">{esc(label)}</a>' for url, label in links)
+    return f'<p class="data-note rider-competition-links"><strong>Competition record:</strong> {rendered}.</p>'
+
 def build_rider_page(r, riders):
     prefix = "../"
     # The rider page hero prefers the portrait action shot; the square avatar
     # (used on the grid cards) is the fallback, then the initials placeholder.
     action = has_action_photo(r["slug"])
     photo = has_photo(r["slug"])
+    portrait_alt = f"{r['display_name']} professional downhill mountain bike rider"
     if action:
-        photo_html = f'<img src="../assets/img/riders-action/{action}" alt="{esc(r["display_name"])}" fetchpriority="high">'
+        photo_html = f'<img src="../assets/img/riders-action/{action}" alt="{esc(portrait_alt)}" fetchpriority="high">'
     elif photo:
-        photo_html = f'<img src="../assets/img/riders/{photo}" alt="{esc(r["display_name"])}" width="400" height="400" fetchpriority="high">'
+        photo_html = f'<img src="../assets/img/riders/{photo}" alt="{esc(portrait_alt)}" width="400" height="400" fetchpriority="high">'
     else:
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
 
@@ -3372,39 +3532,8 @@ def build_rider_page(r, riders):
     if highlight_parts:
         rider_summary += ", including " + ", ".join(highlight_parts)
     rider_summary += f". The season record below contains {len(history)} tracked result{'s' if len(history) != 1 else ''} and {rider_total_points(r)} cumulative points."
-    meta_description = f"{r['display_name']}: 2026 downhill results, {rider_total_points(r)} tracked points"
-    if category_rank:
-        meta_description += f", {ordinal(category_rank)} in {r.get('gender_category') or 'the category'}"
-    meta_description += f", plus the documented bike setup and equipment."
-    keyword_pages = {
-        "jackson-goldstone": (
-            "Jackson Goldstone Bike Setup 2026 | Results & Kit",
-            "Jackson Goldstone bike setup for 2026: frame, suspension, wheels and components, plus UCI downhill results, ranking and tracked points.",
-        ),
-        "jordan-williams": (
-            "Jordan Williams Bike Check 2026 | Setup & Results",
-            "Jordan Williams bike check and 2026 downhill setup: documented frame, suspension and components with UCI results, ranking and points.",
-        ),
-        "asa-vermette": (
-            "Asa Vermette Bike Setup 2026 | Results & Equipment",
-            "Asa Vermette bike setup and equipment for 2026, with documented race components, UCI downhill results, championship ranking and points.",
-        ),
-        "anna-newkirk": (
-            "Anna Newkirk — Downhill Rider, Results & Bike 2026",
-            "Anna Newkirk’s 2026 profile: 4th in the tracked UCI DH Women Elite standings with 565 points, plus results and her Frameworks race bike setup.",
-        ),
-        "gloria-scarsi": (
-            "Gloria Scarsi — Downhill Rider, Results & Bike 2026",
-            "Gloria Scarsi’s 2026 profile: 5th in the tracked UCI DH Women Elite standings with 550 points, plus results and her Zerode G3 race bike setup.",
-        ),
-        "sacha-earnest": (
-            "Sacha Earnest — Downhill Rider, Results & Bike 2026",
-            "Sacha Earnest’s 2026 profile: 7th in the tracked UCI DH Women Elite standings with 520 points, plus results, podiums and her Trek Session setup.",
-        ),
-    }
-    page_title, meta_description = keyword_pages.get(
-        r.get("slug"),
-        (f"{r['display_name']} — Bike Setup & Kit | {SITE_NAME}", meta_description),
+    page_title, meta_description = rider_seo_metadata(
+        r, equipment, history, category_rank, highlight_parts,
     )
     if history:
         results_html = f"""{competition_filters(history)}
@@ -3447,6 +3576,8 @@ def build_rider_page(r, riders):
         "@context": "https://schema.org", "@type": "Person", "name": r["display_name"],
         "url": absolute_url(rider_url), "nationality": r.get("country") or None,
         "description": rider_summary,
+        "jobTitle": "Professional mountain bike rider",
+        "knowsAbout": ["Downhill mountain biking", "Mountain bike racing", "Mountain bike equipment"],
     }
     if rider_image:
         person_schema["image"] = absolute_url(rider_image)
@@ -3459,7 +3590,7 @@ def build_rider_page(r, riders):
         meta_description,
         prefix, canonical_path=rider_url, page_type="article", image_path=rider_image,
         schemas=[
-            {"@context": "https://schema.org", "@type": "WebPage", "name": f"{r['display_name']} bike setup and results", "url": absolute_url(rider_url), "dateModified": SITE_UPDATED, "mainEntity": {"@id": absolute_url(rider_url) + "#rider"}},
+            {"@context": "https://schema.org", "@type": "ProfilePage", "name": f"{r['display_name']} bike setup and results", "description": meta_description, "url": absolute_url(rider_url), "dateModified": SITE_UPDATED, "mainEntity": {"@id": absolute_url(rider_url) + "#rider"}},
             {**person_schema, "@id": absolute_url(rider_url) + "#rider"},
             breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html"), (r["display_name"], rider_url)]),
         ]
@@ -3475,6 +3606,7 @@ def build_rider_page(r, riders):
         f'<span>{esc(candidate.get("team") or "Privateer")} · {rider_total_points(candidate)} pts</span></a>'
         for candidate in related
     )
+    rider_context_links = rider_competition_context(r)
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
@@ -3493,7 +3625,7 @@ def build_rider_page(r, riders):
     {setup_head}{build_html}
     {equip_html}
 
-    <section class="rider-editorial rider-setup-analysis reveal"><div><div class="label">Build context</div><h2>Setup analysis</h2><p>{esc(setup_analysis)}</p><p class="data-note">Page generated from the dataset updated {esc(SITE_UPDATED)}. Equipment is revised when a verifiable change is identified. <a href="../methodology.html">Read the methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></section>
+    <section class="rider-editorial rider-setup-analysis reveal"><div><div class="label">Build context</div><h2>Setup analysis</h2><p>{esc(setup_analysis)}</p>{rider_context_links}<p class="data-note">Page generated from the dataset updated {esc(SITE_UPDATED)}. Equipment is revised when a verifiable change is identified. <a href="../methodology.html">Read the methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></section>
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>

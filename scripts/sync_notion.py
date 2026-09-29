@@ -404,12 +404,14 @@ def export(client: Notion):
         event_ids = value(item, "🏆 Event ") or []
         event_id = next((identifier for identifier in event_ids if identifier in events), None)
         season_id = event_seasons.get(event_id)
-        phase = value(item, "Sélectionner")
+        # The Race database now exposes explicit English property names. Keep
+        # the former names as a fallback so an older snapshot still exports.
+        phase = value(item, "Stage") or value(item, "Sélectionner")
         if season_id and value(item, "Type") == "Downhill":
             races[page_id(item.get("id"))] = {
                 "event": events[event_id]["name"],
                 "date": events[event_id]["date"],
-                "gender": value(item, "Sélectionner 1"),
+                "gender": value(item, "Gender") or value(item, "Sélectionner 1"),
                 "phase": phase,
                 "competition": seasons[season_id]["name"],
             }

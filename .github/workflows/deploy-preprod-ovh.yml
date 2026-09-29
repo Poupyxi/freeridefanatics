@@ -1,9 +1,18 @@
-name: Deploy RidersFanatics preproduction to OVH
+name: Update Preprod
 
 on:
   push:
     branches: [preprod]
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: Force rebuilding and publishing preproduction
+        required: true
+        type: boolean
+        default: true
+  schedule:
+    # Schedules run from the default branch; always build the preprod branch.
+    - cron: "*/15 * * * *"
 
 concurrency:
   group: ridersfanatics-preproduction
@@ -15,7 +24,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     environment: preproduction
     env:
       RF_BUILD_ENV: preprod
@@ -24,57 +33,175 @@ jobs:
       RF_COMPETITIONS_PATH: data/notion/competitions.json
       RF_SITE_URL: https://preprod.ridersfanatics.com
       RF_SKIP_IMAGE_OPTIMIZER: "1"
+      GOOGLE_DRIVE_IMAGE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_IMAGE_FOLDER_ID }}
 
     steps:
       - name: Check out the preproduction revision
         uses: actions/checkout@v4
+        with:
+          ref: preprod
 
-      - name: Read the 2026 data from Notion
+      - name: Read and validate Notion
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: |
+          set -euo pipefail
           test -n "$NOTION_TOKEN" || { echo "NOTION_TOKEN is required." >&2; exit 1; }
           python3 scripts/sync_notion.py
+          test -s data/notion/riders.json
+          test -s data/notion/competitions.json
+          test -s data/notion/sync-metadata.json
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
           python3 tests/notion_only_source.py
+          python3 tests/result_status_logic.py
+          python3 tests/rider_name_normalization.py
+          python3 tests/seo_priority_content.py
+
+      - name: Install read-only Google Drive image support
+        run: python3 -m pip install --disable-pip-version-check -r requirements-drive.txt
+
+      - name: Synchronize Google Drive images
+        env:
+          GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          RF_IMAGE_LIBRARY: ${{ runner.temp }}/freeride-images
+        run: |
+          set -euo pipefail
+          test -n "$GOOGLE_DRIVE_IMAGE_FOLDER_ID"
+          test -n "$GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON"
+          python3 scripts/sync_drive_images.py \
+            --output "$RF_IMAGE_LIBRARY" \
+            --manifest data/drive/live-image-manifest.json \
+            --public-mirror assets/img/drive-library
+          python3 tests/drive_image_sync.py
+          python3 import_images.py --force --no-build
+          python3 scripts/image_snapshot_hash.py \
+            assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment \
+            > data/drive/live-images-version.txt
+          test -s data/drive/live-image-manifest.json
+          test -s data/drive/live-images-version.txt
+
+      - name: Compare with the published data and images
+        id: change
+        env:
+          FORCE_DEPLOY: ${{ inputs.force_deploy || false }}
+          PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
+          PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          local_version="$(python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())')"
+          local_images_version="$(cat data/drive/live-images-version.txt)"
+          test -n "$local_version"
+          test -n "$local_images_version"
+
+          if test "$GITHUB_EVENT_NAME" = "push"; then
+            echo "A preprod code or committed image change requires a rebuild."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if test "$GITHUB_EVENT_NAME" = "workflow_dispatch" && test "$FORCE_DEPLOY" = "true"; then
+            echo "Manual forced refresh requested."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
+          remote_version="$(curl --fail --silent --show-error --retry 2 \
+            --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
+            https://preprod.ridersfanatics.com/notion-data-version.txt || true)"
+          remote_images_version="$(curl --fail --silent --show-error --retry 2 \
+            --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
+            https://preprod.ridersfanatics.com/drive-images-version.txt || true)"
+          if test "$local_version" = "$remote_version" && test "$local_images_version" = "$remote_images_version"; then
+            echo "No Notion or Google Drive image change; preproduction remains untouched."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Notion or Google Drive images changed, or no published version is available."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Keep the validated Notion snapshot for diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: notion-preproduction-snapshot
+          path: data/notion/
+          retention-days: 1
 
       - name: Build and test the protected preview
+        if: steps.change.outputs.changed == 'true'
         run: |
+          set -euo pipefail
           python3 build.py
           python3 tests/environment_visibility.py
-          ! grep -q '<section class="competition-hero"' competitions.html
-          ! grep -qi '<h1>Choose a competition' competitions.html
           grep -q 'Disallow: /' robots.txt
           grep -q 'noindex,nofollow,noarchive' index.html
-          test -f competitions/red-bull/index.html
-          test -f competitions/red-bull/rampage/index.html
-          test -f competitions/red-bull/hardline/index.html
-          grep -q 'uci-events-banner' competitions/uci-mtb-world-cup-dh-2026.html
-          grep -q 'uci-iconic-tour.js?v=5' competitions/uci-mtb-world-cup-dh-2026.html
-          ! grep -qi 'Recorded events' competitions/uci-mtb-world-cup-dh-2026.html
+          ! grep -q 'preprod-source-switcher' index.html
+          ! grep -q 'Google Sheets' index.html
+          test -f riders/finn-iles.html
+          test -f competitions/project-17.html
           test -f competitions/project-17/riders.html
           grep -q 'data-rider-grid' competitions/project-17/riders.html
-          grep -q 'class="rider-card reveal"' competitions/project-17/riders.html
+          test -f competitions/uci-mtb-world-cup-dh-2026.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
+          test -f competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html
+          grep -q 'Coming soon' competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html
 
       - name: Prepare isolated public files
+        if: steps.change.outputs.changed == 'true'
         env:
           PREPROD_AUTH_FILE: ${{ secrets.OVH_AUTH_FILE }}
         run: |
+          set -euo pipefail
           test -n "$PREPROD_AUTH_FILE"
           mkdir -p "$RUNNER_TEMP/public"
           deploy/publish-static.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/public" preprod
           cp data/notion/sync-metadata.json "$RUNNER_TEMP/public/notion-sync-metadata.json"
-          python3 -c 'import json; print(json.load(open("data/notion/sync-metadata.json"))["sha256"])' \
+          python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())' \
             > "$RUNNER_TEMP/public/notion-data-version.txt"
+          cp data/drive/live-images-version.txt "$RUNNER_TEMP/public/drive-images-version.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/public/deployment-source-sha.txt"
+          printf 'profile_data_source=notion-only\nimage_source=google-drive-only\n' \
+            > "$RUNNER_TEMP/public/data-source-status.txt"
           sed -i "s|__PREPROD_AUTH_FILE__|$PREPROD_AUTH_FILE|g" "$RUNNER_TEMP/public/.htaccess"
+
+          test -s "$RUNNER_TEMP/public/notion-sync-metadata.json"
+          test -s "$RUNNER_TEMP/public/notion-data-version.txt"
+          test -s "$RUNNER_TEMP/public/drive-images-version.txt"
+          test -s "$RUNNER_TEMP/public/deployment-source-sha.txt"
+          test -s "$RUNNER_TEMP/public/data-source-status.txt"
+          test -f "$RUNNER_TEMP/public/competitions/project-17/riders.html"
+          grep -q 'data-rider-grid' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
+          grep -q 'class="rider-card reveal"' "$RUNNER_TEMP/public/competitions/project-17/riders.html"
+          test -f "$RUNNER_TEMP/public/assets/img/riders/bragg-cami-drive.jpg"
+          grep -q 'assets/img/riders/bragg-cami-drive.jpg' "$RUNNER_TEMP/public/riders/bragg-cami.html"
+          test -f "$RUNNER_TEMP/public/assets/img/equipment/frame-forbidden-supernought.jpg"
+          grep -q 'assets/img/equipment/frame-forbidden-supernought.jpg' "$RUNNER_TEMP/public/riders/bragg-cami.html"
+          test -f "$RUNNER_TEMP/public/assets/img/equipment/reveal/frame-forbidden-supernought-sketch.png"
+          test -f "$RUNNER_TEMP/public/assets/img/equipment/reveal/frame-forbidden-supernought-draw.svg"
+          grep -q 'data-frame-reveal' "$RUNNER_TEMP/public/riders/bragg-cami.html"
+          grep -q 'frame-forbidden-supernought-draw.svg' "$RUNNER_TEMP/public/riders/bragg-cami.html"
+          grep -q 'data-rider-feedback' "$RUNNER_TEMP/public/riders/bragg-cami.html"
+          grep -q 'frame-src https://docs.google.com' "$RUNNER_TEMP/public/.htaccess"
+          grep -q 'competition-season-meta' "$RUNNER_TEMP/public/competitions/project-17.html"
+          grep -q 'Instagram <strong>@' "$RUNNER_TEMP/public/competitions/project-17.html"
+          ! grep -q 'preprod-source-switcher' "$RUNNER_TEMP/public/index.html"
+          ! grep -q 'Google Sheets' "$RUNNER_TEMP/public/index.html"
           ! test -f "$RUNNER_TEMP/public/contact-submit.php"
-          ! test -e "$RUNNER_TEMP/public/google"
-          ! test -e "$RUNNER_TEMP/public/notion"
+          ! test -d "$RUNNER_TEMP/public/google"
+          ! test -d "$RUNNER_TEMP/public/notion"
+          ! test -d "$RUNNER_TEMP/public/.git"
+          ! test -d "$RUNNER_TEMP/public/tests"
+          ! test -d "$RUNNER_TEMP/public/scripts"
 
       - name: Install publishing and authentication tools
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp apache2-utils
+        if: steps.change.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp apache2-utils
 
-      - name: Publish to the separate OVH directory
+      - name: Publish only to the OVH preproduction directory
+        if: steps.change.outputs.changed == 'true'
         env:
           OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
           OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
@@ -85,20 +212,29 @@ jobs:
           PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
           PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
         run: |
+          set -euo pipefail
           case "$OVH_REMOTE_DIR" in
-            /home/ridersi/www|/home/ridersi/www/|/|"") echo "Unsafe preproduction directory" >&2; exit 2 ;;
+            /home/ridersi/www|/home/ridersi/www/|/|"")
+              echo "Unsafe preproduction directory: $OVH_REMOTE_DIR" >&2
+              exit 2
+              ;;
           esac
+          test -n "$OVH_SFTP_HOST" && test -n "$OVH_SFTP_PORT"
+          test -n "$OVH_SFTP_USER" && test -n "$OVH_SFTP_PASSWORD"
+          test -n "$OVH_AUTH_FILE"
           test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
           htpasswd -nbB "$PREPROD_BASIC_USER" "$PREPROD_BASIC_PASSWORD" > "$RUNNER_TEMP/preprod.htpasswd"
           lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
             "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" \
             -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 20; put $RUNNER_TEMP/preprod.htpasswd -o $OVH_AUTH_FILE; mirror --reverse --delete --parallel=4 --verbose $RUNNER_TEMP/public $OVH_REMOTE_DIR; bye"
 
-      - name: Verify preproduction protection
+      - name: Verify preproduction protection and content
+        if: steps.change.outputs.changed == 'true'
         env:
           PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
           PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
         run: |
+          set -euo pipefail
           ready=0
           for attempt in {1..20}; do
             status_code="$(curl --silent --output /dev/null --write-out '%{http_code}' https://preprod.ridersfanatics.com/ || true)"
@@ -109,16 +245,33 @@ jobs:
             sleep 15
           done
           test "$ready" = "1"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/ > /dev/null
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/google/)" = "404"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/notion-sync-metadata.json | grep -q '"profile_data_source": "notion-only"'
-          page_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
-          grep -q 'uci-events-banner' <<< "$page_html"
-          grep -q 'uci-iconic-tour.js?v=5' <<< "$page_html"
-          ! grep -qi 'Recorded events' <<< "$page_html"
-          project_riders_html="$(curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/competitions/project-17/riders.html)"
+
+          auth=(--user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD")
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "${auth[@]}" https://preprod.ridersfanatics.com/)" = "200"
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/notion-data-version.txt > /dev/null
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/drive-images-version.txt > /dev/null
+          test "$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/deployment-source-sha.txt)" = "$(git rev-parse HEAD)"
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
+          source_status="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/data-source-status.txt)"
+          grep -q '^profile_data_source=notion-only$' <<< "$source_status"
+          grep -q '^image_source=google-drive-only$' <<< "$source_status"
+          index_html="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/)"
+          ! grep -q 'preprod-source-switcher' <<< "$index_html"
+          ! grep -q 'Google Sheets' <<< "$index_html"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "${auth[@]}" https://preprod.ridersfanatics.com/google/)" = "404"
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/assets/img/riders/bragg-cami-drive.jpg > /dev/null
+          project_riders_html="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/project-17/riders.html)"
           grep -q 'data-rider-grid' <<< "$project_riders_html"
           grep -q 'class="rider-card reveal"' <<< "$project_riders_html"
-          curl --fail --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=5 | grep -q 'customElements.define'
-          curl --silent --show-error --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html > /dev/null
+          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html | grep -q 'Coming soon'
+          uci_page="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
+          grep -q 'uci-events-banner' <<< "$uci_page"
+          grep -q 'uci-iconic-tour.js?v=8' <<< "$uci_page"
+          ! grep -qi 'Recorded events' <<< "$uci_page"
+          tour_script="$(curl --fail --silent --show-error "${auth[@]}" 'https://preprod.ridersfanatics.com/assets/js/uci-iconic-tour.js?v=8')"
+          grep -q "'/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html'" <<< "$tour_script"
+          grep -q "'/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html'" <<< "$tour_script"
+          curl --silent --show-error "${auth[@]}" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'

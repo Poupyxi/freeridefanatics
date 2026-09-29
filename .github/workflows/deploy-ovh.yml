@@ -9,6 +9,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   validate-preprod:
@@ -17,6 +18,7 @@ jobs:
     environment: preproduction
     outputs:
       source_sha: ${{ steps.source.outputs.sha }}
+      preprod_run_id: ${{ steps.preprod_run.outputs.run_id }}
     env:
       RF_DATA_SOURCE: notion
       RF_DATA_PATH: data/notion/riders.json
@@ -33,44 +35,34 @@ jobs:
         id: source
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Read and validate Notion
+      - name: Locate the latest successful preproduction snapshot
+        id: preprod_run
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          test -n "$NOTION_TOKEN" || { echo "NOTION_TOKEN is required." >&2; exit 1; }
-          python3 scripts/sync_notion.py
-          test -s data/notion/riders.json
-          test -s data/notion/competitions.json
-          test -s data/notion/sync-metadata.json
-          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
-          python3 tests/notion_only_source.py
-          python3 tests/result_status_logic.py
-          python3 tests/rider_name_normalization.py
-          python3 tests/seo_priority_content.py
+          run_id="$(gh api \
+            "/repos/$GITHUB_REPOSITORY/actions/workflows/deploy-preprod-ovh.yml/runs?status=success&per_page=1" \
+            --jq '.workflow_runs[0].id // empty')"
+          test -n "$run_id" || { echo "No successful preproduction run is available." >&2; exit 1; }
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
-      - name: Install read-only Google Drive image support
-        run: python3 -m pip install --disable-pip-version-check -r requirements-drive.txt
+      - name: Load the snapshot already validated in preproduction
+        uses: actions/download-artifact@v4
+        with:
+          name: validated-preproduction-snapshot
+          path: ${{ runner.temp }}/validated-preproduction-snapshot
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.preprod_run.outputs.run_id }}
 
-      - name: Synchronize and prepare Google Drive images
-        env:
-          GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
-          RF_IMAGE_LIBRARY: ${{ runner.temp }}/freeride-images
+      - name: Restore the snapshot already validated in preproduction
         run: |
           set -euo pipefail
-          test -n "$GOOGLE_DRIVE_IMAGE_FOLDER_ID"
-          test -n "$GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON"
-          python3 scripts/sync_drive_images.py \
-            --output "$RF_IMAGE_LIBRARY" \
-            --manifest data/drive/live-image-manifest.json \
-            --public-mirror assets/img/drive-library
-          python3 tests/drive_image_sync.py
-          python3 import_images.py --force --no-build
-          python3 scripts/image_snapshot_hash.py \
-            assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment \
-            > data/drive/live-images-version.txt
-          test -s data/drive/live-image-manifest.json
-          test -s data/drive/live-images-version.txt
+          snapshot="$RUNNER_TEMP/validated-preproduction-snapshot/validated-preproduction-snapshot.tar"
+          test -s "$snapshot"
+          tar -xf "$snapshot" -C "$GITHUB_WORKSPACE"
+          cp "$GITHUB_WORKSPACE/validated-source-sha.txt" "$RUNNER_TEMP/validated-source-sha.txt"
 
       - name: Confirm this revision and data are live in preproduction
         env:
@@ -80,7 +72,12 @@ jobs:
           set -euo pipefail
           test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
 
-          local_source="$(git rev-parse HEAD)"
+          local_source="$(cat "$RUNNER_TEMP/validated-source-sha.txt")"
+          test "$local_source" = "$(git rev-parse HEAD)" || {
+            echo "The latest successful preproduction snapshot does not match the current preprod branch." >&2
+            echo "Run Update Preprod successfully before promoting again." >&2
+            exit 1
+          }
           live_source="$(curl --fail --silent --show-error --retry 3 \
             --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
             https://preprod.ridersfanatics.com/deployment-source-sha.txt)"
@@ -110,27 +107,6 @@ jobs:
             exit 1
           }
 
-      - name: Package the validated preproduction snapshot
-        run: |
-          set -euo pipefail
-          tar -cf "$RUNNER_TEMP/validated-preproduction-snapshot.tar" \
-            data/notion \
-            data/drive/live-image-manifest.json \
-            data/drive/live-images-version.txt \
-            assets/img/drive-library \
-            assets/img/riders \
-            assets/img/riders-action \
-            assets/img/equipment
-          test -s "$RUNNER_TEMP/validated-preproduction-snapshot.tar"
-
-      - name: Pass the validated preproduction snapshot to the production build
-        uses: actions/upload-artifact@v4
-        with:
-          name: validated-preproduction-snapshot
-          path: ${{ runner.temp }}/validated-preproduction-snapshot.tar
-          retention-days: 1
-          compression-level: 0
-
   deploy:
     needs: validate-preprod
     runs-on: ubuntu-latest
@@ -155,6 +131,9 @@ jobs:
         with:
           name: validated-preproduction-snapshot
           path: ${{ runner.temp }}/validated-preproduction-snapshot
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.validate-preprod.outputs.preprod_run_id }}
 
       - name: Restore the validated preproduction snapshot
         run: |

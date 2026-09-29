@@ -258,6 +258,7 @@ jobs:
           grep -q '^image_source=google-drive-only$' <<< "$source_status"
           index_html="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/)"
           ! grep -q 'preprod-source-switcher' <<< "$index_html"
+
           ! grep -q 'Google Sheets' <<< "$index_html"
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' "${auth[@]}" https://preprod.ridersfanatics.com/google/)" = "404"
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/assets/img/riders/bragg-cami-drive.jpg > /dev/null
@@ -275,3 +276,28 @@ jobs:
           grep -q "'/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html'" <<< "$tour_script"
           grep -q "'/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html'" <<< "$tour_script"
           curl --silent --show-error "${auth[@]}" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'
+
+      - name: Package the validated preproduction snapshot
+        if: steps.change.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > "$RUNNER_TEMP/validated-source-sha.txt"
+          tar -cf "$RUNNER_TEMP/validated-preproduction-snapshot.tar" \
+            data/notion \
+            data/drive/live-image-manifest.json \
+            data/drive/live-images-version.txt \
+            assets/img/drive-library \
+            assets/img/riders \
+            assets/img/riders-action \
+            assets/img/equipment \
+            -C "$RUNNER_TEMP" validated-source-sha.txt
+          test -s "$RUNNER_TEMP/validated-preproduction-snapshot.tar"
+
+      - name: Keep the validated preproduction snapshot for promotion
+        if: steps.change.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-preproduction-snapshot
+          path: ${{ runner.temp }}/validated-preproduction-snapshot.tar
+          retention-days: 7
+          compression-level: 0

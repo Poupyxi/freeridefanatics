@@ -188,7 +188,7 @@ def result_status(result):
     return RESULT_STATUS_ALIASES.get(normalized)
 
 def result_counts_as_start(result):
-    """DNS is not a start; a prior qualifier can still mark participation."""
+    """DNS is not a start; DNF and DSQ count even without a recorded time."""
     if "participated" in result:
         return bool(result.get("participated"))
     return result_status(result) != "DNS"

@@ -282,8 +282,8 @@ def scoring_status(item, place: int | None = None) -> str | None:
 
 
 def scoring_counts_as_participation(phase: str | None, status: str | None) -> bool:
-    """A qualifier entry counts as participation, including DNS/DNF/DSQ."""
-    return phase == "Qualifier" or status != "DNS"
+    """DNS is never a participation; DNF and DSQ still count as starts."""
+    return status != "DNS"
 
 
 def ordinal(number: int | None) -> str | None:
@@ -425,8 +425,8 @@ def export(client: Notion):
         if race is None:
             continue
         place = safe_int(value(item, "Place"))
-        # A qualifier entry always belongs to the participant field, including
-        # DNS/DNF/DSQ. A final-only DNS does not count as a start.
+        # DNS never counts as participation, including during qualifying.
+        # DNF and DSQ remain starts even when no time was recorded.
         if not scoring_counts_as_participation(race["phase"], scoring_status(item, place)):
             continue
         for rider_id in rider_ids:

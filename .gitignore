@@ -13,6 +13,9 @@ tmp/
 .results-latest.csv
 .profiles-latest.csv
 assets/js/promo-pool.js
+assets/img/drive-library/
+data/drive/live-image-manifest.json
+data/drive/live-images-version.txt
 node_modules/
 .env
 .env.*

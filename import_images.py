@@ -48,13 +48,13 @@ try:
 except ImportError:
     HAS_CV2 = False
 
-LIBRARY = os.path.expanduser("~/Desktop/freeride")
+LIBRARY = os.environ.get("RF_IMAGE_LIBRARY", os.path.expanduser("~/Desktop/freeride"))
 SRC_PP = os.path.join(LIBRARY, "PPRiders")
 SRC_ACTION = os.path.join(LIBRARY, "PictureRiders")
 SRC_EQUIP = os.path.join(LIBRARY, "Equipment")
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(ROOT, "data", "riders.json")
+DATA_PATH = os.environ.get("RF_DATA_PATH", os.path.join(ROOT, "data", "riders.json"))
 OUT_PP = os.path.join(ROOT, "assets", "img", "riders")
 OUT_ACTION = os.path.join(ROOT, "assets", "img", "riders-action")
 OUT_EQUIP = os.path.join(ROOT, "assets", "img", "equipment")

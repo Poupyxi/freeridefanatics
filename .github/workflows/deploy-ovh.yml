@@ -206,7 +206,7 @@ jobs:
           test -f competitions/uci-mtb-world-cup-dh-2026/standings.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
-          grep -q 'UCI Downhill World Cup 2026 Standings' competitions/uci-mtb-world-cup-dh-2026/standings.html
+          grep -q 'UCI World Series 2026 Standings' competitions/uci-mtb-world-cup-dh-2026/standings.html
 
           test -f riders/descalzo-facundo.html
           grep -q 'Jackson Goldstone Bike Check 2026' riders/jackson-goldstone.html

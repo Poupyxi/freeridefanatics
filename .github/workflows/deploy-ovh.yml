@@ -13,7 +13,7 @@ permissions:
 jobs:
   validate-preprod:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     environment: preproduction
     outputs:
       source_sha: ${{ steps.source.outputs.sha }}
@@ -110,19 +110,26 @@ jobs:
             exit 1
           }
 
+      - name: Package the validated preproduction snapshot
+        run: |
+          set -euo pipefail
+          tar -cf "$RUNNER_TEMP/validated-preproduction-snapshot.tar" \
+            data/notion \
+            data/drive/live-image-manifest.json \
+            data/drive/live-images-version.txt \
+            assets/img/drive-library \
+            assets/img/riders \
+            assets/img/riders-action \
+            assets/img/equipment
+          test -s "$RUNNER_TEMP/validated-preproduction-snapshot.tar"
+
       - name: Pass the validated preproduction snapshot to the production build
         uses: actions/upload-artifact@v4
         with:
           name: validated-preproduction-snapshot
-          path: |
-            data/notion/
-            data/drive/live-image-manifest.json
-            data/drive/live-images-version.txt
-            assets/img/drive-library/
-            assets/img/riders/
-            assets/img/riders-action/
-            assets/img/equipment/
+          path: ${{ runner.temp }}/validated-preproduction-snapshot.tar
           retention-days: 1
+          compression-level: 0
 
   deploy:
     needs: validate-preprod
@@ -147,7 +154,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: validated-preproduction-snapshot
-          path: .
+          path: ${{ runner.temp }}/validated-preproduction-snapshot
+
+      - name: Restore the validated preproduction snapshot
+        run: |
+          set -euo pipefail
+          snapshot="$RUNNER_TEMP/validated-preproduction-snapshot/validated-preproduction-snapshot.tar"
+          test -s "$snapshot"
+          tar -xf "$snapshot" -C "$GITHUB_WORKSPACE"
 
       - name: Validate the production inputs
         run: |

@@ -56,6 +56,7 @@ jobs:
           python3 tests/result_status_logic.py
           python3 tests/rider_name_normalization.py
           python3 tests/seo_priority_content.py
+          python3 tests/workflow_contract.py
 
       - name: Install read-only Google Drive image support
         run: python3 -m pip install --disable-pip-version-check -r requirements-drive.txt
@@ -76,15 +77,24 @@ jobs:
             --manifest data/drive/live-image-manifest.json \
             --public-mirror assets/img/drive-library
           python3 tests/drive_image_sync.py
+          python3 scripts/sync_drive_logos.py --source-directory "$RF_IMAGE_LIBRARY"
+          python3 tests/drive_logo_sync.py
           python3 import_images.py --force --no-build
           python3 tests/equipment_category_mapping.py
           python3 tests/frame_reveal_assets.py
           python3 scripts/image_snapshot_hash.py \
             assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment \
+            assets/img/brands assets/img/competitions assets/img/teams \
             > data/drive/live-images-version.txt
           python3 scripts/deployment_health.py create \
             --riders data/notion/riders.json \
             --drive-manifest data/drive/live-image-manifest.json \
+            --public-image-path assets/img/riders \
+            --public-image-path assets/img/riders-action \
+            --public-image-path assets/img/equipment \
+            --public-image-path assets/img/brands \
+            --public-image-path assets/img/competitions \
+            --public-image-path assets/img/teams \
             --output data/deployment-health.json
           python3 tests/deployment_health.py
           test -s data/drive/live-image-manifest.json
@@ -146,11 +156,15 @@ jobs:
             data/notion \
             data/drive/live-image-manifest.json \
             data/drive/live-images-version.txt \
+            data/drive-logo-manifest.json \
             data/deployment-health.json \
             assets/img/drive-library \
             assets/img/riders \
             assets/img/riders-action \
             assets/img/equipment \
+            assets/img/brands \
+            assets/img/competitions \
+            assets/img/teams \
             -C "$RUNNER_TEMP" validated-source-sha.txt
           test -s "$RUNNER_TEMP/validated-preproduction-snapshot.tar"
 

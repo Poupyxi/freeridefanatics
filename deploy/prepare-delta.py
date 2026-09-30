@@ -15,13 +15,11 @@ import hashlib
 import json
 import re
 import shutil
+import unicodedata
 from pathlib import Path, PurePosixPath
 
 
 MANIFEST_NAME = "deployment-manifest.json"
-SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9._@+-]+$")
-
-
 def safe_relative_path(value: str) -> bool:
     if not isinstance(value, str) or not value:
         return False
@@ -29,8 +27,23 @@ def safe_relative_path(value: str) -> bool:
     return (
         not path.is_absolute()
         and value != MANIFEST_NAME
-        and all(part not in {"", ".", ".."} and SAFE_SEGMENT.fullmatch(part) for part in path.parts)
+        and all(
+            part not in {"", ".", ".."}
+            and all(unicodedata.category(character)[0] != "C" for character in part)
+            for part in path.parts
+        )
     )
+
+
+def lftp_quote(value: str) -> str:
+    """Quote a validated path for lftp without variable or command expansion."""
+    escaped = (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("$", "\\$")
+        .replace("`", "\\`")
+    )
+    return f'"{escaped}"'
 
 
 def sha256(path: Path) -> str:
@@ -118,7 +131,7 @@ def main() -> int:
     )
     args.delete_script.parent.mkdir(parents=True, exist_ok=True)
     args.delete_script.write_text(
-        "".join(f'rm -f "{relative}"\n' for relative in removed),
+        "".join(f"rm -f {lftp_quote('./' + relative)}\n" for relative in removed),
         encoding="utf-8",
     )
 

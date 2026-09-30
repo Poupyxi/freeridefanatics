@@ -9,14 +9,32 @@ import sys
 from pathlib import Path
 
 
-METRICS = ("riders", "results", "images")
+METRICS = ("riders", "results", "images", "published_images")
+IMAGE_EXTENSIONS = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 
 
 def read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def create_metrics(riders_path: Path, drive_manifest_path: Path) -> dict[str, object]:
+def count_public_images(paths: list[Path]) -> int:
+    images = set()
+    for root in paths:
+        if root.is_dir():
+            images.update(
+                image.resolve() for image in root.rglob("*")
+                if image.is_file() and image.suffix.casefold() in IMAGE_EXTENSIONS
+            )
+        elif root.is_file() and root.suffix.casefold() in IMAGE_EXTENSIONS:
+            images.add(root.resolve())
+    return len(images)
+
+
+def create_metrics(
+    riders_path: Path,
+    drive_manifest_path: Path,
+    public_image_paths: list[Path],
+) -> dict[str, object]:
     riders = read_json(riders_path)
     drive_manifest = read_json(drive_manifest_path)
     if not isinstance(riders, list) or not riders:
@@ -45,6 +63,7 @@ def create_metrics(riders_path: Path, drive_manifest_path: Path) -> dict[str, ob
             "riders": len(riders),
             "results": result_count,
             "images": len(files),
+            "published_images": count_public_images(public_image_paths),
         },
     }
 
@@ -88,7 +107,7 @@ def validate_metrics(
 
 
 def command_create(args) -> int:
-    metrics = create_metrics(args.riders, args.drive_manifest)
+    metrics = create_metrics(args.riders, args.drive_manifest, args.public_image_path)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(metrics, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
@@ -97,7 +116,8 @@ def command_create(args) -> int:
     counts = metrics["counts"]
     print(
         f"Deployment health: {counts['riders']} riders, "
-        f"{counts['results']} results, {counts['images']} images."
+        f"{counts['results']} results, {counts['images']} Drive images, "
+        f"{counts['published_images']} published images."
     )
     return 0
 
@@ -109,11 +129,13 @@ def command_validate(args) -> int:
         "riders": args.min_riders,
         "results": args.min_results,
         "images": args.min_images,
+        "published_images": args.min_published_images,
     }
     maximum_drop = {
         "riders": args.max_rider_drop,
         "results": args.max_result_drop,
         "images": args.max_image_drop,
+        "published_images": args.max_published_image_drop,
     }
     failures = validate_metrics(candidate, baseline, minimums, maximum_drop)
 
@@ -138,6 +160,7 @@ def parser() -> argparse.ArgumentParser:
     create = commands.add_parser("create")
     create.add_argument("--riders", type=Path, required=True)
     create.add_argument("--drive-manifest", type=Path, required=True)
+    create.add_argument("--public-image-path", type=Path, action="append", required=True)
     create.add_argument("--output", type=Path, required=True)
     create.set_defaults(handler=command_create)
 
@@ -147,9 +170,11 @@ def parser() -> argparse.ArgumentParser:
     validate.add_argument("--min-riders", type=int, default=300)
     validate.add_argument("--min-results", type=int, default=750)
     validate.add_argument("--min-images", type=int, default=1200)
+    validate.add_argument("--min-published-images", type=int, default=1500)
     validate.add_argument("--max-rider-drop", type=float, default=5.0)
     validate.add_argument("--max-result-drop", type=float, default=10.0)
     validate.add_argument("--max-image-drop", type=float, default=10.0)
+    validate.add_argument("--max-published-image-drop", type=float, default=10.0)
     validate.set_defaults(handler=command_validate)
     return root
 

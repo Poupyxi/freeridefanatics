@@ -17,10 +17,13 @@ with tempfile.TemporaryDirectory() as temp:
     delta = base / "delta"
     public.mkdir()
     (public / "assets").mkdir()
+    (public / "assets" / "Brand logo").mkdir()
     (public / "index.html").write_text("new page", encoding="utf-8")
     (public / ".htaccess").write_text("Options -Indexes", encoding="utf-8")
     unchanged = public / "assets" / "photo.webp"
     unchanged.write_bytes(b"same image")
+    spaced = public / "assets" / "Brand logo" / "Commençal (2026).webp"
+    spaced.write_bytes(b"unicode image")
 
     import hashlib
     old_manifest = {
@@ -32,6 +35,7 @@ with tempfile.TemporaryDirectory() as temp:
                 "size": unchanged.stat().st_size,
             },
             "old.html": {"sha256": "1" * 64, "size": 3},
+            "Old logo/Name with spaces.webp": {"sha256": "3" * 64, "size": 3},
             "../unsafe": {"sha256": "2" * 64, "size": 3},
         },
     }
@@ -49,9 +53,16 @@ with tempfile.TemporaryDirectory() as temp:
 
     assert (delta / "index.html").is_file()
     assert (delta / ".htaccess").is_file()
+    assert (delta / "assets" / "Brand logo" / "Commençal (2026).webp").is_file()
     assert not (delta / "assets" / "photo.webp").exists()
-    assert deletes.read_text(encoding="utf-8") == 'rm -f "old.html"\n'
+    assert deletes.read_text(encoding="utf-8") == (
+        'rm -f "./Old logo/Name with spaces.webp"\n'
+        'rm -f "./old.html"\n'
+    )
     generated = json.loads((public / "deployment-manifest.json").read_text(encoding="utf-8"))
-    assert set(generated["files"]) == {".htaccess", "index.html", "assets/photo.webp"}
+    assert set(generated["files"]) == {
+        ".htaccess", "index.html", "assets/photo.webp",
+        "assets/Brand logo/Commençal (2026).webp",
+    }
 
 print("deployment delta: passed")

@@ -66,7 +66,10 @@ jobs:
             assets/img/drive-library \
             assets/img/riders \
             assets/img/riders-action \
-            assets/img/equipment
+            assets/img/equipment \
+            assets/img/brands \
+            assets/img/competitions \
+            assets/img/teams
           tar -xf "$snapshot" -C "$GITHUB_WORKSPACE"
           cp "$GITHUB_WORKSPACE/validated-source-sha.txt" "$RUNNER_TEMP/validated-source-sha.txt"
 
@@ -151,7 +154,10 @@ jobs:
             assets/img/drive-library \
             assets/img/riders \
             assets/img/riders-action \
-            assets/img/equipment
+            assets/img/equipment \
+            assets/img/brands \
+            assets/img/competitions \
+            assets/img/teams
           tar -xf "$snapshot" -C "$GITHUB_WORKSPACE"
 
       - name: Validate the production inputs
@@ -159,16 +165,24 @@ jobs:
           set -euo pipefail
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
           python3 tests/notion_only_source.py
+          python3 tests/workflow_contract.py
           test -s data/drive/live-image-manifest.json
           test -s data/drive/live-images-version.txt
+          test -s data/drive-logo-manifest.json
           test -s data/deployment-health.json
           python3 scripts/deployment_health.py create \
             --riders data/notion/riders.json \
             --drive-manifest data/drive/live-image-manifest.json \
+            --public-image-path assets/img/riders \
+            --public-image-path assets/img/riders-action \
+            --public-image-path assets/img/equipment \
+            --public-image-path assets/img/brands \
+            --public-image-path assets/img/competitions \
+            --public-image-path assets/img/teams \
             --output "$RUNNER_TEMP/recomputed-deployment-health.json"
           cmp data/deployment-health.json "$RUNNER_TEMP/recomputed-deployment-health.json"
           python3 tests/deployment_health.py
-          test "$(python3 scripts/image_snapshot_hash.py assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment)" = \
+          test "$(python3 scripts/image_snapshot_hash.py assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment assets/img/brands assets/img/competitions assets/img/teams)" = \
             "$(cat data/drive/live-images-version.txt)"
 
       - name: Build and verify production
@@ -245,9 +259,11 @@ jobs:
             --min-riders 300 \
             --min-results 750 \
             --min-images 1200 \
+            --min-published-images 1500 \
             --max-rider-drop 5 \
             --max-result-drop 10 \
-            --max-image-drop 10
+            --max-image-drop 10 \
+            --max-published-image-drop 10
 
       - name: Install SFTP publishing client
         run: |

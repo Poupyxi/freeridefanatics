@@ -126,6 +126,22 @@ jobs:
           path: data/notion/
           retention-days: 1
 
+      - name: Package the validated preproduction snapshot
+        if: steps.change.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > "$RUNNER_TEMP/validated-source-sha.txt"
+          tar -cf "$RUNNER_TEMP/validated-preproduction-snapshot.tar" \
+            data/notion \
+            data/drive/live-image-manifest.json \
+            data/drive/live-images-version.txt \
+            assets/img/drive-library \
+            assets/img/riders \
+            assets/img/riders-action \
+            assets/img/equipment \
+            -C "$RUNNER_TEMP" validated-source-sha.txt
+          test -s "$RUNNER_TEMP/validated-preproduction-snapshot.tar"
+
       - name: Build and test the protected preview
         if: steps.change.outputs.changed == 'true'
         run: |
@@ -276,22 +292,6 @@ jobs:
           grep -q "'/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html'" <<< "$tour_script"
           grep -q "'/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html'" <<< "$tour_script"
           curl --silent --show-error "${auth[@]}" --head https://preprod.ridersfanatics.com/ | grep -qi '^x-robots-tag: noindex, nofollow, noarchive'
-
-      - name: Package the validated preproduction snapshot
-        if: steps.change.outputs.changed == 'true'
-        run: |
-          set -euo pipefail
-          git rev-parse HEAD > "$RUNNER_TEMP/validated-source-sha.txt"
-          tar -cf "$RUNNER_TEMP/validated-preproduction-snapshot.tar" \
-            data/notion \
-            data/drive/live-image-manifest.json \
-            data/drive/live-images-version.txt \
-            assets/img/drive-library \
-            assets/img/riders \
-            assets/img/riders-action \
-            assets/img/equipment \
-            -C "$RUNNER_TEMP" validated-source-sha.txt
-          test -s "$RUNNER_TEMP/validated-preproduction-snapshot.tar"
 
       - name: Keep the validated preproduction snapshot for promotion
         if: steps.change.outputs.changed == 'true'

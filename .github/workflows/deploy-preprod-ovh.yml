@@ -60,6 +60,9 @@ jobs:
       - name: Install read-only Google Drive image support
         run: python3 -m pip install --disable-pip-version-check -r requirements-drive.txt
 
+      - name: Install frame animation support
+        run: python3 -m pip install --disable-pip-version-check -r requirements-frame-reveal.txt
+
       - name: Synchronize Google Drive images
         env:
           GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
@@ -74,6 +77,7 @@ jobs:
             --public-mirror assets/img/drive-library
           python3 tests/drive_image_sync.py
           python3 import_images.py --force --no-build
+          python3 tests/frame_reveal_assets.py
           python3 scripts/image_snapshot_hash.py \
             assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment \
             > data/drive/live-images-version.txt

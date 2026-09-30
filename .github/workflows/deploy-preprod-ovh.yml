@@ -82,8 +82,14 @@ jobs:
           python3 scripts/image_snapshot_hash.py \
             assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment \
             > data/drive/live-images-version.txt
+          python3 scripts/deployment_health.py create \
+            --riders data/notion/riders.json \
+            --drive-manifest data/drive/live-image-manifest.json \
+            --output data/deployment-health.json
+          python3 tests/deployment_health.py
           test -s data/drive/live-image-manifest.json
           test -s data/drive/live-images-version.txt
+          test -s data/deployment-health.json
 
       - name: Compare with the published data and images
         id: change
@@ -140,6 +146,7 @@ jobs:
             data/notion \
             data/drive/live-image-manifest.json \
             data/drive/live-images-version.txt \
+            data/deployment-health.json \
             assets/img/drive-library \
             assets/img/riders \
             assets/img/riders-action \
@@ -180,6 +187,7 @@ jobs:
           python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())' \
             > "$RUNNER_TEMP/public/notion-data-version.txt"
           cp data/drive/live-images-version.txt "$RUNNER_TEMP/public/drive-images-version.txt"
+          cp data/deployment-health.json "$RUNNER_TEMP/public/deployment-health.json"
           git rev-parse HEAD > "$RUNNER_TEMP/public/deployment-source-sha.txt"
           printf 'profile_data_source=notion-only\nimage_source=google-drive-only\n' \
             > "$RUNNER_TEMP/public/data-source-status.txt"
@@ -188,6 +196,7 @@ jobs:
           test -s "$RUNNER_TEMP/public/notion-sync-metadata.json"
           test -s "$RUNNER_TEMP/public/notion-data-version.txt"
           test -s "$RUNNER_TEMP/public/drive-images-version.txt"
+          test -s "$RUNNER_TEMP/public/deployment-health.json"
           test -s "$RUNNER_TEMP/public/deployment-source-sha.txt"
           test -s "$RUNNER_TEMP/public/data-source-status.txt"
           test -f "$RUNNER_TEMP/public/competitions/project-17/riders.html"
@@ -305,6 +314,8 @@ jobs:
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/notion-data-version.txt > /dev/null
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/drive-images-version.txt > /dev/null
+          curl --fail --silent --show-error "${auth[@]}" \
+            https://preprod.ridersfanatics.com/deployment-health.json | grep -q '"riders"'
           curl --fail --silent --show-error "${auth[@]}" \
             "https://preprod.ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
           test "$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/deployment-source-sha.txt)" = "$(git rev-parse HEAD)"

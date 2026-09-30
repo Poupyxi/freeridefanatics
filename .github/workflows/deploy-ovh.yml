@@ -161,6 +161,13 @@ jobs:
           python3 tests/notion_only_source.py
           test -s data/drive/live-image-manifest.json
           test -s data/drive/live-images-version.txt
+          test -s data/deployment-health.json
+          python3 scripts/deployment_health.py create \
+            --riders data/notion/riders.json \
+            --drive-manifest data/drive/live-image-manifest.json \
+            --output "$RUNNER_TEMP/recomputed-deployment-health.json"
+          cmp data/deployment-health.json "$RUNNER_TEMP/recomputed-deployment-health.json"
+          python3 tests/deployment_health.py
           test "$(python3 scripts/image_snapshot_hash.py assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment)" = \
             "$(cat data/drive/live-images-version.txt)"
 
@@ -211,15 +218,36 @@ jobs:
           python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())' \
             > "$RUNNER_TEMP/public/notion-data-version.txt"
           cp data/drive/live-images-version.txt "$RUNNER_TEMP/public/drive-images-version.txt"
+          cp data/deployment-health.json "$RUNNER_TEMP/public/deployment-health.json"
 
           test -s "$RUNNER_TEMP/public/notion-sync-metadata.json"
           test -s "$RUNNER_TEMP/public/notion-data-version.txt"
           test -s "$RUNNER_TEMP/public/drive-images-version.txt"
+          test -s "$RUNNER_TEMP/public/deployment-health.json"
           test -f "$RUNNER_TEMP/public/index.html"
           test -f "$RUNNER_TEMP/public/riders.html"
           ! test -d "$RUNNER_TEMP/public/.git"
           ! test -d "$RUNNER_TEMP/public/tests"
           ! test -d "$RUNNER_TEMP/public/scripts"
+
+      - name: Enforce production volume guard
+        run: |
+          set -euo pipefail
+          baseline="$RUNNER_TEMP/current-production-health.json"
+          if ! curl --fail --silent --show-error --retry 3 \
+            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" \
+            --output "$baseline"; then
+            rm -f "$baseline"
+          fi
+          python3 scripts/deployment_health.py validate \
+            --candidate data/deployment-health.json \
+            --baseline "$baseline" \
+            --min-riders 300 \
+            --min-results 750 \
+            --min-images 1200 \
+            --max-rider-drop 5 \
+            --max-result-drop 10 \
+            --max-image-drop 10
 
       - name: Install SFTP publishing client
         run: |
@@ -281,6 +309,8 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-images-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" | grep -q '"riders"'
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
             "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
@@ -298,3 +328,27 @@ jobs:
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
           curl --silent --show-error --head https://ridersfanatics.com/ | grep -qi '^strict-transport-security:'
+
+      - name: Package the verified production rollback snapshot
+        run: |
+          set -euo pipefail
+          rollback="$RUNNER_TEMP/production-rollback"
+          mkdir -p "$rollback"
+          tar -cf "$rollback/public-site.tar" -C "$RUNNER_TEMP/public" .
+          cp data/deployment-health.json "$rollback/deployment-health.json"
+          {
+            printf 'run_id=%s\n' "$GITHUB_RUN_ID"
+            printf 'source_sha=%s\n' "${{ needs.validate-preprod.outputs.source_sha }}"
+            printf 'created_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            printf 'archive_sha256=%s\n' "$(sha256sum "$rollback/public-site.tar" | cut -d' ' -f1)"
+          } > "$rollback/rollback-metadata.txt"
+          test -s "$rollback/public-site.tar"
+          test -s "$rollback/rollback-metadata.txt"
+
+      - name: Keep the verified production snapshot for rollback
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-rollback-${{ github.run_id }}
+          path: ${{ runner.temp }}/production-rollback/
+          retention-days: 30
+          compression-level: 0

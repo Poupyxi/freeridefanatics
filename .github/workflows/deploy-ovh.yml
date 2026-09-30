@@ -227,6 +227,24 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
 
+      - name: Prepare content-addressed upload delta
+        id: delta
+        run: |
+          set -euo pipefail
+          remote_manifest="$RUNNER_TEMP/remote-deployment-manifest.json"
+          if ! curl --fail --silent --show-error \
+            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" \
+            --output "$remote_manifest"; then
+            printf '{"version":1,"files":{}}\n' > "$remote_manifest"
+          fi
+          python3 deploy/prepare-delta.py \
+            --public "$RUNNER_TEMP/public" \
+            --remote-manifest "$remote_manifest" \
+            --delta "$RUNNER_TEMP/upload-delta" \
+            --delete-script "$RUNNER_TEMP/delete-remote.lftp" \
+            --github-output "$GITHUB_OUTPUT"
+          python3 tests/deployment_delta.py
+
       - name: Publish only to the OVH production directory
         env:
           OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
@@ -245,10 +263,13 @@ jobs:
           lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
             "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" <<LFTP
           set sftp:auto-confirm yes
+          set cmd:fail-exit yes
           set net:max-retries 3
           set net:timeout 20
-          mirror --reverse --delete --parallel=4 --verbose \
-            "$RUNNER_TEMP/public" "$OVH_REMOTE_DIR"
+          cd "$OVH_REMOTE_DIR"
+          mirror --reverse --parallel=4 --verbose "$RUNNER_TEMP/upload-delta" .
+          source "$RUNNER_TEMP/delete-remote.lftp"
+          put "$RUNNER_TEMP/public/deployment-manifest.json" -o deployment-manifest.json
           bye
           LFTP
 
@@ -259,6 +280,8 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-images-version.txt > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null

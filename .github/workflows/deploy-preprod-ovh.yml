@@ -77,6 +77,7 @@ jobs:
             --public-mirror assets/img/drive-library
           python3 tests/drive_image_sync.py
           python3 import_images.py --force --no-build
+          python3 tests/equipment_category_mapping.py
           python3 tests/frame_reveal_assets.py
           python3 scripts/image_snapshot_hash.py \
             assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment \
@@ -220,6 +221,29 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp apache2-utils
 
+      - name: Prepare content-addressed upload delta
+        if: steps.change.outputs.changed == 'true'
+        id: delta
+        env:
+          PREPROD_BASIC_USER: ${{ secrets.PREPROD_BASIC_USER }}
+          PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          remote_manifest="$RUNNER_TEMP/remote-deployment-manifest.json"
+          if ! curl --fail --silent --show-error \
+            --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
+            "https://preprod.ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" \
+            --output "$remote_manifest"; then
+            printf '{"version":1,"files":{}}\n' > "$remote_manifest"
+          fi
+          python3 deploy/prepare-delta.py \
+            --public "$RUNNER_TEMP/public" \
+            --remote-manifest "$remote_manifest" \
+            --delta "$RUNNER_TEMP/upload-delta" \
+            --delete-script "$RUNNER_TEMP/delete-remote.lftp" \
+            --github-output "$GITHUB_OUTPUT"
+          python3 tests/deployment_delta.py
+
       - name: Publish only to the OVH preproduction directory
         if: steps.change.outputs.changed == 'true'
         env:
@@ -245,8 +269,18 @@ jobs:
           test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
           htpasswd -nbB "$PREPROD_BASIC_USER" "$PREPROD_BASIC_PASSWORD" > "$RUNNER_TEMP/preprod.htpasswd"
           lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
-            "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" \
-            -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 20; put $RUNNER_TEMP/preprod.htpasswd -o $OVH_AUTH_FILE; mirror --reverse --delete --parallel=4 --verbose $RUNNER_TEMP/public $OVH_REMOTE_DIR; bye"
+            "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" <<LFTP
+          set cmd:fail-exit yes
+          set sftp:auto-confirm yes
+          set net:max-retries 3
+          set net:timeout 20
+          put "$RUNNER_TEMP/preprod.htpasswd" -o "$OVH_AUTH_FILE"
+          cd "$OVH_REMOTE_DIR"
+          mirror --reverse --parallel=4 --verbose "$RUNNER_TEMP/upload-delta" .
+          source "$RUNNER_TEMP/delete-remote.lftp"
+          put "$RUNNER_TEMP/public/deployment-manifest.json" -o deployment-manifest.json
+          bye
+          LFTP
 
       - name: Verify preproduction protection and content
         if: steps.change.outputs.changed == 'true'
@@ -271,6 +305,8 @@ jobs:
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/notion-data-version.txt > /dev/null
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/drive-images-version.txt > /dev/null
+          curl --fail --silent --show-error "${auth[@]}" \
+            "https://preprod.ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
           test "$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/deployment-source-sha.txt)" = "$(git rev-parse HEAD)"
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
           source_status="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/data-source-status.txt)"

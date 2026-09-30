@@ -122,9 +122,10 @@ NEWSLETTER_FORM_URL = (
 EQUIP_GROUP_MAP = {
     "Frame": "Chassis", "Fork": "Chassis", "RearShock": "Chassis",
     "Handlebar": "Cockpit", "Saddle": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit",
+    "Stem": "Cockpit", "Spacer": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "BrakeLever": "Drivetrain",
     "Disk": "Drivetrain", "CHAIN": "Drivetrain",
-    "Wheels": "Wheels & Tyres", "Tires": "Wheels & Tyres", "Pedals": "Wheels & Tyres",
+    "Wheels": "Wheels & Tyres", "Hub": "Wheels & Tyres", "Tires": "Wheels & Tyres", "Pedals": "Wheels & Tyres",
     "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
 }
 EQUIP_GROUP_ORDER = ["Chassis", "Cockpit", "Drivetrain", "Wheels & Tyres", "Protection"]
@@ -2931,15 +2932,16 @@ EQUIPMENT_CATEGORY_PLURALS = {
     "DropperPost": "Dropper Posts", "Helmet": "Helmets", "Goggles": "Goggles",
     "Protection": "Body Protection", "Shoes": "Shoes", "CHAIN": "Chains",
     "Disk": "Brake Rotors", "GRIP": "Grips", "Stem": "Stems",
+    "Hub": "Hubs", "Spacer": "Spacers",
     "Shifter": "Shifters", "BrakeCaliper": "Brake Calipers",
 }
 
 DIRECTORY_GROUP_MAP = {
     "Frame": "Frame & suspension", "Fork": "Frame & suspension", "RearShock": "Frame & suspension",
-    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit",
+    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit", "Spacer": "Cockpit",
     "BrakeLever": "Cockpit", "BrakeCaliper": "Cockpit", "Disk": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "CHAIN": "Drivetrain", "Shifter": "Drivetrain",
-    "Wheels": "Wheels", "Tires": "Wheels",
+    "Wheels": "Wheels", "Hub": "Wheels", "Tires": "Wheels",
     "Saddle": "Extention", "Pedals": "Extention",
     "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
 }
@@ -3169,6 +3171,8 @@ EQUIPMENT_EDITORIAL = {
     "BrakeLever": ("Brake controls are part of a complete braking system designed for repeatable modulation on steep tracks.", "Use the linked rider profiles to see the wider build; lever names alone do not document pads, rotors or individual setup."),
     "Handlebar": ("Handlebars shape a rider's cockpit position and steering interface.", "Model usage shows paddock presence, but width, rise and trimming are rider-specific details that may not be public."),
     "Stem": ("Stems connect the handlebar to the fork and contribute to cockpit fit.", "Compare named platforms and rider adoption without assuming that every rider uses the same length or position."),
+    "Spacer": ("Cockpit spacers adjust stack height and help riders fine-tune their position.", "Compare recorded products as setup references; exact spacer combinations remain rider and frame specific."),
+    "Hub": ("Hubs connect the wheel build to the frame and fork while carrying bearings and engagement mechanisms.", "Use the linked rider profiles to understand each hub in the context of its complete wheel setup."),
     "GRIP": ("Grips are a small but highly personal contact point between rider and bike.", "Usage totals show which products appear in the tracked field, not which diameter, compound or wear strategy suits every rider."),
     "Crankset": ("Cranksets transfer rider input through the downhill drivetrain and must tolerate repeated impacts.", "Read points as competitive exposure and open the rider profiles for the surrounding drivetrain context."),
     "CHAIN": ("Chains connect the drivetrain components and are selected as part of a complete transmission system.", "The table identifies recorded product families; compatibility, gearing and replacement schedules remain build-specific."),
@@ -3280,7 +3284,7 @@ def build_compare_page():
 # ---------------------------------------------------------------- best equipment carousel
 
 CAROUSEL_CATEGORY_ORDER = [
-    "Frame", "Fork", "RearShock", "Handlebar", "Wheels", "Tires",
+    "Frame", "Fork", "RearShock", "Handlebar", "Stem", "Spacer", "Wheels", "Hub", "Tires",
     "BrakeLever", "Crankset", "Derailleur", "Pedals", "Saddle",
     "DropperPost", "Helmet", "Goggles", "Protection", "Shoes",
 ]

@@ -17,8 +17,11 @@ on:
     - cron: "*/15 * * * *"
 
 concurrency:
-  group: ridersfanatics-preproduction
-  cancel-in-progress: false
+  # Keep deployment runs serialized, while allowing unrelated pull requests to
+  # validate independently. A newer commit only cancels the older run of the
+  # same pull request.
+  group: ${{ github.event_name == 'pull_request' && format('ridersfanatics-preproduction-pr-{0}', github.event.pull_request.number) || 'ridersfanatics-preproduction' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

@@ -100,8 +100,9 @@ overwritten on every build.
 
 ### Automatic OVH deployment
 
-Production uses OVH shared Web Hosting. `Update Preprod` refreshes the protected
-preview from Notion and Google Drive. `Preprod to Prod` is manual-only and
+Production uses OVH shared Web Hosting. `Update Notion Preprod` and
+`Update Drive Preprod` refresh their respective read-only sources independently
+while rebuilding one coherent protected preview. `Preprod to Prod` is manual-only and
 promotes the exact revision, data snapshot and image snapshot already validated
 on preproduction to `/home/ridersi/www`.
 
@@ -110,9 +111,10 @@ shared-hosting architecture.
 
 ### Protected preproduction
 
-The `preprod` branch is built with `RF_BUILD_ENV=preprod` and deployed by
-`.github/workflows/deploy-preprod-ovh.yml` to a directory that must be separate
-from `/home/ridersi/www`. Its canonical origin is
+The `preprod` branch is built with `RF_BUILD_ENV=preprod`. Notion refreshes are
+orchestrated by `.github/workflows/deploy-preprod-ovh.yml`, while Drive refreshes
+are scheduled by `.github/workflows/deploy-preprod-drive-ovh.yml`. Both deploy to
+a directory that must be separate from `/home/ridersi/www`. Its canonical origin is
 `https://preprod.ridersfanatics.com`.
 
 Competition publication state lives in `data/competitions.json`. Production
@@ -139,11 +141,15 @@ Preproduction should use a different account restricted to its preview path.
 
 ### Read-only Notion and Google Drive sync
 
-Preproduction checks Notion and the Drive image library every 15 minutes. Both
-integrations are read-only. The workflow imports rider portraits, action shots
-and equipment images, then compares the generated data and image hashes with
-the versions already on OVH. An unchanged snapshot is not redeployed, and an
-invalid or unavailable source cannot replace the last valid preview.
+Preproduction checks Notion and the Drive image library independently every 15
+minutes, with the Drive check offset by seven minutes. Both integrations are
+read-only. Each workflow compares only its own source receipt with the version
+already on OVH. When it detects a change, it restores the other source from the
+latest complete validated snapshot, rebuilds the whole site and publishes a new
+complete Notion + Drive snapshot. An unchanged source is not redeployed, and an
+invalid or unavailable source cannot replace the last valid preview. Complete
+preproduction snapshots are retained for 30 days so either isolated updater can
+reuse the last validated state of the other source.
 
 Every image found recursively under the configured Drive folder is also
 mirrored under `assets/img/drive-library/` for publication, even when its folder

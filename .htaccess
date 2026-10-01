@@ -6,6 +6,10 @@ RewriteCond %{HTTPS} !=on [OR]
 RewriteCond %{HTTP_HOST} ^www\.ridersfanatics\.com$ [NC]
 RewriteRule ^ https://ridersfanatics.com%{REQUEST_URI} [R=301,L,NE]
 RewriteRule ^index\.html$ https://ridersfanatics.com/ [R=301,L,NE]
+# Retire the former client-side translation URLs. Multilingual SEO pages live
+# under /guides/<language>/; every other document has one canonical URL.
+RewriteCond %{QUERY_STRING} (^|&)lang=(?:en|fr|de|es|it|pt|nl|pl|ja|zh-cn)(?:&|$) [NC]
+RewriteRule ^ https://ridersfanatics.com%{REQUEST_URI} [R=301,L,NE,QSD]
 # Retired paths found in Search Console: preserve their relevant destinations.
 RewriteRule ^competitions/uci(?:/index\.html|/?)$ /competitions/uci-mtb-world-cup-dh-2026.html [R=301,L,NE,QSD]
 RewriteRule ^riders/facundo-descalzo\.html$ /riders/descalzo-facundo.html [R=301,L,NE]

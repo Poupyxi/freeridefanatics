@@ -11,6 +11,11 @@ actual = {path.name for path in workflows.glob("*.yml")}
 expected = {"deploy-preprod-ovh.yml", "deploy-ovh.yml"}
 assert actual == expected, f"Expected only {sorted(expected)}, found {sorted(actual)}"
 
+dependabot = (ROOT / ".github" / "dependabot.yml").read_text(encoding="utf-8")
+assert dependabot.count("target-branch: preprod") == 2, (
+    "Dependency updates must be validated in preproduction before main"
+)
+
 preprod = (workflows / "deploy-preprod-ovh.yml").read_text(encoding="utf-8")
 production = (workflows / "deploy-ovh.yml").read_text(encoding="utf-8")
 assert "branches: [preprod]" in preprod

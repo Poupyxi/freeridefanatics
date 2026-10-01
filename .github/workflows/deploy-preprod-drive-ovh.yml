@@ -1,0 +1,25 @@
+name: Update Drive Preprod
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: Force refreshing Drive images and publishing preproduction
+        required: true
+        type: boolean
+        default: true
+  schedule:
+    # Offset Drive from the Notion check so both sources never queue together.
+    - cron: "7-59/15 * * * *"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  update-drive-preprod:
+    uses: ./.github/workflows/deploy-preprod-ovh.yml
+    with:
+      sync_scope: drive
+      force_deploy: ${{ inputs.force_deploy || false }}
+    secrets: inherit

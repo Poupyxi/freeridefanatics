@@ -1,7 +1,26 @@
 name: Preprod to Prod
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Promote the validated preview or restore a verified production snapshot
+        required: true
+        type: choice
+        default: promote
+        options:
+          - promote
+          - restore
+      rollback_run_id:
+        description: Production workflow run id to restore
+        required: false
+        type: string
+      confirmation:
+        description: Type RESTORE when selecting the restore operation
+        required: false
+        type: string
 
 concurrency:
   group: ridersfanatics-production
@@ -12,7 +31,42 @@ permissions:
   actions: read
 
 jobs:
+  production-change-validation:
+    if: github.event_name == 'pull_request'
+    name: Validate production change
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RF_BUILD_ENV: production
+      RF_DATA_SOURCE: notion
+      RF_DATA_PATH: data/riders.json
+      RF_COMPETITIONS_PATH: data/competitions.json
+      RF_SITE_URL: https://ridersfanatics.com
+      RF_SKIP_IMAGE_OPTIMIZER: "1"
+    steps:
+      - name: Check out the proposed change
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate without deployment credentials
+        run: |
+          set -euo pipefail
+          python3 tests/notion_only_source.py
+          python3 tests/result_status_logic.py
+          python3 tests/rider_name_normalization.py
+          python3 tests/seo_priority_content.py
+          python3 tests/drive_image_sync.py
+          python3 tests/deployment_delta.py
+          python3 tests/deployment_health.py
+          python3 tests/deployment_access_contract.py
+          python3 tests/restore_snapshot.py
+          python3 tests/workflow_contract.py
+          python3 build.py
+          test -s index.html
+          test -s riders.html
+          test -s equipment.html
+          grep -q 'Allow: /' robots.txt
+
   validate-preprod:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'promote'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: preproduction
@@ -27,7 +81,7 @@ jobs:
 
     steps:
       - name: Check out the preproduction revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: preprod
 
@@ -48,7 +102,7 @@ jobs:
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
       - name: Load the snapshot already validated in preproduction
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: validated-preproduction-snapshot
           path: ${{ runner.temp }}/validated-preproduction-snapshot
@@ -66,7 +120,10 @@ jobs:
             assets/img/drive-library \
             assets/img/riders \
             assets/img/riders-action \
-            assets/img/equipment
+            assets/img/equipment \
+            assets/img/brands \
+            assets/img/competitions \
+            assets/img/teams
           tar -xf "$snapshot" -C "$GITHUB_WORKSPACE"
           cp "$GITHUB_WORKSPACE/validated-source-sha.txt" "$RUNNER_TEMP/validated-source-sha.txt"
 
@@ -115,6 +172,7 @@ jobs:
 
   deploy:
     needs: validate-preprod
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'promote'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: production
@@ -128,12 +186,12 @@ jobs:
 
     steps:
       - name: Check out the exact validated preproduction revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ needs.validate-preprod.outputs.source_sha }}
 
       - name: Load the validated preproduction snapshot
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: validated-preproduction-snapshot
           path: ${{ runner.temp }}/validated-preproduction-snapshot
@@ -151,7 +209,10 @@ jobs:
             assets/img/drive-library \
             assets/img/riders \
             assets/img/riders-action \
-            assets/img/equipment
+            assets/img/equipment \
+            assets/img/brands \
+            assets/img/competitions \
+            assets/img/teams
           tar -xf "$snapshot" -C "$GITHUB_WORKSPACE"
 
       - name: Validate the production inputs
@@ -159,9 +220,26 @@ jobs:
           set -euo pipefail
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
           python3 tests/notion_only_source.py
+          python3 tests/workflow_contract.py
+          python3 tests/deployment_access_contract.py
           test -s data/drive/live-image-manifest.json
           test -s data/drive/live-images-version.txt
-          test "$(python3 scripts/image_snapshot_hash.py assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment)" = \
+          test -s data/drive/live-drive-source-version.txt
+          test -s data/drive-logo-manifest.json
+          test -s data/deployment-health.json
+          python3 scripts/deployment_health.py create \
+            --riders data/notion/riders.json \
+            --drive-manifest data/drive/live-image-manifest.json \
+            --public-image-path assets/img/riders \
+            --public-image-path assets/img/riders-action \
+            --public-image-path assets/img/equipment \
+            --public-image-path assets/img/brands \
+            --public-image-path assets/img/competitions \
+            --public-image-path assets/img/teams \
+            --output "$RUNNER_TEMP/recomputed-deployment-health.json"
+          cmp data/deployment-health.json "$RUNNER_TEMP/recomputed-deployment-health.json"
+          python3 tests/deployment_health.py
+          test "$(python3 scripts/image_snapshot_hash.py assets/img/drive-library assets/img/riders assets/img/riders-action assets/img/equipment assets/img/brands assets/img/competitions assets/img/teams)" = \
             "$(cat data/drive/live-images-version.txt)"
 
       - name: Build and verify production
@@ -211,21 +289,64 @@ jobs:
           python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())' \
             > "$RUNNER_TEMP/public/notion-data-version.txt"
           cp data/drive/live-images-version.txt "$RUNNER_TEMP/public/drive-images-version.txt"
+          cp data/drive/live-drive-source-version.txt "$RUNNER_TEMP/public/drive-source-version.txt"
+          cp data/deployment-health.json "$RUNNER_TEMP/public/deployment-health.json"
 
           test -s "$RUNNER_TEMP/public/notion-sync-metadata.json"
           test -s "$RUNNER_TEMP/public/notion-data-version.txt"
           test -s "$RUNNER_TEMP/public/drive-images-version.txt"
+          test -s "$RUNNER_TEMP/public/drive-source-version.txt"
+          test -s "$RUNNER_TEMP/public/deployment-health.json"
           test -f "$RUNNER_TEMP/public/index.html"
           test -f "$RUNNER_TEMP/public/riders.html"
           ! test -d "$RUNNER_TEMP/public/.git"
           ! test -d "$RUNNER_TEMP/public/tests"
           ! test -d "$RUNNER_TEMP/public/scripts"
 
+      - name: Enforce production volume guard
+        run: |
+          set -euo pipefail
+          baseline="$RUNNER_TEMP/current-production-health.json"
+          if ! curl --fail --silent --show-error --retry 3 \
+            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" \
+            --output "$baseline"; then
+            rm -f "$baseline"
+          fi
+          python3 scripts/deployment_health.py validate \
+            --candidate data/deployment-health.json \
+            --baseline "$baseline" \
+            --min-riders 300 \
+            --min-results 750 \
+            --min-images 1200 \
+            --min-published-images 1500 \
+            --max-rider-drop 5 \
+            --max-result-drop 10 \
+            --max-image-drop 10 \
+            --max-published-image-drop 10
+
       - name: Install SFTP publishing client
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
+
+      - name: Prepare content-addressed upload delta
+        id: delta
+        run: |
+          set -euo pipefail
+          remote_manifest="$RUNNER_TEMP/remote-deployment-manifest.json"
+          if ! curl --fail --silent --show-error \
+            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" \
+            --output "$remote_manifest"; then
+            printf '{"version":1,"files":{}}\n' > "$remote_manifest"
+          fi
+          python3 deploy/prepare-delta.py \
+            --public "$RUNNER_TEMP/public" \
+            --remote-manifest "$remote_manifest" \
+            --delta "$RUNNER_TEMP/upload-delta" \
+            --delete-script "$RUNNER_TEMP/delete-remote.lftp" \
+            --github-output "$GITHUB_OUTPUT"
+          python3 tests/deployment_delta.py
 
       - name: Publish only to the OVH production directory
         env:
@@ -234,6 +355,7 @@ jobs:
           OVH_SFTP_USER: ${{ secrets.OVH_SFTP_USER }}
           OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
           OVH_REMOTE_DIR: ${{ secrets.OVH_REMOTE_DIR }}
+          OVH_SFTP_KNOWN_HOSTS: ${{ secrets.OVH_SFTP_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           case "$OVH_REMOTE_DIR" in
@@ -242,13 +364,26 @@ jobs:
           esac
           test -n "$OVH_SFTP_HOST" && test -n "$OVH_SFTP_PORT"
           test -n "$OVH_SFTP_USER" && test -n "$OVH_SFTP_PASSWORD"
+          sftp_auto_confirm=yes
+          if test -n "$OVH_SFTP_KNOWN_HOSTS"; then
+            mkdir -p "$HOME/.ssh"
+            printf '%s\n' "$OVH_SFTP_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+            chmod 700 "$HOME/.ssh"
+            chmod 600 "$HOME/.ssh/known_hosts"
+            sftp_auto_confirm=no
+          else
+            echo "::warning::OVH_SFTP_KNOWN_HOSTS is not configured; host-key auto-confirm remains enabled."
+          fi
           lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
             "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" <<LFTP
-          set sftp:auto-confirm yes
+          set sftp:auto-confirm $sftp_auto_confirm
+          set cmd:fail-exit yes
           set net:max-retries 3
           set net:timeout 20
-          mirror --reverse --delete --parallel=4 --verbose \
-            "$RUNNER_TEMP/public" "$OVH_REMOTE_DIR"
+          cd "$OVH_REMOTE_DIR"
+          mirror --reverse --parallel=4 --verbose "$RUNNER_TEMP/upload-delta" .
+          source "$RUNNER_TEMP/delete-remote.lftp"
+          put "$RUNNER_TEMP/public/deployment-manifest.json" -o deployment-manifest.json
           bye
           LFTP
 
@@ -259,6 +394,11 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-images-version.txt > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-source-version.txt > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" | grep -q '"riders"'
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
@@ -275,3 +415,141 @@ jobs:
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
           curl --silent --show-error --head https://ridersfanatics.com/ | grep -qi '^strict-transport-security:'
+
+      - name: Package the verified production rollback snapshot
+        run: |
+          set -euo pipefail
+          rollback="$RUNNER_TEMP/production-rollback"
+          mkdir -p "$rollback"
+          tar -cf "$rollback/public-site.tar" -C "$RUNNER_TEMP/public" .
+          cp data/deployment-health.json "$rollback/deployment-health.json"
+          {
+            printf 'run_id=%s\n' "$GITHUB_RUN_ID"
+            printf 'source_sha=%s\n' "${{ needs.validate-preprod.outputs.source_sha }}"
+            printf 'created_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            printf 'archive_sha256=%s\n' "$(sha256sum "$rollback/public-site.tar" | cut -d' ' -f1)"
+          } > "$rollback/rollback-metadata.txt"
+          test -s "$rollback/public-site.tar"
+          test -s "$rollback/rollback-metadata.txt"
+
+      - name: Keep the verified production snapshot for rollback
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: production-rollback-${{ github.run_id }}
+          path: ${{ runner.temp }}/production-rollback/
+          retention-days: 14
+          compression-level: 0
+
+  restore:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'restore'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+    env:
+      ROLLBACK_RUN_ID: ${{ inputs.rollback_run_id }}
+      RESTORE_CONFIRMATION: ${{ inputs.confirmation }}
+
+    steps:
+      - name: Validate the explicit restoration request
+        run: |
+          set -euo pipefail
+          test "$RESTORE_CONFIRMATION" = "RESTORE" || {
+            echo "Restoration requires the exact confirmation RESTORE." >&2
+            exit 2
+          }
+          [[ "$ROLLBACK_RUN_ID" =~ ^[0-9]+$ ]] || {
+            echo "A numeric production workflow run id is required." >&2
+            exit 2
+          }
+
+      - name: Check out the restoration utilities
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Download the selected verified production snapshot
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: production-rollback-${{ inputs.rollback_run_id }}
+          path: ${{ runner.temp }}/selected-rollback
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.rollback_run_id }}
+
+      - name: Validate and extract the rollback snapshot
+        run: |
+          set -euo pipefail
+          python3 scripts/restore_snapshot.py \
+            --artifact "$RUNNER_TEMP/selected-rollback" \
+            --expected-run-id "$ROLLBACK_RUN_ID" \
+            --output "$RUNNER_TEMP/restore-public"
+          python3 tests/restore_snapshot.py
+
+      - name: Install SFTP publishing client
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+
+      - name: Prepare a differential rollback upload
+        run: |
+          set -euo pipefail
+          remote_manifest="$RUNNER_TEMP/remote-deployment-manifest.json"
+          if ! curl --fail --silent --show-error \
+            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" \
+            --output "$remote_manifest"; then
+            printf '{"version":1,"files":{}}\n' > "$remote_manifest"
+          fi
+          python3 deploy/prepare-delta.py \
+            --public "$RUNNER_TEMP/restore-public" \
+            --remote-manifest "$remote_manifest" \
+            --delta "$RUNNER_TEMP/restore-delta" \
+            --delete-script "$RUNNER_TEMP/restore-delete.lftp"
+          python3 tests/deployment_delta.py
+
+      - name: Restore only the selected verified snapshot
+        env:
+          OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
+          OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
+          OVH_SFTP_USER: ${{ secrets.OVH_SFTP_USER }}
+          OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
+          OVH_REMOTE_DIR: ${{ secrets.OVH_REMOTE_DIR }}
+          OVH_SFTP_KNOWN_HOSTS: ${{ secrets.OVH_SFTP_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          case "$OVH_REMOTE_DIR" in
+            /home/ridersi/www|/home/ridersi/www/) ;;
+            *) echo "Unsafe production directory: $OVH_REMOTE_DIR" >&2; exit 2 ;;
+          esac
+          test -n "$OVH_SFTP_HOST" && test -n "$OVH_SFTP_PORT"
+          test -n "$OVH_SFTP_USER" && test -n "$OVH_SFTP_PASSWORD"
+          sftp_auto_confirm=yes
+          if test -n "$OVH_SFTP_KNOWN_HOSTS"; then
+            mkdir -p "$HOME/.ssh"
+            printf '%s\n' "$OVH_SFTP_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+            chmod 700 "$HOME/.ssh"
+            chmod 600 "$HOME/.ssh/known_hosts"
+            sftp_auto_confirm=no
+          else
+            echo "::warning::OVH_SFTP_KNOWN_HOSTS is not configured; host-key auto-confirm remains enabled."
+          fi
+          lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" \
+            "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" <<LFTP
+          set sftp:auto-confirm $sftp_auto_confirm
+          set cmd:fail-exit yes
+          set net:max-retries 3
+          set net:timeout 20
+          cd "$OVH_REMOTE_DIR"
+          mirror --reverse --parallel=4 --verbose "$RUNNER_TEMP/restore-delta" .
+          source "$RUNNER_TEMP/restore-delete.lftp"
+          put "$RUNNER_TEMP/restore-public/deployment-manifest.json" -o deployment-manifest.json
+          bye
+          LFTP
+
+      - name: Verify the restored production
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            https://ridersfanatics.com/ > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            https://ridersfanatics.com/deployment-health.json | grep -q '"riders"'
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            https://ridersfanatics.com/deployment-manifest.json | grep -q '"version":1'

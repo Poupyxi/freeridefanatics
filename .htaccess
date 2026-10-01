@@ -24,6 +24,7 @@ RewriteRule ^riders\.html$ https://ridersfanatics.com/riders.html [R=301,L,NE,QS
 # other JSON files remain forbidden.
 RewriteRule ^assets/i18n/(de|es|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn)\.json$ - [L,NC]
 RewriteRule ^notion-sync-metadata\.json$ - [L,NC]
+RewriteRule ^deployment-(?:health|manifest)\.json$ - [L,NC]
 RewriteRule \.json$ - [F,L,NC]
 RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
 

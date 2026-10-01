@@ -80,6 +80,7 @@ COMPETITIONS_PATH = os.environ.get(
 ADS_PATH = os.path.join(ROOT, "data", "ads.json")
 BRAND_LOGOS_PATH = os.path.join(ROOT, "data", "brand-logos.json")
 COMPETITION_LOGOS_PATH = os.path.join(ROOT, "data", "competition-logos.json")
+DRIVE_LOGO_MANIFEST_PATH = os.path.join(ROOT, "data", "drive-logo-manifest.json")
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
@@ -121,9 +122,10 @@ NEWSLETTER_FORM_URL = (
 EQUIP_GROUP_MAP = {
     "Frame": "Chassis", "Fork": "Chassis", "RearShock": "Chassis",
     "Handlebar": "Cockpit", "Saddle": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit",
+    "Stem": "Cockpit", "Spacer": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "BrakeLever": "Drivetrain",
     "Disk": "Drivetrain", "CHAIN": "Drivetrain",
-    "Wheels": "Wheels & Tyres", "Tires": "Wheels & Tyres", "Pedals": "Wheels & Tyres",
+    "Wheels": "Wheels & Tyres", "Hub": "Wheels & Tyres", "Tires": "Wheels & Tyres", "Pedals": "Wheels & Tyres",
     "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
 }
 EQUIP_GROUP_ORDER = ["Chassis", "Cockpit", "Drivetrain", "Wheels & Tyres", "Protection"]
@@ -1336,7 +1338,7 @@ def build_standings(riders):
             search_blob = f"{team} {who}".lower()
             rows.append(f"""<tr data-standing-row data-search="{esc(search_blob)}">
             <td class="pos{medal}">{i}</td>
-            <td class="who">{esc(team)}<span class="sub">{esc(who)}</span>
+            <td class="who">{team_identity_html(team)}<span class="sub">{esc(who)}</span>
               <span class="mobile-total">{total} pts</span></td>
             <td class="total">{total}</td>
           </tr>""")
@@ -1714,7 +1716,7 @@ def build_competition_round(riders, competition, event, round_number, events):
     for rank, team in enumerate(event_teams, 1):
         names = ", ".join(event_team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
-        team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{esc(team)}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
+        team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{team_identity_html(team, "../../../")}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
     team_table = (f'''<section class="round-category standings-block" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="Team results, horizontally scrollable"><table class="round-results"><caption>Team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div><p class="standings-empty" hidden>No team result is recorded for this event.</p></section>'''
                   if show_team_ranking else "")
 
@@ -1986,7 +1988,7 @@ def build_competition_standings(riders, competition):
         </section>'''
 
     team_podium = "".join(
-        f'''<div class="clean-podium-card podium-{rank}"><span class="clean-podium-rank">{rank:02d}</span><div><strong>{esc(team)}</strong><small>{len(team_riders[team])} tracked riders</small></div><b>{team_points[team]}<small>pts</small></b></div>'''
+        f'''<div class="clean-podium-card podium-{rank}"><span class="clean-podium-rank">{rank:02d}</span><div>{team_identity_html(team, "../../")}<small>{len(team_riders[team])} tracked riders</small></div><b>{team_points[team]}<small>pts</small></b></div>'''
         for rank, team in enumerate(teams[:3], 1)
     )
     team_rows = []
@@ -1994,7 +1996,7 @@ def build_competition_standings(riders, competition):
         names = ", ".join(rider["display_name"] for rider in team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
         team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}">
-          <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b>
+          <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b>
         </div>''')
     team_panel = f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}">
       <div class="clean-podium">{team_podium}</div><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{"".join(team_rows)}</div><p class="standings-empty" hidden>No team matches your search.</p>
@@ -2042,6 +2044,54 @@ def build_competition_standings(riders, competition):
     html += footer_html("../../")
     return html
 
+_DRIVE_LOGO_MANIFEST = None
+
+
+def load_drive_logo_manifest():
+    """Load safe, generated logo paths while keeping embedded logos as fallback."""
+    global _DRIVE_LOGO_MANIFEST
+    if _DRIVE_LOGO_MANIFEST is not None:
+        return _DRIVE_LOGO_MANIFEST
+    empty = {"brands": [], "competitions": [], "teams": []}
+    if not os.path.exists(DRIVE_LOGO_MANIFEST_PATH):
+        _DRIVE_LOGO_MANIFEST = empty
+        return empty
+    try:
+        with open(DRIVE_LOGO_MANIFEST_PATH, encoding="utf-8") as source:
+            payload = json.load(source)
+    except (OSError, json.JSONDecodeError):
+        _DRIVE_LOGO_MANIFEST = empty
+        return empty
+    logos = payload.get("logos") or {}
+    safe = {}
+    for section in empty:
+        safe[section] = [
+            item for item in (logos.get(section) or [])
+            if re.fullmatch(r"[a-z0-9-]+", item.get("key") or "")
+            and re.fullmatch(
+                rf"assets/img/{section}/[a-z0-9-]+\.webp",
+                item.get("src") or "",
+            )
+            and os.path.isfile(os.path.join(ROOT, item["src"]))
+        ]
+    _DRIVE_LOGO_MANIFEST = safe
+    return safe
+
+
+def team_identity_html(team, prefix=""):
+    key = competition_round_slug(team)
+    logo = next(
+        (item for item in load_drive_logo_manifest()["teams"] if item["key"] == key),
+        None,
+    )
+    image = (
+        f'<img class="team-identity-logo" src="{prefix}{logo["src"]}" '
+        f'alt="" loading="lazy" width="44" height="44">'
+        if logo else ""
+    )
+    return f'<span class="team-identity">{image}<strong>{esc(team)}</strong></span>'
+
+
 def load_competition_logos():
     with open(COMPETITION_LOGOS_PATH, encoding="utf-8") as logo_source:
         logo_data = json.load(logo_source)
@@ -2072,6 +2122,11 @@ def load_competition_logos():
         logo_assets[logo_key] = {
             "src": f"assets/img/competitions/{logo_key}.{logo_extension}",
             "name": logo.get("name") or logo_key,
+        }
+    for logo in load_drive_logo_manifest()["competitions"]:
+        logo_assets[logo["key"]] = {
+            "src": logo["src"],
+            "name": logo.get("name") or logo["key"],
         }
     return logo_assets
 
@@ -2289,7 +2344,7 @@ def season_ranking_selector(riders, competition):
     for rank, team in enumerate(teams, 1):
         names = ", ".join(team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
-        team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
+        team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
     team_panel = (f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p></section>'''
                   if show_team_ranking else "")
     visible_categories = [
@@ -2376,7 +2431,7 @@ def redbull_event_ranking_selector(riders, competition):
             for rank, team in enumerate(sorted(team_points, key=lambda item: (-team_points[item], item.lower())), 1):
                 names = ", ".join(team_riders[team])
                 search = esc_attr(f"{team} {names}".lower())
-                team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
+                team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
             panels.append(f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is recorded for {esc(competition_event_label(event_name))} yet.</p></section>''')
 
     event_buttons = "".join(
@@ -2877,15 +2932,16 @@ EQUIPMENT_CATEGORY_PLURALS = {
     "DropperPost": "Dropper Posts", "Helmet": "Helmets", "Goggles": "Goggles",
     "Protection": "Body Protection", "Shoes": "Shoes", "CHAIN": "Chains",
     "Disk": "Brake Rotors", "GRIP": "Grips", "Stem": "Stems",
+    "Hub": "Hubs", "Spacer": "Spacers",
     "Shifter": "Shifters", "BrakeCaliper": "Brake Calipers",
 }
 
 DIRECTORY_GROUP_MAP = {
     "Frame": "Frame & suspension", "Fork": "Frame & suspension", "RearShock": "Frame & suspension",
-    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit",
+    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit", "Spacer": "Cockpit",
     "BrakeLever": "Cockpit", "BrakeCaliper": "Cockpit", "Disk": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "CHAIN": "Drivetrain", "Shifter": "Drivetrain",
-    "Wheels": "Wheels", "Tires": "Wheels",
+    "Wheels": "Wheels", "Hub": "Wheels", "Tires": "Wheels",
     "Saddle": "Extention", "Pedals": "Extention",
     "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
 }
@@ -3057,11 +3113,20 @@ def build_brands_directory(riders):
     del riders
     with open(BRAND_LOGOS_PATH, encoding="utf-8") as logo_source:
         logo_data = json.load(logo_source)
-    logos = sorted(logo_data.get("logos", []), key=lambda item: norm_product_text(item.get("name", "")))
+    logos_by_key = {}
+    for logo in logo_data.get("logos", []):
+        key = competition_round_slug(logo.get("name") or "")
+        if key:
+            logos_by_key[key] = dict(logo)
+    for logo in load_drive_logo_manifest()["brands"]:
+        logos_by_key[logo["key"]] = dict(logo)
+    logos = sorted(logos_by_key.values(), key=lambda item: norm_product_text(item.get("name", "")))
     os.makedirs(BRAND_IMG_DIR, exist_ok=True)
     for brand in logos:
         logo_key = unicodedata.normalize("NFKD", brand["name"]).encode("ascii", "ignore").decode("ascii")
         logo_key = re.sub(r"[^a-z0-9]+", "-", logo_key.lower()).strip("-")
+        if brand.get("src"):
+            continue
         logo_bytes = base64.b64decode(brand["data"], validate=True)
         logo_path = os.path.join(BRAND_IMG_DIR, f"{logo_key}.webp")
         current_logo = None
@@ -3106,6 +3171,8 @@ EQUIPMENT_EDITORIAL = {
     "BrakeLever": ("Brake controls are part of a complete braking system designed for repeatable modulation on steep tracks.", "Use the linked rider profiles to see the wider build; lever names alone do not document pads, rotors or individual setup."),
     "Handlebar": ("Handlebars shape a rider's cockpit position and steering interface.", "Model usage shows paddock presence, but width, rise and trimming are rider-specific details that may not be public."),
     "Stem": ("Stems connect the handlebar to the fork and contribute to cockpit fit.", "Compare named platforms and rider adoption without assuming that every rider uses the same length or position."),
+    "Spacer": ("Cockpit spacers adjust stack height and help riders fine-tune their position.", "Compare recorded products as setup references; exact spacer combinations remain rider and frame specific."),
+    "Hub": ("Hubs connect the wheel build to the frame and fork while carrying bearings and engagement mechanisms.", "Use the linked rider profiles to understand each hub in the context of its complete wheel setup."),
     "GRIP": ("Grips are a small but highly personal contact point between rider and bike.", "Usage totals show which products appear in the tracked field, not which diameter, compound or wear strategy suits every rider."),
     "Crankset": ("Cranksets transfer rider input through the downhill drivetrain and must tolerate repeated impacts.", "Read points as competitive exposure and open the rider profiles for the surrounding drivetrain context."),
     "CHAIN": ("Chains connect the drivetrain components and are selected as part of a complete transmission system.", "The table identifies recorded product families; compatibility, gearing and replacement schedules remain build-specific."),
@@ -3217,7 +3284,7 @@ def build_compare_page():
 # ---------------------------------------------------------------- best equipment carousel
 
 CAROUSEL_CATEGORY_ORDER = [
-    "Frame", "Fork", "RearShock", "Handlebar", "Wheels", "Tires",
+    "Frame", "Fork", "RearShock", "Handlebar", "Stem", "Spacer", "Wheels", "Hub", "Tires",
     "BrakeLever", "Crankset", "Derailleur", "Pedals", "Saddle",
     "DropperPost", "Helmet", "Goggles", "Protection", "Shoes",
 ]

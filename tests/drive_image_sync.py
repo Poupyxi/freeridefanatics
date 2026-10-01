@@ -42,6 +42,48 @@ class DriveImageSyncTests(unittest.TestCase):
                 with self.subTest(rejected=rejected), self.assertRaises(ValueError):
                     sync_drive_images.safe_public_mirror(rejected)
 
+    def test_source_version_is_stable_and_changes_with_drive_metadata(self):
+        first = {
+            "path": "PPRiders/rider.webp",
+            "drive_id": "drive-1",
+            "mime_type": "image/webp",
+            "modified_time": "2026-10-01T00:00:00Z",
+            "drive_md5": "abc",
+            "size": 42,
+        }
+        second = {**first, "path": "Equipment/Frame/frame.webp", "drive_id": "drive-2"}
+        baseline = sync_drive_images.source_version([first, second])
+        self.assertEqual(baseline, sync_drive_images.source_version([second, first]))
+        self.assertNotEqual(
+            baseline,
+            sync_drive_images.source_version([first, {**second, "drive_md5": "changed"}]),
+        )
+
+    def test_inventory_reads_metadata_without_downloading_files(self):
+        original = sync_drive_images.list_children
+        tree = {
+            "root": [
+                {"id": "folder-1", "name": "PPRiders", "mimeType": sync_drive_images.FOLDER_MIME},
+                {"id": "ignored", "name": "notes.txt", "mimeType": "text/plain"},
+            ],
+            "folder-1": [{
+                "id": "image-1",
+                "name": "Rider.webp",
+                "mimeType": "image/webp",
+                "modifiedTime": "2026-10-01T00:00:00Z",
+                "md5Checksum": "abc",
+                "size": "123",
+            }],
+        }
+        try:
+            sync_drive_images.list_children = lambda _service, folder_id: iter(tree[folder_id])
+            records = sync_drive_images.inventory_folder(object(), "root")
+        finally:
+            sync_drive_images.list_children = original
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["path"], "PPRiders/Rider.webp")
+        self.assertEqual(records[0]["size"], 123)
+
 
 if __name__ == "__main__":
     unittest.main()

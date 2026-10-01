@@ -1,4 +1,4 @@
 google-api-python-client==2.179.0
 google-auth==2.40.3
 Pillow==12.3.0
-pillow-avif-plugin==1.5.2
+pillow-avif-plugin==1.6.0

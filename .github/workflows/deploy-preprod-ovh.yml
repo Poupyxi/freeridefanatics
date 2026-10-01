@@ -262,7 +262,9 @@ jobs:
           esac
 
       - name: Install frame animation support
-        if: steps.change.outputs.changed == 'true' && env.RF_SYNC_SCOPE == 'drive'
+        # The shared category and reveal validation imports Pillow even when
+        # Drive itself is restored unchanged during a Notion-only refresh.
+        if: steps.change.outputs.changed == 'true'
         run: python3 -m pip install --disable-pip-version-check -r requirements-frame-reveal.txt
 
       - name: Synchronize Google Drive images

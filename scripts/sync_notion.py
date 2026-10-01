@@ -61,7 +61,15 @@ CATEGORY_MAP = {
     "Handlebar": "Handlebar",
     "Saddle": "Saddle",
     "Crankset": "Crankset",
+    "Crankseat": "Crankset",
     "Derailleur": "Derailleur",
+    "Gearbox": "Derailleur",
+    "Hub": "Hub",
+    "Hubs": "Hub",
+    "Spacer": "Spacer",
+    "Spacers": "Spacer",
+    "Stem": "Stem",
+    "Stems": "Stem",
     "Brake": "BrakeLever",
     "Grip": "GRIP",
     "Chain": "CHAIN",
@@ -206,6 +214,18 @@ def instagram_handle(url: str | None) -> str | None:
     return url if url.startswith("@") else None
 
 
+def season_edition_count(page) -> int | None:
+    """Read an edition count regardless of the exact French/English label."""
+    for name in (page.get("properties") or {}):
+        normalized = slugify(name)
+        if "edition" not in normalized:
+            continue
+        count = safe_int(value(page, name))
+        if count is not None and count > 0:
+            return count
+    return None
+
+
 def display_rider_name(value_: str | None) -> str:
     """Convert Notion's common ``SURNAME Firstname`` format for public pages.
 
@@ -270,8 +290,8 @@ def scoring_status(item, place: int | None = None) -> str | None:
 
 
 def scoring_counts_as_participation(phase: str | None, status: str | None) -> bool:
-    """A qualifier entry counts as participation, including DNS/DNF/DSQ."""
-    return phase == "Qualifier" or status != "DNS"
+    """DNS is never a participation; DNF and DSQ still count as starts."""
+    return status != "DNS"
 
 
 def ordinal(number: int | None) -> str | None:
@@ -327,6 +347,12 @@ def competition_year(name: str, event_records: list[dict]) -> int:
     return event_years[0] if event_years else 2026
 
 
+def event_location(page) -> str:
+    """Read a plain-text event location without exposing relation identifiers."""
+    candidate = first_value(page, "Location", "Lieu", "location")
+    return candidate.strip() if isinstance(candidate, str) else ""
+
+
 def export(client: Notion):
     pages = {name: client.query(source_id) for name, source_id in DATA_SOURCES.items()}
     seasons = {}
@@ -337,7 +363,12 @@ def export(client: Notion):
         event_ids = value(item, "🏆 Event ") or []
         if not identifier or not name or not event_ids:
             continue
-        seasons[identifier] = {"name": name, "event_ids": event_ids}
+        seasons[identifier] = {
+            "name": name,
+            "event_ids": event_ids,
+            "instagram": instagram_handle(value(item, "Instagram")),
+            "edition_count": season_edition_count(item),
+        }
         for event_id in event_ids:
             event_seasons.setdefault(event_id, identifier)
     if not seasons:
@@ -350,6 +381,7 @@ def export(client: Notion):
         page_id(item.get("id")): {
             "name": value(item, "Name competition"),
             "date": value(item, "Date") or "9999-12-31",
+            "location": event_location(item),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }
@@ -370,6 +402,8 @@ def export(client: Notion):
             "season": competition_year(season["name"], event_records),
             "status": "published",
             "notion_page_id": identifier,
+            "instagram": season.get("instagram"),
+            "edition_count": season.get("edition_count"),
             "events": sorted(event_records, key=lambda event: (event["date"], event["name"])),
         })
 
@@ -378,14 +412,14 @@ def export(client: Notion):
         event_ids = value(item, "🏆 Event ") or []
         event_id = next((identifier for identifier in event_ids if identifier in events), None)
         season_id = event_seasons.get(event_id)
-        # These fields were renamed in Notion in September 2026. Keep the
-        # legacy labels as fallbacks so a gradual schema migration stays safe.
-        phase = first_value(item, "Stage", "Sélectionner")
+        # The Race database now exposes explicit English property names. Keep
+        # the former names as a fallback so an older snapshot still exports.
+        phase = value(item, "Stage") or value(item, "Sélectionner")
         if season_id and value(item, "Type") == "Downhill":
             races[page_id(item.get("id"))] = {
                 "event": events[event_id]["name"],
                 "date": events[event_id]["date"],
-                "gender": first_value(item, "Gender", "Sélectionner 1"),
+                "gender": value(item, "Gender") or value(item, "Sélectionner 1"),
                 "phase": phase,
                 "competition": seasons[season_id]["name"],
             }
@@ -401,8 +435,8 @@ def export(client: Notion):
         if race is None:
             continue
         place = safe_int(value(item, "Place"))
-        # A qualifier entry always belongs to the participant field, including
-        # DNS/DNF/DSQ. A final-only DNS does not count as a start.
+        # DNS never counts as participation, including during qualifying.
+        # DNF and DSQ remain starts even when no time was recorded.
         if not scoring_counts_as_participation(race["phase"], scoring_status(item, place)):
             continue
         for rider_id in rider_ids:
@@ -478,12 +512,6 @@ def export(client: Notion):
             result["points"] = None
         result_rows.setdefault(rider_id, []).append(result)
 
-    if pages["scoring"] and not result_rows:
-        raise RuntimeError(
-            f"Notion returned {len(pages['scoring'])} Scoring rows but none could be exported; "
-            "check the Race stage/gender property mappings before publishing"
-        )
-
     equipment = {}
     for item in pages["equipment"]:
         equipment[page_id(item.get("id"))] = {
@@ -497,9 +525,21 @@ def export(client: Notion):
     equipment_by_rider = {}
     primary_season_id = page_id(os.environ.get("NOTION_SEASON_PAGE_ID", PRIMARY_SEASON_PAGE_ID))
     for item in pages["equipment_links"]:
-        if primary_season_id not in set(value(item, "☀️ Saison") or []):
+        season_ids = set(value(item, "☀️ Saison") or [])
+        # New equipment links are sometimes created before their season field
+        # is filled in. Keep an explicitly different season isolated, but infer
+        # the active season for an untagged link when the related rider already
+        # participates in, or has a result for, that season. This prevents a
+        # complete rider setup from disappearing because only the link's season
+        # cell was left blank.
+        if season_ids and primary_season_id not in season_ids:
             continue
         rider_ids = value(item, "🚻 Riders") or []
+        if not season_ids:
+            rider_ids = [
+                rider_id for rider_id in rider_ids
+                if rider_id in result_rows or rider_id in participations_by_rider
+            ]
         product_ids = value(item, "Equipments") or []
         for rider_id in rider_ids:
             for product_id in product_ids:

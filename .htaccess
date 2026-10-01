@@ -12,7 +12,6 @@ RewriteRule ^riders/facundo-descalzo\.html$ /riders/descalzo-facundo.html [R=301
 # Cerro Abajo is now an event within the Red Bull 2026 parent season.
 RewriteRule ^competitions/red-bull-cerro-abajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
 RewriteRule ^competitions/red-bull-cerro-abajo-2026/.*$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
-RewriteRule ^competitions/redbull-2026/rounds/ceroabajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
 # Retire the old crawlable rider filters while preserving the selected view
 # for visitors. Fragments never create separate URLs in Google's index.
 RewriteCond %{QUERY_STRING} (^|&)filter=Men(?:\+|%20)Elite(?:&|$) [NC]
@@ -21,8 +20,11 @@ RewriteCond %{QUERY_STRING} (^|&)filter=Women(?:\+|%20)Elite(?:&|$) [NC]
 RewriteRule ^riders\.html$ https://ridersfanatics.com/riders.html#women [R=301,L,NE,QSD]
 RewriteCond %{QUERY_STRING} (^|&)filter= [NC]
 RewriteRule ^riders\.html$ https://ridersfanatics.com/riders.html [R=301,L,NE,QSD]
-# Translation catalogs are the only JSON files intentionally served publicly.
-RewriteCond %{REQUEST_URI} !^/assets/i18n/(?:de|es|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn)\.json$ [NC]
+# Serve the translation catalogs and the public synchronization receipt. All
+# other JSON files remain forbidden.
+RewriteRule ^assets/i18n/(de|es|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn)\.json$ - [L,NC]
+RewriteRule ^notion-sync-metadata\.json$ - [L,NC]
+RewriteRule ^deployment-(?:health|manifest)\.json$ - [L,NC]
 RewriteRule \.json$ - [F,L,NC]
 RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
 
@@ -32,7 +34,7 @@ RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self' https://10eaaef6.sibforms.com; frame-src https://10eaaef6.sibforms.com https://docs.google.com; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self' https://10eaaef6.sibforms.com; frame-src https://10eaaef6.sibforms.com; upgrade-insecure-requests"
   Header always set X-Permitted-Cross-Domain-Policies "none"
   Header always unset X-Powered-By
 </IfModule>

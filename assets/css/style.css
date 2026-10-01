@@ -989,6 +989,11 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .competition-season-heading h1{font-family:var(--head);font-size:clamp(38px,5vw,68px);line-height:.94;text-transform:uppercase;margin:12px 0 0;}
 .competition-season-heading p{max-width:680px;margin:16px 0 0;color:var(--muted);line-height:1.6;}
 .competition-season-heading .hero-ctas{margin-top:20px;}
+.competition-season-meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:18px;padding-top:13px;border-top:1px solid rgba(21,22,26,.13);font-family:var(--mono);font-size:10px;line-height:1.5;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+.competition-season-meta a{color:var(--ink);font-weight:400;}
+.competition-season-meta a strong{color:var(--orange-dark);font-weight:700;}
+.competition-season-meta>span strong{color:var(--ink);}
+.competition-season-meta a:hover{color:var(--orange-dark);}
 .competition-season-event{display:flex;flex-direction:column;gap:7px;padding:20px 22px;background:rgba(255,255,255,.72);border:1px solid rgba(21,22,26,.08);border-radius:18px;}
 .competition-season-event span,.competition-season-event time{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
 .competition-season-event strong{font-family:var(--head);font-size:25px;line-height:1.05;text-transform:uppercase;}
@@ -1127,6 +1132,11 @@ a.clean-standing-row:hover{background:#fff5ef;}
 @media(max-width:620px){.competition-hero,.competition-detail-hero{padding:66px 0 58px}.competition-hero h1,.competition-detail-hero h1{font-size:clamp(34px,9vw,42px);overflow-wrap:anywhere}.competition-note{grid-template-columns:1fr}.competition-card{min-height:0;padding:26px 22px}.competition-sport{margin-top:38px}.competition-summary dl{grid-template-columns:1fr}.competition-summary dl div+div{border-top:1px solid var(--line)}.competition-rounds ol{grid-template-columns:1fr}.competition-rounds li:nth-child(odd){border-right:0}.competition-rounds li:nth-child(even){padding-left:0}.competition-link-grid{grid-template-columns:1fr}.competition-link-grid>a+a,.competition-link-grid>a:nth-child(3){border-left:1px solid var(--line);border-top:0}.competition-subnav a{padding:15px 14px}.competition-subnav a:first-child{padding-left:0}.competition-subnav a[aria-current="page"]::after{left:14px;right:14px}.competition-standings-hero{padding:58px 0 46px}.competition-standings-hero h1{font-size:clamp(39px,12vw,58px)}.standings-hero-meta span{min-width:0;width:50%;margin:0;padding:16px 14px 0 0}.standings-hero-meta span:nth-child(2){border-right:0;padding-left:14px}.standings-hero-meta span:last-child{width:100%;margin-top:16px;padding-top:16px;border-top:1px solid #34373d}.clean-standings-section{padding-top:30px}.clean-standings-heading{align-items:start;flex-direction:column}.clean-standings-toolbar{align-items:stretch;flex-direction:column;padding-bottom:24px}.clean-standings-toolbar .standings-search{width:100%}.clean-podium-card{padding:18px 15px}.clean-standing-list{overflow:visible}.clean-standing-head{grid-template-columns:40px minmax(0,1fr) 66px;padding:10px 12px}.clean-standing-head span:nth-child(3),.clean-standing-head span:nth-child(4){display:none}.clean-standing-row{grid-template-columns:40px minmax(0,1fr) 66px;gap:10px;min-height:64px;padding:10px 12px}.clean-standing-team,.clean-standing-nation{display:none}.clean-standing-name small{display:block}.clean-standing-row>b{font-size:18px}.clean-standings-note{grid-template-columns:1fr;gap:12px;padding:22px}.clean-standings-note a{grid-column:auto}.team-standing-row .clean-standing-name small{white-space:normal;line-height:1.45}}
 
 @media(max-width:700px){
+  .competition-card,.competition-card.has-logo{display:flex;flex-direction:column;align-items:flex-start;padding:20px;}
+  .competition-card-logo{justify-content:flex-start;width:100%;height:68px;margin:14px 0;}
+  .competition-card-logo img{max-height:68px;}
+  .competition-card.has-logo .competition-sport{margin-top:0;}
+  .competition-card .btn{margin-top:18px;}
   .competition-season-hero{padding:28px 0 32px;}
   .competition-season-hero-grid{grid-template-columns:1fr;gap:22px;}
   .competition-season-logo{justify-content:flex-start;min-height:100px;padding:16px;}
@@ -1135,11 +1145,6 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .competition-season-event{padding:17px 18px;}
   .competition-view-switch .wrap{overflow-x:auto;padding-top:13px;padding-bottom:13px;}
   .competition-view-switch a{min-width:122px;padding:11px 17px;}
-  .competition-card,.competition-card.has-logo{display:flex;flex-direction:column;align-items:flex-start;padding:20px;}
-  .competition-card-logo{justify-content:flex-start;width:100%;height:68px;margin:14px 0;}
-  .competition-card-logo img{max-height:68px;}
-  .competition-card.has-logo .competition-sport{margin-top:0;}
-  .competition-card .btn{margin-top:18px;}
 }
 
 /* Keep the season overview immediately readable below the global navigation. */
@@ -1243,6 +1248,22 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .equipment-category-body>p{font-size:12px; line-height:1.5; color:var(--muted); margin-bottom:22px;}
 .equipment-category-stats{display:flex; gap:22px; margin-top:auto; padding-top:17px; border-top:1px solid var(--line); font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);}
 .equipment-category-stats strong{color:var(--ink); font-family:var(--head); font-size:17px; margin-right:4px;}
+.equipment-directory-section{padding:54px 0 12px;scroll-margin-top:88px}
+.equipment-directory-head{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:18px}
+.equipment-directory-head h2{font-family:var(--head);font-size:clamp(32px,5vw,54px);line-height:.95;text-transform:uppercase;margin-top:8px}
+.equipment-directory-head>a{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid currentColor;padding-bottom:4px}
+.equipment-directory-scroll{max-height:309px;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);background:#fff;scrollbar-color:var(--orange) #ecece8;scrollbar-width:thin}
+.equipment-directory-scroll::-webkit-scrollbar{width:8px}.equipment-directory-scroll::-webkit-scrollbar-track{background:#ecece8}.equipment-directory-scroll::-webkit-scrollbar-thumb{background:var(--orange)}
+.equipment-directory-row{min-height:102px;display:grid;grid-template-columns:52px 92px minmax(0,1fr) 94px 28px;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);transition:background .2s ease}
+.equipment-directory-row:last-child{border-bottom:0}.equipment-directory-row:hover{background:#f5f3ef}
+.equipment-directory-rank{font-family:var(--head);font-size:25px;color:var(--orange)}
+.equipment-directory-media{width:82px;height:80px;display:flex;align-items:center;justify-content:center;background:#f3f3ef;overflow:hidden}
+.equipment-directory-media img{width:100%;height:100%;object-fit:contain;padding:7px;mix-blend-mode:multiply}
+.equipment-ranking-placeholder{font-family:var(--head);font-size:25px;color:#c1c2bf}
+.equipment-directory-product{min-width:0;display:flex;flex-direction:column;gap:6px}.equipment-directory-product strong{font-family:var(--head);font-size:20px;line-height:1.05;text-transform:uppercase;overflow-wrap:anywhere}.equipment-directory-product small{font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.equipment-directory-usage{display:flex;flex-direction:column;align-items:flex-end}.equipment-directory-usage strong{font-family:var(--head);font-size:26px;line-height:1}.equipment-directory-usage small{font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--muted)}
+.equipment-directory-arrow{font-size:18px;color:var(--orange)}
+.equipment-directory-summary{margin-top:10px;text-align:right;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .equipment-compare-banner{display:flex; align-items:center; justify-content:space-between; gap:48px; margin:78px 0 30px; padding:38px 42px; background:var(--dark); color:#fff;}
 .equipment-compare-banner .label{color:#ffad78;}
 .equipment-compare-banner h2{font-family:var(--head); font-size:clamp(26px,4vw,42px); text-transform:uppercase; margin:9px 0;}
@@ -1286,6 +1307,8 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .brand-logo{display:flex;min-width:0;height:180px;align-items:center;justify-content:center;padding:34px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
 .brand-logo img{display:block;width:100%;height:100%;max-width:190px;max-height:90px;object-fit:contain;transition:transform .2s ease}
 .brand-logo:hover img{transform:scale(1.04)}
+.team-identity{display:inline-flex;align-items:center;gap:10px;min-width:0}
+.team-identity-logo{display:block;width:36px;height:36px;flex:0 0 36px;object-fit:contain}
 @media(max-width:980px){.brand-logo-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:720px){.brand-logo-directory{padding:34px 0 54px}.brand-logo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.brand-logo{height:140px;padding:24px}}
 @media(max-width:460px){.brand-logo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.brand-logo{height:125px;padding:20px}}
@@ -1354,6 +1377,8 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .equipment-catalogue{padding-top:34px}.equipment-catalogue-head{align-items:flex-start;flex-direction:column;gap:15px}.equipment-group{padding-top:48px}
   .equipment-group-head{grid-template-columns:48px minmax(0,1fr);gap:14px}.equipment-group-icon{width:48px;height:48px}.equipment-group-icon svg{width:27px;height:27px}
   .equipment-category-grid{grid-template-columns:1fr}.equipment-category-media{height:185px}.equipment-compare-banner{padding:28px 24px;margin-top:58px}
+  .equipment-directory-section{padding-top:42px}.equipment-directory-head{align-items:flex-start}.equipment-directory-head h2{font-size:38px}
+  .equipment-directory-scroll{max-height:273px}.equipment-directory-row{min-height:91px;grid-template-columns:38px 62px minmax(0,1fr) 54px;padding:8px 10px;gap:9px}.equipment-directory-media{width:58px;height:64px}.equipment-directory-rank{font-size:20px}.equipment-directory-product strong{font-size:16px}.equipment-directory-product small{display:none}.equipment-directory-usage strong{font-size:22px}.equipment-directory-arrow{display:none}
   .equipment-rank-card{grid-template-columns:38px minmax(0,1fr);gap:14px}.equipment-rank-card>img,.equipment-rank-card>picture>img,.equipment-placeholder{display:none}.equipment-rank-main h2{font-size:20px}
   .compare-tray{align-items:stretch;gap:11px;flex-direction:column}.compare-tray-actions{justify-content:flex-end}.compare-page-head{align-items:flex-start;flex-direction:column}.compare-grid{grid-template-columns:1fr}
 }
@@ -1574,7 +1599,7 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .newsletter-benefits li{font-size:9px; padding:6px 8px;}
 }
 
-/* Rider contribution form */
+/* Preproduction rider contribution form */
 .rider-feedback [hidden]{display:none!important}
 .rider-feedback-trigger{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));z-index:1000;width:58px;height:58px;border:0;border-radius:50%;background:#a3441f;color:#fff;box-shadow:0 8px 26px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer}
 .rider-feedback-trigger:hover,.rider-feedback-trigger:focus-visible{background:#7c3115;outline:3px solid #fff;outline-offset:3px}

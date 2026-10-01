@@ -64,16 +64,8 @@ SITE_URL = os.environ.get(
     "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com",
 ).rstrip("/")
 SITE_UPDATED = "2026-09-09"
-if DATA_SOURCE == "notion":
-    metadata_path = os.path.join(ROOT, "data", "notion", "sync-metadata.json")
-    if os.path.exists(metadata_path):
-        with open(metadata_path, encoding="utf-8") as metadata_source:
-            candidate = json.load(metadata_source).get("generated_at", "")[:10]
-        if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", candidate):
-            SITE_UPDATED = candidate
-site_updated_date = time.strptime(SITE_UPDATED, "%Y-%m-%d")
-SITE_UPDATED_LABEL = f"{site_updated_date.tm_mday} {time.strftime('%b %Y', site_updated_date)}"
-SITE_UPDATED_LONG = f"{site_updated_date.tm_mday} {time.strftime('%B %Y', site_updated_date)}"
+SITE_UPDATED_LABEL = "9 Sep 2026"
+SITE_UPDATED_LONG = "9 September 2026"
 CONTACT_EMAIL = "contact@ridersfanatics.com"
 DATA_LICENSE_URL = f"{SITE_URL}/data-license.html"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
@@ -88,6 +80,7 @@ COMPETITIONS_PATH = os.environ.get(
 ADS_PATH = os.path.join(ROOT, "data", "ads.json")
 BRAND_LOGOS_PATH = os.path.join(ROOT, "data", "brand-logos.json")
 COMPETITION_LOGOS_PATH = os.path.join(ROOT, "data", "competition-logos.json")
+DRIVE_LOGO_MANIFEST_PATH = os.path.join(ROOT, "data", "drive-logo-manifest.json")
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
@@ -129,9 +122,10 @@ NEWSLETTER_FORM_URL = (
 EQUIP_GROUP_MAP = {
     "Frame": "Chassis", "Fork": "Chassis", "RearShock": "Chassis",
     "Handlebar": "Cockpit", "Saddle": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit",
+    "Stem": "Cockpit", "Spacer": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "BrakeLever": "Drivetrain",
     "Disk": "Drivetrain", "CHAIN": "Drivetrain",
-    "Wheels": "Wheels & Tyres", "Tires": "Wheels & Tyres", "Pedals": "Wheels & Tyres",
+    "Wheels": "Wheels & Tyres", "Hub": "Wheels & Tyres", "Tires": "Wheels & Tyres", "Pedals": "Wheels & Tyres",
     "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
 }
 EQUIP_GROUP_ORDER = ["Chassis", "Cockpit", "Drivetrain", "Wheels & Tyres", "Protection"]
@@ -196,7 +190,7 @@ def result_status(result):
     return RESULT_STATUS_ALIASES.get(normalized)
 
 def result_counts_as_start(result):
-    """DNS is not a start; a prior qualifier can still mark participation."""
+    """DNS is not a start; DNF and DSQ count even without a recorded time."""
     if "participated" in result:
         return bool(result.get("participated"))
     return result_status(result) != "DNS"
@@ -245,6 +239,7 @@ def norm_product_text(value):
 EQUIPMENT_ALIASES = {
     ("Frame", "commencal", "supreme dh v5"): ("Commençal", "Supreme DH V5.2"),
     ("Frame", "commencal", "supreme dh v5 2"): ("Commençal", "Supreme DH V5.2"),
+    ("Frame", "commencal", "supreme dh v5 mullet 29 27 5"): ("Commençal", "Supreme DH V5.2"),
     ("Fork", "ohlins", "dh38 m2 coil"): ("Öhlins", "DH38"),
     ("RearShock", "fox", "factory"): ("Fox", "Float X2 Factory"),
     ("Handlebar", "burgtec", "ride wide alloy dh"): ("Burgtec", "Ride Wide DH"),
@@ -267,6 +262,7 @@ EQUIPMENT_ALIASES = {
 
 BRAND_DISPLAY = {
     "5dev": "5DEV", "commencal": "Commençal", "enve": "ENVE",
+    "forbiden": "Forbidden", "forbidden": "Forbidden",
     "north shore billet": "North Shore Billet", "northshorebillet": "North Shore Billet",
     "ohlins": "Öhlins", "rockshox": "RockShox", "sram": "SRAM",
 }
@@ -313,22 +309,15 @@ def sync_drive_rider_portraits(riders):
     """Match Drive portraits to riders by their stable Instagram handle."""
     if not os.path.isdir(DRIVE_RIDER_IMG_DIR):
         return 0
-
-    def handle_key(value):
-        # Instagram handles are frequently written with different cosmetic
-        # separators in Notion and Drive (`name.rider` vs `name_rider`).
-        # The letters and digits are the stable identity.
-        return re.sub(r"[^a-z0-9]", "", (value or "").casefold().lstrip("@"))
-
     sources = {}
     for filename in os.listdir(DRIVE_RIDER_IMG_DIR):
         stem, ext = os.path.splitext(filename)
         if ext.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue
-        sources[handle_key(stem)] = os.path.join(DRIVE_RIDER_IMG_DIR, filename)
+        sources[stem.casefold()] = os.path.join(DRIVE_RIDER_IMG_DIR, filename)
     matched = 0
     for rider in riders:
-        handle = handle_key(rider.get("instagram"))
+        handle = (rider.get("instagram") or "").strip().lstrip("@").casefold()
         source = sources.get(handle)
         if not source:
             continue
@@ -352,10 +341,62 @@ def equip_image_slug(category, brand, main_model):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 def has_equip_photo(category, brand, main_model):
-    slug = equip_image_slug(category, brand, main_model)
-    for ext in ("jpg", "jpeg", "png", "webp"):
-        if os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{ext}")):
-            return f"{slug}.{ext}"
+    canonical_slug = equip_image_slug(category, brand, main_model)
+    raw_slug = re.sub(
+        r"[^a-z0-9]+", "-",
+        unicodedata.normalize("NFKD", f"{category} {brand} {main_model}")
+        .encode("ascii", "ignore").decode("ascii").lower(),
+    ).strip("-")
+
+    # Notion stores the commercial reference while Drive filenames can also
+    # contain a colour, tune, wheel position or model year. Try both the
+    # canonical site identity and the unmodified Notion identity first.
+    for slug in dict.fromkeys((raw_slug, canonical_slug)):
+        for ext in ("webp", "jpg", "jpeg", "png"):
+            if os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{ext}")):
+                return f"{slug}.{ext}"
+
+    # Resolve safe filename variants imported from Drive. A candidate is only
+    # accepted when it has the same category and brand and at least two model
+    # tokens overlap. This links e.g. `BoXXer Ultimate Electric Red` to the
+    # existing `BoXXer Ultimate` image without confusing neighbouring models.
+    desired = set(raw_slug.split("-"))
+    category_tokens = set(equip_image_slug(category, "", "").split("-"))
+    brand_tokens = set(re.sub(r"[^a-z0-9]+", "-", norm_product_text(brand)).split("-")) - {""}
+    model_tokens = set(re.sub(r"[^a-z0-9]+", "-", norm_product_text(main_model)).split("-")) - {""}
+    candidates_by_stem = {}
+    if os.path.isdir(EQUIP_IMG_DIR):
+        for filename in os.listdir(EQUIP_IMG_DIR):
+            stem, ext = os.path.splitext(filename)
+            if ext.lower() not in {".webp", ".jpg", ".jpeg", ".png"} or stem.endswith("-480"):
+                continue
+            tokens = set(stem.split("-"))
+            if not category_tokens.issubset(tokens) or not brand_tokens.issubset(tokens):
+                continue
+            candidate_model = tokens - category_tokens - brand_tokens
+            # Suspension variants with opposite spring technologies are not
+            # interchangeable product photos.
+            if (("air" in model_tokens and "coil" in candidate_model)
+                    or ("coil" in model_tokens and "air" in candidate_model)):
+                continue
+            overlap = candidate_model & model_tokens
+            if len(overlap) < min(2, len(model_tokens)):
+                continue
+            # Prefer the candidate that explains the greatest share of both
+            # names; extension preference keeps the modern WebP original.
+            coverage = len(overlap) / max(1, min(len(candidate_model), len(model_tokens)))
+            union_score = len(tokens & desired) / max(1, len(tokens | desired))
+            ext_score = {".webp": 3, ".jpg": 2, ".jpeg": 1, ".png": 0}[ext.lower()]
+            candidate = (coverage, union_score, ext_score, filename)
+            if stem not in candidates_by_stem or candidate > candidates_by_stem[stem]:
+                candidates_by_stem[stem] = candidate
+    candidates = list(candidates_by_stem.values())
+    if candidates:
+        candidates.sort(reverse=True)
+        best = candidates[0]
+        # Refuse ambiguous matches with an identical semantic score.
+        if len(candidates) == 1 or best[:2] != candidates[1][:2]:
+            return best[3]
     return None
 
 def tire_component_photos(brand, main_model):
@@ -420,6 +461,8 @@ def contribution_form_rider(r):
     return ""
 
 def rider_feedback_html(r):
+    if not IS_PREPROD:
+        return ""
     selected_rider = contribution_form_rider(r)
     rider_prefill = f"&amp;entry.{CONTRIBUTION_RIDER_ENTRY}={quote(selected_rider)}" if selected_rider else ""
     form_url = CONTRIBUTION_FORM_URL + "?embedded=true" + rider_prefill
@@ -461,7 +504,7 @@ def breadcrumb_html(items):
     return ""
 
 def head(title, description, asset_prefix, body_class="", canonical_path="/",
-         schemas=None, image_path=None, page_type="website", robots=None):
+         schemas=None, image_path=None, page_type="website"):
     body_attr = f' class="{esc(body_class)}"' if body_class else ""
     canonical = absolute_url(canonical_path)
     image = absolute_url(image_path) if image_path else absolute_url("/assets/img/og-default.png")
@@ -469,7 +512,6 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
     image_preload = f'<link rel="preload" as="image" href="{image}">' if image_path else ""
     schema_html = "\n".join(json_ld(s) for s in (schemas or []))
     adsense_script = "" if IS_PREPROD else '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" crossorigin="anonymous"></script>'
-    robots = "noindex,nofollow,noarchive" if IS_PREPROD else (robots or "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1")
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -477,7 +519,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(description)}">
-<meta name="robots" content="{robots}">
+<meta name="robots" content="{'noindex,nofollow,noarchive' if IS_PREPROD else 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'}">
 <link rel="canonical" href="{canonical}">
 <meta property="og:type" content="{page_type}">
 <meta property="og:site_name" content="{SITE_NAME}">
@@ -558,7 +600,7 @@ def header_html(asset_prefix, active=""):
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
-      <span class="icon-btn">{len(PROMO_RIDERS)} Riders</span>
+      <span class="icon-btn">64 Riders</span>
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -1296,7 +1338,7 @@ def build_standings(riders):
             search_blob = f"{team} {who}".lower()
             rows.append(f"""<tr data-standing-row data-search="{esc(search_blob)}">
             <td class="pos{medal}">{i}</td>
-            <td class="who">{esc(team)}<span class="sub">{esc(who)}</span>
+            <td class="who">{team_identity_html(team)}<span class="sub">{esc(who)}</span>
               <span class="mobile-total">{total} pts</span></td>
             <td class="total">{total}</td>
           </tr>""")
@@ -1440,7 +1482,7 @@ def competition_events(riders, competition_name):
 def competition_page_events(riders, competition):
     """Show all scheduled RedBull events, including those without results yet."""
     recorded = competition_events(riders, competition["name"])
-    if competition["id"] != "redbull-2026":
+    if competition["id"] != "redbull-2026" and not IS_PREPROD:
         return recorded
     scheduled = [event.get("name") for event in competition.get("events", []) if event.get("name")]
     return list(dict.fromkeys(scheduled + recorded))
@@ -1519,8 +1561,8 @@ def competition_logo_key(competition):
 
 def redbull_event_logo_key(event):
     return {
-        "ceroabajo-2026": "red-bull-cerro-abajo-2026",
         "cerroabajo-2026": "red-bull-cerro-abajo-2026",
+        "ceroabajo-2026": "red-bull-cerro-abajo-2026",
         "rampage-2026": "redbull-rampage-2026",
         "hardline-2026": "redbull-hardline-2026",
     }.get(competition_round_slug(event))
@@ -1624,6 +1666,9 @@ def build_competition_round(riders, competition, event, round_number, events):
     path = f"/competitions/{cid}/rounds/{slug}.html"
     display_event = competition_event_label(event)
     scheduled_event = next((item for item in competition.get("events", []) if item.get("name") == event), {})
+    scheduled_date = scheduled_event.get("date") or ""
+    if scheduled_date.startswith("9999-"):
+        scheduled_date = ""
     official_event = red_bull_event_info(event) if is_red_bull_cerro_abajo(competition) else None
 
     categories = {}
@@ -1671,7 +1716,7 @@ def build_competition_round(riders, competition, event, round_number, events):
     for rank, team in enumerate(event_teams, 1):
         names = ", ".join(event_team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
-        team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{esc(team)}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
+        team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{team_identity_html(team, "../../../")}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
     team_table = (f'''<section class="round-category standings-block" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="Team results, horizontally scrollable"><table class="round-results"><caption>Team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div><p class="standings-empty" hidden>No team result is recorded for this event.</p></section>'''
                   if show_team_ranking else "")
 
@@ -1723,8 +1768,12 @@ def build_competition_round(riders, competition, event, round_number, events):
     )
     if cid == "redbull-2026" and not all_entries:
         page_title = f"Red Bull {display_event} | 2026 Event & Riders | {SITE_NAME}"
-        description = (f"Red Bull {display_event} is scheduled for {scheduled_event.get('date') or '2026'}. "
+        description = (f"Red Bull {display_event} is scheduled for {scheduled_date or '2026'}. "
                        "Explore the event now; rider results will appear when verified.")
+    elif not all_entries:
+        page_title = f"{display_event} 2026 | Upcoming UCI Downhill Event"
+        description = (f"{display_event} 2026 UCI downhill event preview: date, location and event information. "
+                       "Verified riders and results will appear when available.")
     elif is_red_bull_cerro_abajo(competition):
         page_title = f"{event} Red Bull Cerro Abajo 2026 Results | {SITE_NAME}"
         recorded_data = "recorded placings and points" if has_points else "the recorded finishing order"
@@ -1760,12 +1809,12 @@ def build_competition_round(riders, competition, event, round_number, events):
                                      "addressCountry": official_event["country_code"]}},
             "url": absolute_url(path), "sameAs": official_event["official_url"],
         })
-    scheduled_date = scheduled_event.get("date")
     scheduled_location = scheduled_event.get("location")
-    if focused_seo and scheduled_date and scheduled_location and not official_event:
+    if scheduled_date and scheduled_location and not official_event:
         schemas.append({
             "@context": "https://schema.org", "@type": "SportsEvent",
-            "name": focused_seo["heading"], "description": focused_seo["copy"],
+            "name": focused_seo["heading"] if focused_seo else f"{display_event} {competition['season']}",
+            "description": focused_seo["copy"] if focused_seo else description,
             "startDate": scheduled_date,
             "eventStatus": ("https://schema.org/EventCompleted" if all_entries
                             else "https://schema.org/EventScheduled"),
@@ -1786,11 +1835,15 @@ def build_competition_round(riders, competition, event, round_number, events):
     html += header_html("../../../", active="competitions")
     official_source = (f'''<p class="round-official-source"><a href="{esc_attr(official_event['official_url'])}" rel="nofollow noopener" target="_blank">Official event information <span aria-hidden="true">↗</span></a></p>'''
                        if official_event else "")
-    if not all_entries and cid == "redbull-2026":
-        event_date = scheduled_event.get("date") or ""
+    if not all_entries:
+        event_date = scheduled_date
+        event_location = scheduled_event.get("location") or ""
         date_line = f'<p><time datetime="{esc_attr(event_date)}">{esc(event_date)}</time></p>' if event_date else ""
+        location_line = f'<p>{esc(event_location)}</p>' if event_location else ""
         results_section = (f'<section class="section round-results-section"><div class="wrap">'
-                           f'<h2>Results to come</h2>{date_line}<p>No verified rider results are recorded for this event yet.</p>'
+                           f'<div class="label">Coming soon</div><h2>Event information</h2>{date_line}{location_line}'
+                           f'<p>No verified rider results are recorded yet. This page will be updated automatically when Notion receives the participant list or results.</p>'
+                           f'<p><a href="../../{cid}.html">Back to the competition calendar →</a></p>'
                            f'</div></section>')
     else:
         results_section = (f'<section class="section round-results-section"><div class="wrap">'
@@ -1935,7 +1988,7 @@ def build_competition_standings(riders, competition):
         </section>'''
 
     team_podium = "".join(
-        f'''<div class="clean-podium-card podium-{rank}"><span class="clean-podium-rank">{rank:02d}</span><div><strong>{esc(team)}</strong><small>{len(team_riders[team])} tracked riders</small></div><b>{team_points[team]}<small>pts</small></b></div>'''
+        f'''<div class="clean-podium-card podium-{rank}"><span class="clean-podium-rank">{rank:02d}</span><div>{team_identity_html(team, "../../")}<small>{len(team_riders[team])} tracked riders</small></div><b>{team_points[team]}<small>pts</small></b></div>'''
         for rank, team in enumerate(teams[:3], 1)
     )
     team_rows = []
@@ -1943,7 +1996,7 @@ def build_competition_standings(riders, competition):
         names = ", ".join(rider["display_name"] for rider in team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
         team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}">
-          <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b>
+          <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b>
         </div>''')
     team_panel = f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}">
       <div class="clean-podium">{team_podium}</div><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{"".join(team_rows)}</div><p class="standings-empty" hidden>No team matches your search.</p>
@@ -1956,18 +2009,12 @@ def build_competition_standings(riders, competition):
          "name": rider["display_name"], "url": absolute_url(f"/riders/{rider['slug']}.html")}
         for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
     ]
+    description = f"{name} standings for Elite Men, Elite Women and teams: current points, season leaders and linked rider profiles."
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
-    if cid == "uci-mtb-world-cup-dh-2026":
-        page_title = "UCI Downhill World Cup 2026 Standings | Men & Women"
-        description = (f"UCI downhill World Cup 2026 standings after {latest_round}: "
-                       "Men Elite, Women Elite, team points and linked race results.")
-    else:
-        page_title = f"{name} Standings | Men, Women & Teams"
-        description = f"{name} standings for Elite Men, Elite Women and teams: current points, season leaders and linked rider profiles."
     latest_round_href = (f"rounds/{competition_round_slug(latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
     html = head(
-        page_title, description, "../../",
+        f"{name} Standings | Men, Women & Teams", description, "../../",
         body_class="competition-standings-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage",
@@ -1996,6 +2043,54 @@ def build_competition_standings(riders, competition):
 </div></section></main>'''
     html += footer_html("../../")
     return html
+
+_DRIVE_LOGO_MANIFEST = None
+
+
+def load_drive_logo_manifest():
+    """Load safe, generated logo paths while keeping embedded logos as fallback."""
+    global _DRIVE_LOGO_MANIFEST
+    if _DRIVE_LOGO_MANIFEST is not None:
+        return _DRIVE_LOGO_MANIFEST
+    empty = {"brands": [], "competitions": [], "teams": []}
+    if not os.path.exists(DRIVE_LOGO_MANIFEST_PATH):
+        _DRIVE_LOGO_MANIFEST = empty
+        return empty
+    try:
+        with open(DRIVE_LOGO_MANIFEST_PATH, encoding="utf-8") as source:
+            payload = json.load(source)
+    except (OSError, json.JSONDecodeError):
+        _DRIVE_LOGO_MANIFEST = empty
+        return empty
+    logos = payload.get("logos") or {}
+    safe = {}
+    for section in empty:
+        safe[section] = [
+            item for item in (logos.get(section) or [])
+            if re.fullmatch(r"[a-z0-9-]+", item.get("key") or "")
+            and re.fullmatch(
+                rf"assets/img/{section}/[a-z0-9-]+\.webp",
+                item.get("src") or "",
+            )
+            and os.path.isfile(os.path.join(ROOT, item["src"]))
+        ]
+    _DRIVE_LOGO_MANIFEST = safe
+    return safe
+
+
+def team_identity_html(team, prefix=""):
+    key = competition_round_slug(team)
+    logo = next(
+        (item for item in load_drive_logo_manifest()["teams"] if item["key"] == key),
+        None,
+    )
+    image = (
+        f'<img class="team-identity-logo" src="{prefix}{logo["src"]}" '
+        f'alt="" loading="lazy" width="44" height="44">'
+        if logo else ""
+    )
+    return f'<span class="team-identity">{image}<strong>{esc(team)}</strong></span>'
+
 
 def load_competition_logos():
     with open(COMPETITION_LOGOS_PATH, encoding="utf-8") as logo_source:
@@ -2027,6 +2122,11 @@ def load_competition_logos():
         logo_assets[logo_key] = {
             "src": f"assets/img/competitions/{logo_key}.{logo_extension}",
             "name": logo.get("name") or logo_key,
+        }
+    for logo in load_drive_logo_manifest()["competitions"]:
+        logo_assets[logo["key"]] = {
+            "src": logo["src"],
+            "name": logo.get("name") or logo["key"],
         }
     return logo_assets
 
@@ -2080,6 +2180,7 @@ def competition_featured_event(competition):
         "date_label": time.strftime("%d %b %Y", time.strptime(date, "%Y-%m-%d")).lstrip("0"),
         "location": event.get("location") or event.get("name") or "",
     }
+
 
 def competition_display_name(competition):
     return {"beyondgravity": "Beyond Gravity", "redbull-2026": "Red Bull"}.get(
@@ -2243,7 +2344,7 @@ def season_ranking_selector(riders, competition):
     for rank, team in enumerate(teams, 1):
         names = ", ".join(team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
-        team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
+        team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
     team_panel = (f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p></section>'''
                   if show_team_ranking else "")
     visible_categories = [
@@ -2330,7 +2431,7 @@ def redbull_event_ranking_selector(riders, competition):
             for rank, team in enumerate(sorted(team_points, key=lambda item: (-team_points[item], item.lower())), 1):
                 names = ", ".join(team_riders[team])
                 search = esc_attr(f"{team} {names}".lower())
-                team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(team)}</strong><small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
+                team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
             panels.append(f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is recorded for {esc(competition_event_label(event_name))} yet.</p></section>''')
 
     event_buttons = "".join(
@@ -2449,13 +2550,28 @@ def build_competition_detail(riders, competition):
     hero_intro = ("<p>Results and season ranking for Valparaiso, Genova and Stuttgart. "
                   "Each recorded result links directly to the rider profile.</p>"
                   if is_red_bull else "")
+    participants = competition_participants(riders, competition)
+    season_instagram = (competition.get("instagram") or "").strip().lstrip("@")
+    season_meta_items = []
+    if season_instagram:
+        season_meta_items.append(
+            f'<a href="https://instagram.com/{esc_attr(season_instagram)}" rel="noopener" target="_blank">'
+            f'Instagram <strong>@{esc(season_instagram)}</strong> <span aria-hidden="true">↗</span></a>'
+        )
+    season_meta_items.append(f'<span><strong>{len(participants)}</strong> riders</span>')
+    edition_count = competition.get("edition_count")
+    if edition_count:
+        season_meta_items.append(
+            f'<span><strong>{int(edition_count)}</strong> edition{"s" if int(edition_count) != 1 else ""}</span>'
+        )
+    season_meta = f'<div class="competition-season-meta">{"".join(season_meta_items)}</div>'
     season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
     ranking_section = (redbull_event_ranking_selector(riders, competition)
                        if competition["id"] == "redbull-2026"
                        else season_ranking_selector(riders, competition))
     html += f'''<main>
-<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{hero_intro}</div>{featured_event_html}</div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{season_meta}{hero_intro}</div>{featured_event_html}</div></section>
 {competition_view_selector(competition, "standings")}
 {season_visual}
 {season_context}
@@ -2466,7 +2582,7 @@ def build_competition_detail(riders, competition):
     if is_uci_dh:
         html = html.replace(
             '<script src="../assets/js/site.js',
-            '<script src="../assets/js/uci-iconic-tour.js?v=6"></script>\n<script src="../assets/js/site.js',
+            '<script src="../assets/js/uci-iconic-tour.js?v=8"></script>\n<script src="../assets/js/site.js',
         )
     return html
 
@@ -2816,15 +2932,16 @@ EQUIPMENT_CATEGORY_PLURALS = {
     "DropperPost": "Dropper Posts", "Helmet": "Helmets", "Goggles": "Goggles",
     "Protection": "Body Protection", "Shoes": "Shoes", "CHAIN": "Chains",
     "Disk": "Brake Rotors", "GRIP": "Grips", "Stem": "Stems",
+    "Hub": "Hubs", "Spacer": "Spacers",
     "Shifter": "Shifters", "BrakeCaliper": "Brake Calipers",
 }
 
 DIRECTORY_GROUP_MAP = {
     "Frame": "Frame & suspension", "Fork": "Frame & suspension", "RearShock": "Frame & suspension",
-    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit",
+    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit", "Spacer": "Cockpit",
     "BrakeLever": "Cockpit", "BrakeCaliper": "Cockpit", "Disk": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "CHAIN": "Drivetrain", "Shifter": "Drivetrain",
-    "Wheels": "Wheels", "Tires": "Wheels",
+    "Wheels": "Wheels", "Hub": "Wheels", "Tires": "Wheels",
     "Saddle": "Extention", "Pedals": "Extention",
     "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
 }
@@ -2850,6 +2967,49 @@ DIRECTORY_GROUP_CONTENT = {
 
 def equipment_category_plural(category):
     return EQUIPMENT_CATEGORY_PLURALS.get(category, prettify_category(category) + "s")
+
+EQUIPMENT_DIRECTORY_LABELS = {
+    "Frame": "Frame",
+    "Fork": "Fork",
+    "RearShock": "Shox",
+}
+
+def equipment_directory_label(category):
+    return EQUIPMENT_DIRECTORY_LABELS.get(category, equipment_category_plural(category))
+
+def equipment_product_ranking(category, products):
+    """Rank the directory by unique rider adoption, then sporting presence."""
+    ranked = sorted(
+        products.values(),
+        key=lambda product: (
+            -len({rider["slug"] for rider in product["riders"]}),
+            -product["points"],
+            norm_product_text(product["brand"]),
+            norm_product_text(product["model"]),
+        ),
+    )
+    rows = []
+    for position, product in enumerate(ranked, 1):
+        title = " ".join([product["brand"], product["model"]]).strip()
+        rider_count = len({rider["slug"] for rider in product["riders"]})
+        rider_names = sorted({rider["display_name"] for rider in product["riders"]})
+        rider_preview = ", ".join(rider_names[:3])
+        if len(rider_names) > 3:
+            rider_preview += f" +{len(rider_names) - 3}"
+        photo = has_equip_photo(category, product["brand"], product["model"])
+        media = (
+            f'<img src="assets/img/equipment/{photo}" alt="{esc_attr(title)}" loading="lazy">'
+            if photo else
+            f'<span class="equipment-ranking-placeholder" aria-hidden="true">{position:02d}</span>'
+        )
+        rows.append(f'''<a class="equipment-directory-row" href="equipment/{equip_image_slug(category, '', '')}.html">
+          <span class="equipment-directory-rank">{position:02d}</span>
+          <span class="equipment-directory-media">{media}</span>
+          <span class="equipment-directory-product"><strong>{esc(title)}</strong><small>{esc(rider_preview)}</small></span>
+          <span class="equipment-directory-usage"><strong>{rider_count}</strong><small>rider{'s' if rider_count != 1 else ''}</small></span>
+          <span class="equipment-directory-arrow" aria-hidden="true">↗</span>
+        </a>''')
+    return "".join(rows)
 
 def equipment_category_card(category, products, index):
     label = equipment_category_plural(category)
@@ -2888,24 +3048,23 @@ def build_equipment_directory(riders):
     by_cat = collect_equipment(riders)
     categories = [c for c in CAROUSEL_CATEGORY_ORDER if c in by_cat]
     categories += sorted(c for c in by_cat if c not in categories)
-    grouped_sections = []
-    running_index = 1
-    for group in DIRECTORY_GROUP_ORDER:
-        group_categories = [c for c in categories if DIRECTORY_GROUP_MAP.get(c) == group]
-        if not group_categories:
-            continue
-        group_title, group_description = DIRECTORY_GROUP_CONTENT[group]
-        cards = []
-        for category in group_categories:
-            cards.append(equipment_category_card(category, by_cat[category], running_index))
-            running_index += 1
-        group_id = re.sub(r"[^a-z0-9]+", "-", group.lower()).strip("-")
-        grouped_sections.append(f'''<section class="equipment-group" id="{group_id}"><div class="equipment-group-head"><div class="equipment-group-icon">{DIRECTORY_GROUP_ICONS[group]}</div><div><span class="label">{len(group_categories)} categories</span><h2>{esc(group_title)}</h2><p>{esc(group_description)}</p></div></div><div class="equipment-category-grid">{"".join(cards)}</div></section>''')
+    category_sections = []
+    for category in categories:
+        products = by_cat[category]
+        ranked_riders = {r["slug"] for p in products.values() for r in p["riders"]}
+        category_id = equip_image_slug(category, "", "")
+        category_sections.append(f'''<section class="equipment-directory-section" id="{category_id}">
+          <div class="equipment-directory-head"><div><span class="label">Most used by riders</span><h2>{esc(equipment_directory_label(category))}</h2></div><a href="equipment/{category_id}.html">View category →</a></div>
+          <div class="equipment-directory-scroll" tabindex="0" aria-label="All {esc_attr(equipment_directory_label(category))} references, ranked by rider usage">
+            {equipment_product_ranking(category, products)}
+          </div>
+          <p class="equipment-directory-summary">{len(products)} reference{'s' if len(products) != 1 else ''} · {len(ranked_riders)} rider{'s' if len(ranked_riders) != 1 else ''}</p>
+        </section>''')
     path = "/equipment.html"
     product_count = sum(len(by_cat[c]) for c in categories)
     group_nav = "".join(
-        f'<a href="#{re.sub(r"[^a-z0-9]+", "-", group.lower()).strip("-")}">{esc(DIRECTORY_GROUP_CONTENT[group][0])}</a>'
-        for group in DIRECTORY_GROUP_ORDER if any(DIRECTORY_GROUP_MAP.get(c) == group for c in categories)
+        f'<a href="#{equip_image_slug(category, "", "")}">{esc(equipment_directory_label(category))}</a>'
+        for category in categories
     )
     schema_items = [
         {"@type": "ListItem", "position": i, "name": equipment_category_plural(cat), "url": absolute_url(equipment_category_path(cat))}
@@ -2923,7 +3082,7 @@ def build_equipment_directory(riders):
     html += header_html("", active="equipment")
     html += f'''<main><section class="equipment-hero"><div class="wrap equipment-hero-layout"><div class="equipment-hero-copy"><div class="label">Professional race equipment · Verified setups</div><h1>Race equipment, <em>decoded.</em></h1><p>Explore what professional riders actually use. Every category connects products to riders, teams and results within the selected competition.</p><div class="hero-ctas"><a class="btn btn-solid" href="#equipment-catalogue">Browse categories</a><a class="btn equipment-compare-cta" href="compare.html">Open comparator</a></div><div class="equipment-hero-stats"><div><strong>{len(categories)}</strong><span>Categories</span></div><div><strong>{product_count}</strong><span>Products</span></div><div><strong>{len(riders)}</strong><span>Riders</span></div></div></div><div class="equipment-hero-visual" aria-label="Leading tracked equipment">{equipment_hero_visual(by_cat)}</div></div></section>
 <div class="wrap">{breadcrumb_html([("Home", "./"), ("Equipment", "equipment.html")])}</div>
-<section class="section equipment-catalogue" id="equipment-catalogue"><div class="wrap"><div class="equipment-catalogue-head"><div><div class="label">Equipment catalogue</div><h2>Explore the paddock.</h2><p>Choose a family, then open a category to see every tracked product and the riders using it.</p></div><a class="see-all" href="methodology.html">How rankings work →</a></div><nav class="equipment-group-nav" aria-label="Equipment families">{group_nav}</nav>{"".join(grouped_sections)}
+<section class="section equipment-catalogue" id="equipment-catalogue"><div class="wrap"><div class="equipment-catalogue-head"><div><div class="label">Equipment catalogue</div><h2>Most used equipment.</h2><p>Each category is ranked by the number of associated riders. The first three references are visible; scroll within a category to see the complete ranking.</p></div><a class="see-all" href="methodology.html">How rankings work →</a></div><nav class="equipment-group-nav" aria-label="Equipment categories">{group_nav}</nav>{"".join(category_sections)}
 <div class="equipment-compare-banner"><div><span class="label">Product comparator</span><h2>Build a side-by-side shortlist.</h2><p>Select two to four products from the same category and compare their tracked riders, teams and competition presence.</p></div><a class="btn btn-solid" href="compare.html">Start comparing</a></div>
 <div class="guide-callout"><strong>How to read these rankings</strong><p>Combined rider points describe competitive presence in the tracked field. They are not a laboratory comparison: sponsorship, rider count and team selection influence every total.</p></div></div></section></main>'''
     html += footer_html("")
@@ -2954,11 +3113,20 @@ def build_brands_directory(riders):
     del riders
     with open(BRAND_LOGOS_PATH, encoding="utf-8") as logo_source:
         logo_data = json.load(logo_source)
-    logos = sorted(logo_data.get("logos", []), key=lambda item: norm_product_text(item.get("name", "")))
+    logos_by_key = {}
+    for logo in logo_data.get("logos", []):
+        key = competition_round_slug(logo.get("name") or "")
+        if key:
+            logos_by_key[key] = dict(logo)
+    for logo in load_drive_logo_manifest()["brands"]:
+        logos_by_key[logo["key"]] = dict(logo)
+    logos = sorted(logos_by_key.values(), key=lambda item: norm_product_text(item.get("name", "")))
     os.makedirs(BRAND_IMG_DIR, exist_ok=True)
     for brand in logos:
         logo_key = unicodedata.normalize("NFKD", brand["name"]).encode("ascii", "ignore").decode("ascii")
         logo_key = re.sub(r"[^a-z0-9]+", "-", logo_key.lower()).strip("-")
+        if brand.get("src"):
+            continue
         logo_bytes = base64.b64decode(brand["data"], validate=True)
         logo_path = os.path.join(BRAND_IMG_DIR, f"{logo_key}.webp")
         current_logo = None
@@ -3003,6 +3171,8 @@ EQUIPMENT_EDITORIAL = {
     "BrakeLever": ("Brake controls are part of a complete braking system designed for repeatable modulation on steep tracks.", "Use the linked rider profiles to see the wider build; lever names alone do not document pads, rotors or individual setup."),
     "Handlebar": ("Handlebars shape a rider's cockpit position and steering interface.", "Model usage shows paddock presence, but width, rise and trimming are rider-specific details that may not be public."),
     "Stem": ("Stems connect the handlebar to the fork and contribute to cockpit fit.", "Compare named platforms and rider adoption without assuming that every rider uses the same length or position."),
+    "Spacer": ("Cockpit spacers adjust stack height and help riders fine-tune their position.", "Compare recorded products as setup references; exact spacer combinations remain rider and frame specific."),
+    "Hub": ("Hubs connect the wheel build to the frame and fork while carrying bearings and engagement mechanisms.", "Use the linked rider profiles to understand each hub in the context of its complete wheel setup."),
     "GRIP": ("Grips are a small but highly personal contact point between rider and bike.", "Usage totals show which products appear in the tracked field, not which diameter, compound or wear strategy suits every rider."),
     "Crankset": ("Cranksets transfer rider input through the downhill drivetrain and must tolerate repeated impacts.", "Read points as competitive exposure and open the rider profiles for the surrounding drivetrain context."),
     "CHAIN": ("Chains connect the drivetrain components and are selected as part of a complete transmission system.", "The table identifies recorded product families; compatibility, gearing and replacement schedules remain build-specific."),
@@ -3114,7 +3284,7 @@ def build_compare_page():
 # ---------------------------------------------------------------- best equipment carousel
 
 CAROUSEL_CATEGORY_ORDER = [
-    "Frame", "Fork", "RearShock", "Handlebar", "Wheels", "Tires",
+    "Frame", "Fork", "RearShock", "Handlebar", "Stem", "Spacer", "Wheels", "Hub", "Tires",
     "BrakeLever", "Crankset", "Derailleur", "Pedals", "Saddle",
     "DropperPost", "Helmet", "Goggles", "Protection", "Shoes",
 ]
@@ -3424,7 +3594,6 @@ def build_rider_page(r, riders):
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'
 
     history = r.get("competition_history") or []
-    has_profile_content = bool(history or equipment or bullets)
     category_rank, season_analysis, setup_analysis, best_place = rider_editorial(r, riders)
     highlight_parts = []
     for wanted in ("Frame", "Fork", "RearShock"):
@@ -3499,7 +3668,6 @@ def build_rider_page(r, riders):
         page_title,
         meta_description,
         prefix, canonical_path=rider_url, page_type="article", image_path=rider_image,
-        robots=None if has_profile_content else "noindex,follow",
         schemas=[
             {"@context": "https://schema.org", "@type": "ProfilePage", "name": f"{r['display_name']} bike setup and results", "description": meta_description, "url": absolute_url(rider_url), "dateModified": SITE_UPDATED, "mainEntity": {"@id": absolute_url(rider_url) + "#rider"}},
             {**person_schema, "@id": absolute_url(rider_url) + "#rider"},

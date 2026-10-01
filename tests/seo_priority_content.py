@@ -55,6 +55,19 @@ assert_round(
     "Whistler UCI Downhill World Cup 2026",
 )
 
+build.IS_PREPROD = True
+uci["events"] = [{
+    "name": "Lake Placid",
+    "date": "2026-10-03",
+    "location": "Lake Placid, New York, USA",
+}]
+assert build.competition_page_events([], uci) == ["Lake Placid"]
+lake_placid_html = build.build_competition_round([], uci, "Lake Placid", 1, ["Lake Placid"])
+assert "<title>Lake Placid 2026 | Upcoming UCI Downhill Event</title>" in lake_placid_html
+assert "Coming soon" in lake_placid_html
+assert '"@type": "SportsEvent"' in lake_placid_html
+assert "No verified rider results are recorded yet" in lake_placid_html
+
 red_bull = {
     "id": "redbull-2026",
     "name": "RedBull 2026",

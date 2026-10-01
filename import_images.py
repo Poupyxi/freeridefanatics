@@ -48,13 +48,13 @@ try:
 except ImportError:
     HAS_CV2 = False
 
-LIBRARY = os.path.expanduser("~/Desktop/freeride")
+LIBRARY = os.environ.get("RF_IMAGE_LIBRARY", os.path.expanduser("~/Desktop/freeride"))
 SRC_PP = os.path.join(LIBRARY, "PPRiders")
 SRC_ACTION = os.path.join(LIBRARY, "PictureRiders")
 SRC_EQUIP = os.path.join(LIBRARY, "Equipment")
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(ROOT, "data", "riders.json")
+DATA_PATH = os.environ.get("RF_DATA_PATH", os.path.join(ROOT, "data", "riders.json"))
 OUT_PP = os.path.join(ROOT, "assets", "img", "riders")
 OUT_ACTION = os.path.join(ROOT, "assets", "img", "riders-action")
 OUT_EQUIP = os.path.join(ROOT, "assets", "img", "equipment")
@@ -68,13 +68,15 @@ JPEG_QUALITY = 82
 
 IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".avif")
 
-# Library folder name -> category key used in riders.json.
-# Folders with no equivalent (Hub, Spacer, Stems) are intentionally absent:
-# the site doesn't track those parts.
+# Library folder name -> category key used in riders.json. Keep the historical
+# Drive spellings as aliases: changing a folder name in Drive must not be a
+# prerequisite for publishing a newly linked component.
 FOLDER_TO_CATEGORY = {
     "Frame": "Frame", "Fork": "Fork", "Rear Shock": "RearShock",
     "Handle bar": "Handlebar", "Dropper Post": "DropperPost", "Seatpost": "DropperPost",
-    "Saddle": "Saddle", "Crank": "Crankset", "Derailleur": "Derailleur",
+    "Saddle": "Saddle", "Crank": "Crankset", "Crankseat": "Crankset",
+    "Derailleur": "Derailleur", "Gearbox": "Derailleur",
+    "Hub": "Hub", "Spacer": "Spacer", "Stems": "Stem", "Stem": "Stem",
     "Brake": "BrakeLever", "Brake Lever": "BrakeLever", "Grip": "GRIP", "Chain": "CHAIN", "Disk": "Disk",
     "Wheels": "Wheels", "Tires": "Tires", "Pedals": "Pedals",
     "Shoes": "Shoes", "Helmet": "Helmet", "Protection": "Protection", "Goggles": "Goggles",
@@ -307,7 +309,11 @@ def index_library_equipment():
             except (OSError, ValueError):
                 continue
             stem = os.path.splitext(f)[0]
-            parts = [p.strip() for p in stem.split(";")]
+            # The documented format is `Brand;Model;Variant`. Older Drive
+            # folders use `Brand_Model_Variant`; accept both and deliberately
+            # ignore the optional variant when matching a Notion reference.
+            separator = ";" if ";" in stem else "_"
+            parts = [p.strip() for p in stem.split(separator)]
             # Some bulk catalogue exports put tyre product images in the
             # Wheels folder and mark them with a third `Pneu` field. Route
             # those by their declared product type instead of their folder.
@@ -321,7 +327,7 @@ def index_library_equipment():
             index[file_category].append({
                 "brand": norm_text(canonical_brand),
                 "model": norm_text(canonical_model),
-                "full": norm_text(stem.replace(";", " ")),
+                "full": norm_text(" ".join(parts[:2])),
                 "path": source_path,
                 "name": f,
             })

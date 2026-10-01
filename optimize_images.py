@@ -45,16 +45,6 @@ def _save_webp(image: Image.Image, destination: Path, *, lossless: bool) -> None
     )
 
 
-def _matches_dimensions(path: Path, expected: tuple[int, int]) -> bool:
-    if not path.exists():
-        return False
-    try:
-        with Image.open(path) as image:
-            return image.size == expected
-    except (OSError, ValueError):
-        return False
-
-
 def generate_webp_variants() -> dict[str, int]:
     """Create WebP files only when they are smaller than their fallback."""
     created = updated = skipped = 0
@@ -73,11 +63,7 @@ def generate_webp_variants() -> dict[str, int]:
             lossless = source.suffix.lower() == ".png"
 
             full = _variant_path(source)
-            needs_full = (
-                not full.exists()
-                or full.stat().st_mtime < source_mtime
-                or not _matches_dimensions(full, image.size)
-            )
+            needs_full = not full.exists() or full.stat().st_mtime < source_mtime
             if needs_full:
                 existed = full.exists()
                 _save_webp(image, full, lossless=lossless)

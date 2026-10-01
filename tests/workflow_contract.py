@@ -18,10 +18,16 @@ assert 'cron: "*/15 * * * *"' in preprod
 assert "pull_request:" in preprod
 assert "preprod-change-validation:" in preprod
 assert "if: github.event_name != 'pull_request'" in preprod
+assert "ridersfanatics-preproduction-pr-{0}" in preprod
+assert "github.event.pull_request.number" in preprod
+assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in preprod
 assert "workflow_dispatch:" in production
 assert "pull_request:" in production
 assert "branches: [main]" in production
 assert "production-change-validation:" in production
+assert "ridersfanatics-production-pr-{0}" in production
+assert "github.event.pull_request.number" in production
+assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in production
 assert "push:" not in production.split("jobs:", 1)[0]
 assert "operation:" in production
 assert "rollback_run_id:" in production

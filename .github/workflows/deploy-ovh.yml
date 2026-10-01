@@ -23,8 +23,10 @@ on:
         type: string
 
 concurrency:
-  group: ridersfanatics-production
-  cancel-in-progress: true
+  # Pull-request checks must not cancel checks from other pull requests. Manual
+  # production operations remain serialized and are never interrupted midway.
+  group: ${{ github.event_name == 'pull_request' && format('ridersfanatics-production-pr-{0}', github.event.pull_request.number) || 'ridersfanatics-production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

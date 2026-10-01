@@ -41,6 +41,8 @@ assert "inputs.operation == 'promote'" in production
 assert "inputs.operation == 'restore'" in production
 assert 'test "$RESTORE_CONFIRMATION" = "RESTORE"' in production
 assert "scripts/restore_snapshot.py" in production
+assert "assets/img/competitions/uci-mtb-world-cup-dh-2026.webp" in production
+assert "assets/img/competitions/uci-mtb-world-cup-dh-2026.png" not in production
 
 for name, contents in (("preprod", preprod), ("production", production)):
     action_refs = re.findall(r"^\s*uses:\s+([^\s#]+)", contents, flags=re.MULTILINE)

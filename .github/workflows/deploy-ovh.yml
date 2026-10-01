@@ -266,11 +266,11 @@ jobs:
           test -f competitions/beyondgravity.html
           test -f competitions/beyondgravity/riders.html
           test -f assets/img/competitions/beyondgravity.jpg
-          test -f assets/img/competitions/uci-mtb-world-cup-dh-2026.png
+          test -f assets/img/competitions/uci-mtb-world-cup-dh-2026.webp
           grep -q 'Beyond Gravity 2027 at Maydena Bike Park' competitions/beyondgravity.html
           grep -q 'Beyond Gravity</h1>' competitions/beyondgravity.html
           grep -q 'competition-status competition-status-soon' competitions.html
-          grep -q 'assets/img/competitions/uci-mtb-world-cup-dh-2026.png' competitions.html
+          grep -q 'assets/img/competitions/uci-mtb-world-cup-dh-2026.webp' competitions.html
           grep -q '<loc>https://ridersfanatics.com/competitions/beyondgravity.html</loc>' sitemap.xml
 
           test -f competitions/uci-mtb-world-cup-dh-2026.html

@@ -87,6 +87,46 @@ def download_file(service, file_id: str, destination: Path):
             _status, done = downloader.next_chunk(num_retries=3)
 
 
+def inventory_folder(service, folder_id: str, relative=Path(".")):
+    """Return a deterministic, download-free inventory of supported images."""
+    records = []
+    seen_names = set()
+    for item in list_children(service, folder_id):
+        name = safe_name(item.get("name"))
+        folded = name.casefold()
+        if folded in seen_names:
+            path = Path(name)
+            suffix = f"--{item['id'][:8]}"
+            name = f"{path.stem}{suffix}{path.suffix}"
+            folded = name.casefold()
+            counter = 2
+            while folded in seen_names:
+                name = f"{path.stem}{suffix}-{counter}{path.suffix}"
+                folded = name.casefold()
+                counter += 1
+        seen_names.add(folded)
+        child_relative = relative / name
+        mime = item.get("mimeType")
+        if mime == FOLDER_MIME:
+            records.extend(inventory_folder(service, item["id"], child_relative))
+        elif isinstance(mime, str) and mime.startswith("image/"):
+            records.append({
+                "path": child_relative.as_posix(),
+                "drive_id": item["id"],
+                "mime_type": mime,
+                "modified_time": item.get("modifiedTime"),
+                "drive_md5": item.get("md5Checksum"),
+                "size": int(item.get("size") or 0),
+            })
+    return records
+
+
+def source_version(records) -> str:
+    normalized = sorted(records, key=lambda row: (row["path"].casefold(), row["drive_id"]))
+    payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def sync_folder(service, folder_id: str, destination: Path, relative=Path(".")):
     records = []
     seen_names = set()
@@ -136,6 +176,8 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--public-mirror", type=Path)
+    parser.add_argument("--source-version", type=Path)
+    parser.add_argument("--inventory-only", action="store_true")
     args = parser.parse_args()
     if not args.folder_id:
         raise SystemExit("GOOGLE_DRIVE_IMAGE_FOLDER_ID is required")
@@ -160,6 +202,18 @@ def main():
         relative_root = Path(root_name)
     else:
         relative_root = Path(".")
+
+    inventory = inventory_folder(service, args.folder_id, relative_root)
+    if not inventory:
+        raise SystemExit("No supported images were found in the Google Drive folder")
+    version = source_version(inventory)
+    if args.source_version:
+        args.source_version.parent.mkdir(parents=True, exist_ok=True)
+        args.source_version.write_text(version + "\n", encoding="utf-8")
+    if args.inventory_only:
+        print(f"Inventoried {len(inventory)} Drive images without downloading them")
+        return
+
     records = sync_folder(service, args.folder_id, output, relative_root)
     if not records:
         raise SystemExit("No supported images were found in the Google Drive folder")

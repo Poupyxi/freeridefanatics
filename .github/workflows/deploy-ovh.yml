@@ -97,10 +97,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          run_id="$(gh api \
-            "/repos/$GITHUB_REPOSITORY/actions/workflows/deploy-preprod-ovh.yml/runs?status=success&per_page=1" \
-            --jq '.workflow_runs[0].id // empty')"
-          test -n "$run_id" || { echo "No successful preproduction run is available." >&2; exit 1; }
+          run_id=""
+          while IFS= read -r candidate; do
+            artifact_id="$(gh api \
+              "/repos/$GITHUB_REPOSITORY/actions/runs/$candidate/artifacts?per_page=100" \
+              --jq '[.artifacts[] | select(.name == "validated-preproduction-snapshot" and .expired == false)][0].id // empty')"
+            if test -n "$artifact_id"; then
+              run_id="$candidate"
+              break
+            fi
+          done < <(gh api \
+            "/repos/$GITHUB_REPOSITORY/actions/workflows/deploy-preprod-ovh.yml/runs?status=success&per_page=50" \
+            --jq '.workflow_runs[] | select(.event != "pull_request") | .id')
+          test -n "$run_id" || {
+            echo "No successful preproduction run with a live validated snapshot is available." >&2
+            exit 1
+          }
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
       - name: Load the snapshot already validated in preproduction

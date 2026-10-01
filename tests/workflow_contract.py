@@ -43,6 +43,9 @@ assert 'test "$RESTORE_CONFIRMATION" = "RESTORE"' in production
 assert "scripts/restore_snapshot.py" in production
 assert "assets/img/competitions/uci-mtb-world-cup-dh-2026.webp" in production
 assert "assets/img/competitions/uci-mtb-world-cup-dh-2026.png" not in production
+assert 'select(.event != "pull_request")' in production
+assert "actions/runs/$candidate/artifacts?per_page=100" in production
+assert "No successful preproduction run with a live validated snapshot" in production
 
 for name, contents in (("preprod", preprod), ("production", production)):
     action_refs = re.findall(r"^\s*uses:\s+([^\s#]+)", contents, flags=re.MULTILINE)

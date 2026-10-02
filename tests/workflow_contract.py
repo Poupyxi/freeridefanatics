@@ -83,6 +83,7 @@ assert "if: env.RF_SYNC_SCOPE == 'notion'" in preprod
 assert preprod.count("env.RF_SYNC_SCOPE == 'drive'") >= 3
 assert "Restore only the unchanged source" in preprod
 assert "Validate the combined Notion and Drive snapshot" in preprod
+assert 'python3 -m pip install --disable-pip-version-check "Pillow==12.3.0"' in preprod
 assert "if: steps.change.outputs.changed == 'true'" in preprod
 assert "retention-days: 30" in preprod
 assert "retention-days: 14" in production

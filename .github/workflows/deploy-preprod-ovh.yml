@@ -1,4 +1,4 @@
-name: Update Preprod
+name: Update Notion Preprod
 
 on:
   pull_request:
@@ -12,6 +12,18 @@ on:
         required: true
         type: boolean
         default: true
+  workflow_call:
+    inputs:
+      sync_scope:
+        description: Isolated preproduction source to refresh
+        required: false
+        type: string
+        default: notion
+      force_deploy:
+        description: Force rebuilding and publishing preproduction
+        required: false
+        type: boolean
+        default: false
   schedule:
     # Schedules run from the default branch; always build the preprod branch.
     - cron: "*/15 * * * *"
@@ -25,6 +37,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   preprod-change-validation:
@@ -75,6 +88,7 @@ jobs:
       RF_SITE_URL: https://preprod.ridersfanatics.com
       RF_SKIP_IMAGE_OPTIMIZER: "1"
       GOOGLE_DRIVE_IMAGE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_IMAGE_FOLDER_ID }}
+      RF_SYNC_SCOPE: ${{ inputs.sync_scope || 'notion' }}
 
     steps:
       - name: Check out the preproduction revision
@@ -92,6 +106,7 @@ jobs:
             requirements-frame-reveal.txt
 
       - name: Read and validate Notion
+        if: env.RF_SYNC_SCOPE == 'notion'
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: |
@@ -110,9 +125,11 @@ jobs:
           python3 tests/deployment_access_contract.py
 
       - name: Install read-only Google Drive image support
+        if: env.RF_SYNC_SCOPE == 'drive'
         run: python3 -m pip install --disable-pip-version-check -r requirements-drive.txt
 
       - name: Inventory Google Drive without downloading images
+        if: env.RF_SYNC_SCOPE == 'drive'
         env:
           GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
           RF_IMAGE_LIBRARY: ${{ runner.temp }}/freeride-image-inventory
@@ -135,18 +152,29 @@ jobs:
           PREPROD_BASIC_PASSWORD: ${{ secrets.PREPROD_BASIC_PASSWORD }}
         run: |
           set -euo pipefail
-          local_version="$(python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())')"
-          local_drive_source_version="$(cat data/drive/live-drive-source-version.txt)"
+          case "$RF_SYNC_SCOPE" in
+            notion)
+              local_version="$(python3 -c 'import hashlib, pathlib; h=hashlib.sha256(); [h.update(pathlib.Path(p).read_bytes()) for p in ("data/notion/riders.json", "data/notion/competitions.json")]; print(h.hexdigest())')"
+              remote_version_url="https://preprod.ridersfanatics.com/notion-data-version.txt"
+              ;;
+            drive)
+              local_version="$(cat data/drive/live-drive-source-version.txt)"
+              remote_version_url="https://preprod.ridersfanatics.com/drive-source-version.txt"
+              ;;
+            *)
+              echo "Unsupported isolated sync scope: $RF_SYNC_SCOPE" >&2
+              exit 2
+              ;;
+          esac
           test -n "$local_version"
-          test -n "$local_drive_source_version"
 
           if test "$GITHUB_EVENT_NAME" = "push"; then
-            echo "A preprod code change requires a rebuild."
+            echo "A preprod code change requires a Notion-based rebuild."
             echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if test "$GITHUB_EVENT_NAME" = "workflow_dispatch" && test "$FORCE_DEPLOY" = "true"; then
-            echo "Manual forced refresh requested."
+          if test "$FORCE_DEPLOY" = "true"; then
+            echo "Forced $RF_SYNC_SCOPE refresh requested."
             echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -154,25 +182,95 @@ jobs:
           test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
           remote_version="$(curl --fail --silent --show-error --retry 2 \
             --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
-            https://preprod.ridersfanatics.com/notion-data-version.txt || true)"
-          remote_drive_source_version="$(curl --fail --silent --show-error --retry 2 \
-            --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
-            https://preprod.ridersfanatics.com/drive-source-version.txt || true)"
-          if test "$local_version" = "$remote_version" && \
-             test "$local_drive_source_version" = "$remote_drive_source_version"; then
-            echo "No Notion or Drive source change; skipping image downloads and deployment."
+            "$remote_version_url" || true)"
+          if test "$local_version" = "$remote_version"; then
+            echo "No $RF_SYNC_SCOPE source change; skipping deployment."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Notion or Drive source inventory changed, or no published receipt is available."
+            echo "$RF_SYNC_SCOPE changed, or no published receipt is available."
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install frame animation support
+      - name: Locate the latest complete preproduction snapshot
         if: steps.change.outputs.changed == 'true'
-        run: python3 -m pip install --disable-pip-version-check -r requirements-frame-reveal.txt
+        id: previous_snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_id=""
+          while IFS= read -r candidate; do
+            artifact_id="$(gh api \
+              "/repos/$GITHUB_REPOSITORY/actions/runs/$candidate/artifacts?per_page=100" \
+              --jq '[.artifacts[] | select(.name == "validated-preproduction-snapshot" and .expired == false)][0].id // empty')"
+            if test -n "$artifact_id"; then
+              run_id="$candidate"
+              break
+            fi
+          done < <(gh api \
+            "/repos/$GITHUB_REPOSITORY/actions/runs?status=success&per_page=100" \
+            --jq '.workflow_runs[] | select(.event != "pull_request") | .id')
+          test -n "$run_id" || {
+            echo "No complete validated preproduction snapshot is available." >&2
+            exit 1
+          }
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+      - name: Load the unchanged source from the validated snapshot
+        if: steps.change.outputs.changed == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: validated-preproduction-snapshot
+          path: ${{ runner.temp }}/previous-preproduction-snapshot
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.previous_snapshot.outputs.run_id }}
+
+      - name: Restore only the unchanged source
+        if: steps.change.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          snapshot="$RUNNER_TEMP/previous-preproduction-snapshot/validated-preproduction-snapshot.tar"
+          test -s "$snapshot"
+          case "$RF_SYNC_SCOPE" in
+            notion)
+              rm -rf \
+                assets/img/drive-library \
+                assets/img/riders \
+                assets/img/riders-action \
+                assets/img/equipment \
+                assets/img/brands \
+                assets/img/competitions \
+                assets/img/teams
+              tar -xf "$snapshot" -C "$GITHUB_WORKSPACE" \
+                data/drive/live-image-manifest.json \
+                data/drive/live-images-version.txt \
+                data/drive/live-drive-source-version.txt \
+                data/drive-logo-manifest.json \
+                assets/img/drive-library \
+                assets/img/riders \
+                assets/img/riders-action \
+                assets/img/equipment \
+                assets/img/brands \
+                assets/img/competitions \
+                assets/img/teams
+              ;;
+            drive)
+              rm -rf data/notion
+              tar -xf "$snapshot" -C "$GITHUB_WORKSPACE" data/notion
+              ;;
+          esac
+
+      - name: Install frame animation support
+        # The shared category and reveal validation imports Pillow even when
+        # Drive itself is restored unchanged during a Notion-only refresh.
+        if: steps.change.outputs.changed == 'true'
+        run: |
+          python3 -m pip install --disable-pip-version-check -r requirements-frame-reveal.txt
+          python3 -m pip install --disable-pip-version-check "Pillow==12.3.0"
 
       - name: Synchronize Google Drive images
-        if: steps.change.outputs.changed == 'true'
+        if: steps.change.outputs.changed == 'true' && env.RF_SYNC_SCOPE == 'drive'
         env:
           GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
           RF_IMAGE_LIBRARY: ${{ runner.temp }}/freeride-images
@@ -189,6 +287,25 @@ jobs:
           python3 scripts/sync_drive_logos.py --source-directory "$RF_IMAGE_LIBRARY"
           python3 tests/drive_logo_sync.py
           python3 import_images.py --force --no-build
+          python3 tests/equipment_category_mapping.py
+          python3 tests/frame_reveal_assets.py
+
+      - name: Validate the combined Notion and Drive snapshot
+        if: steps.change.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          test -s data/notion/riders.json
+          test -s data/notion/competitions.json
+          test -s data/notion/sync-metadata.json
+          test -s data/drive/live-image-manifest.json
+          test -s data/drive/live-drive-source-version.txt
+          test -s data/drive-logo-manifest.json
+          python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 tests/notion_only_source.py
+          python3 tests/result_status_logic.py
+          python3 tests/rider_name_normalization.py
+          python3 tests/drive_image_sync.py
+          python3 tests/drive_logo_sync.py
           python3 tests/equipment_category_mapping.py
           python3 tests/frame_reveal_assets.py
           python3 scripts/image_snapshot_hash.py \
@@ -211,6 +328,7 @@ jobs:
           test -s data/deployment-health.json
 
       - name: Keep the validated Notion snapshot for diagnostics
+        if: steps.change.outputs.changed == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: notion-preproduction-snapshot
@@ -449,5 +567,6 @@ jobs:
         with:
           name: validated-preproduction-snapshot
           path: ${{ runner.temp }}/validated-preproduction-snapshot.tar
-          retention-days: 3
+          # Both isolated refreshes need the other source as their stable base.
+          retention-days: 30
           compression-level: 0

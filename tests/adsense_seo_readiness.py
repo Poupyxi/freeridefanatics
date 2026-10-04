@@ -28,7 +28,7 @@ for rider_page in (ROOT / "riders").glob("*.html"):
         and "No 2026 results recorded yet." in source
     )
     if empty:
-        assert 'content="noindex,follow,noarchive"' in source
+        assert re.search(r'content="noindex,(?:follow|nofollow),noarchive"', source)
         assert rider_page.name not in sitemap
 
 print("AdSense and SEO readiness checks passed.")

@@ -1897,7 +1897,8 @@ def build_competition_riders(riders, competition):
     men = [rider for rider in participants if rider.get("gender_category") == "Men Elite"]
     women = [rider for rider in participants if rider.get("gender_category") == "Women Elite"]
     cards = "\n".join(rider_card(rider, "../../") for rider in participants)
-    description = f"Riders connected to {display_name} {competition['season']}, with profiles, teams and countries."
+    description = (f"{display_name} {competition['season']} rider list: athlete profiles, teams, "
+                   "countries, bike setups, event results and competition rankings.")
     if cid == "project-17":
         page_title = f"Project 17 {competition['season']} Riders | Coast Gravity Park"
     elif cid == "beyondgravity":
@@ -2471,7 +2472,7 @@ def build_competition_detail(riders, competition):
     elif competition["id"] == "uci-mtb-world-cup-dh-2026":
         page_title = "UCI Downhill World Cup 2026 | Events & Standings"
         description = (f"UCI downhill World Cup 2026: explore {len(events)} recorded races, "
-                       "season rankings and rider results by event.")
+                       "riders, schedule, results, standings and season rankings by event.")
     elif competition["id"] == "project-17":
         page_title = f"Project 17 {competition['season']} at Coast Gravity Park | {SITE_NAME}"
         description = (f"Project 17 {competition['season']} at Coast Gravity Park, British Columbia: "
@@ -2484,7 +2485,8 @@ def build_competition_detail(riders, competition):
         seo_context = ('''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>About Beyond Gravity</strong><div><p>Beyond Gravity is a mountain bike event at Maydena Bike Park in Tasmania. Follow the event calendar and connected rider profiles here; results and rankings appear when they are recorded.</p><p><a href="beyondgravity/riders.html">Explore Beyond Gravity riders →</a> · <a href="https://www.maydenabikepark.com/event-calendar/" rel="nofollow noopener" target="_blank">Maydena Bike Park event calendar ↗</a></p></div></div></div></section>''')
     else:
         page_title = f"{name} | Riders & Events"
-        description = f"{name} season overview: completed events, current leaders, rider profiles and links to overall standings and professional downhill equipment."
+        description = (f"{name} competition guide: riders, event schedule, results, standings, "
+                       "rankings and documented mountain bike equipment.")
     html = head(
         page_title, description, "../",
         body_class="competition-detail-page", canonical_path=path,
@@ -3488,6 +3490,7 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
     """Build unique, query-led titles and descriptions for every rider profile."""
     name = rider["display_name"]
     team = rider.get("team") or ""
+    country = rider.get("country") or ""
     points = rider_total_points(rider)
     frame = highlight_parts[0] if highlight_parts else ""
     if equipment and history:
@@ -3500,6 +3503,8 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
         title = f"{name} Downhill Rider Profile | {SITE_NAME}"
 
     details = []
+    if country:
+        details.append(f"{country} rider")
     if team:
         details.append(team)
     if frame:
@@ -3509,9 +3514,20 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
         details.append(f"{ranking} with {points} tracked points")
     if equipment:
         details.append(f"{len(equipment)} documented bike components")
-    description = f"{name} 2026 downhill rider profile: " + ", ".join(details) + "."
-    if not details:
-        description = f"{name} downhill rider profile, biography, race participation and equipment updates on RidersFanatics."
+    if equipment and history:
+        intent = "bike check, race setup, equipment, downhill results and ranking"
+    elif history:
+        intent = "downhill results, ranking and rider profile"
+    elif equipment:
+        intent = "bike check, race setup and mountain bike equipment"
+    else:
+        intent = "downhill rider profile, biography and race participation"
+    description = f"{name} 2026 {intent}"
+    if details:
+        description += ": " + ", ".join(details)
+    description += "."
+    if len(description) > 160:
+        description = description[:157].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
 
     priority_titles = {
         "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",

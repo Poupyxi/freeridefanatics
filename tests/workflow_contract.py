@@ -85,6 +85,8 @@ assert "Restore only the unchanged source" in preprod
 assert "Validate the combined Notion and Drive snapshot" in preprod
 assert 'python3 -m pip install --disable-pip-version-check "Pillow==12.3.0"' in preprod
 assert "if: steps.change.outputs.changed == 'true'" in preprod
+assert preprod.count("grep -Eq 'Coming soon|data-standing-row'") == 2
+assert "grep -q 'Coming soon' competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html" not in preprod
 assert "retention-days: 30" in preprod
 assert "retention-days: 14" in production
 assert "OVH_SFTP_KNOWN_HOSTS" in preprod

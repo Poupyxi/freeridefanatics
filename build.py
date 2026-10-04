@@ -3545,39 +3545,6 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
     return priority_titles.get(rider.get("slug"), title), description
 
 
-def rider_competition_context(rider):
-    """Add crawlable contextual links from a rider profile to recorded seasons/events."""
-    links = []
-    seen = set()
-    for result in reversed(rider.get("competition_history") or []):
-        competition = next(
-            (item for item in COMPETITIONS if item.get("name") == result.get("category")),
-            None,
-        )
-        if not competition:
-            continue
-        competition_key = (competition["id"], "season")
-        if competition_key not in seen:
-            links.append((
-                f"../competitions/{competition['id']}.html",
-                f"{competition_display_name(competition)} {competition.get('season', '')}".strip(),
-            ))
-            seen.add(competition_key)
-        if result.get("event"):
-            event_key = (competition["id"], result["event"])
-            if event_key not in seen:
-                links.append((
-                    f"../competitions/{competition['id']}/rounds/{competition_round_slug(result['event'])}.html",
-                    f"{competition_event_label(result['event'])} results",
-                ))
-                seen.add(event_key)
-        if len(links) >= 3:
-            break
-    if not links:
-        return ""
-    rendered = " · ".join(f'<a href="{esc_attr(url)}">{esc(label)}</a>' for url, label in links)
-    return f'<p class="data-note rider-competition-links"><strong>Competition record:</strong> {rendered}.</p>'
-
 def build_rider_page(r, riders):
     prefix = "../"
     # The rider page hero prefers the portrait action shot; the square avatar
@@ -3617,7 +3584,7 @@ def build_rider_page(r, riders):
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'
 
     history = r.get("competition_history") or []
-    category_rank, season_analysis, setup_analysis, best_place = rider_editorial(r, riders)
+    category_rank, _season_analysis, _setup_analysis, _best_place = rider_editorial(r, riders)
     highlight_parts = []
     for wanted in ("Frame", "Fork", "RearShock"):
         item = next((e for e in equipment if e.get("category") == wanted), None)
@@ -3710,7 +3677,6 @@ def build_rider_page(r, riders):
         f'<span>{esc(candidate.get("team") or "Privateer")} · {rider_total_points(candidate)} pts</span></a>'
         for candidate in related
     )
-    rider_context_links = rider_competition_context(r)
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
@@ -3728,8 +3694,6 @@ def build_rider_page(r, riders):
 
     {setup_head}{build_html}
     {equip_html}
-
-    <section class="rider-editorial rider-setup-analysis reveal"><div><div class="label">Build context</div><h2>Setup analysis</h2><p>{esc(setup_analysis)}</p>{rider_context_links}<p class="data-note">Page generated from the dataset updated {esc(SITE_UPDATED)}. Equipment is revised when a verifiable change is identified. <a href="../methodology.html">Read the methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></section>
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>

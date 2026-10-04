@@ -143,4 +143,10 @@ assert "competition-hub-intro" not in competitions_hub_html
 assert "Mountain bike competitions, standings and race results" not in competitions_hub_html
 assert "Choose a tracked series to explore its calendar" not in competitions_hub_html
 
+build_source = pathlib.Path(build.__file__).read_text(encoding="utf-8")
+assert "rider-setup-analysis" not in build_source
+assert '<div class="label">Build context</div>' not in build_source
+assert "<h2>Setup analysis</h2>" not in build_source
+assert "Competition record:</strong>" not in build_source
+
 print("Priority competition and rider SEO checks passed.")

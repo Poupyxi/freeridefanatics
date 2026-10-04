@@ -2266,7 +2266,7 @@ def build_competitions_hub(riders):
     )
     html += header_html("", active="competitions")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="competition-hub-intro"><div class="label">2026 competition database</div><h1>Mountain bike competitions, standings and race results</h1><p>Choose a tracked series to explore its calendar, participating riders, individual race results and season standings. RidersFanatics connects each competition with the corresponding rider profiles and documented equipment so sporting results remain visible in their full context.</p><p>Coverage currently includes downhill and urban downhill formats. Results are added only when a public source can be verified; events without confirmed classifications remain clearly identified instead of being estimated. Read the <a href="methodology.html">data methodology</a> for scoring and correction details.</p></div><div class="section-head"><h2 class="label competition-hub-title">Competitions tracked</h2><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
 </main>'''
     html += footer_html("")
     return html

@@ -137,4 +137,10 @@ for equipment, history, expected_phrase in search_intent_cases:
     assert "Canada rider" in description
     assert len(description) <= 160
 
+competitions_hub_html = build.build_competitions_hub([])
+assert '<h1 class="label competition-hub-title">Competitions tracked</h1>' in competitions_hub_html
+assert "competition-hub-intro" not in competitions_hub_html
+assert "Mountain bike competitions, standings and race results" not in competitions_hub_html
+assert "Choose a tracked series to explore its calendar" not in competitions_hub_html
+
 print("Priority competition and rider SEO checks passed.")

@@ -504,7 +504,7 @@ def breadcrumb_html(items):
     return ""
 
 def head(title, description, asset_prefix, body_class="", canonical_path="/",
-         schemas=None, image_path=None, page_type="website"):
+         schemas=None, image_path=None, page_type="website", robots=None):
     body_attr = f' class="{esc(body_class)}"' if body_class else ""
     canonical = absolute_url(canonical_path)
     image = absolute_url(image_path) if image_path else absolute_url("/assets/img/og-default.png")
@@ -512,6 +512,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
     image_preload = f'<link rel="preload" as="image" href="{image}">' if image_path else ""
     schema_html = "\n".join(json_ld(s) for s in (schemas or []))
     adsense_script = "" if IS_PREPROD else '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" crossorigin="anonymous"></script>'
+    robots_content = robots or ('noindex,nofollow,noarchive' if IS_PREPROD else 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -519,7 +520,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(description)}">
-<meta name="robots" content="{'noindex,nofollow,noarchive' if IS_PREPROD else 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'}">
+<meta name="robots" content="{robots_content}">
 <link rel="canonical" href="{canonical}">
 <meta property="og:type" content="{page_type}">
 <meta property="og:site_name" content="{SITE_NAME}">
@@ -2265,7 +2266,7 @@ def build_competitions_hub(riders):
     )
     html += header_html("", active="competitions")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competition Tracked</h1><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
+<section class="section competitions-list"><div class="wrap"><div class="competition-hub-intro"><div class="label">2026 competition database</div><h1>Mountain bike competitions, standings and race results</h1><p>Choose a tracked series to explore its calendar, participating riders, individual race results and season standings. RidersFanatics connects each competition with the corresponding rider profiles and documented equipment so sporting results remain visible in their full context.</p><p>Coverage currently includes downhill and urban downhill formats. Results are added only when a public source can be verified; events without confirmed classifications remain clearly identified instead of being estimated. Read the <a href="methodology.html">data methodology</a> for scoring and correction details.</p></div><div class="section-head"><h2 class="label competition-hub-title">Competitions tracked</h2><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
 </main>'''
     html += footer_html("")
     return html
@@ -2629,6 +2630,11 @@ def build_riders_directory(riders, women_count, men_count):
 <main id="main-content">
 <section class="section" id="grid" style="padding-top:32px;">
   <div class="wrap">
+    <div class="directory-intro">
+      <div class="label">2026 rider database</div>
+      <h1>Professional mountain bike riders and race setups</h1>
+      <p>Browse verified rider profiles, competition results, teams and documented equipment. Use the filters to compare the men’s and women’s fields or search directly by rider, team or country.</p>
+    </div>
     <div class="filters" aria-label="Filter rider directory">
       <button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(riders)})</button>
       <button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({men_count})</button>
@@ -3112,7 +3118,7 @@ def collect_brands(riders):
     return brands
 
 def build_brands_directory(riders):
-    del riders
+    brand_records = collect_brands(riders)
     with open(BRAND_LOGOS_PATH, encoding="utf-8") as logo_source:
         logo_data = json.load(logo_source)
     logos_by_key = {}
@@ -3159,7 +3165,8 @@ def build_brands_directory(riders):
     )
     html += header_html("", active="equipment")
     html += f'''<main id="main-content">
-<section class="brand-logo-directory"><div class="wrap"><h1 class="visually-hidden">Mountain bike brands used by professional riders</h1><div class="brand-logo-grid">{cards}</div></div></section>
+<section class="section brand-directory-intro"><div class="wrap"><div class="label">Verified race equipment directory</div><h1>Mountain bike brands used by professional riders</h1><p>This directory brings together the manufacturers identified across RidersFanatics rider profiles and documented 2026 race builds. It covers frames, suspension, brakes, wheels, tires, drivetrains, protection and rider contact points. Brand presence reflects the equipment visible in the tracked dataset; it is not a product test, endorsement or market-share ranking.</p><p>Use the <a href="equipment.html">equipment database</a> to compare product families and open the linked rider profiles to understand each component in the context of a complete race setup. Sponsorship, team supply and prototype availability all influence which brands appear. The <a href="methodology.html">methodology</a> explains how public sources are checked and how corrections can be submitted.</p><dl class="content-stats"><div><dt>{len(logos)}</dt><dd>Brands listed</dd></div><div><dt>{len(brand_records)}</dt><dd>Brands in tracked builds</dd></div><div><dt>{len(riders)}</dt><dd>Rider profiles analysed</dd></div></dl></div></section>
+<section class="brand-logo-directory"><div class="wrap"><h2>Brand directory</h2><p class="data-note">Logos help identify manufacturers quickly. Product and rider relationships are available through the equipment categories.</p><div class="brand-logo-grid">{cards}</div></div></section>
 </main>'''
     html += footer_html("")
     return html
@@ -3680,11 +3687,13 @@ def build_rider_page(r, riders):
         person_schema["affiliation"] = {"@type": "SportsTeam", "name": r["team"]}
     if r.get("instagram"):
         person_schema["sameAs"] = [f"https://instagram.com/{r['instagram'].strip().lstrip('@')}"]
+    has_distinctive_profile_data = bool(bullets or equipment or history)
+    rider_robots = None if (IS_PREPROD or has_distinctive_profile_data) else "noindex,follow,noarchive"
     html = head(
         page_title,
         meta_description,
         prefix, canonical_path=rider_url, page_type="article", image_path=rider_image,
-        schemas=[
+        robots=rider_robots, schemas=[
             {"@context": "https://schema.org", "@type": "ProfilePage", "name": f"{r['display_name']} bike setup and results", "description": meta_description, "url": absolute_url(rider_url), "dateModified": SITE_UPDATED, "mainEntity": {"@id": absolute_url(rider_url) + "#rider"}},
             {**person_schema, "@id": absolute_url(rider_url) + "#rider"},
             breadcrumb_schema([("Home", "/"), ("Riders", "/riders.html"), (r["display_name"], rider_url)]),

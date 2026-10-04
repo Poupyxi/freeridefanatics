@@ -375,7 +375,7 @@ jobs:
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html
-          grep -q 'Coming soon' competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html
+          grep -Eq 'Coming soon|data-standing-row' competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html
 
       - name: Prepare isolated public files
         if: steps.change.outputs.changed == 'true'
@@ -551,7 +551,8 @@ jobs:
           grep -q 'class="rider-card reveal"' <<< "$project_riders_html"
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null
           curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html > /dev/null
-          curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html | grep -q 'Coming soon'
+          lake_placid_html="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/lake-placid.html)"
+          grep -Eq 'Coming soon|data-standing-row' <<< "$lake_placid_html"
           uci_page="$(curl --fail --silent --show-error "${auth[@]}" https://preprod.ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html)"
           grep -q 'uci-events-banner' <<< "$uci_page"
           grep -q 'uci-iconic-tour.js?v=8' <<< "$uci_page"

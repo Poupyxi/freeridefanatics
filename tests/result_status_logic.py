@@ -88,6 +88,66 @@ class ResultStatusTests(unittest.TestCase):
         self.assertLess(build.round_result_sort_key((rider, finisher)),
                         build.round_result_sort_key((rider, dnf)))
 
+    def test_phase_result_preserves_individual_points(self):
+        result = {
+            "points": 225,
+            "stages": {
+                "Qualifier": {"place": 1, "points": 25, "result": "1st"},
+                "Final": {"place": 1, "points": 200, "result": "1st"},
+            },
+        }
+        self.assertEqual(build.result_stage(result, "Qualifier")["points"], 25)
+        self.assertEqual(build.result_stage(result, "Final")["points"], 200)
+        self.assertEqual(result["points"], 225)
+
+    def test_legacy_combined_result_is_a_final_fallback(self):
+        result = {"place": 2, "points": 160, "result": "2nd"}
+        self.assertIs(build.result_stage(result, "Final"), result)
+        self.assertIsNone(build.result_stage(result, "Qualifier"))
+
+    def test_round_page_renders_qualifier_and_final_selectors(self):
+        qualifier = {
+            "place": 1, "points": 25, "result": "1st",
+            "status": "Finisher", "participated": True,
+        }
+        final = {
+            "place": 2, "points": 160, "result": "2nd",
+            "status": "Finisher", "participated": True,
+        }
+        rider = {
+            "display_name": "Test Rider",
+            "slug": "test-rider",
+            "gender_category": "Men Elite",
+            "team": "Test Team",
+            "country": "France",
+            "competition_history": [{
+                "year": 2026,
+                "event": "Test Round",
+                "category": "Test Series 2026",
+                "place": 2,
+                "points": 185,
+                "result": "2nd",
+                "status": "Finisher",
+                "participated": True,
+                "stages": {"Qualifier": qualifier, "Final": final},
+            }],
+        }
+        competition = {
+            "id": "test-series-2026",
+            "name": "Test Series 2026",
+            "season": 2026,
+            "discipline": "Downhill",
+            "events": [{"name": "Test Round", "date": "2026-06-01"}],
+        }
+        html = build.build_competition_round(
+            [rider], competition, "Test Round", 1, ["Test Round"]
+        )
+        self.assertIn('data-standing-stage-filters', html)
+        self.assertIn('data-standing-stage="Qualifier"', html)
+        self.assertIn('data-standing-stage="Final"', html)
+        self.assertIn('<td class="round-points">25</td>', html)
+        self.assertIn('<td class="round-points">160</td>', html)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -252,6 +252,7 @@
     if(!blocks.length) return;
     var groupBar = document.querySelector('[data-standings-filters]');
     var compBar = document.querySelector('[data-standings-comp-filters]');
+    var stageBar = document.querySelector('[data-standing-stage-filters]');
     var searchInput = document.querySelector('[data-standings-search]');
 
     function activeOf(bar, attr){
@@ -286,11 +287,13 @@
         }
       }
       var group = activeOf(groupBar, 'data-standings-group');
+      var stage = activeOf(stageBar, 'data-standing-stage');
       var term = (searchInput && searchInput.value || '').trim().toLowerCase();
       blocks.forEach(function(b){
         var okGroup = !group || b.getAttribute('data-standings') === group;
         var okComp = !comp || b.getAttribute('data-competition') === comp;
-        var isShown = okGroup && okComp;
+        var okStage = !stage || b.getAttribute('data-standing-stage') === stage;
+        var isShown = okGroup && okComp && okStage;
         b.classList.toggle('is-shown', isShown);
         var rows = Array.prototype.slice.call(b.querySelectorAll('[data-standing-row]'));
         var shown = 0;
@@ -306,7 +309,7 @@
       });
     }
 
-    [[groupBar, 'data-standings-group'], [compBar, 'data-standings-comp']].forEach(function(pair){
+    [[groupBar, 'data-standings-group'], [compBar, 'data-standings-comp'], [stageBar, 'data-standing-stage']].forEach(function(pair){
       var bar = pair[0];
       if(!bar) return;
       bar.querySelectorAll('.filter-btn').forEach(function(btn){
@@ -324,10 +327,11 @@
 
     if(searchInput) searchInput.addEventListener('input', render);
 
-    if(groupBar){
-      groupBar.addEventListener('keydown', function(e){
+    [groupBar, stageBar].forEach(function(tabBar){
+      if(!tabBar) return;
+      tabBar.addEventListener('keydown', function(e){
         if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-        var tabs = Array.prototype.slice.call(groupBar.querySelectorAll('[role="tab"]'));
+        var tabs = Array.prototype.slice.call(tabBar.querySelectorAll('[role="tab"]'));
         var current = tabs.indexOf(document.activeElement);
         if(current < 0) return;
         e.preventDefault();
@@ -336,7 +340,7 @@
         next.focus();
         next.click();
       });
-    }
+    });
 
     blocks.forEach(function(block){
       var scroller = block.querySelector('.standings-scroll');

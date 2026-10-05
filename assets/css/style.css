@@ -1099,6 +1099,7 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .clean-standings-heading h2{margin-top:12px; font-family:var(--head); font-size:clamp(38px,5vw,64px); line-height:.95; text-transform:uppercase;}
 .clean-standings-toolbar{display:flex; align-items:end; justify-content:space-between; gap:34px; margin:0; padding:24px 0 32px; border-bottom:0;}
 .clean-standings-toolbar .filters{margin:7px 0 0;}
+.round-results-section .clean-standings-toolbar{justify-content:flex-start;align-items:flex-end;flex-wrap:wrap;}
 .clean-standings-toolbar .standings-search{width:min(330px,100%);}
 .clean-podium{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px;}
 .clean-podium-card{display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:15px; align-items:center; min-width:0; padding:24px 20px; border:1px solid var(--line); background:#fff; transition:transform .2s ease,border-color .2s ease;}

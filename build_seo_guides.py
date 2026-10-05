@@ -3,6 +3,7 @@
 from html import escape
 import json
 import os
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -10,7 +11,7 @@ BUILD_ENV = os.environ.get("RF_BUILD_ENV", "production").strip().lower()
 IS_PREPROD = BUILD_ENV == "preprod"
 BASE = os.environ.get("RF_SITE_URL", "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com").rstrip("/")
 ROBOTS_META = "noindex,nofollow,noarchive" if IS_PREPROD else "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
-UPDATED = "2026-09-09"
+UPDATED = os.environ.get("RF_SITE_UPDATED", "2026-10-04")
 STANDINGS = "competitions/uci-mtb-world-cup-dh-2026/standings.html"
 
 LANGS = {
@@ -109,7 +110,10 @@ pages += [ROOT / "guides" / code / "index.html" for code in ORDER]
 xml_rows = []
 for item in pages:
     rel = item.relative_to(ROOT).as_posix()
-    if rel == "competitions/red-bull-cerro-abajo-2026/standings.html":
+    page_source = item.read_text(encoding="utf-8", errors="ignore")
+    if rel == "competitions/red-bull-cerro-abajo-2026/standings.html" or rel == "favorites.html":
+        continue
+    if re.search(r'<meta\s+name="robots"\s+content="[^"]*noindex', page_source, re.I):
         continue
     if rel == "index.html":
         url = BASE + "/"
@@ -124,7 +128,7 @@ for item in pages:
         ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{BASE}/guides/en/"/>'
     else:
         links = ""
-    xml_rows.append(f"<url><loc>{url}</loc><lastmod>{UPDATED}</lastmod>{links}</url>")
+    xml_rows.append(f"<url><loc>{url}</loc>{links}</url>")
 (ROOT / "sitemap.xml").write_text(
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '

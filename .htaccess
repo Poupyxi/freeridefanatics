@@ -13,6 +13,15 @@ RewriteRule ^ https://ridersfanatics.com%{REQUEST_URI} [R=301,L,NE,QSD]
 # Retired paths found in Search Console: preserve their relevant destinations.
 RewriteRule ^competitions/uci(?:/index\.html|/?)$ /competitions/uci-mtb-world-cup-dh-2026.html [R=301,L,NE,QSD]
 RewriteRule ^riders/facundo-descalzo\.html$ /riders/descalzo-facundo.html [R=301,L,NE]
+# The first UCI rounds were previously published under descriptive legacy
+# slugs. Keep those URLs useful while sending every visitor to the complete
+# Notion-backed Qualifier / Final page.
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/loudenvielle.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/leogang.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/switzerland-june\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/lenzerheide.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/la-thuile.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/andorra-july\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/pal-arinsal.html [R=301,L,NE]
 # Cerro Abajo is now an event within the Red Bull 2026 parent season.
 RewriteRule ^competitions/red-bull-cerro-abajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
 RewriteRule ^competitions/red-bull-cerro-abajo-2026/.*$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]

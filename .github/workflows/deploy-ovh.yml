@@ -62,6 +62,7 @@ jobs:
           python3 tests/restore_snapshot.py
           python3 tests/workflow_contract.py
           python3 build.py
+          python3 tests/adsense_seo_readiness.py
           test -s index.html
           test -s riders.html
           test -s equipment.html
@@ -97,10 +98,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          run_id="$(gh api \
-            "/repos/$GITHUB_REPOSITORY/actions/workflows/deploy-preprod-ovh.yml/runs?status=success&per_page=1" \
-            --jq '.workflow_runs[0].id // empty')"
-          test -n "$run_id" || { echo "No successful preproduction run is available." >&2; exit 1; }
+          run_id=""
+          while IFS= read -r candidate; do
+            artifact_id="$(gh api \
+              "/repos/$GITHUB_REPOSITORY/actions/runs/$candidate/artifacts?per_page=100" \
+              --jq '[.artifacts[] | select(.name == "validated-preproduction-snapshot" and .expired == false)][0].id // empty')"
+            if test -n "$artifact_id"; then
+              run_id="$candidate"
+              break
+            fi
+          done < <(gh api \
+            "/repos/$GITHUB_REPOSITORY/actions/runs?status=success&per_page=100" \
+            --jq '.workflow_runs[] | select(.event != "pull_request") | .id')
+          test -n "$run_id" || {
+            echo "No successful preproduction run with a live validated snapshot is available." >&2
+            exit 1
+          }
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
       - name: Load the snapshot already validated in preproduction
@@ -248,6 +261,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 build.py
+          python3 tests/adsense_seo_readiness.py
           python3 tests/environment_visibility.py
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html
@@ -266,11 +280,11 @@ jobs:
           test -f competitions/beyondgravity.html
           test -f competitions/beyondgravity/riders.html
           test -f assets/img/competitions/beyondgravity.jpg
-          test -f assets/img/competitions/uci-mtb-world-cup-dh-2026.png
+          test -f assets/img/competitions/uci-mtb-world-cup-dh-2026.webp
           grep -q 'Beyond Gravity 2027 at Maydena Bike Park' competitions/beyondgravity.html
           grep -q 'Beyond Gravity</h1>' competitions/beyondgravity.html
           grep -q 'competition-status competition-status-soon' competitions.html
-          grep -q 'assets/img/competitions/uci-mtb-world-cup-dh-2026.png' competitions.html
+          grep -q 'assets/img/competitions/uci-mtb-world-cup-dh-2026.webp' competitions.html
           grep -q '<loc>https://ridersfanatics.com/competitions/beyondgravity.html</loc>' sitemap.xml
 
           test -f competitions/uci-mtb-world-cup-dh-2026.html

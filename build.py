@@ -206,6 +206,20 @@ def round_result_sort_key(pair):
     return (bucket, place or 9999, -(result.get("points") or 0),
             rider.get("display_name") or "")
 
+def result_stage(result, stage):
+    """Return one event phase while keeping older snapshots buildable.
+
+    Notion snapshots created before phase-level exports only contain the
+    combined result. Treat those rows as Final data so a rollback does not
+    leave its event pages empty.
+    """
+    stages = result.get("stages") or {}
+    if stage in stages:
+        return stages[stage]
+    if not stages and stage == "Final":
+        return result
+    return None
+
 def ordinal(n):
     if n is None:
         return None
@@ -1687,9 +1701,24 @@ def build_competition_round(riders, competition, event, round_number, events):
         categories[category] = entries
         all_entries.extend(entries)
 
-    def result_table(category, label):
+    available_stages = [
+        stage for stage in ("Qualifier", "Final")
+        if any(result_stage(result, stage) is not None for _, result in all_entries)
+    ]
+    if not available_stages:
+        available_stages = ["Final"]
+
+    def stage_entries(category, stage):
+        return [
+            (rider, stage_result)
+            for rider, result in categories[category]
+            for stage_result in [result_stage(result, stage)]
+            if stage_result is not None
+        ]
+
+    def result_table(category, label, stage):
         rows = []
-        entries = categories[category]
+        entries = sorted(stage_entries(category, stage), key=round_result_sort_key)
         for rider, result in entries:
             place = history_place(result)
             result_label = result.get("result") or ordinal(place) or "—"
@@ -1697,9 +1726,9 @@ def build_competition_round(riders, competition, event, round_number, events):
             nation = rider.get("country_code") or rider.get("country") or "—"
             search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
             rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{esc(result_label)}</td><th scope="row"><a href="../../../riders/{rider['slug']}.html">{esc(rider['display_name'])}</a><small>{esc(team)}</small></th><td>{esc(nation)}</td><td class="round-points">{esc(result.get('points')) if result.get('points') is not None else '—'}</td></tr>''')
-        if not rows:
-            return f'<section class="round-category"><h2>{label}</h2><p class="round-empty">No {label.lower()} results are recorded for this round yet.</p></section>'
-        return f'''<section class="round-category standings-block" data-standings="{category}" data-competition="{esc_attr(name)}"><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{label} results, horizontally scrollable"><table class="round-results"><caption>{label} results for {esc(event)}</caption><thead><tr><th scope="col">Result</th><th scope="col">Rider</th><th scope="col">Nation</th><th scope="col">Points</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div><p class="standings-empty" hidden>No {label.lower()} results are recorded for this event.</p></section>'''
+        table = (f'''<div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{stage} {label} results, horizontally scrollable"><table class="round-results"><caption>{stage} {label} results for {esc(event)}</caption><thead><tr><th scope="col">Result</th><th scope="col">Rider</th><th scope="col">Nation</th><th scope="col">Points</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>'''
+                 if rows else "")
+        return f'''<section class="round-category standings-block" data-standings="{category}" data-standing-stage="{stage}" data-competition="{esc_attr(name)}">{table}<p class="standings-empty"{'' if not rows else ' hidden'}>No {stage.lower()} {label.lower()} results are recorded for this event.</p></section>'''
 
     team_entries = [
         (rider, result) for rider, result in all_entries
@@ -1707,19 +1736,27 @@ def build_competition_round(riders, competition, event, round_number, events):
         if (rider.get("team") or "").strip().lower() not in {"", "privateer"}
     ]
     show_team_ranking = bool(all_entries) and len(team_entries) * 2 >= len(all_entries)
-    event_team_points, event_team_riders = {}, {}
-    for rider, result in team_entries:
-        team = rider["team"].strip()
-        event_team_points[team] = event_team_points.get(team, 0) + (result.get("points") or 0)
-        event_team_riders.setdefault(team, []).append(rider["display_name"])
-    event_teams = sorted(event_team_points, key=lambda team: (-event_team_points[team], team.lower()))
-    team_rows = []
-    for rank, team in enumerate(event_teams, 1):
-        names = ", ".join(event_team_riders[team])
-        search = esc_attr(f"{team} {names}".lower())
-        team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{team_identity_html(team, "../../../")}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
-    team_table = (f'''<section class="round-category standings-block" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="Team results, horizontally scrollable"><table class="round-results"><caption>Team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div><p class="standings-empty" hidden>No team result is recorded for this event.</p></section>'''
-                  if show_team_ranking else "")
+    def team_table(stage):
+        stage_team_entries = [
+            (rider, stage_result)
+            for rider, result in team_entries
+            for stage_result in [result_stage(result, stage)]
+            if stage_result is not None and result_counts_as_start(stage_result)
+        ]
+        event_team_points, event_team_riders = {}, {}
+        for rider, result in stage_team_entries:
+            team = rider["team"].strip()
+            event_team_points[team] = event_team_points.get(team, 0) + (result.get("points") or 0)
+            event_team_riders.setdefault(team, []).append(rider["display_name"])
+        event_teams = sorted(event_team_points, key=lambda team: (-event_team_points[team], team.lower()))
+        team_rows = []
+        for rank, team in enumerate(event_teams, 1):
+            names = ", ".join(event_team_riders[team])
+            search = esc_attr(f"{team} {names}".lower())
+            team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{team_identity_html(team, "../../../")}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
+        table = (f'''<div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{stage} team results, horizontally scrollable"><table class="round-results"><caption>{stage} team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div>'''
+                 if team_rows else "")
+        return f'''<section class="round-category standings-block" data-standings="Teams" data-standing-stage="{stage}" data-competition="{esc_attr(name)}">{table}<p class="standings-empty"{'' if not team_rows else ' hidden'}>No {stage.lower()} team result is recorded for this event.</p></section>'''
 
     hero_leaders = []
     for category, label in (("Men Elite", "Men winner"), ("Women Elite", "Women winner")):
@@ -1728,9 +1765,20 @@ def build_competition_round(riders, competition, event, round_number, events):
             rider, result = placed_results[0]
             result_label = result.get("result") or ordinal(history_place(result)) or "1st"
             hero_leaders.append(f'''<a href="../../../riders/{rider['slug']}.html"><span>{label}</span><strong>{esc(rider['display_name'])}</strong><small>{esc(result_label)}</small></a>''')
-    if show_team_ranking and event_teams:
-        winning_team = event_teams[0]
-        hero_leaders.append(f'''<div><span>Team winner</span><strong>{esc(winning_team)}</strong><small>{event_team_points[winning_team]} pts</small></div>''')
+    final_team_entries = [
+        (rider, stage_result)
+        for rider, result in team_entries
+        for stage_result in [result_stage(result, "Final")]
+        if stage_result is not None and result_counts_as_start(stage_result)
+    ]
+    final_team_points = {}
+    for rider, result in final_team_entries:
+        team = rider["team"].strip()
+        final_team_points[team] = final_team_points.get(team, 0) + (result.get("points") or 0)
+    final_teams = sorted(final_team_points, key=lambda team: (-final_team_points[team], team.lower()))
+    if show_team_ranking and final_teams:
+        winning_team = final_teams[0]
+        hero_leaders.append(f'''<div><span>Team winner</span><strong>{esc(winning_team)}</strong><small>{final_team_points[winning_team]} pts</small></div>''')
 
     visible_categories = [
         (category, label) for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
@@ -1744,7 +1792,18 @@ def build_competition_round(riders, competition, event, round_number, events):
         f'data-standings-group="{group}" aria-selected="{"true" if index == 0 else "false"}">{label}</button>'
         for index, (group, label) in enumerate(ranking_filters)
     )
-    result_tables = "".join(result_table(category, label) for category, label in visible_categories)
+    result_tables = "".join(
+        result_table(category, label, stage)
+        for stage in available_stages
+        for category, label in visible_categories
+    )
+    if show_team_ranking:
+        result_tables += "".join(team_table(stage) for stage in available_stages)
+    stage_buttons = "".join(
+        f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
+        f'data-standing-stage="{stage}" aria-selected="{"true" if index == 0 else "false"}">{stage}</button>'
+        for index, stage in enumerate(available_stages)
+    )
 
     previous_link = ""
     next_link = ""
@@ -1848,9 +1907,12 @@ def build_competition_round(riders, competition, event, round_number, events):
                            f'</div></section>')
     else:
         results_section = (f'<section class="section round-results-section"><div class="wrap">'
-                           f'<div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Ranking</span>'
+                           f'<div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span>'
                            f'<div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters '
-                           f'data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div></div>{result_tables}{team_table}'
+                           f'data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div>'
+                           f'<div><span class="toolbar-label">Session</span><div class="filters" role="tablist" '
+                           f'aria-label="Event ranking session" data-standing-stage-filters '
+                           f'data-filter-count="{len(available_stages)}">{stage_buttons}</div></div></div>{result_tables}'
                            f'</div></section>')
     event_logo = (load_competition_logos().get(redbull_event_logo_key(event))
                   if cid == "redbull-2026" else None)
@@ -2266,7 +2328,7 @@ def build_competitions_hub(riders):
     )
     html += header_html("", active="competitions")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="competition-hub-intro"><div class="label">2026 competition database</div><h1>Mountain bike competitions, standings and race results</h1><p>Choose a tracked series to explore its calendar, participating riders, individual race results and season standings. RidersFanatics connects each competition with the corresponding rider profiles and documented equipment so sporting results remain visible in their full context.</p><p>Coverage currently includes downhill and urban downhill formats. Results are added only when a public source can be verified; events without confirmed classifications remain clearly identified instead of being estimated. Read the <a href="methodology.html">data methodology</a> for scoring and correction details.</p></div><div class="section-head"><h2 class="label competition-hub-title">Competitions tracked</h2><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
 </main>'''
     html += footer_html("")
     return html
@@ -2585,7 +2647,7 @@ def build_competition_detail(riders, competition):
     if is_uci_dh:
         html = html.replace(
             '<script src="../assets/js/site.js',
-            '<script src="../assets/js/uci-iconic-tour.js?v=8"></script>\n<script src="../assets/js/site.js',
+            '<script src="../assets/js/uci-iconic-tour.js?v=9"></script>\n<script src="../assets/js/site.js',
         )
     return html
 
@@ -3545,39 +3607,6 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
     return priority_titles.get(rider.get("slug"), title), description
 
 
-def rider_competition_context(rider):
-    """Add crawlable contextual links from a rider profile to recorded seasons/events."""
-    links = []
-    seen = set()
-    for result in reversed(rider.get("competition_history") or []):
-        competition = next(
-            (item for item in COMPETITIONS if item.get("name") == result.get("category")),
-            None,
-        )
-        if not competition:
-            continue
-        competition_key = (competition["id"], "season")
-        if competition_key not in seen:
-            links.append((
-                f"../competitions/{competition['id']}.html",
-                f"{competition_display_name(competition)} {competition.get('season', '')}".strip(),
-            ))
-            seen.add(competition_key)
-        if result.get("event"):
-            event_key = (competition["id"], result["event"])
-            if event_key not in seen:
-                links.append((
-                    f"../competitions/{competition['id']}/rounds/{competition_round_slug(result['event'])}.html",
-                    f"{competition_event_label(result['event'])} results",
-                ))
-                seen.add(event_key)
-        if len(links) >= 3:
-            break
-    if not links:
-        return ""
-    rendered = " · ".join(f'<a href="{esc_attr(url)}">{esc(label)}</a>' for url, label in links)
-    return f'<p class="data-note rider-competition-links"><strong>Competition record:</strong> {rendered}.</p>'
-
 def build_rider_page(r, riders):
     prefix = "../"
     # The rider page hero prefers the portrait action shot; the square avatar
@@ -3617,7 +3646,7 @@ def build_rider_page(r, riders):
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'
 
     history = r.get("competition_history") or []
-    category_rank, season_analysis, setup_analysis, best_place = rider_editorial(r, riders)
+    category_rank, _season_analysis, _setup_analysis, _best_place = rider_editorial(r, riders)
     highlight_parts = []
     for wanted in ("Frame", "Fork", "RearShock"):
         item = next((e for e in equipment if e.get("category") == wanted), None)
@@ -3710,7 +3739,6 @@ def build_rider_page(r, riders):
         f'<span>{esc(candidate.get("team") or "Privateer")} · {rider_total_points(candidate)} pts</span></a>'
         for candidate in related
     )
-    rider_context_links = rider_competition_context(r)
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
@@ -3728,8 +3756,6 @@ def build_rider_page(r, riders):
 
     {setup_head}{build_html}
     {equip_html}
-
-    <section class="rider-editorial rider-setup-analysis reveal"><div><div class="label">Build context</div><h2>Setup analysis</h2><p>{esc(setup_analysis)}</p>{rider_context_links}<p class="data-note">Page generated from the dataset updated {esc(SITE_UPDATED)}. Equipment is revised when a verifiable change is identified. <a href="../methodology.html">Read the methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></section>
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>

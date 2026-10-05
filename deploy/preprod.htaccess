@@ -8,6 +8,14 @@ Require valid-user
 
 RewriteEngine On
 RewriteRule ^contact-submit\.php$ - [R=404,L]
+# Redirect the incomplete legacy UCI pages to their complete Notion-backed
+# Qualifier / Final counterparts.
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/loudenvielle.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/leogang.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/switzerland-june\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/lenzerheide.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/la-thuile.html [R=301,L,NE]
+RewriteRule ^competitions/uci-mtb-world-cup-dh-2026/rounds/andorra-july\.html$ /competitions/uci-mtb-world-cup-dh-2026/rounds/pal-arinsal.html [R=301,L,NE]
 # Preserve the former Cerro Abajo URLs after promoting Red Bull to a season.
 RewriteRule ^competitions/red-bull-cerro-abajo-2026\.html$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]
 RewriteRule ^competitions/red-bull-cerro-abajo-2026/.*$ /competitions/redbull-2026/rounds/cerroabajo-2026.html [R=301,L,NE]

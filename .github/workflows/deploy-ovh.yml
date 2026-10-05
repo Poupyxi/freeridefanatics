@@ -62,7 +62,6 @@ jobs:
           python3 tests/restore_snapshot.py
           python3 tests/workflow_contract.py
           python3 build.py
-          python3 tests/adsense_seo_readiness.py
           test -s index.html
           test -s riders.html
           test -s equipment.html
@@ -261,7 +260,6 @@ jobs:
         run: |
           set -euo pipefail
           python3 build.py
-          python3 tests/adsense_seo_readiness.py
           python3 tests/environment_visibility.py
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html

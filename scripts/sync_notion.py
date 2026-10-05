@@ -483,6 +483,7 @@ def export(client: Notion):
                 "participated": False,
                 "place": None,
                 "points": 0,
+                "stages": {},
                 "_event_date": race["date"],
                 "_has_final": False,
                 "_has_points": False,
@@ -492,6 +493,28 @@ def export(client: Notion):
                 result["_has_points"] = True
             if scoring_counts_as_participation(race["phase"], status):
                 result["participated"] = True
+
+            # Keep the two point awards available to event pages. The
+            # top-level fields remain the combined event result used by the
+            # season standings, while ``stages`` exposes the exact Qualifier
+            # and Final allocation without changing the public totals.
+            stage = result["stages"].setdefault(race["phase"], {
+                "result": None,
+                "status": None,
+                "time": None,
+                "participated": False,
+                "place": None,
+                "points": None,
+            })
+            if has_points:
+                stage["points"] = (stage.get("points") or 0) + points
+            if scoring_counts_as_participation(race["phase"], status):
+                stage["participated"] = True
+            stage["place"] = place
+            stage["status"] = status
+            stage["time"] = race_time
+            stage["result"] = ordinal(place) if place is not None else status
+
             if race["phase"] == "Final":
                 result["place"] = place
                 result["status"] = status

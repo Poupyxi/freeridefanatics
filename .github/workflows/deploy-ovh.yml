@@ -410,15 +410,15 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-images-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-source-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 \
-            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" | grep -q '"riders"'
+            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" | grep '"riders"' > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 \
-            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
-          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
+            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep '"version":1' > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep '"sha256"' > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html > /dev/null
-          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/beyondgravity.html | grep -q 'Beyond Gravity 2027 at Maydena Bike Park'
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/beyondgravity.html | grep 'Beyond Gravity 2027 at Maydena Bike Park' > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/assets/img/competitions/beyondgravity.jpg > /dev/null
           test "$(curl --silent --location --output /dev/null --write-out '%{http_code} %{url_effective}' \
             https://ridersfanatics.com/competitions/uci/ | sed 's/:443\//\//')" = \
@@ -428,7 +428,7 @@ jobs:
             '200 https://ridersfanatics.com/riders/descalzo-facundo.html'
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
-          curl --silent --show-error --head https://ridersfanatics.com/ | grep -qi '^strict-transport-security:'
+          curl --silent --show-error --head https://ridersfanatics.com/ | grep -i '^strict-transport-security:' > /dev/null
 
       - name: Package the verified production rollback snapshot
         run: |

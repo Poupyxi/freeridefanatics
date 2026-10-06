@@ -199,17 +199,18 @@ jobs:
         run: |
           set -euo pipefail
           run_id=""
+          candidates="$(gh api --paginate \
+            "/repos/$GITHUB_REPOSITORY/actions/artifacts?name=validated-preproduction-snapshot&per_page=100" \
+            --jq '.artifacts[] | select(.expired == false) | .workflow_run.id')"
           while IFS= read -r candidate; do
-            artifact_id="$(gh api \
-              "/repos/$GITHUB_REPOSITORY/actions/runs/$candidate/artifacts?per_page=100" \
-              --jq '[.artifacts[] | select(.name == "validated-preproduction-snapshot" and .expired == false)][0].id // empty')"
-            if test -n "$artifact_id"; then
+            test -n "$candidate" || continue
+            eligible="$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$candidate" \
+              --jq 'select(.conclusion == "success" and (.event == "push" or .event == "schedule" or .event == "workflow_dispatch") and (.path == ".github/workflows/deploy-preprod-ovh.yml" or .path == ".github/workflows/deploy-preprod-drive-ovh.yml")) | .id')"
+            if test -n "$eligible"; then
               run_id="$candidate"
               break
             fi
-          done < <(gh api \
-            "/repos/$GITHUB_REPOSITORY/actions/workflows/deploy-preprod-ovh.yml/runs?branch=preprod&status=success&per_page=50" \
-            --jq '.workflow_runs[] | select(.event != "pull_request") | .id')
+          done <<< "$candidates"
           test -n "$run_id" || {
             echo "No complete validated preproduction snapshot is available." >&2
             exit 1

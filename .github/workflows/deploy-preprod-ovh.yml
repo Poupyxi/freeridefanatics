@@ -208,7 +208,7 @@ jobs:
               break
             fi
           done < <(gh api \
-            "/repos/$GITHUB_REPOSITORY/actions/runs?status=success&per_page=100" \
+            "/repos/$GITHUB_REPOSITORY/actions/workflows/deploy-preprod-ovh.yml/runs?branch=preprod&status=success&per_page=50" \
             --jq '.workflow_runs[] | select(.event != "pull_request") | .id')
           test -n "$run_id" || {
             echo "No complete validated preproduction snapshot is available." >&2

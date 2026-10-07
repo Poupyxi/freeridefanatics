@@ -608,6 +608,9 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .results-table tr:hover td{background:var(--bg-card);}
 .results-table .points{font-family:var(--mono); color:var(--orange); font-weight:700;}
 .results-table .result{font-weight:600;}
+.rider-stage-result{display:flex;flex-direction:column;gap:3px;white-space:nowrap;}
+.rider-stage-result strong{font:700 13px var(--mono);color:var(--ink);}
+.rider-stage-result small{font:8px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
 .results-table .podium{font-family:var(--head); letter-spacing:0.02em;}
 .results-table .p1{color:#b8860b;}
 .results-table .p2{color:#6b7076;}
@@ -1124,6 +1127,28 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .clean-standing-name small{display:none; overflow:hidden; margin-top:5px; font-family:var(--mono); font-size:8px; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; color:var(--muted);}
 .clean-standing-team{overflow:hidden; font-size:12px; text-overflow:ellipsis; white-space:nowrap; color:#4d5054;}
 .clean-standing-nation{font-family:var(--mono); font-size:10px; color:var(--muted);}
+.standing-stage-breakdown{margin-top:18px;border:1px solid var(--line);background:#fff;}
+.standing-stage-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px;border-bottom:1px solid var(--line);background:#f3f3f0;}
+.standing-stage-heading strong{font-family:var(--head);font-size:18px;text-transform:uppercase;}
+.standing-stage-heading span{font:9px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.standing-stage-scroll{overflow-x:auto;overscroll-behavior-inline:contain;}
+.standing-stage-table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;}
+.standing-stage-table th,.standing-stage-table td{min-width:132px;padding:13px 15px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;}
+.standing-stage-table tr:last-child th,.standing-stage-table tr:last-child td{border-bottom:0;}
+.standing-stage-table th:last-child,.standing-stage-table td:last-child{border-right:0;}
+.standing-stage-table thead th{background:#faf9f6;font:8px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+.standing-stage-table thead a:hover{color:var(--orange-dark);}
+.standing-stage-table th:first-child{position:sticky;left:0;z-index:2;min-width:210px;background:#fff;box-shadow:1px 0 0 var(--line);}
+.standing-stage-table thead th:first-child{z-index:3;background:#f3f3f0;}
+.standing-stage-table tbody th>a{display:block;font-size:13px;color:var(--ink);}
+.standing-stage-table tbody th>a:hover{color:var(--orange-dark);}
+.standing-stage-table tbody th small{display:block;margin-top:4px;font:8px var(--mono);text-transform:uppercase;color:var(--muted);}
+.standing-stage-line{display:grid;grid-template-columns:15px minmax(34px,auto);gap:2px 5px;align-items:baseline;white-space:nowrap;}
+.standing-stage-line+.standing-stage-line{margin-top:7px;padding-top:7px;border-top:1px solid #eceae6;}
+.standing-stage-line>b{grid-row:1 / 3;font:700 9px var(--mono);color:var(--orange-dark);}
+.standing-stage-line>strong{font:700 11px var(--mono);color:var(--ink);}
+.standing-stage-line>small{font:7px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+.standing-stage-empty{font:11px var(--mono);color:var(--muted);}
 .clean-standings-note{display:grid; grid-template-columns:210px minmax(0,1fr) auto; gap:30px; align-items:start; margin-top:34px; padding:26px 28px; border-left:4px solid var(--orange); background:#fff;}
 .clean-standings-note strong{font-family:var(--head); font-size:18px; text-transform:uppercase;}
 .clean-standings-note p{font-size:13px; line-height:1.65; color:var(--muted);}
@@ -1131,6 +1156,7 @@ a.clean-standing-row:hover{background:#fff5ef;}
 
 @media(max-width:900px){.competition-grid{grid-template-columns:1fr}.competition-overview-grid{grid-template-columns:1fr;gap:42px}.competition-link-grid{grid-template-columns:repeat(2,1fr)}.competition-link-grid>a:nth-child(3){border-left:1px solid var(--line)}.competition-link-grid>a:nth-child(n+3){border-top:0}.clean-podium{grid-template-columns:1fr}.clean-standing-head,.clean-standing-row{grid-template-columns:50px minmax(180px,1.5fr) minmax(120px,1fr) 70px 75px}.clean-standings-note{grid-template-columns:180px 1fr}.clean-standings-note a{grid-column:2}}
 @media(max-width:620px){.competition-hero,.competition-detail-hero{padding:66px 0 58px}.competition-hero h1,.competition-detail-hero h1{font-size:clamp(34px,9vw,42px);overflow-wrap:anywhere}.competition-note{grid-template-columns:1fr}.competition-card{min-height:0;padding:26px 22px}.competition-sport{margin-top:38px}.competition-summary dl{grid-template-columns:1fr}.competition-summary dl div+div{border-top:1px solid var(--line)}.competition-rounds ol{grid-template-columns:1fr}.competition-rounds li:nth-child(odd){border-right:0}.competition-rounds li:nth-child(even){padding-left:0}.competition-link-grid{grid-template-columns:1fr}.competition-link-grid>a+a,.competition-link-grid>a:nth-child(3){border-left:1px solid var(--line);border-top:0}.competition-subnav a{padding:15px 14px}.competition-subnav a:first-child{padding-left:0}.competition-subnav a[aria-current="page"]::after{left:14px;right:14px}.competition-standings-hero{padding:58px 0 46px}.competition-standings-hero h1{font-size:clamp(39px,12vw,58px)}.standings-hero-meta span{min-width:0;width:50%;margin:0;padding:16px 14px 0 0}.standings-hero-meta span:nth-child(2){border-right:0;padding-left:14px}.standings-hero-meta span:last-child{width:100%;margin-top:16px;padding-top:16px;border-top:1px solid #34373d}.clean-standings-section{padding-top:30px}.clean-standings-heading{align-items:start;flex-direction:column}.clean-standings-toolbar{align-items:stretch;flex-direction:column;padding-bottom:24px}.clean-standings-toolbar .standings-search{width:100%}.clean-podium-card{padding:18px 15px}.clean-standing-list{overflow:visible}.clean-standing-head{grid-template-columns:40px minmax(0,1fr) 66px;padding:10px 12px}.clean-standing-head span:nth-child(3),.clean-standing-head span:nth-child(4){display:none}.clean-standing-row{grid-template-columns:40px minmax(0,1fr) 66px;gap:10px;min-height:64px;padding:10px 12px}.clean-standing-team,.clean-standing-nation{display:none}.clean-standing-name small{display:block}.clean-standing-row>b{font-size:18px}.clean-standings-note{grid-template-columns:1fr;gap:12px;padding:22px}.clean-standings-note a{grid-column:auto}.team-standing-row .clean-standing-name small{white-space:normal;line-height:1.45}}
+@media(max-width:620px){.standing-stage-heading{align-items:flex-start;flex-direction:column;gap:5px}.standing-stage-table th:first-child{min-width:160px}}
 
 @media(max-width:700px){
   .competition-card,.competition-card.has-logo{display:flex;flex-direction:column;align-items:flex-start;padding:20px;}

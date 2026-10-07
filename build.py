@@ -220,6 +220,19 @@ def result_stage(result, stage):
         return result
     return None
 
+def stage_result_summary(result, stage):
+    """Return the published place/status and points for one race session.
+
+    The label always comes from the phase-level Notion record when it exists.
+    Older snapshots remain readable through ``result_stage``'s Final fallback.
+    """
+    phase = result_stage(result, stage)
+    if phase is None:
+        return "—", None
+    place = history_place(phase)
+    label = phase.get("result") or ordinal(place) or result_status(phase) or "—"
+    return str(label), phase.get("points")
+
 def ordinal(n):
     if n is None:
         return None
@@ -2033,6 +2046,62 @@ def build_competition_standings(riders, competition):
           <span class="clean-podium-rank">{rank:02d}</span><div><strong>{esc(rider['display_name'])}</strong><small>{esc(rider.get('team') or 'Privateer')} · {esc(rider.get('nationality') or '')}</small></div><b>{points}<small>pts</small></b>
         </a>'''
 
+    events = stats["events"]
+    has_stage_results = any(
+        result.get("stages")
+        for rider in categories["Men Elite"] + categories["Women Elite"]
+        for result in rider.get("competition_history") or []
+        if result.get("category") == name
+    )
+
+    def stage_cell(result):
+        if not result:
+            return '<span class="standing-stage-empty">—</span>'
+        lines = []
+        for stage, short_label in (("Qualifier", "Q"), ("Final", "F")):
+            result_label, points = stage_result_summary(result, stage)
+            points_html = (f'<small>{esc(points)} pts</small>'
+                           if points is not None else "")
+            lines.append(
+                f'<span class="standing-stage-line"><b>{short_label}</b>'
+                f'<strong>{esc(result_label)}</strong>{points_html}</span>'
+            )
+        return "".join(lines)
+
+    def stage_breakdown(ranked, label):
+        if not has_stage_results or not events:
+            return ""
+        event_headers = "".join(
+            f'<th scope="col"><a href="rounds/{competition_round_slug(event)}.html">'
+            f'{esc(competition_event_label(event))}</a></th>'
+            for event in events
+        )
+        rows = []
+        for rider in ranked:
+            event_results = {
+                result.get("event"): result
+                for result in rider.get("competition_history") or []
+                if result.get("category") == name
+            }
+            team = rider.get("team") or "Privateer"
+            nation = rider.get("country_code") or rider.get("country") or "—"
+            search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
+            cells = "".join(
+                f'<td>{stage_cell(event_results.get(event))}</td>'
+                for event in events
+            )
+            rows.append(
+                f'<tr data-standing-row data-search="{search}"><th scope="row">'
+                f'<a href="../../riders/{rider["slug"]}.html">{esc(rider["display_name"])}</a>'
+                f'<small>{esc(team)} · {esc(nation)}</small></th>{cells}</tr>'
+            )
+        return f'''<div class="standing-stage-breakdown">
+          <div class="standing-stage-heading"><strong>Round places</strong><span>Q = Qualifier · F = Final</span></div>
+          <div class="standings-scroll standing-stage-scroll" tabindex="0" role="region" aria-label="{esc_attr(label)} qualifier and final places by round">
+            <table class="standing-stage-table"><thead><tr><th scope="col">Rider</th>{event_headers}</tr></thead><tbody>{''.join(rows)}</tbody></table>
+          </div>
+        </div>'''
+
     def rider_panel(category, label):
         ranked = categories[category]
         podium = "".join(podium_card(rank, rider) for rank, rider in enumerate(ranked[:3], 1))
@@ -2048,6 +2117,7 @@ def build_competition_standings(riders, competition):
         return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(name)}">
           <div class="clean-podium">{podium}</div>
           <div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{"".join(rows)}</div>
+          {stage_breakdown(ranked, label)}
           <p class="standings-empty" hidden>No {label.lower()} rider matches your search.</p>
         </section>'''
 
@@ -3472,8 +3542,15 @@ def results_rows(history):
         points = h.get("points")
         comp = h.get("category") or "Other"
         place = history_place(h)
-        result = h.get("result") or ordinal(place) or "—"
         podium = f" podium p{place}" if place and place <= 3 else ""
+        qualifier_label, qualifier_points = stage_result_summary(h, "Qualifier")
+        final_label, final_points = stage_result_summary(h, "Final")
+
+        def stage_cell(label, stage_points):
+            points_html = (f'<small>{esc(stage_points)} pts</small>'
+                           if stage_points is not None else "")
+            return f'<span class="rider-stage-result"><strong>{esc(label)}</strong>{points_html}</span>'
+
         competition = next((item for item in COMPETITIONS if item.get("name") == comp), None)
         event_label = esc(h.get('event'))
         if competition and h.get("event"):
@@ -3482,7 +3559,8 @@ def results_rows(history):
         rows.append(f"""<tr data-competition="{esc(comp)}">
           <td>{esc(h.get('year'))}</td>
           <td>{event_label}</td>
-          <td class="result{podium}">{esc(result)}</td>
+          <td class="result">{stage_cell(qualifier_label, qualifier_points)}</td>
+          <td class="result{podium}">{stage_cell(final_label, final_points)}</td>
           <td class="points">{esc(points) if points is not None else '—'}</td>
         </tr>""")
     return "\n        ".join(rows)
@@ -3670,7 +3748,7 @@ def build_rider_page(r, riders):
         results_html = f"""{competition_filters(history)}
       <div class="results-scroll" tabindex="0" role="region" aria-label="Race results table, horizontally scrollable on small screens"><table class="results-table" data-results-table>
         <caption>{esc(r['display_name'])} 2026 race results</caption>
-        <thead><tr><th scope="col">Year</th><th scope="col">Event</th><th scope="col">Result</th><th scope="col">Points</th></tr></thead>
+        <thead><tr><th scope="col">Year</th><th scope="col">Event</th><th scope="col">Qualifier</th><th scope="col">Final</th><th scope="col">Total points</th></tr></thead>
         <tbody>
         {results_rows(history)}
         </tbody>

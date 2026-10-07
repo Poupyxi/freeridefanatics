@@ -18,6 +18,7 @@ in data/riders.json and rebuild — the "Shop" button will link there
 instead of "#".
 """
 import base64
+import datetime as dt
 import json
 import os
 import random
@@ -38,6 +39,10 @@ DATA_PATH = (
     _configured_data_path
     if os.path.isabs(_configured_data_path)
     else os.path.join(ROOT, _configured_data_path)
+)
+SYNC_METADATA_PATH = os.environ.get(
+    "RF_SYNC_METADATA_PATH",
+    os.path.join(os.path.dirname(DATA_PATH), "sync-metadata.json"),
 )
 RIDERS_DIR = os.path.join(ROOT, "riders")
 EQUIPMENT_DIR = os.path.join(ROOT, "equipment")
@@ -63,9 +68,38 @@ SITE_URL = os.environ.get(
     "RF_SITE_URL",
     "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com",
 ).rstrip("/")
-SITE_UPDATED = "2026-09-09"
-SITE_UPDATED_LABEL = "9 Sep 2026"
-SITE_UPDATED_LONG = "9 September 2026"
+def site_update_values(metadata_path=SYNC_METADATA_PATH):
+    """Return ISO, compact and long dates for the validated data snapshot.
+
+    Notion writes ``generated_at`` beside the exported riders. Drive-only
+    builds restore that same validated snapshot, so the displayed date remains
+    tied to the data rather than to a deployment or a hard-coded release date.
+    """
+    fallback = ("2026-09-09", "9 Sep 2026", "9 September 2026")
+    try:
+        with open(metadata_path, encoding="utf-8") as metadata_source:
+            generated_at = json.load(metadata_source).get("generated_at")
+        if not generated_at:
+            return fallback
+        parsed = dt.datetime.fromisoformat(str(generated_at).replace("Z", "+00:00"))
+        month_short = (
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        )[parsed.month - 1]
+        month_long = (
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December",
+        )[parsed.month - 1]
+        return (
+            parsed.date().isoformat(),
+            f"{parsed.day} {month_short} {parsed.year}",
+            f"{parsed.day} {month_long} {parsed.year}",
+        )
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return fallback
+
+
+SITE_UPDATED, SITE_UPDATED_LABEL, SITE_UPDATED_LONG = site_update_values()
 CONTACT_EMAIL = "contact@ridersfanatics.com"
 DATA_LICENSE_URL = f"{SITE_URL}/data-license.html"
 BUILD_VERSION = str(int(time.time()))  # cache-busting query string, changes every build
@@ -105,6 +139,7 @@ with open(ADS_PATH, encoding="utf-8") as ads_source:
     AD_CATALOG = json.load(ads_source)
 with open(DATA_PATH, encoding="utf-8") as promo_source:
     PROMO_RIDERS = json.load(promo_source)
+RIDER_COUNT = len(PROMO_RIDERS)
 PROMO_EQUIPMENT = [
     item for rider in PROMO_RIDERS for item in (rider.get("equipment") or [])
     if item.get("category") and (item.get("brand") or item.get("model_detail"))
@@ -628,7 +663,7 @@ def header_html(asset_prefix, active=""):
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
-      <span class="icon-btn">64 Riders</span>
+      <span class="icon-btn">{RIDER_COUNT} Riders</span>
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -1042,7 +1077,7 @@ def build_trust_pages():
             [
                 ("Our purpose", ["RidersFanatics was created to make professional downhill equipment easier to explore. Rider information, race results and identifiable bike components are connected in one structured database, so fans can move from a rider to a setup, from a component to the riders using it, and from equipment trends to sporting results.", "The site is designed for riders, fans, mechanics and journalists who want a clearer view of the equipment used at the highest level of downhill racing."]),
                 ("Independent and unofficial", ["RidersFanatics is an independent editorial project. It is not an official UCI website and is not operated by, endorsed by or affiliated with the riders, teams, race organisers or manufacturers referenced on its pages.", "Brand names, rider names and product names remain the property of their respective owners and are used for identification and editorial reporting."]),
-                ("What the database covers", ["The 2026 database currently connects 64 elite riders with teams, public career information, race results and identified equipment across frames, suspension, cockpit, drivetrain, wheels, tires and protection.", "The scope will grow when reliable information adds genuine value. RidersFanatics does not publish speculative specifications simply to fill an empty field."]),
+                ("What the database covers", [f"The 2026 database currently connects {RIDER_COUNT} elite riders with teams, public career information, race results and identified equipment across frames, suspension, cockpit, drivetrain, wheels, tires and protection.", "The scope will grow when reliable information adds genuine value. RidersFanatics does not publish speculative specifications simply to fill an empty field."]),
                 ("Transparency", ["Equipment can change between practice, qualifying and race runs. Prototypes can also differ from products sold to the public. Every setup should therefore be understood as a documented snapshot based on the best public information available at the time.", "The full collection and ranking principles are explained on the methodology page."]),
             ],
         ),
@@ -1054,7 +1089,7 @@ def build_trust_pages():
             [
                 ("Sources used", ["The database is assembled from publicly available material including official event information, team and rider communications, manufacturer product pages, public sponsor listings, race photography and reputable event coverage.", "A manufacturer link identifies the product family but does not by itself prove every internal tune, prototype part or race-day setting."]),
                 ("Equipment identification", ["A component is recorded when its brand or model can be identified with reasonable confidence. Model names are normalised so small differences in punctuation, accents or naming do not fragment the statistics.", "When only a brand is known, the database avoids inventing a model. When a component remains uncertain, it may be omitted until stronger evidence is available."]),
-                ("Updates", ["Race results and standings are updated as new season data is imported. Equipment records are updated when a verifiable change is identified; the absence of a new entry does not mean that every component was physically rechecked after every run or every race.", "The global update date describes the most recent database publication, not a guarantee that all 64 setups were independently reconfirmed on that day."]),
+                ("Updates", ["Race results and standings are updated as new season data is imported. Equipment records are updated when a verifiable change is identified; the absence of a new entry does not mean that every component was physically rechecked after every run or every race.", f"The global update date describes the most recent database publication, not a guarantee that all {RIDER_COUNT} setups were independently reconfirmed on that day."]),
                 ("Equipment rankings", ["Equipment rankings combine the current season points of tracked riders associated with a product. They describe competitive presence within this dataset; they are not laboratory tests and do not prove that one product is objectively better than another.", "The number and performance of sponsored riders strongly influence these totals. Rankings should be read alongside rider count, category and season context."]),
                 ("Corrections", ["Corrections should include the rider, component or result concerned, the proposed change, the relevant race or date and a public source that supports the correction.", f"Send a correction through the contact page or email {CONTACT_EMAIL}. Every proposed change is checked against a reliable public source before publication."]),
             ],
@@ -3212,7 +3247,7 @@ def build_equipment_directory(riders):
     ]
     html = head(
         f"Professional Downhill Equipment Database | {SITE_NAME}",
-        "Explore the frames, forks, shocks, brakes, wheels, tires and protection used by 64 tracked professional downhill riders.",
+        f"Explore the frames, forks, shocks, brakes, wheels, tires and protection used by {RIDER_COUNT} tracked professional downhill riders.",
         "", body_class="equipment-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage", "name": "Professional downhill equipment database", "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},

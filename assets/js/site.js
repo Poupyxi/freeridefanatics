@@ -303,9 +303,9 @@
           if(match) shown += 1;
         });
         var empty = b.querySelector('.standings-empty');
-        var scroll = b.querySelector('.standings-scroll');
+        var scrolls = Array.prototype.slice.call(b.querySelectorAll('.standings-scroll'));
         if(empty) empty.hidden = shown !== 0;
-        if(scroll) scroll.hidden = shown === 0;
+        scrolls.forEach(function(scroll){ scroll.hidden = shown === 0; });
       });
     }
 

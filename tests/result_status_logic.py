@@ -105,6 +105,24 @@ class ResultStatusTests(unittest.TestCase):
         self.assertIs(build.result_stage(result, "Final"), result)
         self.assertIsNone(build.result_stage(result, "Qualifier"))
 
+    def test_rider_results_show_qualifier_final_and_phase_points(self):
+        history = [{
+            "year": 2026,
+            "event": "Test Round",
+            "category": "Test Series 2026",
+            "place": 2,
+            "points": 185,
+            "result": "2nd",
+            "stages": {
+                "Qualifier": {"place": 1, "points": 25, "result": "1st"},
+                "Final": {"place": 2, "points": 160, "result": "2nd"},
+            },
+        }]
+        html = build.results_rows(history)
+        self.assertIn('<strong>1st</strong><small>25 pts</small>', html)
+        self.assertIn('<strong>2nd</strong><small>160 pts</small>', html)
+        self.assertIn('<td class="points">185</td>', html)
+
     def test_round_page_renders_qualifier_and_final_selectors(self):
         qualifier = {
             "place": 1, "points": 25, "result": "1st",
@@ -147,6 +165,15 @@ class ResultStatusTests(unittest.TestCase):
         self.assertIn('data-standing-stage="Final"', html)
         self.assertIn('<td class="round-points">25</td>', html)
         self.assertIn('<td class="round-points">160</td>', html)
+
+        standings_html = build.build_competition_standings([rider], {
+            **competition,
+            "sport": "Mountain bike",
+        })
+        self.assertIn('class="standing-stage-breakdown"', standings_html)
+        self.assertIn('Q = Qualifier · F = Final', standings_html)
+        self.assertIn('<strong>1st</strong><small>25 pts</small>', standings_html)
+        self.assertIn('<strong>2nd</strong><small>160 pts</small>', standings_html)
 
 
 if __name__ == "__main__":

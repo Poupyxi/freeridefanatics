@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Regression checks for Notion race-status normalization."""
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
 import unittest
 
 
@@ -30,6 +32,49 @@ def scoring_row(time_value=None, status_value=None):
 
 
 class ResultStatusTests(unittest.TestCase):
+    def test_global_rider_count_comes_from_the_active_dataset(self):
+        self.assertEqual(build.RIDER_COUNT, len(build.PROMO_RIDERS))
+        self.assertIn(
+            f'<span class="icon-btn">{len(build.PROMO_RIDERS)} Riders</span>',
+            build.header_html(""),
+        )
+
+    def test_site_update_date_comes_from_notion_sync_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            metadata = Path(directory) / "sync-metadata.json"
+            metadata.write_text(json.dumps({
+                "generated_at": "2026-10-07T06:59:53.186338+00:00",
+            }), encoding="utf-8")
+            self.assertEqual(
+                build.site_update_values(metadata),
+                ("2026-10-07", "7 Oct 2026", "7 October 2026"),
+            )
+
+    def test_site_update_date_has_a_safe_legacy_fallback(self):
+        self.assertEqual(
+            build.site_update_values(ROOT / "missing-sync-metadata.json"),
+            ("2026-09-09", "9 Sep 2026", "9 September 2026"),
+        )
+
+    def test_localized_guides_use_the_active_rider_count(self):
+        source = (ROOT / "build_seo_guides.py").read_text(encoding="utf-8")
+        self.assertIn('RF_RIDER_COUNT', source)
+        self.assertIn('{RIDER_COUNT} Riders', source)
+        self.assertNotIn('>64 Riders<', source)
+
+    def test_i18n_catalogs_use_count_templates_not_snapshot_totals(self):
+        import re
+        snapshot_total = re.compile(r"\b64\s+riders?\b", re.IGNORECASE)
+        for path in (ROOT / "assets" / "i18n").glob("*.json"):
+            catalog = json.loads(path.read_text(encoding="utf-8"))
+            with self.subTest(path=path.name):
+                self.assertFalse(any(
+                    snapshot_total.search(str(key)) or snapshot_total.search(str(value))
+                    for key, value in catalog.items()
+                ))
+                self.assertIn("{count} Riders", catalog)
+                self.assertIn("{count} riders · {women} women · {men} men", catalog)
+
     def test_statuses_stored_in_time_are_canonical(self):
         expected = {
             "Finisher": "Finisher",

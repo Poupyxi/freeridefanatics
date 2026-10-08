@@ -1,7 +1,7 @@
 {
   "Skip to main content": "Aller au contenu principal",
-  "Professional rider & equipment database · 64 riders tracked": "Base de données des pilotes professionnels et de leur équipement · 64 pilotes suivis",
-  "Professional rider & equipment database   ·   64 riders tracked": "Base de données des pilotes professionnels et de leur équipement · 64 pilotes suivis",
+  "Professional rider & equipment database · {count} riders tracked": "Base de données des pilotes professionnels et de leur équipement · {count} pilotes suivis",
+  "Professional rider & equipment database   ·   {count} riders tracked": "Base de données des pilotes professionnels et de leur équipement · {count} pilotes suivis",
   "Primary navigation": "Navigation principale",
   "Change language": "Changer de langue",
   "Competitions": "Compétitions",
@@ -12,8 +12,8 @@
   "Equipment": "Équipement",
   "Men": "Hommes",
   "Women": "Femmes",
-  "64 Riders": "64 pilotes",
-  "64 riders": "64 pilotes",
+  "{count} Riders": "{count} pilotes",
+  "{count} riders": "{count} pilotes",
   "Their": "Leur montage",
   "exact": "exact.",
   "setup. Your next upgrade.": "Votre prochaine évolution.",
@@ -109,5 +109,6 @@
   "Used by both selected riders.": "Utilisé par les deux pilotes sélectionnés.",
   "Used by one of the selected riders.": "Utilisé par l’un des pilotes sélectionnés.",
   "Explore category": "Découvrir la catégorie",
-  "Related 2026 downhill riders": "Pilotes de descente associés en 2026"
+  "Related 2026 downhill riders": "Pilotes de descente associés en 2026",
+  "{count} riders · {women} women · {men} men": "{count} pilotes · {women} femmes · {men} hommes"
 }

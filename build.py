@@ -4101,7 +4101,13 @@ def main():
 
     seo_builder = os.path.join(ROOT, "build_seo_guides.py")
     if os.path.exists(seo_builder):
-        subprocess.run([sys.executable, seo_builder], check=True)
+        guide_environment = os.environ.copy()
+        guide_environment["RF_RIDER_COUNT"] = str(len(riders))
+        guide_environment["RF_SITE_UPDATED"] = SITE_UPDATED
+        subprocess.run([sys.executable, seo_builder], check=True, env=guide_environment)
+    i18n_normalizer = os.path.join(ROOT, "scripts", "normalize_i18n_catalogs.py")
+    if os.path.exists(i18n_normalizer):
+        subprocess.run([sys.executable, i18n_normalizer], check=True)
 
     ensure_accessibility_landmarks()
     run_image_optimizer()

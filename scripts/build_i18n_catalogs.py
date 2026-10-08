@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from pathlib import Path
 
@@ -30,7 +31,32 @@ DYNAMIC_STRINGS = {
     "Used by one of the selected riders.",
     "Explore category",
     "Brake Disc",
+    "{count} Riders",
+    "{count} riders · {women} women · {men} men",
 }
+
+DATA_PATH = Path(os.environ.get("RF_DATA_PATH", ROOT / "data" / "riders.json"))
+if not DATA_PATH.is_absolute():
+    DATA_PATH = ROOT / DATA_PATH
+DATASET_RIDER_COUNT = int(os.environ.get(
+    "RF_RIDER_COUNT",
+    len(json.loads(DATA_PATH.read_text(encoding="utf-8"))),
+))
+SNAPSHOT_RIDER_COUNT = re.compile(
+    rf"\b{DATASET_RIDER_COUNT}(?=\s+riders?\b)",
+    re.IGNORECASE,
+)
+SNAPSHOT_SPLIT = re.compile(
+    rf"^({DATASET_RIDER_COUNT}) riders · (\d+) women · (\d+) men$",
+    re.IGNORECASE,
+)
+
+
+def dynamic_template(value: str) -> str:
+    split = SNAPSHOT_SPLIT.match(value)
+    if split:
+        return "{count} riders · {women} women · {men} men"
+    return SNAPSHOT_RIDER_COUNT.sub("{count}", value)
 
 
 def source_pages() -> list[Path]:
@@ -54,7 +80,7 @@ def collect_strings() -> list[str]:
                 continue
             value = str(node).strip()
             if value:
-                strings.add(value)
+                strings.add(dynamic_template(value))
         for element in soup.find_all(True):
             for attribute in TRANSLATABLE_ATTRIBUTES:
                 value = str(element.get(attribute, "")).strip()

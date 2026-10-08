@@ -56,6 +56,25 @@ class ResultStatusTests(unittest.TestCase):
             ("2026-09-09", "9 Sep 2026", "9 September 2026"),
         )
 
+    def test_localized_guides_use_the_active_rider_count(self):
+        source = (ROOT / "build_seo_guides.py").read_text(encoding="utf-8")
+        self.assertIn('RF_RIDER_COUNT', source)
+        self.assertIn('{RIDER_COUNT} Riders', source)
+        self.assertNotIn('>64 Riders<', source)
+
+    def test_i18n_catalogs_use_count_templates_not_snapshot_totals(self):
+        import re
+        snapshot_total = re.compile(r"\b64\s+riders?\b", re.IGNORECASE)
+        for path in (ROOT / "assets" / "i18n").glob("*.json"):
+            catalog = json.loads(path.read_text(encoding="utf-8"))
+            with self.subTest(path=path.name):
+                self.assertFalse(any(
+                    snapshot_total.search(str(key)) or snapshot_total.search(str(value))
+                    for key, value in catalog.items()
+                ))
+                self.assertIn("{count} Riders", catalog)
+                self.assertIn("{count} riders · {women} women · {men} men", catalog)
+
     def test_statuses_stored_in_time_are_canonical(self):
         expected = {
             "Finisher": "Finisher",

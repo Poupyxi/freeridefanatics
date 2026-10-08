@@ -60,6 +60,8 @@ jobs:
           python3 tests/deployment_health.py
           python3 tests/deployment_access_contract.py
           python3 tests/restore_snapshot.py
+          python3 tests/notion_snapshot_freshness.py
+          python3 tests/live_site_metadata.py
           python3 tests/workflow_contract.py
           python3 build.py
           python3 tests/adsense_seo_readiness.py
@@ -151,6 +153,10 @@ jobs:
           test -n "$PREPROD_BASIC_USER" && test -n "$PREPROD_BASIC_PASSWORD"
 
           local_source="$(cat "$RUNNER_TEMP/validated-source-sha.txt")"
+          python3 scripts/validate_notion_snapshot.py \
+            --riders data/notion/riders.json \
+            --metadata data/notion/sync-metadata.json \
+            --max-age-hours 48
           test "$local_source" = "$(git rev-parse HEAD)" || {
             echo "The latest successful preproduction snapshot does not match the current preprod branch." >&2
             echo "Run Update Preprod successfully before promoting again." >&2
@@ -234,6 +240,10 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 scripts/validate_notion_snapshot.py \
+            --riders data/notion/riders.json \
+            --metadata data/notion/sync-metadata.json \
+            --max-age-hours 48
           python3 tests/notion_only_source.py
           python3 tests/workflow_contract.py
           python3 tests/deployment_access_contract.py
@@ -406,7 +416,8 @@ jobs:
       - name: Verify production
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/ > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            https://ridersfanatics.com/ --output "$RUNNER_TEMP/live-index.html"
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/assets/i18n/fr.json > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-data-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-images-version.txt > /dev/null
@@ -415,7 +426,13 @@ jobs:
             "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" | grep -q '"riders"'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 \
             "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
-          curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/notion-sync-metadata.json | grep -q '"sha256"'
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+            https://ridersfanatics.com/notion-sync-metadata.json \
+            --output "$RUNNER_TEMP/live-notion-sync-metadata.json"
+          grep -q '"sha256"' "$RUNNER_TEMP/live-notion-sync-metadata.json"
+          python3 scripts/verify_live_site_metadata.py \
+            --html "$RUNNER_TEMP/live-index.html" \
+            --metadata "$RUNNER_TEMP/live-notion-sync-metadata.json"
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null

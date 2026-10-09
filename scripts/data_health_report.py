@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import importlib.util
 import json
 import os
 import re
@@ -17,6 +18,7 @@ from typing import Callable
 
 IMAGE_EXTENSIONS = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 PARTICIPATION_STATUSES = {"FINISHER", "DNF", "DSQ", "DQ"}
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def read_json(path: Path):
@@ -348,7 +350,11 @@ def markdown_report(report: dict, *, detail_limit: int = 20) -> str:
 
 
 def cli_equipment_resolver(equipment_dir: Path):
-    import build
+    spec = importlib.util.spec_from_file_location("ridersfanatics_build", ROOT / "build.py")
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load the site equipment resolver")
+    build = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build)
 
     build.EQUIP_IMG_DIR = str(equipment_dir)
     cache: dict[tuple[str, str, str], str | None] = {}

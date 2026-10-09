@@ -115,6 +115,15 @@ class DataHealthReportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             health.drive_inventory({"image_count": 2, "files": [{"path": "PPRiders/a.jpg"}]})
 
+    def test_cli_equipment_resolver_loads_build_from_the_repository_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            resolve = health.cli_equipment_resolver(Path(directory))
+            self.assertIsNone(resolve({
+                "category": "Frame",
+                "brand": "Missing Brand",
+                "model_detail": "Missing Model",
+            }))
+
     def test_duplicate_slugs_are_critical(self):
         with tempfile.TemporaryDirectory() as directory:
             riders, competitions, drive, portraits, actions = self.fixtures(Path(directory))

@@ -248,6 +248,20 @@ def related_ids(page, targets, *preferred_names):
     return []
 
 
+def relation_schema_names(pages, targets, *preferred_names):
+    """Return rider relation properties that can represent a target database."""
+    preferred = {slugify(name) for name in preferred_names}
+    names = set()
+    for page in pages:
+        for name, item in (page.get("properties") or {}).items():
+            if item.get("type") != "relation":
+                continue
+            identifiers = value(page, name) or []
+            if slugify(name) in preferred or any(identifier in targets for identifier in identifiers):
+                names.add(name)
+    return sorted(names)
+
+
 def instagram_handle(url: str | None) -> str | None:
     if not url:
         return None
@@ -422,6 +436,9 @@ def export(client: Notion):
     brands = title_map(pages["brands"], "Name")
     if pages["teams"] and not teams:
         raise RuntimeError("The Notion Teams database was queried but no title property could be resolved")
+    team_relation_names = relation_schema_names(
+        pages["riders"], teams, "Team", "team", "Teams", "teams"
+    )
     events = {
         page_id(item.get("id")): {
             "name": value(item, "Name competition"),
@@ -713,17 +730,23 @@ def export(client: Notion):
     if len(slugs) != len(set(slugs)):
         raise RuntimeError("Duplicate rider slugs were generated")
     mapped_team_count = sum(bool(rider.get("team")) for rider in riders)
-    if teams and not mapped_team_count:
-        raise RuntimeError(
-            f"The Notion Teams database contains {len(teams)} named teams, "
-            "but none could be related to a rider"
-        )
     riders.sort(key=lambda rider: (
         rider.get("gender_category") or "",
         -sum((row.get("points") or 0) for row in rider["competition_history"]),
         rider["display_name"],
     ))
-    return riders, competition_catalog, {name: len(items) for name, items in pages.items()}
+    team_assignments = {
+        "teams_catalogued": len(teams),
+        "riders_with_team": mapped_team_count,
+        "relation_available": bool(team_relation_names),
+        "relation_properties": team_relation_names,
+    }
+    return (
+        riders,
+        competition_catalog,
+        {name: len(items) for name, items in pages.items()},
+        team_assignments,
+    )
 
 
 def main():
@@ -736,7 +759,7 @@ def main():
     if not token:
         raise SystemExit("NOTION_TOKEN is required")
 
-    riders, competitions, counts = export(Notion(token))
+    riders, competitions, counts, team_assignments = export(Notion(token))
     serialized = json.dumps(riders, ensure_ascii=False, indent=2) + "\n"
     digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -758,6 +781,7 @@ def main():
         "sha256": digest,
         "riders": len(riders),
         "queried_pages": counts,
+        "team_assignments": team_assignments,
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Notion snapshot ready: {len(riders)} riders, {len(competitions['series'])} seasons, sha256={digest}")
 

@@ -117,6 +117,7 @@ def analyze(
     equipment_resolver: Callable[[dict], str | None],
     generated_at: str,
     logo_manifest: dict | None = None,
+    source_metadata: dict | None = None,
 ) -> dict:
     if not isinstance(riders, list) or not riders:
         raise ValueError("riders must be a non-empty array")
@@ -129,6 +130,7 @@ def analyze(
         "duplicate_slugs": [],
         "riders_without_country": [],
         "riders_without_team": [],
+        "team_assignments_unavailable": [],
         "riders_without_instagram": [],
         "riders_without_results": [],
         "riders_without_equipment": [],
@@ -156,6 +158,10 @@ def analyze(
     action_pictures = 0
     women = 0
     men = 0
+    team_metadata = (source_metadata or {}).get("team_assignments") or {}
+    team_assignments_available = team_metadata.get("relation_available", True) is True
+    teams_catalogued = int(team_metadata.get("teams_catalogued") or 0)
+    riders_with_team = 0
 
     for index, rider in enumerate(riders, 1):
         if not isinstance(rider, dict):
@@ -171,13 +177,13 @@ def analyze(
         category = str(rider.get("gender_category") or "")
         women += int("women" in category.casefold())
         men += int("men" in category.casefold() and "women" not in category.casefold())
-        for field, issue in (
-            ("country", "riders_without_country"),
-            ("team", "riders_without_team"),
-            ("instagram", "riders_without_instagram"),
-        ):
+        for field, issue in (("country", "riders_without_country"), ("instagram", "riders_without_instagram")):
             if not str(rider.get(field) or "").strip():
                 issues[issue].append(compact)
+        has_team = bool(str(rider.get("team") or "").strip())
+        riders_with_team += int(has_team)
+        if team_assignments_available and not has_team:
+            issues["riders_without_team"].append(compact)
         handle = normalize_handle(rider.get("instagram"))
         if handle:
             handles.add(handle)
@@ -247,6 +253,12 @@ def analyze(
             if normalize_handle(Path(path).name) not in handles:
                 issues["unmatched_drive_portraits"].append(path)
 
+    if not team_assignments_available:
+        issues["team_assignments_unavailable"].append({
+            "teams_catalogued": teams_catalogued,
+            "message": "Notion Riders has no relation to the Teams database",
+        })
+
     issue_counts = {name: len(rows) for name, rows in issues.items()}
     critical_count = issue_counts["duplicate_slugs"]
     logo_counts = {
@@ -263,6 +275,8 @@ def analyze(
             "riders": rider_count,
             "women": women,
             "men": men,
+            "teams_catalogued": teams_catalogued,
+            "riders_with_team": riders_with_team,
             "competitions": competition_count,
             "events": event_count,
             "results": results,
@@ -285,6 +299,9 @@ def analyze(
         },
         "drive_sections": dict(sorted(drive_sections.items())),
         "logo_counts": logo_counts,
+        "source_capabilities": {
+            "team_assignments_available": team_assignments_available,
+        },
         "issue_counts": issue_counts,
         "issues": issues,
     }
@@ -306,6 +323,8 @@ def markdown_report(report: dict, *, detail_limit: int = 20) -> str:
     ]
     labels = (
         ("Riders", "riders"), ("Women", "women"), ("Men", "men"),
+        ("Teams catalogued", "teams_catalogued"),
+        ("Riders assigned to a team", "riders_with_team"),
         ("Competitions", "competitions"), ("Events", "events"),
         ("Results", "results"), ("Participations", "participations"),
         ("Qualifier results", "qualifier_results"), ("Final results", "final_results"),
@@ -379,6 +398,7 @@ def main() -> int:
     parser.add_argument("--competitions", type=Path, required=True)
     parser.add_argument("--drive-manifest", type=Path, required=True)
     parser.add_argument("--logo-manifest", type=Path)
+    parser.add_argument("--sync-metadata", type=Path)
     parser.add_argument("--portrait-dir", type=Path, required=True)
     parser.add_argument("--action-dir", type=Path, required=True)
     parser.add_argument("--equipment-dir", type=Path, required=True)
@@ -397,6 +417,7 @@ def main() -> int:
             equipment_resolver=cli_equipment_resolver(args.equipment_dir),
             generated_at=generated_at,
             logo_manifest=read_json(args.logo_manifest) if args.logo_manifest else None,
+            source_metadata=read_json(args.sync_metadata) if args.sync_metadata else None,
         )
         markdown = markdown_report(report)
         args.output_json.parent.mkdir(parents=True, exist_ok=True)

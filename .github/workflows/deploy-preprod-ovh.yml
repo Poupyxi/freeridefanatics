@@ -69,6 +69,7 @@ jobs:
           python3 tests/restore_snapshot.py
           python3 tests/notion_snapshot_freshness.py
           python3 tests/live_site_metadata.py
+          python3 tests/notion_team_mapping.py
           python3 tests/data_health_report.py
           python3 tests/workflow_contract.py
           python3 build.py
@@ -349,6 +350,7 @@ jobs:
             --competitions data/notion/competitions.json \
             --drive-manifest data/drive/live-image-manifest.json \
             --logo-manifest data/drive-logo-manifest.json \
+            --sync-metadata data/notion/sync-metadata.json \
             --portrait-dir assets/img/riders \
             --action-dir assets/img/riders-action \
             --equipment-dir assets/img/equipment \

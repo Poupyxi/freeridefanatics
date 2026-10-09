@@ -201,8 +201,51 @@ def first_value(page, *names):
     return None
 
 
-def title_map(pages, title_property):
-    return {page_id(item.get("id")): value(item, title_property) for item in pages}
+def page_title(page, *preferred_names):
+    """Return a database page title without depending on its visible label.
+
+    Notion lets editors rename a title column at any time.  Relations keep the
+    same page identifiers, so the exporter must not lose every team merely
+    because ``Nom`` became ``Name`` (or received an emoji prefix).
+    """
+    for name in preferred_names:
+        candidate = value(page, name)
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+    for name, item in (page.get("properties") or {}).items():
+        if item.get("type") != "title":
+            continue
+        candidate = value(page, name)
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+    return None
+
+
+def title_map(pages, *preferred_names):
+    mapped = {}
+    for item in pages:
+        identifier = page_id(item.get("id"))
+        title = page_title(item, *preferred_names)
+        if identifier and title:
+            mapped[identifier] = title
+    return mapped
+
+
+def related_ids(page, targets, *preferred_names):
+    """Resolve relations by target page ids, even after a property rename."""
+    ordered_names = list(preferred_names)
+    ordered_names.extend(
+        name for name, item in (page.get("properties") or {}).items()
+        if item.get("type") == "relation" and name not in ordered_names
+    )
+    for name in ordered_names:
+        candidate = value(page, name)
+        if not isinstance(candidate, list):
+            continue
+        matches = [identifier for identifier in candidate if identifier in targets]
+        if matches:
+            return matches
+    return []
 
 
 def instagram_handle(url: str | None) -> str | None:
@@ -374,9 +417,11 @@ def export(client: Notion):
     if not seasons:
         raise RuntimeError("No Notion season with visible Event relations was found")
 
-    teams = title_map(pages["teams"], "Nom")
+    teams = title_map(pages["teams"], "Nom", "Name", "Team")
     countries = title_map(pages["countries"], "Name")
     brands = title_map(pages["brands"], "Name")
+    if pages["teams"] and not teams:
+        raise RuntimeError("The Notion Teams database was queried but no title property could be resolved")
     events = {
         page_id(item.get("id")): {
             "name": value(item, "Name competition"),
@@ -578,7 +623,7 @@ def export(client: Notion):
         name = value(item, "First Name") or ""
         handle = instagram_handle(value(item, "Instagram"))
         birth = value(item, "Date of Birth")
-        team_ids = first_value(item, "Team", "team") or []
+        team_ids = related_ids(item, teams, "Team", "team", "Teams", "teams")
         team = next((teams.get(team_id) for team_id in team_ids if teams.get(team_id)), None)
         # The live Notion relation is named ``country``. Keep aliases only for
         # harmless schema renames; every value still comes from Notion.
@@ -667,6 +712,12 @@ def export(client: Notion):
     slugs = [rider.get("slug") for rider in riders]
     if len(slugs) != len(set(slugs)):
         raise RuntimeError("Duplicate rider slugs were generated")
+    mapped_team_count = sum(bool(rider.get("team")) for rider in riders)
+    if teams and not mapped_team_count:
+        raise RuntimeError(
+            f"The Notion Teams database contains {len(teams)} named teams, "
+            "but none could be related to a rider"
+        )
     riders.sort(key=lambda rider: (
         rider.get("gender_category") or "",
         -sum((row.get("points") or 0) for row in rider["competition_history"]),

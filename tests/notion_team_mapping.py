@@ -55,6 +55,8 @@ def main():
     # Preferred names remain supported when Notion uses the original schema.
     original = {"properties": {"Team": relation_property(TEAM_TWO)}}
     assert SYNC.related_ids(original, teams, "Team", "Teams") == [TEAM_TWO]
+    assert SYNC.relation_schema_names([original], teams, "Team", "Teams") == ["Team"]
+    assert SYNC.relation_schema_names([unrelated], teams, "Team", "Teams") == []
     print("Notion team mapping: renamed titles and relations resolved safely")
 
 

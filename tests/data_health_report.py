@@ -140,6 +140,32 @@ class DataHealthReportTests(unittest.TestCase):
             self.assertEqual(report["status"], "critical")
             self.assertEqual(report["issue_counts"]["duplicate_slugs"], 1)
 
+    def test_missing_team_relations_are_reported_as_a_schema_gap(self):
+        with tempfile.TemporaryDirectory() as directory:
+            riders, competitions, drive, portraits, actions = self.fixtures(Path(directory))
+            report = health.analyze(
+                riders,
+                competitions,
+                drive,
+                portrait_dir=portraits,
+                action_dir=actions,
+                equipment_resolver=lambda item: None,
+                generated_at="2026-10-09T08:00:00+00:00",
+                source_metadata={
+                    "team_assignments": {
+                        "teams_catalogued": 21,
+                        "riders_with_team": 0,
+                        "relation_available": False,
+                        "relation_properties": [],
+                    }
+                },
+            )
+            self.assertEqual(report["counts"]["teams_catalogued"], 21)
+            self.assertEqual(report["counts"]["riders_with_team"], 1)
+            self.assertEqual(report["issue_counts"]["riders_without_team"], 0)
+            self.assertEqual(report["issue_counts"]["team_assignments_unavailable"], 1)
+            self.assertFalse(report["source_capabilities"]["team_assignments_available"])
+
 
 if __name__ == "__main__":
     unittest.main()

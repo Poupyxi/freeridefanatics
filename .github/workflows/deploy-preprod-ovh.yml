@@ -350,6 +350,7 @@ jobs:
             --competitions data/notion/competitions.json \
             --drive-manifest data/drive/live-image-manifest.json \
             --logo-manifest data/drive-logo-manifest.json \
+            --sync-metadata data/notion/sync-metadata.json \
             --portrait-dir assets/img/riders \
             --action-dir assets/img/riders-action \
             --equipment-dir assets/img/equipment \

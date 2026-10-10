@@ -57,6 +57,36 @@ def main():
     assert SYNC.related_ids(original, teams, "Team", "Teams") == [TEAM_TWO]
     assert SYNC.relation_schema_names([original], teams, "Team", "Teams") == ["Team"]
     assert SYNC.relation_schema_names([unrelated], teams, "Team", "Teams") == []
+
+    seasons = {
+        "44444444-4444-4444-4444-444444444444": {"name": "Season 2026"},
+        "55555555-5555-5555-5555-555555555555": {"name": "Season 2027"},
+    }
+    rider_one = "66666666-6666-6666-6666-666666666666"
+    rider_two = "77777777-7777-7777-7777-777777777777"
+    complete_link = {"properties": {
+        "👥 Team": relation_property(TEAM_ONE),
+        "🚻 Riders": relation_property(rider_one, rider_two),
+        "☀️ Saison": relation_property("44444444-4444-4444-4444-444444444444"),
+    }}
+    incomplete_link = {"properties": {
+        "👥 Team": relation_property(TEAM_TWO),
+        "🚻 Riders": relation_property(rider_one),
+        "☀️ Saison": relation_property(),
+    }}
+    assignments, health = SYNC.team_season_assignments(
+        [complete_link, incomplete_link], {rider_one, rider_two}, teams, seasons
+    )
+    assert assignments[rider_one] == [{"team": "Team One", "season": "Season 2026"}]
+    assert assignments[rider_two] == [{"team": "Team One", "season": "Season 2026"}]
+    assert health == {
+        "assignment_rows": 2,
+        "complete_rows": 1,
+        "incomplete_rows": 1,
+        "assignments": 2,
+        "riders_with_team": 2,
+        "conflicts": 0,
+    }
     print("Notion team mapping: renamed titles and relations resolved safely")
 
 

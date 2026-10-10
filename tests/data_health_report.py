@@ -166,6 +166,31 @@ class DataHealthReportTests(unittest.TestCase):
             self.assertEqual(report["issue_counts"]["team_assignments_unavailable"], 1)
             self.assertFalse(report["source_capabilities"]["team_assignments_available"])
 
+    def test_incomplete_season_team_rows_are_reported_without_marking_every_rider(self):
+        with tempfile.TemporaryDirectory() as directory:
+            riders, competitions, drive, portraits, actions = self.fixtures(Path(directory))
+            riders[0]["team_history"] = [{"team": "Team One", "season": "Season 2026"}]
+            report = health.analyze(
+                riders,
+                competitions,
+                drive,
+                portrait_dir=portraits,
+                action_dir=actions,
+                equipment_resolver=lambda item: None,
+                generated_at="2026-10-10T08:00:00+00:00",
+                source_metadata={"team_assignments": {
+                    "teams_catalogued": 21,
+                    "relation_available": True,
+                    "assignment_rows": 2,
+                    "complete_rows": 1,
+                    "incomplete_rows": 1,
+                    "conflicts": 0,
+                }},
+            )
+            self.assertEqual(report["counts"]["riders_with_team"], 1)
+            self.assertEqual(report["issue_counts"]["riders_without_team"], 0)
+            self.assertEqual(report["issue_counts"]["team_assignment_rows_incomplete"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

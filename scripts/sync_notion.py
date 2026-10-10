@@ -49,6 +49,7 @@ DATA_SOURCES = {
     "brands": "3cb9cf6b-f148-8090-b481-000b49ff2d90",
     "equipment_links": "3ca9cf6b-f148-8018-9a11-000b4b610ef2",
 }
+TEAM_RIDER_LINK_DATABASE_ID = "3f59cf6b-f148-80d0-b550-eed862db6874"
 PRIMARY_SEASON_PAGE_ID = "3c99cf6b-f148-8077-b23f-e87cec70ad46"
 
 CATEGORY_MAP = {
@@ -158,6 +159,15 @@ class Notion:
     def retrieve_page(self, identifier: str):
         return self.request("GET", f"/pages/{identifier}")
 
+    def query_database(self, database_id: str):
+        """Query the first data source contained in a Notion database page."""
+        payload = self.request("GET", f"/databases/{database_id}")
+        sources = payload.get("data_sources") or []
+        source_id = next((page_id(item.get("id")) for item in sources if page_id(item.get("id"))), None)
+        if not source_id:
+            raise RuntimeError(f"Notion database {database_id} does not expose a data source")
+        return self.query(source_id)
+
 
 def prop(page, name):
     return (page.get("properties") or {}).get(name) or {}
@@ -260,6 +270,42 @@ def relation_schema_names(pages, targets, *preferred_names):
             if slugify(name) in preferred or any(identifier in targets for identifier in identifiers):
                 names.add(name)
     return sorted(names)
+
+
+def team_season_assignments(link_pages, rider_ids, teams, seasons):
+    """Expand Team Rider Link rows into season-scoped rider assignments."""
+    assignments = {}
+    incomplete_rows = 0
+    complete_rows = 0
+    for item in link_pages:
+        team_ids = related_ids(item, teams, "👥 Team", "Team", "Teams")
+        linked_riders = related_ids(item, rider_ids, "🚻 Riders", "Riders", "Rider")
+        season_ids = related_ids(item, seasons, "☀️ Saison", "Saison", "Season")
+        if not team_ids or not linked_riders or not season_ids:
+            incomplete_rows += 1
+            continue
+        complete_rows += 1
+        for rider_id in linked_riders:
+            for season_id in season_ids:
+                assignments.setdefault(rider_id, []).append({
+                    "team": teams[team_ids[0]],
+                    "season": seasons[season_id]["name"],
+                })
+
+    conflicts = 0
+    for rows in assignments.values():
+        season_teams = {}
+        for row in rows:
+            season_teams.setdefault(row["season"], set()).add(row["team"])
+        conflicts += sum(len(names) > 1 for names in season_teams.values())
+    return assignments, {
+        "assignment_rows": len(link_pages),
+        "complete_rows": complete_rows,
+        "incomplete_rows": incomplete_rows,
+        "assignments": sum(len(rows) for rows in assignments.values()),
+        "riders_with_team": len(assignments),
+        "conflicts": conflicts,
+    }
 
 
 def instagram_handle(url: str | None) -> str | None:
@@ -412,6 +458,7 @@ def event_location(page) -> str:
 
 def export(client: Notion):
     pages = {name: client.query(source_id) for name, source_id in DATA_SOURCES.items()}
+    pages["team_links"] = client.query_database(TEAM_RIDER_LINK_DATABASE_ID)
     seasons = {}
     event_seasons = {}
     for item in pages["seasons"]:
@@ -436,8 +483,9 @@ def export(client: Notion):
     brands = title_map(pages["brands"], "Name")
     if pages["teams"] and not teams:
         raise RuntimeError("The Notion Teams database was queried but no title property could be resolved")
-    team_relation_names = relation_schema_names(
-        pages["riders"], teams, "Team", "team", "Teams", "teams"
+    rider_ids = {page_id(item.get("id")) for item in pages["riders"] if page_id(item.get("id"))}
+    team_history_by_rider, team_link_health = team_season_assignments(
+        pages["team_links"], rider_ids, teams, seasons
     )
     events = {
         page_id(item.get("id")): {
@@ -640,8 +688,12 @@ def export(client: Notion):
         name = value(item, "First Name") or ""
         handle = instagram_handle(value(item, "Instagram"))
         birth = value(item, "Date of Birth")
-        team_ids = related_ids(item, teams, "Team", "team", "Teams", "teams")
-        team = next((teams.get(team_id) for team_id in team_ids if teams.get(team_id)), None)
+        team_history = team_history_by_rider.get(identifier, [])
+        primary_season_name = (seasons.get(primary_season_id) or {}).get("name")
+        primary_teams = sorted({
+            row["team"] for row in team_history if row.get("season") == primary_season_name
+        })
+        team = primary_teams[0] if len(primary_teams) == 1 else None
         # The live Notion relation is named ``country``. Keep aliases only for
         # harmless schema renames; every value still comes from Notion.
         country_ids = first_value(item, "country", "Country", "counrty") or []
@@ -673,6 +725,7 @@ def export(client: Notion):
             "age": age_from_birth(birth) if birth else None,
             "instagram": handle,
             "team": team,
+            "team_history": sorted(team_history, key=lambda row: (row["season"], row["team"])),
             "bio": value(item, "Biographie et principaux résultats") or "",
             "competition_history": history,
             "competition_participation": sorted(participations_by_rider.get(identifier, set())),
@@ -708,6 +761,13 @@ def export(client: Notion):
         current["competition_participation"] = sorted(set(
             current.get("competition_participation", []) + rider.get("competition_participation", [])
         ))
+        team_history_rows = {
+            (row.get("season"), row.get("team")): row
+            for row in current.get("team_history", []) + rider.get("team_history", [])
+        }
+        current["team_history"] = sorted(
+            team_history_rows.values(), key=lambda row: (row.get("season") or "", row.get("team") or "")
+        )
         equipment_rows = {}
         for part in current.get("equipment", []) + rider.get("equipment", []):
             key = (part.get("category"), part.get("brand"), part.get("model_detail"))
@@ -729,7 +789,7 @@ def export(client: Notion):
     slugs = [rider.get("slug") for rider in riders]
     if len(slugs) != len(set(slugs)):
         raise RuntimeError("Duplicate rider slugs were generated")
-    mapped_team_count = sum(bool(rider.get("team")) for rider in riders)
+    mapped_team_count = sum(bool(rider.get("team_history")) for rider in riders)
     riders.sort(key=lambda rider: (
         rider.get("gender_category") or "",
         -sum((row.get("points") or 0) for row in rider["competition_history"]),
@@ -738,8 +798,9 @@ def export(client: Notion):
     team_assignments = {
         "teams_catalogued": len(teams),
         "riders_with_team": mapped_team_count,
-        "relation_available": bool(team_relation_names),
-        "relation_properties": team_relation_names,
+        "relation_available": True,
+        "relation_properties": ["👥 Team", "🚻 Riders", "☀️ Saison"],
+        **team_link_health,
     }
     return (
         riders,

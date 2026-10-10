@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -87,6 +88,13 @@ def main():
         "riders_with_team": 2,
         "conflicts": 0,
     }
+
+    client = SYNC.Notion("test-token")
+    with mock.patch.object(client, "request", return_value={
+        "data_sources": [{"id": "88888888-8888-8888-8888-888888888888"}]
+    }), mock.patch.object(client, "query", return_value=[{"id": "page"}]) as query:
+        assert client.query_database("99999999-9999-9999-9999-999999999999") == [{"id": "page"}]
+        query.assert_called_once_with("88888888-8888-8888-8888-888888888888")
     print("Notion team mapping: renamed titles and relations resolved safely")
 
 

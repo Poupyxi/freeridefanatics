@@ -458,7 +458,19 @@ def event_location(page) -> str:
 
 def export(client: Notion):
     pages = {name: client.query(source_id) for name, source_id in DATA_SOURCES.items()}
-    pages["team_links"] = client.query_database(TEAM_RIDER_LINK_DATABASE_ID)
+    team_links_accessible = True
+    team_links_unavailable_reason = None
+    try:
+        pages["team_links"] = client.query_database(TEAM_RIDER_LINK_DATABASE_ID)
+    except RuntimeError as exc:
+        # A newly-created database is not visible to an integration until the
+        # user explicitly shares it. Keep every established Notion source
+        # updating while Data Health reports the missing read permission.
+        if "404" not in str(exc) and "object_not_found" not in str(exc):
+            raise
+        pages["team_links"] = []
+        team_links_accessible = False
+        team_links_unavailable_reason = "database_not_shared_with_integration"
     seasons = {}
     event_seasons = {}
     for item in pages["seasons"]:
@@ -798,8 +810,9 @@ def export(client: Notion):
     team_assignments = {
         "teams_catalogued": len(teams),
         "riders_with_team": mapped_team_count,
-        "relation_available": True,
+        "relation_available": team_links_accessible,
         "relation_properties": ["👥 Team", "🚻 Riders", "☀️ Saison"],
+        "unavailable_reason": team_links_unavailable_reason,
         **team_link_health,
     }
     return (

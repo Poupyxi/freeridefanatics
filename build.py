@@ -1635,6 +1635,22 @@ def competition_event_label(event):
     return re.sub(r"\bCero\s*Abajo\b", "Cerro Abajo", label, flags=re.IGNORECASE)
 
 
+def competition_round_notice(competition, event):
+    """Return a verified event-specific notice without inventing a ranking."""
+    if (competition.get("id") == "redbull-2026"
+            and competition_round_slug(event) == "rampage-2026"):
+        return {
+            "label": "Men's ranking",
+            "title": "Competition suspended",
+            "message": (
+                "The men's competition was suspended because of severe weather and high winds. "
+                "No official men's final ranking is displayed until an official classification "
+                "is published."
+            ),
+        }
+    return None
+
+
 def priority_round_seo(competition, event, rider_count, category_description,
                        has_points, show_team_ranking):
     """Return focused search copy for the event pages with the strongest intent."""
@@ -1729,6 +1745,12 @@ def build_competition_round(riders, competition, event, round_number, events):
     path = f"/competitions/{cid}/rounds/{slug}.html"
     display_event = competition_event_label(event)
     scheduled_event = next((item for item in competition.get("events", []) if item.get("name") == event), {})
+    round_notice = competition_round_notice(competition, event)
+    round_notice_html = (
+        f'''<aside class="round-status-notice" role="note"><span>{esc(round_notice["label"])}</span>'''
+        f'''<div><strong>{esc(round_notice["title"])}</strong><p>{esc(round_notice["message"])}</p></div></aside>'''
+        if round_notice else ""
+    )
     scheduled_date = scheduled_event.get("date") or ""
     if scheduled_date.startswith("9999-"):
         scheduled_date = ""
@@ -1948,13 +1970,13 @@ def build_competition_round(riders, competition, event, round_number, events):
         event_location = scheduled_event.get("location") or ""
         date_line = f'<p><time datetime="{esc_attr(event_date)}">{esc(event_date)}</time></p>' if event_date else ""
         location_line = f'<p>{esc(event_location)}</p>' if event_location else ""
-        results_section = (f'<section class="section round-results-section"><div class="wrap">'
+        results_section = (f'<section class="section round-results-section"><div class="wrap">{round_notice_html}'
                            f'<div class="label">Coming soon</div><h2>Event information</h2>{date_line}{location_line}'
                            f'<p>No verified rider results are recorded yet. This page will be updated automatically when Notion receives the participant list or results.</p>'
                            f'<p><a href="../../{cid}.html">Back to the competition calendar →</a></p>'
                            f'</div></section>')
     else:
-        results_section = (f'<section class="section round-results-section"><div class="wrap">'
+        results_section = (f'<section class="section round-results-section"><div class="wrap">{round_notice_html}'
                            f'<div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span>'
                            f'<div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters '
                            f'data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div>'

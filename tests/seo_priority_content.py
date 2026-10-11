@@ -93,6 +93,11 @@ hardline_html = assert_round(
 )
 assert '"@type": "SportsEvent"' in rampage_html
 assert '"@type": "SportsEvent"' in hardline_html
+assert "Men's ranking" in rampage_html
+assert "Competition suspended" in rampage_html
+assert "severe weather and high winds" in rampage_html
+assert "round-status-notice" in rampage_html
+assert "Competition suspended" not in hardline_html
 
 priority_riders = {
     "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",

@@ -24,6 +24,10 @@ if 'identifier not in result_rows and identifier not in participations_by_rider'
 
 if 'first_value(item, "country", "Country", "counrty")' not in source:
     raise SystemExit("The live Notion country relation is not mapped")
+if 'value(item, "Discipline")' not in source:
+    raise SystemExit("The live Notion Discipline relation is not mapped")
+if sync_notion.DATA_SOURCES.get("disciplines") != "3f79cf6b-f148-807f-80f9-000b14fa7f64":
+    raise SystemExit("The Notion Discipline catalogue is not configured")
 
 routes = sync_notion.ROUTE_SLUGS_BY_HANDLE
 if not routes or not all(isinstance(key, str) and isinstance(value, str) for key, value in routes.items()):

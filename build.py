@@ -4045,9 +4045,30 @@ def write_promo_pool(riders):
         target.write(f"window.RF_PROMO_POOL={payload};\n")
 
 
+def rider_has_discipline(rider, target="Bike Downhill"):
+    """Match the current sport section without discarding multisport riders."""
+    disciplines = rider.get("disciplines")
+    if disciplines is not None:
+        if isinstance(disciplines, str):
+            disciplines = [disciplines]
+        return any(
+            isinstance(item, str) and item.strip().casefold() == target.casefold()
+            for item in disciplines
+        )
+
+    # Compatibility for the checked-in legacy fixture used by pull-request
+    # validation. Live Notion exports always provide the explicit list above.
+    legacy = rider.get("discipline")
+    return isinstance(legacy, str) and "downhill" in legacy.casefold()
+
+
 def main():
     with open(DATA_PATH, encoding="utf-8") as f:
-        riders = json.load(f)
+        all_riders = json.load(f)
+    riders = [rider for rider in all_riders if rider_has_discipline(rider)]
+    if not riders:
+        raise RuntimeError("No Bike Downhill rider is available for the current site section")
+    excluded_rider_count = len(all_riders) - len(riders)
 
     os.makedirs(RIDERS_DIR, exist_ok=True)
     os.makedirs(EQUIPMENT_DIR, exist_ok=True)
@@ -4177,7 +4198,7 @@ def main():
     ensure_accessibility_landmarks()
     run_image_optimizer()
 
-    print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men; {drive_portrait_count} Drive portraits matched).")
+    print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men; {drive_portrait_count} Drive portraits matched; {excluded_rider_count} non-Bike Downhill riders excluded).")
     print("newsletter:  Brevo single-opt-in form embedded.")
 
 if __name__ == "__main__":

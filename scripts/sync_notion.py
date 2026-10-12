@@ -48,6 +48,7 @@ DATA_SOURCES = {
     "equipment": "3c99cf6b-f148-8010-a1c7-000b9ef9ef98",
     "brands": "3cb9cf6b-f148-8090-b481-000b49ff2d90",
     "equipment_links": "3ca9cf6b-f148-8018-9a11-000b4b610ef2",
+    "disciplines": "3f79cf6b-f148-807f-80f9-000b14fa7f64",
 }
 TEAM_RIDER_LINK_DATABASE_ID = "3f59cf6b-f148-80d0-b550-eed862db6874"
 PRIMARY_SEASON_PAGE_ID = "3c99cf6b-f148-8077-b23f-e87cec70ad46"
@@ -493,6 +494,7 @@ def export(client: Notion):
     teams = title_map(pages["teams"], "Nom", "Name", "Team")
     countries = title_map(pages["countries"], "Name")
     brands = title_map(pages["brands"], "Name")
+    disciplines = title_map(pages["disciplines"], "Nom", "Name")
     if pages["teams"] and not teams:
         raise RuntimeError("The Notion Teams database was queried but no title property could be resolved")
     rider_ids = {page_id(item.get("id")) for item in pages["riders"] if page_id(item.get("id"))}
@@ -711,6 +713,12 @@ def export(client: Notion):
         country_ids = first_value(item, "country", "Country", "counrty") or []
         country = next((countries.get(country_id) for country_id in country_ids if countries.get(country_id)), None)
         gender = value(item, "Gender")
+        discipline_ids = value(item, "Discipline") or []
+        rider_disciplines = sorted({
+            disciplines[discipline_id]
+            for discipline_id in discipline_ids
+            if disciplines.get(discipline_id)
+        })
         raw_name = name.strip()
         route_handle = (handle or "").lower().lstrip("@")
         public_slug = ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(raw_name)
@@ -730,7 +738,10 @@ def export(client: Notion):
             # deterministic slug generated exclusively from their Notion name.
             "slug": public_slug,
             "gender_category": "Women Elite" if gender == "Women" else "Men Elite",
-            "discipline": value(item, "Disciplines") or "",
+            # Keep every Notion discipline in the snapshot. The current site
+            # build selects Bike Downhill without discarding future sports.
+            "disciplines": rider_disciplines,
+            "discipline": rider_disciplines[0] if rider_disciplines else "",
             "country": country,
             "hometown": value(item, "Hometown"),
             "date_of_birth": display_birth(birth),
@@ -773,6 +784,11 @@ def export(client: Notion):
         current["competition_participation"] = sorted(set(
             current.get("competition_participation", []) + rider.get("competition_participation", [])
         ))
+        merged_disciplines = sorted(set(
+            (current.get("disciplines") or []) + (rider.get("disciplines") or [])
+        ))
+        current["disciplines"] = merged_disciplines
+        current["discipline"] = merged_disciplines[0] if merged_disciplines else ""
         team_history_rows = {
             (row.get("season"), row.get("team")): row
             for row in current.get("team_history", []) + rider.get("team_history", [])

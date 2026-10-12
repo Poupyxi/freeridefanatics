@@ -2270,6 +2270,7 @@ def build_competition_standings(riders, competition):
     return html
 
 _DRIVE_LOGO_MANIFEST = None
+_TEAM_LOGO_NEGATIVE_CACHE = {}
 
 
 def load_drive_logo_manifest():
@@ -2309,12 +2310,53 @@ def team_identity_html(team, prefix=""):
         (item for item in load_drive_logo_manifest()["teams"] if item["key"] == key),
         None,
     )
+    negative_on_light = bool(
+        logo and (
+            logo.get("negative_on_light") is True
+            or (
+                "negative_on_light" not in logo
+                and team_logo_needs_negative_filter(logo["src"])
+            )
+        )
+    )
+    logo_class = "team-identity-logo team-identity-logo-negative" if negative_on_light else "team-identity-logo"
     image = (
-        f'<img class="team-identity-logo" src="{prefix}{logo["src"]}" '
+        f'<img class="{logo_class}" src="{prefix}{logo["src"]}" '
         f'alt="" loading="lazy" width="44" height="44">'
         if logo else ""
     )
     return f'<span class="team-identity">{image}<strong>{esc(team)}</strong></span>'
+
+
+def team_logo_needs_negative_filter(relative_path):
+    """Fallback contrast check for snapshots created before the manifest flag."""
+    cached = _TEAM_LOGO_NEGATIVE_CACHE.get(relative_path)
+    if cached is not None:
+        return cached
+    try:
+        from PIL import Image
+
+        with Image.open(os.path.join(ROOT, relative_path)) as image:
+            pixels = [
+                pixel
+                for pixel in image.convert("RGBA").getdata()
+                if pixel[3] >= 32
+            ]
+        if not pixels:
+            result = False
+        else:
+            luminance = [
+                (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255
+                for red, green, blue, _alpha in pixels
+            ]
+            mean_luminance = sum(luminance) / len(luminance)
+            light_ratio = sum(value > 0.82 for value in luminance) / len(luminance)
+            dark_ratio = sum(value < 0.25 for value in luminance) / len(luminance)
+            result = mean_luminance >= 0.80 and light_ratio >= 0.65 and dark_ratio <= 0.12
+    except (OSError, ImportError):
+        result = False
+    _TEAM_LOGO_NEGATIVE_CACHE[relative_path] = result
+    return result
 
 
 def load_competition_logos():

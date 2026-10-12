@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+from unittest.mock import patch
 import unittest
 
 
@@ -39,6 +40,23 @@ def rider(name, points, team=None, *, gender="Men Elite", status="Finisher"):
 
 
 class TeamStandingsTests(unittest.TestCase):
+    def test_team_logo_uses_negative_class_only_when_manifest_requests_it(self):
+        manifest = {
+            "teams": [{
+                "key": "alpha-factory",
+                "src": "assets/img/teams/alpha-factory.webp",
+                "negative_on_light": True,
+            }],
+        }
+        with patch.object(BUILD, "load_drive_logo_manifest", return_value=manifest):
+            html = BUILD.team_identity_html("Alpha Factory")
+        self.assertIn("team-identity-logo-negative", html)
+
+        manifest["teams"][0]["negative_on_light"] = False
+        with patch.object(BUILD, "load_drive_logo_manifest", return_value=manifest):
+            html = BUILD.team_identity_html("Alpha Factory")
+        self.assertNotIn("team-identity-logo-negative", html)
+
     def test_team_is_resolved_for_the_requested_season_only(self):
         athlete = rider("Season Rider", 100, "Test Factory")
         athlete["team_history"].append({

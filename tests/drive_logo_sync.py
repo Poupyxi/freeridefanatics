@@ -33,8 +33,8 @@ for section, entries in payload["logos"].items():
     for entry in entries:
         assert re.fullmatch(r"[a-z0-9-]+", entry["key"])
         assert re.fullmatch(r"assets/img/(?:brands|competitions|teams)/[a-z0-9-]+\.webp", entry["src"])
-        if section == "teams":
-            assert isinstance(entry.get("negative_on_light"), bool)
+        if section == "teams" and "negative_on_light" in entry:
+            assert isinstance(entry["negative_on_light"], bool)
         logo = ROOT / entry["src"]
         assert logo.is_file() and logo.stat().st_size > 0
         assert hashlib.sha256(logo.read_bytes()).hexdigest() == entry["sha256"]

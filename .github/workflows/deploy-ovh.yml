@@ -55,6 +55,7 @@ jobs:
           python3 tests/notion_only_source.py
           python3 tests/result_status_logic.py
           python3 tests/rider_name_normalization.py
+          python3 tests/rider_discipline_filter.py
           python3 tests/seo_priority_content.py
           python3 tests/drive_image_sync.py
           python3 tests/deployment_delta.py
@@ -310,6 +311,7 @@ jobs:
           python3 tests/notion_only_source.py
           python3 tests/result_status_logic.py
           python3 tests/rider_name_normalization.py
+          python3 tests/rider_discipline_filter.py
           python3 tests/notion_team_mapping.py
 
       - name: Rebuild and validate the combined data safety receipt
@@ -448,6 +450,7 @@ jobs:
             --metadata data/notion/sync-metadata.json \
             --max-age-hours 48
           python3 tests/notion_only_source.py
+          python3 tests/rider_discipline_filter.py
           python3 tests/workflow_contract.py
           python3 tests/deployment_access_contract.py
           test -s data/drive/live-image-manifest.json

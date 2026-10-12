@@ -30,5 +30,7 @@ if not routes or not all(isinstance(key, str) and isinstance(value, str) for key
     raise SystemExit("The URL compatibility registry must contain only handle-to-slug strings")
 if routes.get("finniles") != "finn-iles":
     raise SystemExit("Established rider URLs are not protected")
+if routes.get("valihoell") != "valentina-holl":
+    raise SystemExit("Valentina Höll's current handle must preserve her established public URL")
 
 print("Notion-only profile contract valid; portraits remain a build-time Drive concern.")

@@ -82,9 +82,10 @@ red_bull = {
 rampage_html = assert_round(
     red_bull,
     "Rampage 2026",
-    "Red Bull Rampage 2026 | Riders, Results &amp; Rankings",
+    "Red Bull Rampage 2026 Results | Women's Ranking",
     "Red Bull Rampage 2026 riders and results",
 )
+assert "The men's competition was suspended because of high winds." in rampage_html
 hardline_html = assert_round(
     red_bull,
     "Hardline 2026",
@@ -112,11 +113,13 @@ assert men_panel < notice < women_panel
 
 priority_riders = {
     "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",
+    "holl-valentina": "Valentina Höll Bike Check 2026 | UCI DH Results",
     "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026 | Results & Setup",
     "lisa-bouladou": "Lisa Bouladou 2026 | DH Results & Bike Check",
     "asa-vermette": "Asa Vermette Bike Check 2026 | Results & Equipment",
     "amaury-pierron": "Amaury Pierron Bike Check 2026 | UCI DH Results",
     "max-alran": "Max Alran Bike Check 2026 | UCI DH Results",
+    "jordan-williams": "Jordan Williams Bike Check 2026 | Setup & Results",
 }
 for slug, expected in priority_riders.items():
     rider = {
@@ -130,6 +133,13 @@ for slug, expected in priority_riders.items():
     )
     assert title == expected
     assert rider["display_name"] in description
+    assert len(description) <= 160
+    assert not description.endswith("…")
+
+assert "Frameworks DH frame" in build.rider_seo_metadata(
+    {"display_name": "Asa Vermette", "slug": "asa-vermette"},
+    [{"category": "Frame"}], [{"points": 100}], 1, ["Frameworks DH"],
+)[1]
 
 search_intent_cases = [
     ([{"category": "Frame"}], [{"points": 100}], "bike check, race setup, equipment, downhill results and ranking"),

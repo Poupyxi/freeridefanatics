@@ -99,6 +99,17 @@ assert "severe weather and high winds" in rampage_html
 assert "round-status-notice" in rampage_html
 assert "Competition suspended" not in hardline_html
 
+women_only = sample_rider("Rampage 2026", red_bull["name"])
+women_only["gender_category"] = "Women Elite"
+rampage_women_html = build.build_competition_round(
+    [women_only], red_bull, "Rampage 2026", 1, ["Rampage 2026"]
+)
+assert 'data-standings-group="Men Elite"' in rampage_women_html
+men_panel = rampage_women_html.index('data-standings="Men Elite"')
+notice = rampage_women_html.index("Competition suspended")
+women_panel = rampage_women_html.index('data-standings="Women Elite"')
+assert men_panel < notice < women_panel
+
 priority_riders = {
     "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",
     "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026 | Results & Setup",

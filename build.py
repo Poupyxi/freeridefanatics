@@ -1640,6 +1640,7 @@ def competition_round_notice(competition, event):
     if (competition.get("id") == "redbull-2026"
             and competition_round_slug(event) == "rampage-2026"):
         return {
+            "category": "Men Elite",
             "label": "Men's ranking",
             "title": "Competition suspended",
             "message": (
@@ -1746,11 +1747,6 @@ def build_competition_round(riders, competition, event, round_number, events):
     display_event = competition_event_label(event)
     scheduled_event = next((item for item in competition.get("events", []) if item.get("name") == event), {})
     round_notice = competition_round_notice(competition, event)
-    round_notice_html = (
-        f'''<aside class="round-status-notice" role="note"><span>{esc(round_notice["label"])}</span>'''
-        f'''<div><strong>{esc(round_notice["title"])}</strong><p>{esc(round_notice["message"])}</p></div></aside>'''
-        if round_notice else ""
-    )
     scheduled_date = scheduled_event.get("date") or ""
     if scheduled_date.startswith("9999-"):
         scheduled_date = ""
@@ -1798,7 +1794,15 @@ def build_competition_round(riders, competition, event, round_number, events):
             rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{esc(result_label)}</td><th scope="row"><a href="../../../riders/{rider['slug']}.html">{esc(rider['display_name'])}</a><small>{esc(team)}</small></th><td>{esc(nation)}</td><td class="round-points">{esc(result.get('points')) if result.get('points') is not None else '—'}</td></tr>''')
         table = (f'''<div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{stage} {label} results, horizontally scrollable"><table class="round-results"><caption>{stage} {label} results for {esc(event)}</caption><thead><tr><th scope="col">Result</th><th scope="col">Rider</th><th scope="col">Nation</th><th scope="col">Points</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>'''
                  if rows else "")
-        return f'''<section class="round-category standings-block" data-standings="{category}" data-standing-stage="{stage}" data-competition="{esc_attr(name)}">{table}<p class="standings-empty"{'' if not rows else ' hidden'}>No {stage.lower()} {label.lower()} results are recorded for this event.</p></section>'''
+        category_notice = round_notice if round_notice and round_notice.get("category") == category else None
+        notice_html = (
+            f'''<aside class="round-status-notice" role="note"><span>{esc(category_notice["label"])}</span>'''
+            f'''<div><strong>{esc(category_notice["title"])}</strong><p>{esc(category_notice["message"])}</p></div></aside>'''
+            if category_notice else ""
+        )
+        empty_html = ("" if category_notice and not rows else
+                      f'''<p class="standings-empty"{'' if not rows else ' hidden'}>No {stage.lower()} {label.lower()} results are recorded for this event.</p>''')
+        return f'''<section class="round-category standings-block" data-standings="{category}" data-standing-stage="{stage}" data-competition="{esc_attr(name)}">{notice_html}{table}{empty_html}</section>'''
 
     team_entries = [
         (rider, result) for rider, result in all_entries
@@ -1852,7 +1856,7 @@ def build_competition_round(riders, competition, event, round_number, events):
 
     visible_categories = [
         (category, label) for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
-        if categories[category]
+        if categories[category] or (round_notice and round_notice.get("category") == category)
     ]
     ranking_filters = list(visible_categories)
     if show_team_ranking:
@@ -1970,13 +1974,13 @@ def build_competition_round(riders, competition, event, round_number, events):
         event_location = scheduled_event.get("location") or ""
         date_line = f'<p><time datetime="{esc_attr(event_date)}">{esc(event_date)}</time></p>' if event_date else ""
         location_line = f'<p>{esc(event_location)}</p>' if event_location else ""
-        results_section = (f'<section class="section round-results-section"><div class="wrap">{round_notice_html}'
+        results_section = (f'<section class="section round-results-section"><div class="wrap">'
                            f'<div class="label">Coming soon</div><h2>Event information</h2>{date_line}{location_line}'
                            f'<p>No verified rider results are recorded yet. This page will be updated automatically when Notion receives the participant list or results.</p>'
                            f'<p><a href="../../{cid}.html">Back to the competition calendar →</a></p>'
                            f'</div></section>')
     else:
-        results_section = (f'<section class="section round-results-section"><div class="wrap">{round_notice_html}'
+        results_section = (f'<section class="section round-results-section"><div class="wrap">'
                            f'<div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span>'
                            f'<div class="filters" role="tablist" aria-label="Event ranking category" data-standings-filters '
                            f'data-filter-count="{len(ranking_filters)}">{filter_buttons}</div></div>'

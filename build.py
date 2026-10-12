@@ -1688,10 +1688,10 @@ def priority_round_seo(competition, event, rider_count, category_description,
         }
     if competition.get("id") == "redbull-2026" and "rampage" in slug:
         return {
-            "title": "Red Bull Rampage 2026 | Riders, Results & Rankings",
+            "title": "Red Bull Rampage 2026 Results | Women's Ranking",
             "description": (
-                f"Red Bull Rampage 2026 riders and results: {category_description} rankings"
-                f"{points}{teams}, event information and {rider_count} linked athlete profiles."
+                "Red Bull Rampage 2026 women's results and ranking, with linked rider profiles. "
+                "The men's competition was suspended because of high winds."
             ),
             "heading": "Red Bull Rampage 2026 riders and results",
             "copy": (
@@ -3732,6 +3732,7 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
 
     priority_titles = {
         "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",
+        "holl-valentina": "Valentina Höll Bike Check 2026 | UCI DH Results",
         "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026 | Results & Setup",
         "lisa-bouladou": "Lisa Bouladou 2026 | DH Results & Bike Check",
         "asa-vermette": "Asa Vermette Bike Check 2026 | Results & Equipment",
@@ -3743,7 +3744,45 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
         "gloria-scarsi": "Gloria Scarsi Bike Check 2026 | DH Results & Setup",
         "sacha-earnest": "Sacha Earnest Bike Check 2026 | DH Results & Setup",
     }
-    return priority_titles.get(rider.get("slug"), title), description
+    priority_descriptions = {
+        "valentina-holl": (
+            "Valentina Höll 2026 bike check and downhill results: Commencal Supreme DH V5.2 "
+            "frame, documented equipment and current UCI season ranking."
+        ),
+        "holl-valentina": (
+            "Valentina Höll 2026 bike check and downhill results: Commencal Supreme DH V5.2 "
+            "frame, documented equipment and current UCI season ranking."
+        ),
+        "gracey-hemstreet": (
+            "Gracey Hemstreet 2026 bike check and downhill results: Norco Torrent DH frame, "
+            "documented equipment and current UCI season ranking."
+        ),
+        "lisa-bouladou": (
+            "Lisa Bouladou 2026 downhill results and bike check: UCI race finishes, current "
+            "women's ranking and documented mountain bike equipment."
+        ),
+        "asa-vermette": (
+            "Asa Vermette 2026 bike check and downhill results: Frameworks DH frame, documented "
+            "equipment, UCI race finishes and current season ranking."
+        ),
+        "amaury-pierron": (
+            "Amaury Pierron 2026 bike check and downhill results: documented race equipment, "
+            "UCI World Cup finishes and current season ranking."
+        ),
+        "max-alran": (
+            "Max Alran 2026 bike check and downhill results: documented race equipment, UCI "
+            "World Cup finishes and current season ranking."
+        ),
+        "jordan-williams": (
+            "Jordan Williams 2026 downhill results and bike check: UCI race finishes, current "
+            "season ranking and documented mountain bike equipment."
+        ),
+    }
+    rider_slug = rider.get("slug")
+    return (
+        priority_titles.get(rider_slug, title),
+        priority_descriptions.get(rider_slug, description),
+    )
 
 
 def build_rider_page(r, riders):

@@ -15,6 +15,17 @@ UPDATED = os.environ.get("RF_SITE_UPDATED", "2026-10-04")
 RIDER_COUNT = int(os.environ.get("RF_RIDER_COUNT", "0"))
 STANDINGS = "competitions/uci-mtb-world-cup-dh-2026/standings.html"
 
+# These files remain available as 301 redirect sources for old links, but a
+# sitemap must only advertise their current canonical destinations.
+REDIRECT_ONLY_PATHS = {
+    "competitions/uci-mtb-world-cup-dh-2026/rounds/andorra-july.html",
+    "competitions/uci-mtb-world-cup-dh-2026/rounds/la-thuile-italy-july.html",
+    "competitions/uci-mtb-world-cup-dh-2026/rounds/leogang-austria-june.html",
+    "competitions/uci-mtb-world-cup-dh-2026/rounds/loudenvielle-france-may.html",
+    "competitions/uci-mtb-world-cup-dh-2026/rounds/mona-yongpyong-south-korea-may.html",
+    "competitions/uci-mtb-world-cup-dh-2026/rounds/switzerland-june.html",
+}
+
 LANGS = {
 "en": {
 "name":"English","title":"World Cup Downhill Bike Setup Guide","meta":"Explore how professional downhill mountain bikes are set up for UCI World Cup racing: frames, suspension, brakes, wheels, tires and rider-specific choices.",
@@ -112,7 +123,9 @@ xml_rows = []
 for item in pages:
     rel = item.relative_to(ROOT).as_posix()
     page_source = item.read_text(encoding="utf-8", errors="ignore")
-    if rel == "competitions/red-bull-cerro-abajo-2026/standings.html" or rel == "favorites.html":
+    if (rel == "competitions/red-bull-cerro-abajo-2026/standings.html"
+            or rel == "favorites.html"
+            or rel in REDIRECT_ONLY_PATHS):
         continue
     if re.search(r'<meta\s+name="robots"\s+content="[^"]*noindex', page_source, re.I):
         continue

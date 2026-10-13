@@ -596,7 +596,8 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <meta name="twitter:description" content="{esc(description)}">
 <meta name="twitter:image" content="{image}">
 <meta name="theme-color" content="#15161a">
-<link rel="icon" href="{asset_prefix}assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="{asset_prefix}assets/img/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="{asset_prefix}assets/img/brand/freeride-fanatics-summer-180.png">
 {image_preload}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -638,7 +639,7 @@ def header_html(asset_prefix, active=""):
     return f"""<header>
   <div class="wrap nav-row">
     <a class="logo" href="{home_href}">
-      <span class="mark">R</span>
+      <img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.jpg" alt="" width="48" height="48">
       RIDERSFANATICS
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
@@ -674,7 +675,7 @@ def footer_html(asset_prefix):
     home_href = asset_prefix or "./"
     return f"""{promo_strip_html(asset_prefix)}<footer>
   <div class="wrap footer-row">
-    <a class="footer-logo" href="{home_href}"><span class="mark">R</span>RIDERSFANATICS</a>
+    <a class="footer-logo" href="{home_href}"><img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.jpg" alt="" width="28" height="28">RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
       <a href="{asset_prefix}riders.html#grid">Riders</a>
       <a href="{asset_prefix}competitions.html">Competitions</a>
@@ -1191,7 +1192,7 @@ def build_index(riders, women_count, men_count):
         canonical_path="/",
         schemas=[
             {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "description": "Professional riders, competitions, equipment, setups and race results."},
-            {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "logo": absolute_url("/assets/img/favicon.svg")},
+            {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "logo": absolute_url("/assets/img/brand/freeride-fanatics-summer.jpg")},
             faq_schema,
         ],
     )

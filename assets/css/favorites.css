@@ -73,7 +73,7 @@
   .favorite-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.favorite-guide-grid{grid-template-columns:1fr;gap:40px}
 }
 @media(max-width:640px){
-  .favorites-page .nav-row{padding-left:14px;padding-right:14px;gap:8px}.favorites-page .logo{font-size:15px;gap:7px}.favorites-page .logo .mark{width:27px;height:27px}.favorites-page .nav-icons{gap:8px}.favorites-page .nav-toggle{width:34px;min-width:34px}
+  .favorites-page .nav-row{padding-left:14px;padding-right:14px;gap:8px}.favorites-page .logo{font-size:15px;gap:7px}.favorites-page .logo .site-brand-logo{width:34px;height:34px}.favorites-page .nav-icons{gap:8px}.favorites-page .nav-toggle{width:34px;min-width:34px}
   .favorite-hero h1{font-size:51px}.favorite-hero-actions,.favorite-shop-head,.favorite-toolbar{align-items:stretch;flex-direction:column}
   .favorite-search{min-width:0;width:100%}.favorite-product-grid{grid-template-columns:1fr}.favorite-product-media{aspect-ratio:1.2}
   .favorite-disclosure .wrap{grid-template-columns:1fr}.favorite-shop{padding:70px 0}.favorite-buying-guide{padding:70px 0}

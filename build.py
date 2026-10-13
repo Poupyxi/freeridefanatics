@@ -639,7 +639,7 @@ def header_html(asset_prefix, active=""):
     return f"""<header>
   <div class="wrap nav-row">
     <a class="logo" href="{home_href}">
-      <img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.jpg" alt="" width="48" height="48">
+      <img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="48" height="48">
       RIDERSFANATICS
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
@@ -675,7 +675,7 @@ def footer_html(asset_prefix):
     home_href = asset_prefix or "./"
     return f"""{promo_strip_html(asset_prefix)}<footer>
   <div class="wrap footer-row">
-    <a class="footer-logo" href="{home_href}"><img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.jpg" alt="" width="28" height="28">RIDERSFANATICS</a>
+    <a class="footer-logo" href="{home_href}"><img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28">RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
       <a href="{asset_prefix}riders.html#grid">Riders</a>
       <a href="{asset_prefix}competitions.html">Competitions</a>
@@ -1192,7 +1192,7 @@ def build_index(riders, women_count, men_count):
         canonical_path="/",
         schemas=[
             {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "description": "Professional riders, competitions, equipment, setups and race results."},
-            {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "logo": absolute_url("/assets/img/brand/freeride-fanatics-summer.jpg")},
+            {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "logo": absolute_url("/assets/img/brand/freeride-fanatics-summer.png")},
             faq_schema,
         ],
     )

@@ -60,6 +60,7 @@ with open(os.path.join(ROOT, "data", "contribution-form-riders.json"), encoding=
     CONTRIBUTION_FORM_RIDERS = json.load(form_riders_file)
 
 SITE_NAME = "RidersFanatics"
+RANDOM_RIDER_EQUIPMENT_CHANCE = 0.75
 BUILD_ENV = os.environ.get("RF_BUILD_ENV", "production").strip().lower()
 if BUILD_ENV not in {"production", "preprod"}:
     raise RuntimeError("RF_BUILD_ENV must be 'production' or 'preprod'")
@@ -1159,17 +1160,28 @@ def rider_card(r, asset_prefix=""):
       </a>"""
 
 def random_rider_button(riders, asset_prefix="", solid=True):
-    """CTA that opens a different rider each time.
+    """CTA that opens a different rider each time, favouring documented setups.
 
     The href points at a real rider page so the button still works without
     JavaScript; site.js picks a random one on load and on every click. The
     fallback target is fixed rather than random so rebuilds stay reproducible."""
     slugs = [r["slug"] for r in riders]
+    equipped_slugs = [
+        r["slug"]
+        for r in riders
+        if any(
+            isinstance(item, dict)
+            and any(str(item.get(field) or "").strip() for field in ("category", "brand", "model_detail"))
+            for item in (r.get("equipment") or [])
+        )
+    ]
     button_class = "btn btn-solid" if solid else "btn"
     if not slugs:
         return f'<a href="{asset_prefix}riders.html" class="{button_class}">Browse riders</a>'
     return (f'<a href="{asset_prefix}riders/{slugs[0]}.html" class="{button_class}" '
             f'data-random-rider="{",".join(slugs)}" '
+            f'data-random-rider-priority="{",".join(equipped_slugs)}" '
+            f'data-random-rider-priority-chance="{RANDOM_RIDER_EQUIPMENT_CHANCE}" '
             f'data-rider-prefix="{asset_prefix}riders/">Random rider</a>')
 
 def build_index(riders, women_count, men_count):

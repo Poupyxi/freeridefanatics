@@ -627,18 +627,22 @@
   safe('random-rider', function(){
     document.querySelectorAll('[data-random-rider]').forEach(function(btn){
       var slugs = (btn.getAttribute('data-random-rider') || '').split(',').filter(Boolean);
+      var prioritySlugs = (btn.getAttribute('data-random-rider-priority') || '').split(',').filter(Boolean);
+      var configuredChance = Number(btn.getAttribute('data-random-rider-priority-chance'));
+      var priorityChance = Number.isFinite(configuredChance)
+        ? Math.max(0, Math.min(1, configuredChance))
+        : 0;
       if(slugs.length < 2) return;
       var prefix = btn.getAttribute('data-rider-prefix') || 'riders/';
       var last = null;
 
       function roll(){
-        var slug = slugs[Math.floor(Math.random() * slugs.length)];
-        if(slugs.length > 1){
-          // avoid repeating the previous pick — a repeat reads as a broken button
-          while(slug === last){
-            slug = slugs[Math.floor(Math.random() * slugs.length)];
-          }
-        }
+        var pool = prioritySlugs.length && Math.random() < priorityChance ? prioritySlugs : slugs;
+        var choices = pool.filter(function(slug){ return slug !== last; });
+        // A priority pool containing only the previous rider must not trap the
+        // selector. Fall back to every other rider while keeping all profiles eligible.
+        if(!choices.length) choices = slugs.filter(function(slug){ return slug !== last; });
+        var slug = choices[Math.floor(Math.random() * choices.length)];
         last = slug;
         return prefix + slug + '.html';
       }

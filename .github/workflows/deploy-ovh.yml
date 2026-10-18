@@ -313,6 +313,16 @@ jobs:
           python3 tests/rider_name_normalization.py
           python3 tests/rider_discipline_filter.py
           python3 tests/notion_team_mapping.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          metadata = json.loads(Path("data/notion/sync-metadata.json").read_text(encoding="utf-8"))
+          assignments = metadata.get("team_assignments") or {}
+          if assignments.get("relation_available") is not True:
+              raise SystemExit("The season-scoped Notion team relation is unavailable; production refresh blocked.")
+          if int(assignments.get("riders_with_team") or 0) < 1:
+              raise SystemExit("No rider team assignment was exported; production refresh blocked.")
+          PY
 
       - name: Rebuild and validate the combined data safety receipt
         run: |

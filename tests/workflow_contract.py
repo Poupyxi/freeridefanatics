@@ -66,6 +66,8 @@ assert "--max-age-hours 2" in production
 assert "Rebuild and validate the combined data safety receipt" in production
 assert "environment: preproduction" in direct_prepare
 assert "NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}" in direct_prepare
+assert "The season-scoped Notion team relation is unavailable" in direct_prepare
+assert "No rider team assignment was exported" in direct_prepare
 assert "NOTION_TOKEN" not in production_deploy
 assert "validated-production-notion-snapshot" in direct_prepare
 assert "validated-production-notion-snapshot" in production_deploy

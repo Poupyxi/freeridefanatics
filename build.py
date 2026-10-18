@@ -234,6 +234,22 @@ def result_counts_as_start(result):
 def result_is_rankable(result):
     return history_place(result) is not None or (result.get("points") or 0) > 0
 
+def result_has_points(result):
+    """True only when a result contains a positive points award."""
+    value = result.get("points")
+    try:
+        return float(value) > 0
+    except (TypeError, ValueError):
+        return False
+
+def result_time_value(result):
+    """Return a displayable race time without confusing statuses with times."""
+    value = result.get("time")
+    if value is None:
+        return ""
+    value = str(value).strip()
+    return value if value and result_status({"result": value}) is None else ""
+
 def round_result_sort_key(pair):
     rider, result = pair
     place = history_place(result)
@@ -1618,6 +1634,14 @@ def competition_rider_points(rider, competition_name):
     return sum((result.get("points") or 0) for result in rider.get("competition_history") or []
                if result.get("category") == competition_name)
 
+def competition_has_recorded_points(riders, competition_name):
+    return any(
+        result_has_points(result)
+        for rider in riders
+        for result in rider.get("competition_history") or []
+        if result.get("category") == competition_name
+    )
+
 def competition_has_result(rider, competition_name):
     """The event page includes finishers and non-finish statuses alike."""
     return any(
@@ -1822,14 +1846,22 @@ def build_competition_round(riders, competition, event, round_number, events):
     def result_table(category, label, stage):
         rows = []
         entries = sorted(stage_entries(category, stage), key=round_result_sort_key)
+        show_times = any(result_time_value(result) for _, result in entries)
+        show_points = any(result_has_points(result) for _, result in entries)
         for rider, result in entries:
             place = history_place(result)
             result_label = result.get("result") or ordinal(place) or "—"
             team = rider.get("team") or "Privateer"
             nation = rider.get("country_code") or rider.get("country") or "—"
             search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
-            rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{esc(result_label)}</td><th scope="row"><a href="../../../riders/{rider['slug']}.html">{esc(rider['display_name'])}</a><small>{esc(team)}</small></th><td>{esc(nation)}</td><td class="round-points">{esc(result.get('points')) if result.get('points') is not None else '—'}</td></tr>''')
-        table = (f'''<div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{stage} {label} results, horizontally scrollable"><table class="round-results"><caption>{stage} {label} results for {esc(event)}</caption><thead><tr><th scope="col">Result</th><th scope="col">Rider</th><th scope="col">Nation</th><th scope="col">Points</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>'''
+            time_cell = (f'<td class="round-time">{esc(result_time_value(result)) or "—"}</td>'
+                         if show_times else "")
+            points_cell = (f'<td class="round-points">{esc(result.get("points")) if result_has_points(result) else "—"}</td>'
+                           if show_points else "")
+            rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{esc(result_label)}</td><th scope="row"><a href="../../../riders/{rider['slug']}.html">{esc(rider['display_name'])}</a><small>{esc(team)}</small></th><td>{esc(nation)}</td>{time_cell}{points_cell}</tr>''')
+        optional_headers = (("<th scope=\"col\">Time</th>" if show_times else "")
+                            + ("<th scope=\"col\">Points</th>" if show_points else ""))
+        table = (f'''<div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{stage} {label} results, horizontally scrollable"><table class="round-results"><caption>{stage} {label} results for {esc(event)}</caption><thead><tr><th scope="col">Result</th><th scope="col">Rider</th><th scope="col">Nation</th>{optional_headers}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>'''
                  if rows else "")
         category_notice = round_notice if round_notice and round_notice.get("category") == category else None
         notice_html = (
@@ -1855,6 +1887,7 @@ def build_competition_round(riders, competition, event, round_number, events):
             if stage_result is not None and result_counts_as_start(stage_result)
         ]
         event_team_points, event_team_riders = {}, {}
+        show_points = any(result_has_points(result) for _, result in stage_team_entries)
         for rider, result in stage_team_entries:
             team = rider["team"].strip()
             event_team_points[team] = event_team_points.get(team, 0) + (result.get("points") or 0)
@@ -1864,8 +1897,11 @@ def build_competition_round(riders, competition, event, round_number, events):
         for rank, team in enumerate(event_teams, 1):
             names = ", ".join(event_team_riders[team])
             search = esc_attr(f"{team} {names}".lower())
-            team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{team_identity_html(team, "../../../")}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td><td class="round-points">{event_team_points[team]}</td></tr>''')
-        table = (f'''<div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{stage} team results, horizontally scrollable"><table class="round-results"><caption>{stage} team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th><th scope="col">Points</th></tr></thead><tbody>{''.join(team_rows)}</tbody></table></div>'''
+            points_cell = (f'<td class="round-points">{event_team_points[team]}</td>'
+                           if show_points else "")
+            team_rows.append(f'''<tr data-standing-row data-search="{search}"><td class="round-place">{rank:02d}</td><th scope="row">{team_identity_html(team, "../../../")}<small>{esc(names)}</small></th><td>{len(event_team_riders[team])} riders</td>{points_cell}</tr>''')
+        points_header = '<th scope="col">Points</th>' if show_points else ""
+        table = (f'''<div class="round-table-scroll standings-scroll" tabindex="0" role="region" aria-label="{stage} team results, horizontally scrollable"><table class="round-results"><caption>{stage} team results for {esc(event)}</caption><thead><tr><th scope="col">Rank</th><th scope="col">Team</th><th scope="col">Riders</th>{points_header}</tr></thead><tbody>{''.join(team_rows)}</tbody></table></div>'''
                  if team_rows else "")
         return f'''<section class="round-category standings-block" data-standings="Teams" data-standing-stage="{stage}" data-competition="{esc_attr(name)}">{table}<p class="standings-empty"{'' if not team_rows else ' hidden'}>No {stage.lower()} team result is recorded for this event.</p></section>'''
 
@@ -1887,7 +1923,7 @@ def build_competition_round(riders, competition, event, round_number, events):
         team = rider["team"].strip()
         final_team_points[team] = final_team_points.get(team, 0) + (result.get("points") or 0)
     final_teams = sorted(final_team_points, key=lambda team: (-final_team_points[team], team.lower()))
-    if show_team_ranking and final_teams:
+    if show_team_ranking and final_teams and final_team_points[final_teams[0]] > 0:
         winning_team = final_teams[0]
         hero_leaders.append(f'''<div><span>Team winner</span><strong>{esc(winning_team)}</strong><small>{final_team_points[winning_team]} pts</small></div>''')
 
@@ -1932,7 +1968,7 @@ def build_competition_round(riders, competition, event, round_number, events):
     ]
     category_description = " and ".join(label for _, label in visible_categories) or "rider"
     team_description = ", teams" if show_team_ranking else ""
-    has_points = any(result.get("points") is not None for _, result in all_entries)
+    has_points = any(result_has_points(result) for _, result in all_entries)
     focused_seo = priority_round_seo(
         competition, event, len(all_entries), category_description,
         has_points, show_team_ranking,
@@ -2122,6 +2158,7 @@ def build_competition_standings(riders, competition):
     cid = competition["id"]
     stats = competition_stats(riders, competition)
     path = f"/competitions/{cid}/standings.html"
+    has_points = competition_has_recorded_points(riders, name)
     categories = {}
     for category in ("Men Elite", "Women Elite"):
         categories[category] = sorted(
@@ -2145,8 +2182,9 @@ def build_competition_standings(riders, competition):
     def podium_card(rank, rider):
         points = competition_rider_points(rider, name)
         team = rider_team_for_competition(rider, name) or "Privateer"
+        points_html = f'<b>{points}<small>pts</small></b>' if has_points else ""
         return f'''<a class="clean-podium-card podium-{rank}" href="../../riders/{rider['slug']}.html">
-          <span class="clean-podium-rank">{rank:02d}</span><div><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(rider.get('nationality') or '')}</small></div><b>{points}<small>pts</small></b>
+          <span class="clean-podium-rank">{rank:02d}</span><div><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(rider.get('nationality') or '')}</small></div>{points_html}
         </a>'''
 
     events = stats["events"]
@@ -2163,11 +2201,14 @@ def build_competition_standings(riders, competition):
         lines = []
         for stage, short_label in (("Qualifier", "Q"), ("Final", "F")):
             result_label, points = stage_result_summary(result, stage)
+            phase = result_stage(result, stage)
+            race_time = result_time_value(phase or {})
             points_html = (f'<small>{esc(points)} pts</small>'
-                           if points is not None else "")
+                           if points is not None and result_has_points({"points": points}) else "")
+            time_html = f'<small>{esc(race_time)}</small>' if race_time else ""
             lines.append(
                 f'<span class="standing-stage-line"><b>{short_label}</b>'
-                f'<strong>{esc(result_label)}</strong>{points_html}</span>'
+                f'<strong>{esc(result_label)}</strong>{time_html}{points_html}</span>'
             )
         return "".join(lines)
 
@@ -2214,30 +2255,38 @@ def build_competition_standings(riders, competition):
             nation = rider.get("country_code") or rider.get("country") or "—"
             points = competition_rider_points(rider, name)
             search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
+            points_html = f'<b>{points}<small>pts</small></b>' if has_points else ""
             rows.append(f'''<a class="clean-standing-row" href="../../riders/{rider['slug']}.html" data-standing-row data-search="{search}">
-              <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span><b>{points}<small>pts</small></b>
+              <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span>{points_html}
             </a>''')
+        points_header = "<span>Points</span>" if has_points else ""
+        no_points_class = "" if has_points else " no-points"
         return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(name)}">
           <div class="clean-podium">{podium}</div>
-          <div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{"".join(rows)}</div>
+          <div class="standings-scroll clean-standing-list{no_points_class}"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span>{points_header}</div>{"".join(rows)}</div>
           {stage_breakdown(ranked, label)}
           <p class="standings-empty" hidden>No {label.lower()} rider matches your search.</p>
         </section>'''
 
     team_podium = "".join(
-        f'''<div class="clean-podium-card podium-{rank}"><span class="clean-podium-rank">{rank:02d}</span><div>{team_identity_html(team, "../../")}<small>{len(team_riders[team])} tracked riders</small></div><b>{team_points[team]}<small>pts</small></b></div>'''
+        f'''<div class="clean-podium-card podium-{rank}"><span class="clean-podium-rank">{rank:02d}</span><div>{team_identity_html(team, "../../")}<small>{len(team_riders[team])} tracked riders</small></div>{f'<b>{team_points[team]}<small>pts</small></b>' if has_points else ''}</div>'''
         for rank, team in enumerate(teams[:3], 1)
     )
     team_rows = []
     for rank, team in enumerate(teams, 1):
         names = ", ".join(rider["display_name"] for rider in team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
+        points_html = f'<b>{team_points[team]}<small>pts</small></b>' if has_points else ""
         team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}">
-          <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b>
+          <span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span>{points_html}
         </div>''')
+    team_points_header = "<span>Points</span>" if has_points else ""
+    team_no_points_class = "" if has_points else " no-points"
+    team_method = ("Every team-linked rider in this competition contributes their recorded points to the team total."
+                   if has_points else "Teams are listed from the recorded participants; no points are published for this competition.")
     team_panel = (f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}">
-      <div class="clean-podium">{team_podium}</div><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{"".join(team_rows)}</div><p class="standings-empty" hidden>No team matches your search.</p>
-      <p class="team-ranking-method">Every team-linked rider in this competition contributes their recorded points to the team total.</p>
+      <div class="clean-podium">{team_podium}</div><div class="standings-scroll clean-standing-list{team_no_points_class}"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span>{team_points_header}</div>{"".join(team_rows)}</div><p class="standings-empty" hidden>No team matches your search.</p>
+      <p class="team-ranking-method">{team_method}</p>
     </section>''' if teams else "")
 
     leaders = categories["Men Elite"][:1] + categories["Women Elite"][:1]
@@ -2247,7 +2296,9 @@ def build_competition_standings(riders, competition):
          "name": rider["display_name"], "url": absolute_url(f"/riders/{rider['slug']}.html")}
         for position, rider in enumerate(categories["Men Elite"] + categories["Women Elite"], 1)
     ]
-    description = f"{name} standings for Elite Men, Elite Women and teams: current points, season leaders and linked rider profiles."
+    ranking_metric = ("current points" if has_points
+                      else "recorded places and race times")
+    description = f"{name} standings for Elite Men, Elite Women and teams: {ranking_metric}, season leaders and linked rider profiles."
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
     latest_round_href = (f"rounds/{competition_round_slug(latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
@@ -2271,13 +2322,13 @@ def build_competition_standings(riders, competition):
     )
     html += header_html("../../", active="competitions")
     html += f'''<main>
-<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>{esc(name)} standings.</h1><p>The current season order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders scored</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
+<section class="competition-standings-hero"><div class="wrap"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · Updated {SITE_UPDATED_LABEL}</div><h1>{esc(name)} standings.</h1><p>The current season order for Elite Men, Elite Women and teams, updated after {esc(latest_round)}.</p><div class="standings-hero-meta"><span><strong>{len(stats['events'])}</strong> rounds</span><span><strong>{len(stats['scored'])}</strong> riders {'scored' if has_points else 'ranked'}</span><span><strong>{esc(leader_summary)}</strong> category leaders</span></div><div class="hero-ctas"><a class="btn btn-solid" href="{latest_round_href}">Latest round results</a><a class="btn" href="../{cid}.html">Season overview</a></div></div></section>
 {competition_subnav(competition, "standings")}
 <div class="wrap">{breadcrumb_html([("Home", "../../"), ("Competitions", "../../competitions.html"), (name, f"../{cid}.html"), ("Standings", "standings.html")])}</div>
 <section class="section clean-standings-section"><div class="wrap"><div class="clean-standings-heading"><div><div class="label">Championship order</div><h2>Current ranking.</h2></div><a class="see-all" href="../../standings.html">Round-by-round detail →</a></div>
 <div class="standings-toolbar clean-standings-toolbar"><div><span class="toolbar-label">Category</span><div class="filters" role="tablist" aria-label="Standings category" data-standings-filters><button class="filter-btn active" data-standings-group="Men Elite" aria-selected="true">Men</button><button class="filter-btn" data-standings-group="Women Elite" aria-selected="false">Women</button>{'<button class="filter-btn" data-standings-group="Teams" aria-selected="false">Teams</button>' if teams else ''}</div></div><label class="standings-search"><span>Search</span><input class="search-input" type="search" placeholder="Rider, team or country…" data-standings-search></label></div>
 {rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}
-<div class="clean-standings-note"><strong>How to read this ranking</strong><p>Points are attached to this competition only. The detailed view keeps every recorded round visible, while this page focuses on the championship order. Dataset updated {SITE_UPDATED_LONG}.</p><div><a href="../../methodology.html">Methodology →</a><br><a href="../../data-license.html">Data license →</a></div></div>
+<div class="clean-standings-note"><strong>How to read this ranking</strong><p>{'Points are attached to this competition only.' if has_points else 'No points are recorded for this competition; rankings use the published finishing order and race times remain available in each event.'} The detailed view keeps every recorded round visible, while this page focuses on the competition order. Dataset updated {SITE_UPDATED_LONG}.</p><div><a href="../../methodology.html">Methodology →</a><br><a href="../../data-license.html">Data license →</a></div></div>
 </div></section></main>'''
     html += footer_html("../../")
     return html
@@ -2589,6 +2640,7 @@ def build_organization_competition_page(organization, competition):
 
 def season_ranking_selector(riders, competition):
     name = competition["name"]
+    has_points = competition_has_recorded_points(riders, name)
     categories = {}
     for category in ("Men Elite", "Women Elite"):
         categories[category] = sorted(
@@ -2605,8 +2657,11 @@ def season_ranking_selector(riders, competition):
             nation = rider.get("country_code") or rider.get("country") or "—"
             points = competition_rider_points(rider, name)
             search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
-            rows.append(f'''<a class="clean-standing-row" href="../riders/{rider['slug']}.html" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span><b>{points}<small>pts</small></b></a>''')
-        return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{''.join(rows)}</div><p class="standings-empty" hidden>No {label.lower()} ranking is available.</p></section>'''
+            points_html = f'<b>{points}<small>pts</small></b>' if has_points else ""
+            rows.append(f'''<a class="clean-standing-row" href="../riders/{rider['slug']}.html" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span>{points_html}</a>''')
+        points_header = "<span>Points</span>" if has_points else ""
+        no_points_class = "" if has_points else " no-points"
+        return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list{no_points_class}"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span>{points_header}</div>{''.join(rows)}</div><p class="standings-empty" hidden>No {label.lower()} ranking is available.</p></section>'''
 
     ranked_riders = categories["Men Elite"] + categories["Women Elite"]
     team_riders_with_data = [
@@ -2624,8 +2679,13 @@ def season_ranking_selector(riders, competition):
     for rank, team in enumerate(teams, 1):
         names = ", ".join(team_riders[team])
         search = esc_attr(f"{team} {names}".lower())
-        team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
-    team_panel = (f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p><p class="team-ranking-method">Every team-linked rider in this competition contributes their recorded points to the team total.</p></section>'''
+        points_html = f'<b>{team_points[team]}<small>pts</small></b>' if has_points else ""
+        team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span>{points_html}</div>''')
+    team_points_header = "<span>Points</span>" if has_points else ""
+    team_no_points_class = "" if has_points else " no-points"
+    team_method = ("Every team-linked rider in this competition contributes their recorded points to the team total."
+                   if has_points else "Teams are listed from the recorded participants; no points are published for this competition.")
+    team_panel = (f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(name)}"><div class="standings-scroll clean-standing-list{team_no_points_class}"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span>{team_points_header}</div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is available.</p><p class="team-ranking-method">{team_method}</p></section>'''
                   if show_team_ranking else "")
     visible_categories = [
         (category, label) for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
@@ -2656,6 +2716,14 @@ def redbull_event_ranking_selector(riders, competition):
     def event_points(rider, event_name):
         return sum((result.get("points") or 0) for result in event_history(rider, event_name))
 
+    def event_time(rider, event_name):
+        history = event_history(rider, event_name)
+        if not history:
+            return ""
+        result = history[-1]
+        final = result_stage(result, "Final")
+        return result_time_value(final or result)
+
     def event_rank_key(rider, event_name):
         history = event_history(rider, event_name)
         places = sorted(result["place"] for result in history if result.get("place"))
@@ -2664,14 +2732,22 @@ def redbull_event_ranking_selector(riders, competition):
         return (-event_points(rider, event_name), places, -last, rider.get("display_name") or "")
 
     def rider_panel(event_name, event_key, category, label, category_riders):
+        has_points = any(event_points(rider, event_name) > 0 for rider in category_riders)
+        show_times = not has_points and any(event_time(rider, event_name) for rider in category_riders)
         rows = []
         for rank, rider in enumerate(category_riders, 1):
             team = rider_team_for_competition(rider, competition_name) or "Privateer"
             nation = rider.get("country_code") or rider.get("country") or "—"
             points = event_points(rider, event_name)
             search = esc_attr(f"{rider['display_name']} {team} {nation}".lower())
-            rows.append(f'''<a class="clean-standing-row" href="../riders/{rider['slug']}.html" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span><b>{points}<small>pts</small></b></a>''')
-        return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span><span>Points</span></div>{''.join(rows)}</div><p class="standings-empty" hidden>No {label.lower()} ranking is recorded for {esc(competition_event_label(event_name))} yet.</p></section>'''
+            metric_html = (f'<b>{points}<small>pts</small></b>' if has_points else
+                           (f'<b class="standing-time">{esc(event_time(rider, event_name)) or "—"}</b>'
+                            if show_times else ""))
+            rows.append(f'''<a class="clean-standing-row" href="../riders/{rider['slug']}.html" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name"><strong>{esc(rider['display_name'])}</strong><small>{esc(team)} · {esc(nation)}</small></span><span class="clean-standing-team">{esc(team)}</span><span class="clean-standing-nation">{esc(nation)}</span>{metric_html}</a>''')
+        metric_header = ("<span>Points</span>" if has_points else
+                         ("<span>Time</span>" if show_times else ""))
+        no_metric_class = "" if has_points or show_times else " no-points"
+        return f'''<section class="standings-block clean-standings-panel" data-standings="{category}" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list{no_metric_class}"><div class="clean-standing-head"><span>Rank</span><span>Rider</span><span>Team</span><span>Nation</span>{metric_header}</div>{''.join(rows)}</div><p class="standings-empty" hidden>No {label.lower()} ranking is recorded for {esc(competition_event_label(event_name))} yet.</p></section>'''
 
     for event_name in events:
         event_key = competition_round_slug(event_name)
@@ -2712,11 +2788,17 @@ def redbull_event_ranking_selector(riders, competition):
                 team_points[team] = team_points.get(team, 0) + event_points(rider, event_name)
                 team_riders.setdefault(team, []).append(rider["display_name"])
             team_rows = []
+            event_has_points = any(points > 0 for points in team_points.values())
             for rank, team in enumerate(sorted(team_points, key=lambda item: (-team_points[item], item.lower())), 1):
                 names = ", ".join(team_riders[team])
                 search = esc_attr(f"{team} {names}".lower())
-                team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span><b>{team_points[team]}<small>pts</small></b></div>''')
-            panels.append(f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span><span>Points</span></div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is recorded for {esc(competition_event_label(event_name))} yet.</p><p class="team-ranking-method">Every team-linked rider in this competition contributes their recorded points to the team total.</p></section>''')
+                points_html = f'<b>{team_points[team]}<small>pts</small></b>' if event_has_points else ""
+                team_rows.append(f'''<div class="clean-standing-row team-standing-row" data-standing-row data-search="{search}"><span class="clean-standing-rank">{rank:02d}</span><span class="clean-standing-name">{team_identity_html(team, "../")}<small>{esc(names)}</small></span><span class="clean-standing-team">{len(team_riders[team])} riders</span><span class="clean-standing-nation">—</span>{points_html}</div>''')
+            points_header = "<span>Points</span>" if event_has_points else ""
+            no_points_class = "" if event_has_points else " no-points"
+            team_method = ("Every team-linked rider in this event contributes their recorded points to the team total."
+                           if event_has_points else "Teams are listed from the recorded participants; no team points are published for this event.")
+            panels.append(f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list{no_points_class}"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span>{points_header}</div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is recorded for {esc(competition_event_label(event_name))} yet.</p><p class="team-ranking-method">{team_method}</p></section>''')
 
     event_buttons = "".join(
         f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '

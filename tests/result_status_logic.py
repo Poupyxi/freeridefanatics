@@ -258,6 +258,67 @@ class ResultStatusTests(unittest.TestCase):
         self.assertIn('<strong>1st</strong><small>25 pts</small>', standings_html)
         self.assertIn('<strong>2nd</strong><small>160 pts</small>', standings_html)
 
+    def test_round_page_shows_time_and_hides_empty_points_column(self):
+        rider = {
+            "display_name": "Timed Rider",
+            "slug": "timed-rider",
+            "gender_category": "Men Elite",
+            "team": "Test Team",
+            "country": "France",
+            "competition_history": [{
+                "year": 2026,
+                "event": "Timed Round",
+                "category": "Timed Series 2026",
+                "place": 1,
+                "points": None,
+                "time": "3:42.125",
+                "result": "1st",
+                "status": "Finisher",
+                "participated": True,
+            }],
+        }
+        competition = {
+            "id": "timed-series-2026",
+            "name": "Timed Series 2026",
+            "season": 2026,
+            "discipline": "Downhill",
+            "events": [{"name": "Timed Round", "date": "2026-06-01"}],
+        }
+
+        html = build.build_competition_round(
+            [rider], competition, "Timed Round", 1, ["Timed Round"]
+        )
+
+        self.assertIn('<th scope="col">Time</th>', html)
+        self.assertIn('<td class="round-time">3:42.125</td>', html)
+        self.assertNotIn('<th scope="col">Points</th>', html)
+        self.assertNotIn('class="round-points"', html)
+
+        rider["competition_history"][0]["stages"] = {
+            "Final": {
+                "place": 1,
+                "points": None,
+                "time": "3:42.125",
+                "result": "1st",
+                "status": "Finisher",
+                "participated": True,
+            },
+        }
+        standings_html = build.build_competition_standings([rider], {
+            **competition,
+            "sport": "Mountain bike",
+        })
+        self.assertIn('class="standings-scroll clean-standing-list no-points"', standings_html)
+        self.assertIn('<small>3:42.125</small>', standings_html)
+        self.assertNotIn('<span>Points</span>', standings_html)
+
+        overview_html = build.season_ranking_selector([rider], {
+            **competition,
+            "sport": "Mountain bike",
+        })
+        self.assertIn('class="standings-scroll clean-standing-list no-points"', overview_html)
+        self.assertNotIn('<span>Points</span>', overview_html)
+
 
 if __name__ == "__main__":
     unittest.main()

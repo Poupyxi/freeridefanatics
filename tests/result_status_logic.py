@@ -32,6 +32,44 @@ def scoring_row(time_value=None, status_value=None):
 
 
 class ResultStatusTests(unittest.TestCase):
+    def test_rollup_arrays_are_decoded_and_flattened(self):
+        page = {"properties": {
+            "Gender": {
+                "type": "rollup",
+                "rollup": {
+                    "type": "array",
+                    "array": [
+                        {"type": "select", "select": {"name": "Women"}},
+                    ],
+                },
+            },
+            "Seasons": {
+                "type": "rollup",
+                "rollup": {
+                    "type": "array",
+                    "array": [
+                        {"type": "relation", "relation": [{"id": "3c99cf6bf1488077b23fe87cec70ad46"}]},
+                    ],
+                },
+            },
+        }}
+        self.assertEqual(sync_notion.scalar_value(page, "Gender"), "Women")
+        self.assertEqual(
+            sync_notion.list_value(page, "Seasons"),
+            ["3c99cf6b-f148-8077-b23f-e87cec70ad46"],
+        )
+
+    def test_multi_select_scalar_never_becomes_an_unhashable_key(self):
+        page = {"properties": {
+            "Stage": {
+                "type": "multi_select",
+                "multi_select": [{"name": "Final"}],
+            },
+        }}
+        stage = sync_notion.scalar_value(page, "Stage")
+        self.assertEqual(stage, "Final")
+        self.assertIn(stage, {"Final", "Qualifier"})
+
     def test_global_rider_count_comes_from_the_active_dataset(self):
         self.assertEqual(build.RIDER_COUNT, len(build.PROMO_RIDERS))
         self.assertIn(

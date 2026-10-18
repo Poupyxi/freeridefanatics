@@ -22,7 +22,7 @@ for forbidden in ("baseline", "base.get", "data/riders.json", "photo_url"):
 if 'identifier not in result_rows and identifier not in participations_by_rider' in source:
     raise SystemExit("Notion riders without results or participation are being excluded")
 
-if 'first_value(item, "country", "Country", "counrty")' not in source:
+if 'list_value(item, "country", "Country", "counrty")' not in source:
     raise SystemExit("The live Notion country relation is not mapped")
 
 routes = sync_notion.ROUTE_SLUGS_BY_HANDLE

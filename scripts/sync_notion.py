@@ -16,6 +16,7 @@ import os
 import re
 import sys
 import time
+import traceback
 import unicodedata
 import urllib.error
 import urllib.parse
@@ -167,8 +168,8 @@ def rich_text(items) -> str:
     return "".join(item.get("plain_text") or "" for item in (items or [])).strip()
 
 
-def value(page, name):
-    item = prop(page, name)
+def property_value(item):
+    """Decode a Notion property, including formula and rollup wrappers."""
     kind = item.get("type")
     raw = item.get(kind) if kind else None
     if kind in {"title", "rich_text"}:
@@ -183,13 +184,49 @@ def value(page, name):
         return (raw or {}).get("start")
     if kind == "relation":
         return [page_id(entry.get("id")) for entry in (raw or []) if page_id(entry.get("id"))]
-    if kind == "formula":
-        formula = raw or {}
-        return formula.get(formula.get("type"))
-    if kind == "rollup":
-        rollup = raw or {}
-        return rollup.get(rollup.get("type"))
+    if kind in {"formula", "rollup"}:
+        return property_value(raw or {})
+    if kind == "array":
+        decoded = []
+        for entry in raw or []:
+            entry_value = property_value(entry)
+            if isinstance(entry_value, list):
+                decoded.extend(entry_value)
+            elif entry_value is not None:
+                decoded.append(entry_value)
+        return decoded
     return raw
+
+
+def value(page, name):
+    return property_value(prop(page, name))
+
+
+def flattened_values(value_):
+    """Yield scalar values from relation, multi-select, and rollup arrays."""
+    if isinstance(value_, (list, tuple)):
+        for entry in value_:
+            yield from flattened_values(entry)
+    elif value_ is not None:
+        yield value_
+
+
+def scalar_value(page, *names):
+    """Return the first populated scalar across current and legacy fields."""
+    for name in names:
+        for candidate in flattened_values(value(page, name)):
+            if candidate != "":
+                return candidate
+    return None
+
+
+def list_value(page, *names):
+    """Return a flattened list from the first populated matching field."""
+    for name in names:
+        candidates = [candidate for candidate in flattened_values(value(page, name)) if candidate != ""]
+        if candidates:
+            return candidates
+    return []
 
 
 def first_value(page, *names):
@@ -239,9 +276,7 @@ def related_ids(page, targets, *preferred_names):
         if item.get("type") == "relation" and name not in ordered_names
     )
     for name in ordered_names:
-        candidate = value(page, name)
-        if not isinstance(candidate, list):
-            continue
+        candidate = list_value(page, name)
         matches = [identifier for identifier in candidate if identifier in targets]
         if matches:
             return matches
@@ -256,7 +291,7 @@ def relation_schema_names(pages, targets, *preferred_names):
         for name, item in (page.get("properties") or {}).items():
             if item.get("type") != "relation":
                 continue
-            identifiers = value(page, name) or []
+            identifiers = list_value(page, name)
             if slugify(name) in preferred or any(identifier in targets for identifier in identifiers):
                 names.add(name)
     return sorted(names)
@@ -277,7 +312,7 @@ def season_edition_count(page) -> int | None:
         normalized = slugify(name)
         if "edition" not in normalized:
             continue
-        count = safe_int(value(page, name))
+        count = safe_int(scalar_value(page, name))
         if count is not None and count > 0:
             return count
     return None
@@ -334,8 +369,8 @@ def scoring_status(item, place: int | None = None) -> str | None:
     dedicated property names keeps the exporter compatible with a later schema
     cleanup without requiring a simultaneous site migration.
     """
-    explicit = first_value(item, "Status", "Result", "Résultat")
-    time_value = value(item, "Time")
+    explicit = scalar_value(item, "Status", "Result", "Résultat")
+    time_value = scalar_value(item, "Time")
     status = normalize_result_status(explicit) or normalize_result_status(time_value)
     if status:
         return status
@@ -406,7 +441,7 @@ def competition_year(name: str, event_records: list[dict]) -> int:
 
 def event_location(page) -> str:
     """Read a plain-text event location without exposing relation identifiers."""
-    candidate = first_value(page, "Location", "Lieu", "location")
+    candidate = scalar_value(page, "Location", "Lieu", "location")
     return candidate.strip() if isinstance(candidate, str) else ""
 
 
@@ -416,14 +451,14 @@ def export(client: Notion):
     event_seasons = {}
     for item in pages["seasons"]:
         identifier = page_id(item.get("id"))
-        name = value(item, "Nom") or ""
-        event_ids = value(item, "🏆 Event ") or []
+        name = scalar_value(item, "Nom") or ""
+        event_ids = list_value(item, "🏆 Event ")
         if not identifier or not name or not event_ids:
             continue
         seasons[identifier] = {
             "name": name,
             "event_ids": event_ids,
-            "instagram": instagram_handle(value(item, "Instagram")),
+            "instagram": instagram_handle(scalar_value(item, "Instagram")),
             "edition_count": season_edition_count(item),
         }
         for event_id in event_ids:
@@ -441,8 +476,8 @@ def export(client: Notion):
     )
     events = {
         page_id(item.get("id")): {
-            "name": value(item, "Name competition"),
-            "date": value(item, "Date") or "9999-12-31",
+            "name": scalar_value(item, "Name competition"),
+            "date": scalar_value(item, "Date") or "9999-12-31",
             "location": event_location(item),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
@@ -471,17 +506,17 @@ def export(client: Notion):
 
     races = {}
     for item in pages["races"]:
-        event_ids = value(item, "🏆 Event ") or []
+        event_ids = list_value(item, "🏆 Event ")
         event_id = next((identifier for identifier in event_ids if identifier in events), None)
         season_id = event_seasons.get(event_id)
         # The Race database now exposes explicit English property names. Keep
         # the former names as a fallback so an older snapshot still exports.
-        phase = value(item, "Stage") or value(item, "Sélectionner")
-        if season_id and value(item, "Type") == "Downhill":
+        phase = scalar_value(item, "Stage", "Sélectionner")
+        if season_id and scalar_value(item, "Type") == "Downhill":
             races[page_id(item.get("id"))] = {
                 "event": events[event_id]["name"],
                 "date": events[event_id]["date"],
-                "gender": value(item, "Gender") or value(item, "Sélectionner 1"),
+                "gender": scalar_value(item, "Gender", "Sélectionner 1"),
                 "phase": phase,
                 "competition": seasons[season_id]["name"],
             }
@@ -491,12 +526,12 @@ def export(client: Notion):
     # complete in Notion before timing and placings are published.
     participations_by_rider = {}
     for item in pages["scoring"]:
-        rider_ids = value(item, "🚻 Riders") or []
-        race_ids = value(item, "🏁 Race") or []
+        rider_ids = list_value(item, "🚻 Riders")
+        race_ids = list_value(item, "🏁 Race")
         race = races.get(race_ids[0]) if race_ids else None
         if race is None:
             continue
-        place = safe_int(value(item, "Place"))
+        place = safe_int(scalar_value(item, "Place"))
         # DNS never counts as participation, including during qualifying.
         # DNF and DSQ remain starts even when no time was recorded.
         if not scoring_counts_as_participation(race["phase"], scoring_status(item, place)):
@@ -509,14 +544,14 @@ def export(client: Notion):
     # awards while keeping the final placing as the displayed race result.
     combined_results = {}
     for item in pages["scoring"]:
-        rider_ids = value(item, "🚻 Riders") or []
-        race_ids = value(item, "🏁 Race") or []
+        rider_ids = list_value(item, "🚻 Riders")
+        race_ids = list_value(item, "🏁 Race")
         rider_id = rider_ids[0] if rider_ids else None
         race_id = race_ids[0] if race_ids else None
-        points = safe_int(value(item, "points"))
-        place = safe_int(value(item, "Place"))
+        points = safe_int(scalar_value(item, "points"))
+        place = safe_int(scalar_value(item, "Place"))
         status = scoring_status(item, place)
-        raw_time = value(item, "Time")
+        raw_time = scalar_value(item, "Time")
         race_time = (raw_time.strip() if isinstance(raw_time, str)
                      and normalize_result_status(raw_time) is None and raw_time.strip()
                      else None)
@@ -600,17 +635,17 @@ def export(client: Notion):
     equipment = {}
     for item in pages["equipment"]:
         equipment[page_id(item.get("id"))] = {
-            "category": CATEGORY_MAP.get(value(item, "Type")),
-            "brand": next((brands.get(identifier) for identifier in (value(item, "Brand") or []) if brands.get(identifier)), ""),
-            "model_detail": value(item, "Product") or "",
-            "affiliate_link": value(item, "Link"),
+            "category": CATEGORY_MAP.get(scalar_value(item, "Type")),
+            "brand": next((brands.get(identifier) for identifier in list_value(item, "Brand") if brands.get(identifier)), ""),
+            "model_detail": scalar_value(item, "Product") or "",
+            "affiliate_link": scalar_value(item, "Link"),
             "amazon_link": None,
         }
 
     equipment_by_rider = {}
     primary_season_id = page_id(os.environ.get("NOTION_SEASON_PAGE_ID", PRIMARY_SEASON_PAGE_ID))
     for item in pages["equipment_links"]:
-        season_ids = set(value(item, "☀️ Saison") or [])
+        season_ids = set(list_value(item, "☀️ Saison"))
         # New equipment links are sometimes created before their season field
         # is filled in. Keep an explicitly different season isolated, but infer
         # the active season for an untagged link when the related rider already
@@ -619,13 +654,13 @@ def export(client: Notion):
         # cell was left blank.
         if season_ids and primary_season_id not in season_ids:
             continue
-        rider_ids = value(item, "🚻 Riders") or []
+        rider_ids = list_value(item, "🚻 Riders")
         if not season_ids:
             rider_ids = [
                 rider_id for rider_id in rider_ids
                 if rider_id in result_rows or rider_id in participations_by_rider
             ]
-        product_ids = value(item, "Equipments") or []
+        product_ids = list_value(item, "Equipments")
         for rider_id in rider_ids:
             for product_id in product_ids:
                 product = equipment.get(product_id)
@@ -637,16 +672,16 @@ def export(client: Notion):
     riders = []
     for item in pages["riders"]:
         identifier = page_id(item.get("id"))
-        name = value(item, "First Name") or ""
-        handle = instagram_handle(value(item, "Instagram"))
-        birth = value(item, "Date of Birth")
+        name = scalar_value(item, "First Name") or ""
+        handle = instagram_handle(scalar_value(item, "Instagram"))
+        birth = scalar_value(item, "Date of Birth")
         team_ids = related_ids(item, teams, "Team", "team", "Teams", "teams")
         team = next((teams.get(team_id) for team_id in team_ids if teams.get(team_id)), None)
         # The live Notion relation is named ``country``. Keep aliases only for
         # harmless schema renames; every value still comes from Notion.
-        country_ids = first_value(item, "country", "Country", "counrty") or []
+        country_ids = list_value(item, "country", "Country", "counrty")
         country = next((countries.get(country_id) for country_id in country_ids if countries.get(country_id)), None)
-        gender = value(item, "Gender")
+        gender = scalar_value(item, "Gender")
         raw_name = name.strip()
         route_handle = (handle or "").lower().lstrip("@")
         public_slug = ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(raw_name)
@@ -666,14 +701,14 @@ def export(client: Notion):
             # deterministic slug generated exclusively from their Notion name.
             "slug": public_slug,
             "gender_category": "Women Elite" if gender == "Women" else "Men Elite",
-            "discipline": value(item, "Disciplines") or "",
+            "discipline": scalar_value(item, "Disciplines") or "",
             "country": country,
-            "hometown": value(item, "Hometown"),
+            "hometown": scalar_value(item, "Hometown"),
             "date_of_birth": display_birth(birth),
             "age": age_from_birth(birth) if birth else None,
             "instagram": handle,
             "team": team,
-            "bio": value(item, "Biographie et principaux résultats") or "",
+            "bio": scalar_value(item, "Biographie et principaux résultats") or "",
             "competition_history": history,
             "competition_participation": sorted(participations_by_rider.get(identifier, set())),
             "equipment": equipment_by_rider.get(identifier, []),
@@ -790,5 +825,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as exc:
+        traceback.print_exc()
         print(f"Notion export failed: {exc}", file=sys.stderr)
         raise SystemExit(1)

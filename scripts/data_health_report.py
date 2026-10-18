@@ -131,6 +131,8 @@ def analyze(
         "riders_without_country": [],
         "riders_without_team": [],
         "team_assignments_unavailable": [],
+        "team_assignment_rows_incomplete": [],
+        "team_assignment_conflicts": [],
         "riders_without_instagram": [],
         "riders_without_results": [],
         "riders_without_equipment": [],
@@ -180,10 +182,8 @@ def analyze(
         for field, issue in (("country", "riders_without_country"), ("instagram", "riders_without_instagram")):
             if not str(rider.get(field) or "").strip():
                 issues[issue].append(compact)
-        has_team = bool(str(rider.get("team") or "").strip())
+        has_team = bool(rider.get("team_history") or str(rider.get("team") or "").strip())
         riders_with_team += int(has_team)
-        if team_assignments_available and not has_team:
-            issues["riders_without_team"].append(compact)
         handle = normalize_handle(rider.get("instagram"))
         if handle:
             handles.add(handle)
@@ -258,6 +258,18 @@ def analyze(
             "teams_catalogued": teams_catalogued,
             "message": "Notion Riders has no relation to the Teams database",
         })
+    incomplete_team_rows = int(team_metadata.get("incomplete_rows") or 0)
+    if incomplete_team_rows:
+        issues["team_assignment_rows_incomplete"].append({
+            "count": incomplete_team_rows,
+            "message": "Team Rider Link rows need Team, Riders and Saison",
+        })
+    team_conflicts = int(team_metadata.get("conflicts") or 0)
+    if team_conflicts:
+        issues["team_assignment_conflicts"].append({
+            "count": team_conflicts,
+            "message": "A rider is linked to multiple teams in the same season",
+        })
 
     issue_counts = {name: len(rows) for name, rows in issues.items()}
     critical_count = issue_counts["duplicate_slugs"]
@@ -277,6 +289,8 @@ def analyze(
             "men": men,
             "teams_catalogued": teams_catalogued,
             "riders_with_team": riders_with_team,
+            "team_assignment_rows": int(team_metadata.get("assignment_rows") or 0),
+            "complete_team_assignment_rows": int(team_metadata.get("complete_rows") or 0),
             "competitions": competition_count,
             "events": event_count,
             "results": results,
@@ -325,6 +339,8 @@ def markdown_report(report: dict, *, detail_limit: int = 20) -> str:
         ("Riders", "riders"), ("Women", "women"), ("Men", "men"),
         ("Teams catalogued", "teams_catalogued"),
         ("Riders assigned to a team", "riders_with_team"),
+        ("Team assignment rows", "team_assignment_rows"),
+        ("Complete team assignment rows", "complete_team_assignment_rows"),
         ("Competitions", "competitions"), ("Events", "events"),
         ("Results", "results"), ("Participations", "participations"),
         ("Qualifier results", "qualifier_results"), ("Final results", "final_results"),

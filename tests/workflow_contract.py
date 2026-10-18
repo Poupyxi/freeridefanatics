@@ -23,6 +23,8 @@ assert dependabot.count("target-branch: preprod") == 2, (
 preprod = (workflows / "deploy-preprod-ovh.yml").read_text(encoding="utf-8")
 drive = (workflows / "deploy-preprod-drive-ovh.yml").read_text(encoding="utf-8")
 production = (workflows / "deploy-ovh.yml").read_text(encoding="utf-8")
+direct_prepare = production.split("  prepare-notion-production:", 1)[1].split("\n  deploy:", 1)[0]
+production_deploy = production.split("\n  deploy:", 1)[1].split("\n  restore:", 1)[0]
 assert "name: Update Notion Preprod" in preprod
 assert "branches: [preprod]" in preprod
 assert 'cron: "*/15 * * * *"' in preprod
@@ -53,7 +55,21 @@ assert "operation:" in production
 assert "rollback_run_id:" in production
 assert "confirmation:" in production
 assert "inputs.operation == 'promote'" in production
+assert "inputs.operation == 'sync-notion-production'" in production
 assert "inputs.operation == 'restore'" in production
+assert 'test "$NOTION_PRODUCTION_CONFIRMATION" = "SYNC NOTION"' in production
+assert "Read fresh production data from Notion" in production
+assert "python3 scripts/sync_notion.py" in production
+assert "Restore only the validated Google Drive images" in production
+assert "actions/workflows/deploy-preprod-ovh.yml/runs?branch=preprod&status=success" in production
+assert "--max-age-hours 2" in production
+assert "Rebuild and validate the combined data safety receipt" in production
+assert "environment: preproduction" in direct_prepare
+assert "NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}" in direct_prepare
+assert "NOTION_TOKEN" not in production_deploy
+assert "validated-production-notion-snapshot" in direct_prepare
+assert "validated-production-notion-snapshot" in production_deploy
+assert "needs: [validate-preprod, prepare-notion-production]" in production_deploy
 assert 'test "$RESTORE_CONFIRMATION" = "RESTORE"' in production
 assert "scripts/restore_snapshot.py" in production
 assert "assets/img/competitions/uci-mtb-world-cup-dh-2026.webp" in production

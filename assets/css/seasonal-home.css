@@ -1,0 +1,69 @@
+/* Isolated homepage preview. This sheet is never loaded by production builds. */
+.seasonal-home{--season-blue:#1b5271;--season-ice:#e8f2f7;transition:background 1.4s,color 1.4s}
+.seasonal-home.season-winter{--bg:#e8f2f7;--bg-card:#f2f9fc;--ink:#173b50;--muted:#496577;--line:#2d5e7333;--orange:#176b99;--orange-dark:#124c70;--orange-on-dark:#9bd8f4}
+.seasonal-home .nav-row{gap:14px}
+.seasonal-home .logo{margin-right:auto;font-size:17px}
+.seasonal-home .season-switch{position:relative;flex:0 0 64px;width:64px;height:44px;padding:0;border:1px solid #c4d6d8;border-radius:28px;background:#95bbc2;overflow:hidden;box-shadow:inset 0 2px 5px #29445144;cursor:pointer}
+.seasonal-home .season-switch[hidden]{display:none}
+.seasonal-home .season-switch::before{content:'';position:absolute;inset:8px -5px 0;background:#829e71;clip-path:polygon(0 100%,26% 15%,46% 75%,72% 0,100% 90%,100% 100%);transition:background .7s}
+.seasonal-home .season-switch::after{content:'';position:absolute;top:7px;left:5px;width:28px;height:28px;border-radius:50%;background:#edcb72;box-shadow:0 0 0 7px #fff2;transition:transform .7s,background .7s}
+.seasonal-home.season-winter .season-switch::after{transform:translateX(24px);background:#eaf9ff}
+.seasonal-home.season-winter .season-switch::before{background:#d0e9f3}
+.seasonal-home .season-logo-pair{position:relative;display:block;width:48px;height:48px;flex:0 0 48px}
+.seasonal-home .season-logo-pair .site-brand-logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .65s}
+.seasonal-home .season-winter-logo{opacity:0}
+.seasonal-home.season-winter .season-logo-pair .site-brand-logo:first-child{opacity:0}
+.seasonal-home.season-winter .season-winter-logo{opacity:1}
+.seasonal-home .home-hero{padding:50px 0 42px;background:linear-gradient(110deg,#ebe9e3 37%,#cddfdc 100%);isolation:isolate}
+.seasonal-home.season-winter .home-hero{background:linear-gradient(110deg,#e8f2f7 32%,#cee5f2 100%)}
+.seasonal-home .home-hero h1{font-size:clamp(36px,4.5vw,58px);line-height:1.04;letter-spacing:-.035em;max-width:58%;margin:22px 0;transition:color 1.5s,text-shadow 1.5s}
+.seasonal-home .home-hero .sub{max-width:52%;font-size:15px;line-height:1.65;margin-bottom:24px}
+.seasonal-home .home-hero .label{font-size:11px;max-width:58%}
+.seasonal-home .hero-ctas{max-width:60%;gap:12px;margin:0;align-items:center}
+.seasonal-home .hero-ctas .btn{font-size:11px;padding:14px 18px;min-height:48px;white-space:normal;text-align:center}
+.seasonal-home .home-text-link{font-size:11px}
+.seasonal-home .ticker-wrap{display:none}
+.seasonal-home .season-panorama{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.seasonal-home .season-sun{position:absolute;right:12%;top:24px;width:86px;height:86px;border-radius:50%;background:#e6c16c;box-shadow:0 0 0 16px #e9ce8d22,0 0 0 34px #ead5a41a;transition:background 2s,transform 2.6s}
+.seasonal-home.season-winter .season-sun{background:#f5f1d5;transform:translateY(40px) scale(.75)}
+.seasonal-home .season-peak{position:absolute;right:0;bottom:0;width:46%;height:320px;clip-path:polygon(0 100%,48% 0,100% 100%);background:#779e8c;transition:background 2s}
+.seasonal-home .season-peak::before{content:'';position:absolute;inset:0;background:#3c6a60;clip-path:polygon(48% 0,100% 100%,53% 100%,62% 70%,48% 44%,53% 28%);transition:background 2s}
+.seasonal-home .season-peak.back{right:-14%;height:245px;width:53%;background:#a8bcae}
+.seasonal-home .season-peak.front{right:22%;height:200px;width:32%;background:#7b9972}
+.seasonal-home.season-winter .season-peak{background:#d7ecf6}
+.seasonal-home.season-winter .season-peak::before{background:#548caa}
+.seasonal-home .season-snow-cover{position:absolute;inset:0;background:linear-gradient(104deg,#f8fdff 48%,#99c8e0 49%);clip-path:polygon(48% 0,100% 100%,64% 81%,54% 91%,39% 68%,25% 82%,0 100%);transform:translateY(-90%);opacity:0;transition:transform 2.2s ease-out,opacity 1.8s}
+.seasonal-home.season-winter .season-snow-cover{transform:translateY(0);opacity:1}
+.seasonal-home .season-ground{position:absolute;bottom:-45px;right:-4%;width:60%;height:100px;background:#7e9e78;border-radius:65% 85% 0 0;transition:background 2s,transform 2s}
+.seasonal-home.season-winter .season-ground{background:#f4fbff;transform:translateY(-8px);box-shadow:inset 0 5px 0 #fff}
+.seasonal-home .season-tree{position:absolute;right:var(--tx);bottom:10px;width:26px;height:70px;background:#356254;clip-path:polygon(50% 0,90% 40%,75% 40%,100% 70%,70% 70%,70% 100%,30% 100%,30% 70%,0 70%,25% 40%,10% 40%);transform:scale(var(--ts));transform-origin:bottom;transition:background 2s}
+.seasonal-home.season-winter .season-tree{background:linear-gradient(110deg,#edfaff 43%,#5a8da5 45%)}
+.seasonal-home .season-explore{padding:28px 0 38px;border-top:1px solid var(--line)}
+.seasonal-home .season-explore-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+.seasonal-home .season-explore h2{font-family:var(--head);font-size:20px;text-transform:uppercase}
+.seasonal-home #season-appearance-status{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange)}
+.seasonal-home .season-destinations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.seasonal-home .season-destinations a{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:24px 18px;background:var(--bg-card);border:1px solid var(--line);font:12px var(--mono);text-transform:uppercase}
+.seasonal-home .season-destinations a span{position:relative;z-index:1}
+.seasonal-home .season-destinations a:hover{filter:brightness(.96)}
+.seasonal-home.season-winter h1{color:#1b5271;text-shadow:1px 2px 0 #fff,2px 4px 0 #83b3c8,3px 7px 12px #4784a044}
+.seasonal-home.season-winter h1 em{color:#2885ad}
+.seasonal-home.season-winter .logo,.seasonal-home.season-winter .season-explore h2{color:#1b5271;text-shadow:0 1px 0 #fff,1px 2px 0 #aacbd9}
+.seasonal-home.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box-shadow:inset 0 -2px 0 #fff8}
+.seasonal-home .season-destinations a,.seasonal-home .hero-ctas .btn{transition:background 1.5s,color 1.5s,border-color 1.5s,box-shadow 1.5s;}
+.seasonal-home.season-winter .season-destinations a,.seasonal-home.season-winter .hero-ctas .btn{color:#194f6c;background:linear-gradient(155deg,#fff,#c0e1f0);border-color:#fff;box-shadow:inset 2px 3px 0 #fff,inset -2px -3px 0 #7eb6ce66;clip-path:polygon(0 0,94% 0,100% 22%,100% 100%,6% 100%,0 78%)}
+.seasonal-home.season-winter .season-destinations a:focus-visible,.seasonal-home.season-winter .hero-ctas .btn:focus-visible{outline-offset:-5px}
+.seasonal-home.season-winter .hero-ctas .btn-solid{color:#fff;background:linear-gradient(145deg,#367c9e,#175072);border-color:#70b7d4;box-shadow:inset 1px 2px 0 #92d4e7,inset -2px -3px 0 #0e3b5a;text-shadow:0 1px 1px #063450}
+.seasonal-home.season-winter .season-destinations a::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,transparent 59%,#ffffffb3 59.3%,#ffffffb3 59.8%,#6eaec344 60.1%,transparent 60.6%),linear-gradient(155deg,transparent 38%,#fff9 38.5%,transparent 39%)}
+.seasonal-home.season-winter .season-explore{background:linear-gradient(160deg,#eaf4f9,#dbeaf2)}
+.seasonal-home .season-weather,.seasonal-home .season-shine{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.seasonal-home .season-flake{position:absolute;left:var(--x);top:-12px;width:var(--size);height:var(--size);border-radius:50%;background:#67bbe0;opacity:0;animation:season-snow var(--duration) var(--delay) linear both}
+.seasonal-home.season-changing .season-shine{background:linear-gradient(115deg,transparent 30%,#fff6 49%,transparent 56%);animation:season-shine 2.7s ease-out both}
+@keyframes season-snow{0%{opacity:0;transform:translate(0,-10px)}15%,85%{opacity:.8}100%{opacity:0;transform:translate(var(--drift),700px)}}
+@keyframes season-shine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.seasonal-home.season-instant .season-panorama *,.seasonal-home.season-instant .season-switch::before,.seasonal-home.season-instant .season-switch::after,.seasonal-home.season-instant .season-logo-pair img{transition:none}
+@media(max-width:1150px){.seasonal-home nav.links{display:none}.seasonal-home nav.links.open{display:flex}.seasonal-home .nav-toggle{display:flex}.seasonal-home .nav-row{flex-wrap:wrap}.seasonal-home nav.links.open{position:absolute;top:100%;left:0;right:0;flex-direction:column;background:var(--bg);padding:24px;border-bottom:1px solid var(--line)}.seasonal-home .nav-icons{margin-left:auto}}
+@media(max-width:760px){.seasonal-home .home-hero h1{max-width:65%;font-size:38px}.seasonal-home .home-hero .sub{max-width:60%}.seasonal-home .hero-ctas{max-width:60%}.seasonal-home .season-peak{height:250px}.seasonal-home .nav-icons .icon-btn{display:none}.seasonal-home .logo{font-size:15px}.seasonal-home .nav-row{padding:16px 20px;gap:10px}.seasonal-home .season-logo-pair{width:38px;height:38px;flex-basis:38px}}
+@media(max-width:560px){.seasonal-home .nav-row{gap:8px}.seasonal-home .logo{gap:6px;font-size:13px}.seasonal-home .season-switch{width:56px;flex-basis:56px}.seasonal-home.season-winter .season-switch::after{transform:translateX(16px)}.seasonal-home .season-logo-pair{width:32px;height:32px;flex-basis:32px}.seasonal-home .nav-icons{gap:8px}.seasonal-home .header-language summary{min-width:44px;padding:9px 6px}.seasonal-home .home-hero{padding:32px 0 205px}.seasonal-home .home-hero h1{font-size:clamp(32px,8vw,42px);max-width:100%}.seasonal-home .home-hero .sub,.seasonal-home .hero-ctas,.seasonal-home .home-hero .label{max-width:100%}.seasonal-home .season-panorama{top:auto;height:195px}.seasonal-home .season-peak{width:70%;height:190px}.seasonal-home .season-peak.back{width:65%;height:150px}.seasonal-home .season-peak.front{right:40%;width:55%;height:135px}.seasonal-home .season-ground{width:100%}.seasonal-home .season-sun{width:48px;height:48px;top:0}.seasonal-home .season-tree{height:45px}.seasonal-home .season-destinations{grid-template-columns:1fr;gap:12px}.seasonal-home .season-destinations a{padding:18px}.seasonal-home .hero-ctas .btn{flex:1}.seasonal-home .season-explore{padding:25px 0}}
+@media(max-width:430px){.seasonal-home .nav-row{padding:12px 16px}.seasonal-home .nav-icons{width:100%;justify-content:flex-end}.seasonal-home .header-language-menu{top:145px}.seasonal-home .home-hero .wrap,.seasonal-home .season-explore .wrap{padding-left:20px;padding-right:20px}}
+@media(prefers-reduced-motion:reduce){.seasonal-home,.seasonal-home *,.seasonal-home *::before,.seasonal-home *::after{transition:none!important;animation:none!important}.seasonal-home .season-weather,.seasonal-home .season-shine{display:none}}

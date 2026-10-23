@@ -626,11 +626,19 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <a class="skip-link" href="#main-content">Skip to main content</a>
 """
 
-def header_html(asset_prefix, active=""):
+def header_html(asset_prefix, active="", seasonal=False):
     def cls(name):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
     home_href = asset_prefix or "./"
+    seasonal = seasonal and IS_PREPROD
+    seasonal_switch = ('    <button class="season-switch" type="button" role="switch" '
+                       'aria-label="Winter appearance" aria-checked="false" '
+                       'aria-describedby="season-appearance-status" hidden></button>\n' if seasonal else "")
+    logo_html = f'<img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="48" height="48">'
+    if seasonal:
+        logo_html = (f'<span class="season-logo-pair">{logo_html}'
+                     f'<img class="site-brand-logo season-winter-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-winter.png" alt="" width="48" height="48"></span>')
     competition_groups = []
     for organization in ORGANIZATIONS:
         items = []
@@ -655,8 +663,8 @@ def header_html(asset_prefix, active=""):
             )
     return f"""<header>
   <div class="wrap nav-row">
-    <a class="logo" href="{home_href}">
-      <img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="48" height="48">
+{seasonal_switch}    <a class="logo" href="{home_href}">
+      {logo_html}
       RIDERSFANATICS
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
@@ -1200,6 +1208,33 @@ def random_rider_button(riders, asset_prefix="", solid=True):
             f'data-random-rider-priority-chance="{RANDOM_RIDER_EQUIPMENT_CHANCE}" '
             f'data-rider-prefix="{asset_prefix}riders/">Random rider</a>')
 
+def seasonal_panorama_html():
+    """Decorative only: season appearance never changes the Notion dataset."""
+    trees = ''.join(f'<div class="season-tree" style="--tx:{x}%;--ts:{0.6 + i * 0.12}"></div>'
+                    for i, x in enumerate((5, 12, 19, 28, 34)))
+    return f'''<div class="season-panorama" aria-hidden="true">
+      <div class="season-sun"></div>
+      <div class="season-peak back"><div class="season-snow-cover"></div></div>
+      <div class="season-peak"><div class="season-snow-cover"></div></div>
+      <div class="season-peak front"><div class="season-snow-cover"></div></div>
+      <div class="season-ground"></div>{trees}
+    </div><div class="season-shine" aria-hidden="true"></div>
+    <div class="season-weather" aria-hidden="true"></div>'''
+
+
+def seasonal_explore_html():
+    return '''<section class="season-explore" aria-labelledby="season-explore-title">
+      <div class="wrap"><div class="season-explore-heading">
+        <h2 id="season-explore-title">Explore</h2>
+        <span id="season-appearance-status" role="status" aria-live="polite">Summer</span>
+      </div><nav class="season-destinations" aria-label="Explore RidersFanatics">
+        <a href="competitions.html"><span>Competitions</span><span aria-hidden="true">↗</span></a>
+        <a href="riders.html#grid"><span>Riders</span><span aria-hidden="true">↗</span></a>
+        <a href="equipment.html"><span>Equipment</span><span aria-hidden="true">↗</span></a>
+      </nav></div>
+    </section>'''
+
+
 def build_index(riders, women_count, men_count):
     prefix = ""
     faq_schema = {
@@ -1216,7 +1251,7 @@ def build_index(riders, women_count, men_count):
         f"{SITE_NAME} | Pro Riders, Equipment & Race Results",
         "RidersFanatics — also searched as Rider Fanatic or RiderFanatic — connects professional riders, competitions, equipment, setups and race results.",
         prefix,
-        body_class="home-page",
+        body_class="home-page seasonal-home" if IS_PREPROD else "home-page",
         canonical_path="/",
         schemas=[
             {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "description": "Professional riders, competitions, equipment, setups and race results."},
@@ -1224,11 +1259,13 @@ def build_index(riders, women_count, men_count):
             faq_schema,
         ],
     )
-    html += header_html(prefix, active="riders")
+    if IS_PREPROD:
+        html = html.replace('</head>', f'<link rel="stylesheet" href="assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>')
+    html += header_html(prefix, active="riders", seasonal=IS_PREPROD)
     html += f"""
 <main id="main-content">
 <section class="hero home-hero">
-  {hero_waves_svg()}
+  {seasonal_panorama_html() if IS_PREPROD else hero_waves_svg()}
   <div class="wrap hero-inner">
     <div class="label">Professional racing · Riders · Equipment · Results</div>
     <h1>Their <em>exact</em> setup. Your next upgrade.</h1>
@@ -1247,6 +1284,8 @@ def build_index(riders, women_count, men_count):
     </div>
   </div>
 </section>
+
+{seasonal_explore_html() if IS_PREPROD else ""}
 
 {build_rankings_section(riders)}
 
@@ -1305,6 +1344,8 @@ def build_index(riders, women_count, men_count):
 """
     html += "</main>"
     html += footer_html(prefix)
+    if IS_PREPROD:
+        html = html.replace('</body>', f'<script src="assets/js/seasonal-home.js?v={BUILD_VERSION}"></script>\n</body>')
     return html
 
 def build_standings(riders):

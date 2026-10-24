@@ -18,10 +18,15 @@ function element() {
 }
 function boot({stored, blocked = false, motion = false, present = true} = {}) {
   const page = element(), toggle = element(), weather = element(), status = element();
+  const summer = element(), winter = element();
+  summer.dataset.seasonScope = 'summer';
+  winter.dataset.seasonScope = 'winter';
+  winter.hidden = true;
   const doc = element(), win = element(), reduced = element();
   let saved = stored, writes = 0, id = 0;
   const timers = new Map();
   page.querySelector = sel => ({'.season-switch': toggle, '.season-weather': weather, '#season-appearance-status': status}[sel]);
+  page.querySelectorAll = sel => sel === '[data-season-scope]' ? [summer, winter] : [];
   doc.querySelector = () => present ? page : null;
   doc.hidden = false;
   doc.createElement = element;
@@ -31,15 +36,19 @@ function boot({stored, blocked = false, motion = false, present = true} = {}) {
   const storage = {getItem() {if (blocked) throw Error('blocked'); return saved;}, setItem(key, value) {if (blocked) throw Error('blocked'); saved = value; writes++;}};
   const context = {window: win, document: doc, localStorage: storage, setTimeout: fn => {timers.set(++id, fn); return id;}, clearTimeout: i => timers.delete(i)};
   vm.runInNewContext(source, context);
-  return {page, toggle, weather, status, doc, win, reduced, timers, context, writes: () => writes, saved: () => saved};
+  return {page, toggle, weather, status, summer, winter, doc, win, reduced, timers, context, writes: () => writes, saved: () => saved};
 }
 
 let app = boot();
 assert.equal(app.status.textContent, 'Summer');
+assert.equal(app.summer.hidden, false);
+assert.equal(app.winter.hidden, true);
 assert.equal(app.toggle.hidden, false);
 assert.equal(app.writes(), 0);
 app.toggle.listeners.click();
 assert.equal(app.status.textContent, 'Winter');
+assert.equal(app.summer.hidden, true);
+assert.equal(app.winter.hidden, false);
 assert.equal(app.toggle.attributes['aria-checked'], 'true');
 assert.equal(app.weather.children.length, 60);
 assert.equal(app.saved(), 'winter');

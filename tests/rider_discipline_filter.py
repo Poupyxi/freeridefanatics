@@ -24,4 +24,12 @@ assert build.rider_has_discipline({
     "discipline": "UCI MTB World Cup Downhill (DH)",
 })
 
+assert build.rider_has_winter_discipline({"disciplines": ["Ski Freeride"]}, "ski")
+assert build.rider_has_winter_discipline({"disciplines": ["Snowboard Freeride"]}, "snowboard")
+assert build.rider_has_winter_discipline({
+    "disciplines": ["Bike Downhill", "Ski Freeride"],
+}, "ski")
+assert not build.rider_has_winter_discipline({"disciplines": ["Bike Downhill"]}, "ski")
+assert not build.rider_has_winter_discipline({"disciplines": ["Ski Freeride"]}, "snowboard")
+
 print("Bike Downhill rider filter checks passed.")

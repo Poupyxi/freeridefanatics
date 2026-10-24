@@ -1,4 +1,4 @@
-/* Preproduction homepage appearance only; no data, routing or sport filtering. */
+/* Preproduction homepage season switch and discipline-safe content visibility. */
 (function () {
   'use strict';
   var page = document.querySelector('.seasonal-home');
@@ -6,6 +6,7 @@
   var toggle = page.querySelector('.season-switch');
   var weather = page.querySelector('.season-weather');
   var status = page.querySelector('#season-appearance-status');
+  var scopedContent = page.querySelectorAll('[data-season-scope]');
   if (!toggle || !weather || !status) return;
   page.dataset.seasonReady = 'true';
   var preference = 'summer';
@@ -30,6 +31,10 @@
     page.classList.toggle('season-winter', winter);
     toggle.setAttribute('aria-checked', String(winter));
     status.textContent = winter ? 'Winter' : 'Summer';
+    for (var scopeIndex = 0; scopeIndex < scopedContent.length; scopeIndex++) {
+      var scopedItem = scopedContent[scopeIndex];
+      scopedItem.hidden = scopedItem.dataset.seasonScope !== season;
+    }
     if (!animate || reduced.matches || !winter || document.hidden) return;
     void page.offsetWidth;
     page.classList.add('season-changing');

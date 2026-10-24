@@ -626,12 +626,15 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <a class="skip-link" href="#main-content">Skip to main content</a>
 """
 
-def header_html(asset_prefix, active="", seasonal=False):
+def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
     def cls(name):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
     home_href = asset_prefix or "./"
     seasonal = seasonal and IS_PREPROD
+    seasonal_counts = seasonal_counts or {}
+    summer_scope = ' data-season-scope="summer"' if seasonal else ''
+    winter_hidden = ' data-season-scope="winter" hidden' if seasonal else ''
     seasonal_switch = ('    <button class="season-switch" type="button" role="switch" '
                        'aria-label="Winter appearance" aria-checked="false" '
                        'aria-describedby="season-appearance-status" hidden></button>\n' if seasonal else "")
@@ -668,7 +671,7 @@ def header_html(asset_prefix, active="", seasonal=False):
       RIDERSFANATICS
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
-      <div class="nav-item has-dropdown competition-nav">
+      <div class="nav-item has-dropdown competition-nav"{summer_scope}>
         <a href="{asset_prefix}competitions.html"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
@@ -676,7 +679,7 @@ def header_html(asset_prefix, active="", seasonal=False):
           </div>
         </div>
       </div>
-      <div class="nav-item has-dropdown">
+      <div class="nav-item has-dropdown"{summer_scope}>
         <a href="{asset_prefix}riders.html#grid"{cls('riders')}>Riders <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
@@ -685,27 +688,40 @@ def header_html(asset_prefix, active="", seasonal=False):
           </div>
         </div>
       </div>
-      <a href="{asset_prefix}equipment.html"{cls('equipment')}>Equipment</a>
+      <a href="{asset_prefix}equipment.html"{cls('equipment')}{summer_scope}>Equipment</a>
+      {f'<a href="#winter-ski"{winter_hidden}>Ski</a><a href="#winter-snowboard"{winter_hidden}>Snowboard</a>' if seasonal else ''}
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
-      <span class="icon-btn">{RIDER_COUNT} Riders</span>
+      <span class="icon-btn"{summer_scope}>{RIDER_COUNT} Riders</span>
+      {f'<span class="icon-btn"{winter_hidden}>{seasonal_counts.get("winter", 0)} Winter riders</span>' if seasonal else ''}
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
 """
 
-def footer_html(asset_prefix):
+def footer_html(asset_prefix, seasonal=False):
     home_href = asset_prefix or "./"
-    return f"""{promo_strip_html(asset_prefix)}<footer>
+    seasonal = seasonal and IS_PREPROD
+    summer_scope = ' data-season-scope="summer"' if seasonal else ''
+    winter_hidden = ' data-season-scope="winter" hidden' if seasonal else ''
+    footer_logo = f'<img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28">'
+    if seasonal:
+        footer_logo = (f'<span class="season-logo-pair">{footer_logo}'
+                       f'<img class="site-brand-logo season-winter-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-winter.png" alt="" width="28" height="28"></span>')
+    promo = promo_strip_html(asset_prefix)
+    if seasonal:
+        promo = f'<div data-season-scope="summer">{promo}</div>'
+    return f"""{promo}<footer>
   <div class="wrap footer-row">
-    <a class="footer-logo" href="{home_href}"><img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28">RIDERSFANATICS</a>
+    <a class="footer-logo" href="{home_href}">{footer_logo}RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
-      <a href="{asset_prefix}riders.html#grid">Riders</a>
-      <a href="{asset_prefix}competitions.html">Competitions</a>
-      <a href="{asset_prefix}equipment.html">Equipment</a>
-      <a href="{asset_prefix}brands.html">Brands</a>
+      <a href="{asset_prefix}riders.html#grid"{summer_scope}>Riders</a>
+      <a href="{asset_prefix}competitions.html"{summer_scope}>Competitions</a>
+      <a href="{asset_prefix}equipment.html"{summer_scope}>Equipment</a>
+      <a href="{asset_prefix}brands.html"{summer_scope}>Brands</a>
+      {f'<a href="#winter-ski"{winter_hidden}>Ski</a><a href="#winter-snowboard"{winter_hidden}>Snowboard</a>' if seasonal else ''}
       <a href="{asset_prefix}contact.html">Contact</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
@@ -1209,7 +1225,7 @@ def random_rider_button(riders, asset_prefix="", solid=True):
             f'data-rider-prefix="{asset_prefix}riders/">Random rider</a>')
 
 def seasonal_panorama_html():
-    """Decorative only: season appearance never changes the Notion dataset."""
+    """Seasonal scenery for the isolated preproduction homepage."""
     trees = ''.join(f'<div class="season-tree" style="--tx:{x}%;--ts:{0.6 + i * 0.12}"></div>'
                     for i, x in enumerate((5, 12, 19, 28, 34)))
     return f'''<div class="season-panorama" aria-hidden="true">
@@ -1222,20 +1238,26 @@ def seasonal_panorama_html():
     <div class="season-weather" aria-hidden="true"></div>'''
 
 
-def seasonal_explore_html():
-    return '''<section class="season-explore" aria-labelledby="season-explore-title">
+def seasonal_explore_html(winter_counts=None):
+    winter_counts = winter_counts or {}
+    ski_count = winter_counts.get("ski", 0)
+    snowboard_count = winter_counts.get("snowboard", 0)
+    return f'''<section class="season-explore" aria-labelledby="season-explore-title">
       <div class="wrap"><div class="season-explore-heading">
         <h2 id="season-explore-title">Explore</h2>
         <span id="season-appearance-status" role="status" aria-live="polite">Summer</span>
-      </div><nav class="season-destinations" aria-label="Explore RidersFanatics">
+      </div><nav class="season-destinations" aria-label="Explore Bike Downhill" data-season-scope="summer">
         <a href="competitions.html"><span>Competitions</span><span aria-hidden="true">↗</span></a>
         <a href="riders.html#grid"><span>Riders</span><span aria-hidden="true">↗</span></a>
         <a href="equipment.html"><span>Equipment</span><span aria-hidden="true">↗</span></a>
-      </nav></div>
+      </nav><div class="season-destinations season-winter-destinations" aria-label="Explore winter disciplines" data-season-scope="winter" hidden>
+        <article id="winter-ski" class="season-discipline-card"><span>Ski</span><strong>{ski_count} riders</strong><small>Dedicated pages coming soon</small></article>
+        <article id="winter-snowboard" class="season-discipline-card"><span>Snowboard</span><strong>{snowboard_count} riders</strong><small>Dedicated pages coming soon</small></article>
+      </div></div>
     </section>'''
 
 
-def build_index(riders, women_count, men_count):
+def build_index(riders, women_count, men_count, winter_counts=None):
     prefix = ""
     faq_schema = {
         "@context": "https://schema.org", "@type": "FAQPage",
@@ -1261,12 +1283,14 @@ def build_index(riders, women_count, men_count):
     )
     if IS_PREPROD:
         html = html.replace('</head>', f'<link rel="stylesheet" href="assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>')
-    html += header_html(prefix, active="riders", seasonal=IS_PREPROD)
+    winter_counts = winter_counts or {}
+    html += header_html(prefix, active="riders", seasonal=IS_PREPROD, seasonal_counts=winter_counts)
     html += f"""
 <main id="main-content">
 <section class="hero home-hero">
   {seasonal_panorama_html() if IS_PREPROD else hero_waves_svg()}
   <div class="wrap hero-inner">
+    {('<div data-season-scope="summer">' if IS_PREPROD else '')}
     <div class="label">Professional racing · Riders · Equipment · Results</div>
     <h1>Their <em>exact</em> setup. Your next upgrade.</h1>
     <p class="sub">Track {len(riders)} professional riders, explore their race setups and compare the equipment they trust across competitions.</p>
@@ -1282,14 +1306,22 @@ def build_index(riders, women_count, men_count):
         <a href="riders.html#grid" aria-hidden="true" tabindex="-1"><b>Rider</b> Profiles</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Pro</b> Setups</a><span class="dot" aria-hidden="true">·</span><a href="standings.html" aria-hidden="true" tabindex="-1"><b>All</b> Standings</a><span class="dot" aria-hidden="true">·</span><a href="#rankings" aria-hidden="true" tabindex="-1"><b>Check</b> Rankings</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Equipment</b> Details</a><span class="dot" aria-hidden="true">·</span><a href="#equipment" aria-hidden="true" tabindex="-1"><b>Shop</b> the Gear</a><span class="dot" aria-hidden="true">·</span>
       </div>
     </div>
+    {('</div><div class="season-winter-intro" data-season-scope="winter" hidden>'
+      '<div class="label">Winter · Ski · Snowboard</div>'
+      '<h1>Freeride lives beyond one season.</h1>'
+      f'<p class="sub">Explore the winter athletes we track: {winter_counts.get("ski", 0)} ski riders and {winter_counts.get("snowboard", 0)} snowboard riders. Bike Downhill content stays in Summer.</p>'
+      '<div class="hero-ctas"><a href="#winter-ski" class="btn btn-solid">Explore ski</a>'
+      '<a href="#winter-snowboard" class="btn">Explore snowboard</a></div></div>' if IS_PREPROD else '')}
   </div>
 </section>
 
-{seasonal_explore_html() if IS_PREPROD else ""}
+{seasonal_explore_html(winter_counts) if IS_PREPROD else ""}
 
+{('<div data-season-scope="summer">' if IS_PREPROD else '')}
 {build_rankings_section(riders)}
 
 {build_best_equipment_carousel(riders)}
+{('</div>' if IS_PREPROD else '')}
 
 <section class="section" id="faq">
   <div class="wrap">
@@ -1331,7 +1363,8 @@ def build_index(riders, women_count, men_count):
     <div class="cta-copy">
       <div class="label">RidersFanatics newsletter</div>
       <h2>Race updates. No noise.</h2>
-      <p class="sub">The useful changes from the downhill paddock, sent only when there is something worth sharing.</p>
+      <p class="sub"{(' data-season-scope="summer"' if IS_PREPROD else '')}>The useful changes from the downhill paddock, sent only when there is something worth sharing.</p>
+      {('<p class="sub" data-season-scope="winter" hidden>The useful changes from ski and snowboard freeride, sent only when there is something worth sharing.</p>' if IS_PREPROD else '')}
       <ul class="newsletter-benefits" aria-label="Newsletter content">
         <li>Race results</li><li>Pro setup updates</li><li>New equipment</li>
       </ul>
@@ -1343,7 +1376,7 @@ def build_index(riders, women_count, men_count):
 </section>
 """
     html += "</main>"
-    html += footer_html(prefix)
+    html += footer_html(prefix, seasonal=IS_PREPROD)
     if IS_PREPROD:
         html = html.replace('</body>', f'<script src="assets/js/seasonal-home.js?v={BUILD_VERSION}"></script>\n</body>')
     return html
@@ -4257,27 +4290,51 @@ def write_promo_pool(riders):
         target.write(f"window.RF_PROMO_POOL={payload};\n")
 
 
-def rider_has_discipline(rider, target="Bike Downhill"):
-    """Match the current sport section without discarding multisport riders."""
+def rider_disciplines(rider):
+    """Return the explicit Notion disciplines with a legacy-fixture fallback."""
     disciplines = rider.get("disciplines")
     if disciplines is not None:
         if isinstance(disciplines, str):
             disciplines = [disciplines]
-        return any(
-            isinstance(item, str) and item.strip().casefold() == target.casefold()
-            for item in disciplines
-        )
+        return [item.strip() for item in disciplines if isinstance(item, str) and item.strip()]
 
     # Compatibility for the checked-in legacy fixture used by pull-request
     # validation. Live Notion exports always provide the explicit list above.
     legacy = rider.get("discipline")
-    return isinstance(legacy, str) and "downhill" in legacy.casefold()
+    return [legacy.strip()] if isinstance(legacy, str) and legacy.strip() else []
+
+
+def rider_has_discipline(rider, target="Bike Downhill"):
+    """Match the current sport section without discarding multisport riders."""
+    disciplines = rider_disciplines(rider)
+    if rider.get("disciplines") is not None:
+        return any(item.casefold() == target.casefold() for item in disciplines)
+    return target == "Bike Downhill" and any("downhill" in item.casefold() for item in disciplines)
+
+
+def rider_has_winter_discipline(rider, sport):
+    """Classify explicit Ski and Snowboard disciplines without mixing Bike pages."""
+    sport = sport.casefold()
+    if sport not in {"ski", "snowboard"}:
+        raise ValueError(f"Unsupported winter discipline: {sport}")
+    for discipline in rider_disciplines(rider):
+        words = discipline.casefold().replace("-", " ").split()
+        if sport in words:
+            return True
+    return False
 
 
 def main():
     with open(DATA_PATH, encoding="utf-8") as f:
         all_riders = json.load(f)
     riders = [rider for rider in all_riders if rider_has_discipline(rider)]
+    ski_riders = [rider for rider in all_riders if rider_has_winter_discipline(rider, "ski")]
+    snowboard_riders = [rider for rider in all_riders if rider_has_winter_discipline(rider, "snowboard")]
+    winter_riders = [
+        rider for rider in all_riders
+        if rider_has_winter_discipline(rider, "ski")
+        or rider_has_winter_discipline(rider, "snowboard")
+    ]
     if not riders:
         raise RuntimeError("No Bike Downhill rider is available for the current site section")
     excluded_rider_count = len(all_riders) - len(riders)
@@ -4316,7 +4373,16 @@ def main():
         print("Built standings.html.")
         return
 
-    index_html = build_index(riders, len(women), len(men))
+    index_html = build_index(
+        riders,
+        len(women),
+        len(men),
+        winter_counts={
+            "ski": len(ski_riders),
+            "snowboard": len(snowboard_riders),
+            "winter": len(winter_riders),
+        },
+    )
     with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)
 

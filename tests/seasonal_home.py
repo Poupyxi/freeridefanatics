@@ -14,7 +14,10 @@ def render(preprod):
          patch.object(build, 'build_rankings_section', return_value='<section id="rankings">Rankings</section>'), \
          patch.object(build, 'build_best_equipment_carousel', return_value='<section id="equipment">Equipment</section>'):
         riders = [{'slug': 'fixture-rider', 'equipment': []}]
-        return build.build_index(riders, 0, 1), build.header_html('../', seasonal=False)
+        return build.build_index(
+            riders, 0, 1,
+            winter_counts={'ski': 4, 'snowboard': 3, 'winter': 6},
+        ), build.header_html('../', seasonal=False)
 
 
 preprod, other_header = render(True)
@@ -33,6 +36,13 @@ for marker in ('id="rankings"', 'id="equipment"', 'id="faq"', 'class="cta-dark"'
     assert marker in preprod and marker in production, marker
 assert 'aria-describedby="season-appearance-status"' in preprod
 assert 'id="season-appearance-status" role="status"' in preprod
+for marker in ('data-season-scope="summer"', 'data-season-scope="winter"',
+               'id="winter-ski"', 'id="winter-snowboard"',
+               '4 riders', '3 riders', '6 Winter riders'):
+    assert marker in preprod, marker
+    assert marker not in production, marker
+assert 'Explore Bike Downhill' in preprod
+assert 'Bike Downhill content stays in Summer.' in preprod
 for asset in ('css/seasonal-home.css', 'js/seasonal-home.js', 'img/brand/freeride-fanatics-winter.png'):
     assert (ROOT / 'assets' / asset).is_file(), asset
 css = (ROOT / 'assets/css/seasonal-home.css').read_text()

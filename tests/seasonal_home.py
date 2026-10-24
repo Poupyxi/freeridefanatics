@@ -17,6 +17,7 @@ def render(preprod):
         return build.build_index(
             riders, 0, 1,
             winter_counts={'ski': 4, 'snowboard': 3, 'winter': 6},
+            source_rider_count=8,
         ), build.header_html('../', seasonal=False)
 
 
@@ -43,6 +44,8 @@ for marker in ('data-season-scope="summer"', 'data-season-scope="winter"',
     assert marker not in production, marker
 assert 'Explore Bike Downhill' in preprod
 assert 'Bike Downhill content stays in Summer.' in preprod
+assert '<meta name="rf-source-rider-count" content="8">' in preprod
+assert 'rf-source-rider-count' not in production
 for asset in ('css/seasonal-home.css', 'js/seasonal-home.js', 'img/brand/freeride-fanatics-winter.png'):
     assert (ROOT / 'assets' / asset).is_file(), asset
 css = (ROOT / 'assets/css/seasonal-home.css').read_text()

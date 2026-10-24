@@ -671,7 +671,7 @@ def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
       RIDERSFANATICS
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
-      <div class="nav-item has-dropdown competition-nav"{summer_scope}>
+      <div class="nav-item has-dropdown competition-nav">
         <a href="{asset_prefix}competitions.html"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
@@ -679,7 +679,7 @@ def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
           </div>
         </div>
       </div>
-      <div class="nav-item has-dropdown"{summer_scope}>
+      <div class="nav-item has-dropdown">
         <a href="{asset_prefix}riders.html#grid"{cls('riders')}>Riders <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
@@ -688,8 +688,7 @@ def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
           </div>
         </div>
       </div>
-      <a href="{asset_prefix}equipment.html"{cls('equipment')}{summer_scope}>Equipment</a>
-      {f'<a href="#winter-ski"{winter_hidden}>Ski</a><a href="#winter-snowboard"{winter_hidden}>Snowboard</a>' if seasonal else ''}
+      <a href="{asset_prefix}equipment.html"{cls('equipment')}>Equipment</a>
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">

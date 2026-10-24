@@ -46,6 +46,12 @@ assert 'Explore Bike Downhill' in preprod
 assert 'Bike Downhill content stays in Summer.' in preprod
 assert '<meta name="rf-source-rider-count" content="8">' in preprod
 assert 'rf-source-rider-count' not in production
+header = preprod.split('</header>', 1)[0]
+for href in ('competitions.html', 'riders.html#grid', 'equipment.html', './#faq'):
+    assert f'href="{href}"' in header, href
+assert 'data-season-scope="summer"' not in header.split('<nav class="links"', 1)[1].split('</nav>', 1)[0]
+assert 'href="#winter-ski"' not in header
+assert 'href="#winter-snowboard"' not in header
 for asset in ('css/seasonal-home.css', 'js/seasonal-home.js', 'img/brand/freeride-fanatics-winter.png'):
     assert (ROOT / 'assets' / asset).is_file(), asset
 css = (ROOT / 'assets/css/seasonal-home.css').read_text()

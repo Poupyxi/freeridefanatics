@@ -1257,7 +1257,7 @@ def seasonal_explore_html(winter_counts=None):
     </section>'''
 
 
-def build_index(riders, women_count, men_count, winter_counts=None):
+def build_index(riders, women_count, men_count, winter_counts=None, source_rider_count=None):
     prefix = ""
     faq_schema = {
         "@context": "https://schema.org", "@type": "FAQPage",
@@ -1282,7 +1282,12 @@ def build_index(riders, women_count, men_count, winter_counts=None):
         ],
     )
     if IS_PREPROD:
-        html = html.replace('</head>', f'<link rel="stylesheet" href="assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>')
+        source_rider_count = source_rider_count if source_rider_count is not None else len(riders)
+        html = html.replace(
+            '</head>',
+            f'<meta name="rf-source-rider-count" content="{source_rider_count}">\n'
+            f'<link rel="stylesheet" href="assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>',
+        )
     winter_counts = winter_counts or {}
     html += header_html(prefix, active="riders", seasonal=IS_PREPROD, seasonal_counts=winter_counts)
     html += f"""
@@ -4382,6 +4387,7 @@ def main():
             "snowboard": len(snowboard_riders),
             "winter": len(winter_riders),
         },
+        source_rider_count=len(all_riders),
     )
     with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)

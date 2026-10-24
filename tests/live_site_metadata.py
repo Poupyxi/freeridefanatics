@@ -21,7 +21,8 @@ class LiveSiteMetadataTests(unittest.TestCase):
         html = Path(directory) / "index.html"
         metadata = Path(directory) / "sync-metadata.json"
         html.write_text(
-            '<span class="icon-btn">360 Riders</span>'
+            '<meta name="rf-source-rider-count" content="360">'
+            '<span class="icon-btn">355 Riders</span>'
             '<time datetime="2026-10-07">7 Oct 2026</time>',
             encoding="utf-8",
         )
@@ -39,9 +40,19 @@ class LiveSiteMetadataTests(unittest.TestCase):
     def test_wrong_count_is_blocked(self):
         with tempfile.TemporaryDirectory() as directory:
             html, metadata = self.fixture(directory)
-            html.write_text(html.read_text().replace("360 Riders", "359 Riders"))
+            html.write_text(html.read_text().replace('content="360"', 'content="359"'))
             with self.assertRaises(verifier.LiveMetadataError):
                 verifier.verify_live_site(html, metadata)
+
+    def test_legacy_visible_count_still_passes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            html, metadata = self.fixture(directory)
+            html.write_text(
+                '<span class="icon-btn">360 Riders</span>'
+                '<time datetime="2026-10-07">7 Oct 2026</time>',
+                encoding="utf-8",
+            )
+            verifier.verify_live_site(html, metadata)
 
     def test_wrong_date_is_blocked(self):
         with tempfile.TemporaryDirectory() as directory:

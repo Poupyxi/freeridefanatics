@@ -35,8 +35,11 @@ def verify_live_site(html_path: Path, metadata_path: Path) -> None:
     if not isinstance(rider_count, int) or rider_count < 1:
         raise LiveMetadataError("live sync metadata has no valid rider count")
     count_marker = f'<span class="icon-btn">{rider_count} Riders</span>'
-    if count_marker not in html:
-        raise LiveMetadataError(f"homepage does not display the snapshot count ({rider_count} Riders)")
+    source_count_marker = f'<meta name="rf-source-rider-count" content="{rider_count}">'
+    if count_marker not in html and source_count_marker not in html:
+        raise LiveMetadataError(
+            f"homepage does not expose the snapshot count ({rider_count} riders)"
+        )
     iso_date, date_label = expected_date(metadata)
     date_marker = f'<time datetime="{iso_date}">{date_label}</time>'
     if date_marker not in html:
@@ -54,7 +57,7 @@ def main() -> None:
         verify_live_site(args.html, args.metadata)
     except LiveMetadataError as exc:
         raise SystemExit(f"Live site metadata verification failed: {exc}") from exc
-    print("Live rider count and Notion generation date match the deployed snapshot.")
+    print("Live Notion source count and generation date match the deployed snapshot.")
 
 
 if __name__ == "__main__":

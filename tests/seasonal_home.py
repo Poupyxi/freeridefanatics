@@ -49,7 +49,11 @@ assert 'rf-source-rider-count' not in production
 header = preprod.split('</header>', 1)[0]
 for href in ('competitions.html', 'riders.html#grid', 'equipment.html', './#faq'):
     assert f'href="{href}"' in header, href
-assert 'data-season-scope="summer"' not in header.split('<nav class="links"', 1)[1].split('</nav>', 1)[0]
+header_nav = header.split('<nav class="links"', 1)[1].split('</nav>', 1)[0]
+assert header_nav.count('class="dropdown" data-season-scope="summer"') == 2
+assert 'data-season-route="competitions"' in header_nav
+assert 'data-season-route="riders"' in header_nav
+assert 'data-season-route="equipment"' in header_nav
 assert 'href="#winter-ski"' not in header
 assert 'href="#winter-snowboard"' not in header
 for asset in ('css/seasonal-home.css', 'js/seasonal-home.js', 'img/brand/freeride-fanatics-winter.png'):

@@ -25,13 +25,13 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=1792840374">
+<link rel="stylesheet" href="assets/css/style.css?v=1792890624">
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "RidersFanatics", "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": "https://preprod.ridersfanatics.com/", "description": "Professional riders, competitions, equipment, setups and race results."}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "RidersFanatics", "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": "https://preprod.ridersfanatics.com/", "logo": "https://preprod.ridersfanatics.com/assets/img/brand/freeride-fanatics-summer.png"}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Where does this data come from?", "acceptedAnswer": {"@type": "Answer", "text": "Setups and results are tracked from official competition information, team communications, manufacturer material and public sponsor listings."}}, {"@type": "Question", "name": "Are the shop links affiliate links?", "acceptedAnswer": {"@type": "Answer", "text": "Some product links are affiliate links. RidersFanatics may earn a commission on qualifying purchases at no extra cost to the visitor."}}, {"@type": "Question", "name": "How often is the equipment data updated?", "acceptedAnswer": {"@type": "Answer", "text": "Results are updated during the season and equipment is updated when a verifiable change is identified."}}, {"@type": "Question", "name": "How are corrections handled?", "acceptedAnswer": {"@type": "Answer", "text": "Corrections are checked against a public source before publication. The methodology page explains the evidence required and current submission status."}}, {"@type": "Question", "name": "Is Rider Fanatic the same as RidersFanatics?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Rider Fanatic, RiderFanatic and Riders Fanatics are common searches for RidersFanatics, the independent rider, equipment and race-results database at ridersfanatics.com."}}]}</script>
 <meta name="rf-source-rider-count" content="64">
-<link rel="stylesheet" href="assets/css/seasonal-home.css?v=1792840374">
+<link rel="stylesheet" href="assets/css/seasonal-home.css?v=1792890624">
 </head>
 <body class="home-page seasonal-home">
 <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -44,23 +44,23 @@
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
       <div class="nav-item has-dropdown competition-nav">
-        <a href="competitions.html">Competitions <span class="caret">&#9662;</span></a>
-        <div class="dropdown">
+        <a href="competitions.html" data-season-route="competitions">Competitions <span class="caret">&#9662;</span></a>
+        <div class="dropdown" data-season-scope="summer">
           <div class="dropdown-inner">
             <div class="competition-menu-group"><a href="competitions/uci/" class="competition-menu-title">UCI</a><a href="competitions/uci-mtb-world-cup-dh-2026.html"><strong>DH World Cup 2026</strong><small>Downhill · 2026</small></a><a href="competitions/uci/enduro-world-cup-2026/"><strong>Enduro World Cup 2026</strong><small>Enduro · 2026</small></a></div><div class="competition-menu-group"><a href="competitions/red-bull/" class="competition-menu-title">Red Bull</a><a href="competitions/red-bull/rampage/"><strong>Rampage</strong><small>Freeride · 2026</small></a><a href="competitions/red-bull/hardline/"><strong>Hardline</strong><small>Downhill / freeride · 2026</small></a></div>
           </div>
         </div>
       </div>
       <div class="nav-item has-dropdown">
-        <a href="riders.html#grid" class="active">Riders <span class="caret">&#9662;</span></a>
-        <div class="dropdown">
+        <a href="riders.html#grid" data-season-route="riders" class="active">Riders <span class="caret">&#9662;</span></a>
+        <div class="dropdown" data-season-scope="summer">
           <div class="dropdown-inner">
             <a href="riders.html#men">Men</a>
             <a href="riders.html#women">Women</a>
           </div>
         </div>
       </div>
-      <a href="equipment.html">Equipment</a>
+      <a href="equipment.html" data-season-route="equipment">Equipment</a>
       <a href="./#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
@@ -1344,11 +1344,10 @@
   <div class="wrap footer-row">
     <a class="footer-logo" href="./"><span class="season-logo-pair"><img class="site-brand-logo" src="assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28"><img class="site-brand-logo season-winter-logo" src="assets/img/brand/freeride-fanatics-winter.png" alt="" width="28" height="28"></span>RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
-      <a href="riders.html#grid" data-season-scope="summer">Riders</a>
-      <a href="competitions.html" data-season-scope="summer">Competitions</a>
-      <a href="equipment.html" data-season-scope="summer">Equipment</a>
+      <a href="riders.html#grid" data-season-route="riders">Riders</a>
+      <a href="competitions.html" data-season-route="competitions">Competitions</a>
+      <a href="equipment.html" data-season-route="equipment">Equipment</a>
       <a href="brands.html" data-season-scope="summer">Brands</a>
-      <a href="#winter-ski" data-season-scope="winter" hidden>Ski</a><a href="#winter-snowboard" data-season-scope="winter" hidden>Snowboard</a>
       <a href="contact.html">Contact</a>
       <a href="privacy.html">Privacy</a>
     </nav>
@@ -1357,8 +1356,9 @@
   <div class="wrap footer-updated">Last updated <time datetime="2026-09-09">9 Sep 2026</time></div>
 </footer>
 
-<script src="assets/js/promo-pool.js?v=1792840374"></script>
-<script src="assets/js/site.js?v=1792840374"></script>
-<script src="assets/js/seasonal-home.js?v=1792840374"></script>
+<script src="assets/js/promo-pool.js?v=1792890624"></script>
+<script src="assets/js/site.js?v=1792890624"></script>
+<script src="assets/js/season-routing.js?v=1792890624"></script>
+<script src="assets/js/seasonal-home.js?v=1792890624"></script>
 </body>
 </html>

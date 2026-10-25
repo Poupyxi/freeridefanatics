@@ -58,6 +58,9 @@
   toggle.addEventListener('click', function () {
     apply(preference === 'summer' ? 'winter' : 'summer', true);
     try { localStorage.setItem(storageKey, preference); } catch (_) {}
+    if (typeof CustomEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('rf-season-change', {detail: preference}));
+    }
   });
   reduced.addEventListener('change', function () { apply(preference, false); });
   document.addEventListener('visibilitychange', function () {

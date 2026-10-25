@@ -87,6 +87,7 @@ def drive_inventory(manifest: dict) -> tuple[Counter, dict[str, list[str]]]:
     portrait_paths = {
         "ppinstariders": [],
         "ppriders": [],
+        "picturefaceriders": [],
         "pictureriders": [],
     }
     for row in files:

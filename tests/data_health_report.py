@@ -31,6 +31,17 @@ class DataHealthReportTests(unittest.TestCase):
             "abelmoga21",
         )
 
+    def test_picture_face_riders_is_a_portrait_source(self):
+        sections, portraits = health.drive_inventory({
+            "image_count": 1,
+            "files": [{"path": "PictureFaceRiders/@abel_moga21.webp"}],
+        })
+        self.assertEqual(sections["picturefaceriders"], 1)
+        self.assertEqual(
+            portraits["picturefaceriders"],
+            ["PictureFaceRiders/@abel_moga21.webp"],
+        )
+
     def fixtures(self, root: Path):
         portraits = root / "portraits"
         actions = root / "actions"

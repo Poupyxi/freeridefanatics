@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 import tempfile
 
+from PIL import Image
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -13,17 +15,31 @@ import import_images
 
 with tempfile.TemporaryDirectory() as library:
     library_path = Path(library)
-    assert import_images.portrait_source_folder(library) == str(
+    assert import_images.portrait_source_folder(
+        library, "PPInstaRiders", "PPRiders"
+    ) == str(
         library_path / "PPInstaRiders"
     )
     (library_path / "PPRiders").mkdir()
-    assert import_images.portrait_source_folder(library) == str(
+    assert import_images.portrait_source_folder(
+        library, "PPInstaRiders", "PPRiders"
+    ) == str(
         library_path / "PPRiders"
     )
     (library_path / "PPInstaRiders").mkdir()
-    assert import_images.portrait_source_folder(library) == str(
+    assert import_images.portrait_source_folder(
+        library, "PPInstaRiders", "PPRiders"
+    ) == str(
         library_path / "PPInstaRiders"
     )
+    (library_path / "PictureRiders").mkdir()
+    assert import_images.portrait_source_folder(
+        library, "PictureFaceRiders", "PictureRiders"
+    ) == str(library_path / "PictureRiders")
+    (library_path / "PictureFaceRiders").mkdir()
+    assert import_images.portrait_source_folder(
+        library, "PictureFaceRiders", "PictureRiders"
+    ) == str(library_path / "PictureFaceRiders")
 
 
 cases = {
@@ -62,5 +78,24 @@ with tempfile.TemporaryDirectory() as source, tempfile.TemporaryDirectory() as o
     )
     assert sorted(imported) == sorted(rider["slug"] for rider in riders)
     assert missing == []
+
+with tempfile.TemporaryDirectory() as source, tempfile.TemporaryDirectory() as output:
+    Image.new("RGB", (20, 30), "blue").save(Path(source) / "@has_face.jpg")
+    stale = Path(output) / "needs-fallback.jpg"
+    Image.new("RGB", (20, 30), "red").save(stale)
+    riders = [
+        {"slug": "has-face", "display_name": "Has Face", "instagram": "@has_face"},
+        {
+            "slug": "needs-fallback",
+            "display_name": "Needs Fallback",
+            "instagram": "@needs_fallback",
+        },
+    ]
+    imported, missing = import_images.import_riders(
+        riders, source, output, "page portraits", False, True, False, prune=True
+    )
+    assert imported == ["has-face"]
+    assert missing == ["needs-fallback"]
+    assert not stale.exists(), "stale page portrait must not block avatar fallback"
 
 print("Portrait filename matching: legacy and descriptive Drive names passed.")

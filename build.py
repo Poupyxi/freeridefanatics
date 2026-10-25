@@ -635,6 +635,7 @@ def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
     seasonal_counts = seasonal_counts or {}
     summer_scope = ' data-season-scope="summer"' if seasonal else ''
     winter_hidden = ' data-season-scope="winter" hidden' if seasonal else ''
+    preprod_summer_scope = ' data-season-scope="summer"' if IS_PREPROD else ''
     seasonal_switch = ('    <button class="season-switch" type="button" role="switch" '
                        'aria-label="Winter appearance" aria-checked="false" '
                        'aria-describedby="season-appearance-status" hidden></button>\n' if seasonal else "")
@@ -672,23 +673,23 @@ def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
       <div class="nav-item has-dropdown competition-nav">
-        <a href="{asset_prefix}competitions.html"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
-        <div class="dropdown">
+        <a href="{asset_prefix}competitions.html" data-season-route="competitions"{competition_cls}>Competitions <span class="caret">&#9662;</span></a>
+        <div class="dropdown"{preprod_summer_scope}>
           <div class="dropdown-inner">
             {''.join(competition_groups)}
           </div>
         </div>
       </div>
       <div class="nav-item has-dropdown">
-        <a href="{asset_prefix}riders.html#grid"{cls('riders')}>Riders <span class="caret">&#9662;</span></a>
-        <div class="dropdown">
+        <a href="{asset_prefix}riders.html#grid" data-season-route="riders"{cls('riders')}>Riders <span class="caret">&#9662;</span></a>
+        <div class="dropdown"{preprod_summer_scope}>
           <div class="dropdown-inner">
             <a href="{asset_prefix}riders.html#men">Men</a>
             <a href="{asset_prefix}riders.html#women">Women</a>
           </div>
         </div>
       </div>
-      <a href="{asset_prefix}equipment.html"{cls('equipment')}>Equipment</a>
+      <a href="{asset_prefix}equipment.html" data-season-route="equipment"{cls('equipment')}>Equipment</a>
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
@@ -716,11 +717,10 @@ def footer_html(asset_prefix, seasonal=False):
   <div class="wrap footer-row">
     <a class="footer-logo" href="{home_href}">{footer_logo}RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
-      <a href="{asset_prefix}riders.html#grid"{summer_scope}>Riders</a>
-      <a href="{asset_prefix}competitions.html"{summer_scope}>Competitions</a>
-      <a href="{asset_prefix}equipment.html"{summer_scope}>Equipment</a>
+      <a href="{asset_prefix}riders.html#grid" data-season-route="riders">Riders</a>
+      <a href="{asset_prefix}competitions.html" data-season-route="competitions">Competitions</a>
+      <a href="{asset_prefix}equipment.html" data-season-route="equipment">Equipment</a>
       <a href="{asset_prefix}brands.html"{summer_scope}>Brands</a>
-      {f'<a href="#winter-ski"{winter_hidden}>Ski</a><a href="#winter-snowboard"{winter_hidden}>Snowboard</a>' if seasonal else ''}
       <a href="{asset_prefix}contact.html">Contact</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
@@ -731,6 +731,7 @@ def footer_html(asset_prefix, seasonal=False):
 
 <script src="{asset_prefix}assets/js/promo-pool.js?v={BUILD_VERSION}"></script>
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
+{f'<script src="{asset_prefix}assets/js/season-routing.js?v={BUILD_VERSION}"></script>' if IS_PREPROD else ''}
 </body>
 </html>
 """
@@ -1175,7 +1176,8 @@ def build_trust_pages():
 
 # ---------------------------------------------------------------- index page
 
-def rider_card(r, asset_prefix=""):
+def rider_card(r, asset_prefix="", rider_prefix=None):
+    rider_prefix = f"{asset_prefix}riders/" if rider_prefix is None else rider_prefix
     photo = has_photo(r["slug"])
     if photo:
         photo_html = (f'<img src="{asset_prefix}assets/img/riders/{photo}?v={BUILD_VERSION}" '
@@ -1186,7 +1188,7 @@ def rider_card(r, asset_prefix=""):
     search_blob = " ".join([
         r.get("display_name",""), r.get("country") or "", r.get("team") or "", cat
     ]).lower()
-    return f"""<a class="rider-card reveal" href="{asset_prefix}riders/{r['slug']}.html" data-category="{cat}" data-search="{esc(search_blob)}">
+    return f"""<a class="rider-card reveal" href="{rider_prefix}{r['slug']}.html" data-category="{cat}" data-search="{esc(search_blob)}">
         <div class="photo">
           {photo_html}
           <span class="badge">{cat}</span>
@@ -2597,12 +2599,13 @@ def competition_display_name(competition):
     )
 
 
-def build_competitions_hub(riders):
+def build_competitions_hub(riders, competitions=None):
+    competitions = COMPETITIONS if competitions is None else competitions
     cards = []
     item_list = []
     competition_logos = load_competition_logos()
     ordered_competitions = sorted(
-        COMPETITIONS,
+        competitions,
         key=lambda competition: (
             bool(competition_latest_race_date(competition)),
             competition_latest_race_date(competition),
@@ -2673,7 +2676,7 @@ def build_competitions_hub(riders):
     )
     html += header_html("", active="competitions")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(COMPETITIONS) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(competitions) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
 </main>'''
     html += footer_html("")
     return html
@@ -3092,6 +3095,148 @@ def build_riders_directory(riders, women_count, men_count):
 """
     html += footer_html(prefix)
     return html
+
+
+def winter_page_assets(html, asset_prefix="../"):
+    """Load the season UI only on protected preproduction winter pages."""
+    return html.replace(
+        "</head>",
+        f'<link rel="stylesheet" href="{asset_prefix}assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>',
+    )
+
+
+def winter_header(asset_prefix, active, rider_count):
+    return (
+        header_html(
+            asset_prefix,
+            active=active,
+            seasonal=True,
+            seasonal_counts={"winter": rider_count},
+        )
+        + '<span id="season-appearance-status" hidden>Winter</span>'
+    )
+
+
+def build_winter_riders_directory(riders):
+    women = sum(rider.get("gender_category") == "Women Elite" for rider in riders)
+    men = sum(rider.get("gender_category") == "Men Elite" for rider in riders)
+    cards = "\n".join(rider_card(rider, "../", "riders/") for rider in riders)
+    empty = "" if cards else '<p class="standings-empty">No Ski or Snowboard rider is published yet.</p>'
+    html = head(
+        f"Ski & Snowboard Riders — {SITE_NAME}",
+        "Browse only the Ski and Snowboard athletes connected to the RidersFanatics winter database.",
+        "../", body_class="riders-page seasonal-home season-winter winter-data-page",
+        canonical_path="/winter/riders.html",
+    )
+    html = winter_page_assets(html)
+    html += winter_header("../", "riders", len(riders))
+    html += f'''<main id="main-content"><section class="section" id="grid" style="padding-top:32px;"><div class="wrap">
+      <div class="directory-intro"><div class="label">Winter rider database</div><h1>Ski and Snowboard riders</h1><p>This view contains only athletes associated with a Ski and/or Snowboard discipline in Notion.</p></div>
+      <div class="filters" aria-label="Filter winter rider directory"><button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(riders)})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({men})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="Women Elite">Women ({women})</button><label class="search-label"><span class="visually-hidden">Search riders</span><input class="search-input" type="search" placeholder="Search a rider, team, country..." data-search></label></div>
+      <div class="grid-riders" data-rider-grid>{cards}</div>{empty}
+    </div></section></main>'''
+    return html + footer_html("../", seasonal=True)
+
+
+def build_winter_competitions_hub(riders, competitions):
+    logos = load_competition_logos()
+    cards = []
+    for competition in sorted(competitions, key=lambda item: competition_latest_race_date(item), reverse=True):
+        stats = competition_stats(riders, competition)
+        logo = logos.get(competition_logo_key(competition))
+        logo_html = ""
+        if logo:
+            src = logo["src"]
+            if not src.startswith(("http://", "https://", "/")):
+                src = "../" + src
+            logo_html = f'<div class="competition-card-logo"><img src="{esc_attr(src)}" alt="{esc_attr(logo["name"])}" loading="lazy"></div>'
+        cards.append(f'''<article class="competition-card{' has-logo' if logo else ''}"><div class="competition-card-top"><span class="competition-status">Winter</span><span>{esc(competition.get('season'))}</span></div>{logo_html}<div class="competition-sport">{esc(competition.get('sport'))} · {esc(competition.get('discipline'))}</div><h2>{esc(competition_display_name(competition))}</h2><div class="competition-card-stats"><span><strong>{len(stats['events'])}</strong> events</span><span><strong>{len(stats['participants'])}</strong> riders</span></div><a class="btn btn-solid" href="competitions/{competition['id']}.html">Open competition</a></article>''')
+    content = "".join(cards) or '<p class="standings-empty">No Ski or Snowboard competition is published yet.</p>'
+    html = head(
+        f"Ski & Snowboard Competitions — {SITE_NAME}",
+        "Explore only Ski and Snowboard competitions connected to RidersFanatics.",
+        "../", body_class="competitions-page seasonal-home season-winter winter-data-page",
+        canonical_path="/winter/competitions.html",
+    )
+    html = winter_page_assets(html)
+    html += winter_header("../", "competitions", len(riders))
+    html += f'''<main id="main-content"><section class="section competitions-list"><div class="wrap"><div class="section-head"><div><div class="label">Winter database</div><h1>Ski and Snowboard competitions</h1></div><span class="see-all">{len(competitions)} series</span></div><div class="competition-grid">{content}</div></div></section></main>'''
+    return html + footer_html("../", seasonal=True)
+
+
+def build_winter_equipment_directory(riders):
+    by_category = collect_equipment(winter_equipment_riders(riders))
+    sections = []
+    for category in sorted(by_category, key=lambda item: equipment_directory_label(item).casefold()):
+        products = sorted(
+            by_category[category].values(),
+            key=lambda item: (-len({rider["slug"] for rider in item["riders"]}), -item["points"]),
+        )
+        rows = []
+        for position, product in enumerate(products, 1):
+            title = " ".join([product.get("brand") or "", product.get("model") or ""]).strip()
+            rider_names = sorted({rider["display_name"] for rider in product["riders"]})
+            rows.append(f'''<div class="equipment-directory-row"><span class="equipment-directory-rank">{position:02d}</span><span class="equipment-directory-product"><strong>{esc(title)}</strong><small>{esc(', '.join(rider_names[:4]))}</small></span><span class="equipment-directory-usage"><strong>{len(rider_names)}</strong><small>rider{'s' if len(rider_names) != 1 else ''}</small></span></div>''')
+        sections.append(f'''<section class="equipment-directory-section"><div class="equipment-directory-head"><div><span class="label">Winter equipment</span><h2>{esc(equipment_directory_label(category))}</h2></div></div><div class="equipment-directory-scroll">{''.join(rows)}</div></section>''')
+    content = "".join(sections) or '<p class="standings-empty">No equipment is linked to a Ski or Snowboard rider yet.</p>'
+    product_count = sum(len(products) for products in by_category.values())
+    html = head(
+        f"Ski & Snowboard Equipment — {SITE_NAME}",
+        "Explore only equipment connected to RidersFanatics Ski and Snowboard athletes.",
+        "../", body_class="equipment-page seasonal-home season-winter winter-data-page",
+        canonical_path="/winter/equipment.html",
+    )
+    html = winter_page_assets(html)
+    html += winter_header("../", "equipment", len(riders))
+    html += f'''<main id="main-content"><section class="equipment-hero"><div class="wrap equipment-hero-layout"><div class="equipment-hero-copy"><div class="label">Winter equipment · Ski · Snowboard</div><h1>Winter equipment, <em>filtered.</em></h1><p>Only equipment associated with Ski and/or Snowboard riders is shown here.</p><div class="equipment-hero-stats"><div><strong>{len(by_category)}</strong><span>Categories</span></div><div><strong>{product_count}</strong><span>Products</span></div><div><strong>{len(riders)}</strong><span>Riders</span></div></div></div></div></section><section class="section equipment-catalogue"><div class="wrap">{content}</div></section></main>'''
+    return html + footer_html("../", seasonal=True)
+
+
+def build_winter_rider_page(rider, winter_competition_names):
+    photo = has_action_photo(rider["slug"])
+    portrait_dir = "riders-action" if photo else "riders"
+    photo = photo or has_photo(rider["slug"])
+    portrait = (
+        f'<img src="../../assets/img/{portrait_dir}/{photo}" alt="{esc_attr(rider["display_name"])}" fetchpriority="high">'
+        if photo else f'<span class="initials">{esc(initials(rider))}</span>'
+    )
+    disciplines = [discipline for discipline in rider_disciplines(rider)
+                   if "ski" in discipline.casefold().split() or "snowboard" in discipline.casefold().split()]
+    history = [result for result in rider.get("competition_history") or []
+               if result.get("category") in winter_competition_names]
+    result_items = "".join(
+        f'<li><strong>{esc(result.get("event") or result.get("category"))}</strong><span>{esc(result.get("result") or "Recorded")}</span></li>'
+        for result in history
+    ) or '<li><span>No winter result recorded yet.</span></li>'
+    html = head(
+        f'{rider["display_name"]} — Ski & Snowboard | {SITE_NAME}',
+        f'{rider["display_name"]} winter athlete profile for Ski and Snowboard disciplines.',
+        "../../", body_class="rider-page seasonal-home season-winter winter-data-page",
+        canonical_path=f'/winter/riders/{rider["slug"]}.html',
+    )
+    html = winter_page_assets(html, "../../")
+    html += winter_header("../../", "riders", 1)
+    html += f'''<main id="main-content"><section class="rider-hero"><div class="wrap rider-hero-grid"><div class="rider-portrait">{portrait}</div><div class="rider-identity"><div class="label">Winter athlete · {esc(' · '.join(disciplines))}</div><h1>{esc(rider['display_name'])}</h1><div class="rider-meta"><div class="item"><span>Country</span>{esc(rider.get('country') or '—')}</div><div class="item"><span>Team</span>{esc(rider.get('team') or 'Independent')}</div></div></div></div></section><section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Winter results only</div><h2>Recorded competitions</h2></div></div><ul class="rider-bio">{result_items}</ul><p class="data-note">This page contains only data associated with winter disciplines.</p></div></section></main>'''
+    return html + footer_html("../../", seasonal=True)
+
+
+def build_winter_competition_page(riders, competition):
+    stats = competition_stats(riders, competition)
+    participant_cards = "".join(
+        rider_card(rider, "../../", f'../riders/')
+        for rider in stats["participants"]
+    ) or '<p class="standings-empty">No Ski or Snowboard participant is recorded yet.</p>'
+    events = "".join(f'<li><strong>{esc(competition_event_label(event))}</strong></li>' for event in stats["events"])
+    html = head(
+        f'{competition_display_name(competition)} — Winter | {SITE_NAME}',
+        f'Ski and Snowboard competition overview for {competition_display_name(competition)}.',
+        "../../", body_class="competition-detail-page seasonal-home season-winter winter-data-page",
+        canonical_path=f'/winter/competitions/{competition["id"]}.html',
+    )
+    html = winter_page_assets(html, "../../")
+    html += winter_header("../../", "competitions", len(riders))
+    html += f'''<main id="main-content"><section class="competition-detail-hero"><div class="wrap"><div class="label">Winter · {esc(competition.get('sport'))} · {esc(competition.get('discipline'))}</div><h1>{esc(competition_display_name(competition))}</h1><p>Only Ski and Snowboard athletes, events and results are included in this view.</p></div></section><section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Events</div><h2>Competition programme</h2></div></div><ul class="rider-bio">{events or '<li>No event recorded yet.</li>'}</ul><div class="section-head"><div><div class="label">Athletes</div><h2>Winter participants</h2></div></div><div class="grid-riders">{participant_cards}</div></div></section></main>'''
+    return html + footer_html("../../", seasonal=True)
 
 # ---------------------------------------------------------------- rider page
 
@@ -4328,6 +4473,39 @@ def rider_has_winter_discipline(rider, sport):
     return False
 
 
+def competition_is_winter(competition):
+    value = " ".join(str(competition.get(field) or "") for field in ("sport", "discipline", "name")).casefold()
+    words = value.replace("-", " ").split()
+    return "ski" in words or "snowboard" in words
+
+
+def competition_is_bike(competition):
+    value = " ".join(str(competition.get(field) or "") for field in ("sport", "discipline", "name")).casefold()
+    return "bike" in value or "cycling" in value or "downhill" in value
+
+
+WINTER_EQUIPMENT_CATEGORIES = {
+    "ski", "skis", "snowboard", "snowboards", "binding", "bindings",
+    "ski boots", "snowboard boots", "boots", "poles", "ski poles",
+    "avalanche safety", "avalanche equipment",
+}
+
+
+def winter_equipment_riders(riders):
+    """Expose only products whose category is explicitly winter-specific."""
+    filtered = []
+    for rider in riders:
+        if "winter_equipment" in rider:
+            winter_equipment = rider.get("winter_equipment") or []
+        else:
+            winter_equipment = [
+                item for item in rider.get("equipment") or []
+                if str(item.get("category") or "").strip().casefold() in WINTER_EQUIPMENT_CATEGORIES
+            ]
+        filtered.append({**rider, "equipment": winter_equipment})
+    return filtered
+
+
 def main():
     with open(DATA_PATH, encoding="utf-8") as f:
         all_riders = json.load(f)
@@ -4339,6 +4517,9 @@ def main():
         if rider_has_winter_discipline(rider, "ski")
         or rider_has_winter_discipline(rider, "snowboard")
     ]
+    winter_competitions = [competition for competition in COMPETITIONS if competition_is_winter(competition)]
+    summer_competitions = [competition for competition in COMPETITIONS if competition_is_bike(competition) and not competition_is_winter(competition)]
+    published_riders = list({rider["slug"]: rider for rider in (riders + (winter_riders if IS_PREPROD else []))}.values())
     if not riders:
         raise RuntimeError("No Bike Downhill rider is available for the current site section")
     excluded_rider_count = len(all_riders) - len(riders)
@@ -4348,7 +4529,7 @@ def main():
     os.makedirs(COMPETITIONS_DIR, exist_ok=True)
     os.makedirs(IMG_DIR, exist_ok=True)
     os.makedirs(EQUIP_IMG_DIR, exist_ok=True)
-    drive_portrait_count = sync_drive_rider_portraits(riders)
+    drive_portrait_count = sync_drive_rider_portraits(published_riders)
 
     # Remove generated organization drafts that are not visible in this build.
     # This makes a production build safe even after a previous preprod build.
@@ -4363,7 +4544,7 @@ def main():
                 shutil.rmtree(os.path.join(organization_dir, competition["id"]), ignore_errors=True)
 
     if "--missing-images" in sys.argv:
-        list_missing_images(riders)
+        list_missing_images(published_riders)
         return
 
     women = [r for r in riders if r.get("gender_category") == "Women Elite"]
@@ -4416,28 +4597,49 @@ def main():
         f.write(build_contact_page())
 
     with open(os.path.join(ROOT, "competitions.html"), "w", encoding="utf-8") as f:
-        f.write(build_competitions_hub(riders))
+        f.write(build_competitions_hub(riders, summer_competitions))
+    if IS_PREPROD:
+        winter_dir = os.path.join(ROOT, "winter")
+        winter_riders_dir = os.path.join(winter_dir, "riders")
+        winter_competitions_dir = os.path.join(winter_dir, "competitions")
+        os.makedirs(winter_dir, exist_ok=True)
+        os.makedirs(winter_riders_dir, exist_ok=True)
+        os.makedirs(winter_competitions_dir, exist_ok=True)
+        with open(os.path.join(winter_dir, "riders.html"), "w", encoding="utf-8") as f:
+            f.write(build_winter_riders_directory(winter_riders))
+        with open(os.path.join(winter_dir, "competitions.html"), "w", encoding="utf-8") as f:
+            f.write(build_winter_competitions_hub(winter_riders, winter_competitions))
+        with open(os.path.join(winter_dir, "equipment.html"), "w", encoding="utf-8") as f:
+            f.write(build_winter_equipment_directory(winter_riders))
+        winter_competition_names = {competition["name"] for competition in winter_competitions}
+        for rider in winter_riders:
+            with open(os.path.join(winter_riders_dir, f"{rider['slug']}.html"), "w", encoding="utf-8") as f:
+                f.write(build_winter_rider_page(rider, winter_competition_names))
+        for competition in winter_competitions:
+            with open(os.path.join(winter_competitions_dir, f"{competition['id']}.html"), "w", encoding="utf-8") as f:
+                f.write(build_winter_competition_page(winter_riders, competition))
     for competition in COMPETITIONS:
+        competition_riders = winter_riders if competition_is_winter(competition) else riders
         with open(os.path.join(COMPETITIONS_DIR, f"{competition['id']}.html"), "w", encoding="utf-8") as f:
-            f.write(build_competition_detail(riders, competition))
+            f.write(build_competition_detail(competition_riders, competition))
         standings_dir = os.path.join(COMPETITIONS_DIR, competition["id"])
         os.makedirs(standings_dir, exist_ok=True)
         with open(os.path.join(standings_dir, "riders.html"), "w", encoding="utf-8") as f:
-            f.write(build_competition_riders(riders, competition))
+            f.write(build_competition_riders(competition_riders, competition))
         standings_file = os.path.join(standings_dir, "standings.html")
         if is_red_bull_cerro_abajo(competition):
             if os.path.exists(standings_file):
                 os.remove(standings_file)
         else:
             with open(standings_file, "w", encoding="utf-8") as f:
-                f.write(build_competition_standings(riders, competition))
-        events = competition_page_events(riders, competition)
+                f.write(build_competition_standings(competition_riders, competition))
+        events = competition_page_events(competition_riders, competition)
         rounds_dir = os.path.join(standings_dir, "rounds")
         os.makedirs(rounds_dir, exist_ok=True)
         for round_number, event in enumerate(events, 1):
             round_file = os.path.join(rounds_dir, f"{competition_round_slug(event)}.html")
             with open(round_file, "w", encoding="utf-8") as f:
-                f.write(build_competition_round(riders, competition, event, round_number, events))
+                f.write(build_competition_round(competition_riders, competition, event, round_number, events))
     for organization in ORGANIZATIONS:
         organization_dir = os.path.join(COMPETITIONS_DIR, organization["id"])
         os.makedirs(organization_dir, exist_ok=True)

@@ -44,7 +44,7 @@ class DriveImageSyncTests(unittest.TestCase):
 
     def test_source_version_is_stable_and_changes_with_drive_metadata(self):
         first = {
-            "path": "PPRiders/rider.webp",
+            "path": "PPInstaRiders/rider.webp",
             "drive_id": "drive-1",
             "mime_type": "image/webp",
             "modified_time": "2026-10-01T00:00:00Z",
@@ -63,7 +63,7 @@ class DriveImageSyncTests(unittest.TestCase):
         original = sync_drive_images.list_children
         tree = {
             "root": [
-                {"id": "folder-1", "name": "PPRiders", "mimeType": sync_drive_images.FOLDER_MIME},
+                {"id": "folder-1", "name": "PPInstaRiders", "mimeType": sync_drive_images.FOLDER_MIME},
                 {"id": "ignored", "name": "notes.txt", "mimeType": "text/plain"},
             ],
             "folder-1": [{
@@ -81,7 +81,7 @@ class DriveImageSyncTests(unittest.TestCase):
         finally:
             sync_drive_images.list_children = original
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0]["path"], "PPRiders/Rider.webp")
+        self.assertEqual(records[0]["path"], "PPInstaRiders/Rider.webp")
         self.assertEqual(records[0]["size"], 123)
 
 

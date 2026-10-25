@@ -11,6 +11,21 @@ sys.path.insert(0, str(ROOT))
 import import_images
 
 
+with tempfile.TemporaryDirectory() as library:
+    library_path = Path(library)
+    assert import_images.portrait_source_folder(library) == str(
+        library_path / "PPInstaRiders"
+    )
+    (library_path / "PPRiders").mkdir()
+    assert import_images.portrait_source_folder(library) == str(
+        library_path / "PPRiders"
+    )
+    (library_path / "PPInstaRiders").mkdir()
+    assert import_images.portrait_source_folder(library) == str(
+        library_path / "PPInstaRiders"
+    )
+
+
 cases = {
     "@abel_moga21.jpg": "abelmoga21",
     "MOGA_Abel__@abel_moga21.jpg": "abelmoga21",

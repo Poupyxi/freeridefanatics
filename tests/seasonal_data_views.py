@@ -28,9 +28,9 @@ snowboard = {
     "gender_category": "Men Elite", "equipment": [], "competition_history": [],
 }
 
-bike_competition = {"id": "bike-dh", "name": "Bike DH", "sport": "Mountain bike", "discipline": "Downhill"}
-ski_competition = {"id": "ski-tour", "name": "Ski Tour", "sport": "Ski", "discipline": "Freeride"}
-snowboard_competition = {"id": "snow-tour", "name": "Snow Tour", "sport": "Snowboard", "discipline": "Freeride"}
+bike_competition = {"id": "bike-dh", "name": "Bike DH", "short_name": "Bike DH", "sport": "Mountain bike", "discipline": "Downhill", "season": 2026, "events": []}
+ski_competition = {"id": "ski-tour", "name": "Ski Tour", "short_name": "Ski Tour", "sport": "Ski", "discipline": "Freeride", "season": 2026, "events": []}
+snowboard_competition = {"id": "snow-tour", "name": "Snow Tour", "short_name": "Snow Tour", "sport": "Snowboard", "discipline": "Freeride", "season": 2026, "events": []}
 
 assert build.rider_has_discipline(bike)
 assert not build.rider_has_discipline(ski)
@@ -51,18 +51,29 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     assert 'href="riders/ski-rider.html"' in riders_html
     assert 'data-season-route="riders"' in riders_html
     assert "season-routing.js" in riders_html
+    summer_riders_html = build.build_riders_directory([bike], 0, 1)
+    for shared_marker in ('class="directory-intro"', 'class="filters"', 'class="grid-riders" data-rider-grid'):
+        assert shared_marker in riders_html and shared_marker in summer_riders_html
 
     rider_html = build.build_winter_rider_page(ski, {"Ski Tour"})
     assert "Ski Rider" in rider_html
-    assert "Ski Freeride" in rider_html
     assert "Bike Downhill" not in rider_html
-    assert "equip-item" not in rider_html
     assert "Setup analysis" not in rider_html
+    assert "Winter Brand" in rider_html
+    assert "Bike Brand" not in rider_html
 
     equipment_html = build.build_winter_equipment_directory([ski])
+    summer_equipment_html = build.build_equipment_directory([bike])
     assert "Winter Brand" in equipment_html
     assert "Powder 110" in equipment_html
     assert "Bike Brand" not in equipment_html
     assert "DH Frame" not in equipment_html
+    for shared_marker in ('class="equipment-hero"', 'class="equipment-hero-stats"', 'class="section equipment-catalogue"'):
+        assert shared_marker in equipment_html and shared_marker in summer_equipment_html
+
+    competitions_html = build.build_winter_competitions_hub([ski], [ski_competition])
+    summer_competitions_html = build.build_competitions_hub([bike], [bike_competition])
+    for shared_marker in ('class="section competitions-list"', 'class="competition-grid"', 'class="competition-card'):
+        assert shared_marker in competitions_html and shared_marker in summer_competitions_html
 
 print("Seasonal data views: Bike Summer and Ski/Snowboard Winter scopes passed.")

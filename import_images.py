@@ -7,7 +7,7 @@ renaming along the way. The library keeps its own conventions (files named by
 Instagram handle, equipment sorted into category folders); this script maps
 them onto the names build.py looks for. Nothing in the library is modified.
 
-  ~/Desktop/freeride/PPRiders/@handle.jpg      -> assets/img/riders/{slug}.jpg
+  ~/Desktop/freeride/PPInstaRiders/@handle.jpg -> assets/img/riders/{slug}.jpg
                                                   (square avatar, grid cards)
   ~/Desktop/freeride/PictureRiders/@handle.jpg -> assets/img/riders-action/{slug}.jpg
                                                   (portrait, rider page hero)
@@ -49,7 +49,21 @@ except ImportError:
     HAS_CV2 = False
 
 LIBRARY = os.environ.get("RF_IMAGE_LIBRARY", os.path.expanduser("~/Desktop/freeride"))
-SRC_PP = os.path.join(LIBRARY, "PPRiders")
+def portrait_source_folder(library):
+    """Use the current Drive folder name, with the legacy name as fallback.
+
+    The photo library was renamed from ``PPRiders`` to ``PPInstaRiders``.
+    Prefer the new explicit folder so stale legacy files cannot override fresh
+    grid portraits, while keeping old/local libraries compatible.
+    """
+    for folder_name in ("PPInstaRiders", "PPRiders"):
+        candidate = os.path.join(library, folder_name)
+        if os.path.isdir(candidate):
+            return candidate
+    return os.path.join(library, "PPInstaRiders")
+
+
+SRC_PP = portrait_source_folder(LIBRARY)
 SRC_ACTION = os.path.join(LIBRARY, "PictureRiders")
 SRC_EQUIP = os.path.join(LIBRARY, "Equipment")
 

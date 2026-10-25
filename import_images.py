@@ -149,6 +149,58 @@ def norm_handle(s, is_filename=False):
             s = stem
     return re.sub(r"[^a-z0-9]", "", s.lower().lstrip("@").strip())
 
+
+def rider_handle_from_filename(filename):
+    """Return the Instagram identity embedded in a portrait filename.
+
+    Drive contributors use both ``@handle.webp`` and the more descriptive
+    ``LAST_First__@handle.webp`` convention.  Matching the complete second
+    form produced a key containing the rider name as well as the handle, so
+    valid Winter portraits were downloaded but never assigned to a profile.
+    Instagram handles cannot contain dashes or spaces; extracting the final
+    explicit ``@handle`` is therefore deterministic.  Legacy filenames keep
+    the previous whole-stem behaviour.
+    """
+    stem, ext = os.path.splitext(filename)
+    if ext.lower() in IMAGE_EXTS:
+        filename = stem
+    explicit_handles = re.findall(r"@([A-Za-z0-9._]+)", filename)
+    return norm_handle(explicit_handles[-1] if explicit_handles else filename)
+
+
+def rider_name_keys_from_filename(filename):
+    """Return exact name keys from ``LAST_First__@handle`` filenames."""
+    stem, ext = os.path.splitext(filename)
+    if ext.lower() in IMAGE_EXTS:
+        filename = stem
+    descriptive_name = filename.split("__@", 1)[0]
+    if descriptive_name == filename or "_" not in descriptive_name:
+        return ()
+    parts = [part for part in descriptive_name.split("_") if part]
+    if len(parts) < 2:
+        return ()
+    return tuple({norm_text(" ".join(parts)), norm_text(" ".join(reversed(parts)))})
+
+
+def one_edit_apart(left, right):
+    """Whether two normalized handles differ by exactly one safe typo."""
+    if left == right or abs(len(left) - len(right)) > 1:
+        return False
+    if len(left) > len(right):
+        left, right = right, left
+    if len(left) == len(right):
+        return sum(a != b for a, b in zip(left, right)) == 1
+    index_left = index_right = differences = 0
+    while index_left < len(left) and index_right < len(right):
+        if left[index_left] == right[index_right]:
+            index_left += 1
+        else:
+            differences += 1
+            if differences > 1:
+                return False
+        index_right += 1
+    return True
+
 def norm_text(s):
     s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode("ascii")
     s = s.lower().replace("™", "").replace("®", "")
@@ -241,6 +293,11 @@ def save_fitted(src, dest, max_side):
 def import_riders(riders, src_dir, out_dir, kind, square, force, dry):
     """Match library files to riders by Instagram handle."""
     by_handle = {norm_handle(r["instagram"]): r for r in riders if r.get("instagram")}
+    by_name = defaultdict(list)
+    for rider in riders:
+        key = norm_text(rider.get("display_name"))
+        if key:
+            by_name[key].append(rider)
     files = listdir_images(src_dir)
     if not files:
         print(f"{kind}: source folder empty or missing ({src_dir})")
@@ -248,14 +305,28 @@ def import_riders(riders, src_dir, out_dir, kind, square, force, dry):
 
     os.makedirs(out_dir, exist_ok=True)
     done, unmatched = [], []
-    matched_handles = set()
+    matched_slugs = set()
 
     for f in files:
-        rider = by_handle.get(norm_handle(f, is_filename=True))
+        file_handle = rider_handle_from_filename(f)
+        rider = by_handle.get(file_handle)
+        if not rider:
+            name_matches = {
+                candidate["slug"]: candidate
+                for key in rider_name_keys_from_filename(f)
+                for candidate in by_name.get(key, [])
+            }
+            if len(name_matches) == 1:
+                rider = next(iter(name_matches.values()))
+        if not rider and len(file_handle) >= 8:
+            close_handles = [handle for handle in by_handle
+                             if one_edit_apart(file_handle, handle)]
+            if len(close_handles) == 1:
+                rider = by_handle[close_handles[0]]
         if not rider:
             unmatched.append(f)
             continue
-        matched_handles.add(norm_handle(f, is_filename=True))
+        matched_slugs.add(rider["slug"])
         dest = os.path.join(out_dir, f"{rider['slug']}.jpg")
         if os.path.exists(dest) and not force:
             continue
@@ -273,10 +344,9 @@ def import_riders(riders, src_dir, out_dir, kind, square, force, dry):
             print(f"  ! {f}: {e}")
             unmatched.append(f)
 
-    no_photo = sorted(r["slug"] for r in riders
-                      if norm_handle(r.get("instagram") or "") not in matched_handles)
+    no_photo = sorted(r["slug"] for r in riders if r["slug"] not in matched_slugs)
     verb = "would import" if dry else "imported"
-    print(f"{kind}: {len(matched_handles)}/{len(riders)} riders matched, {len(done)} {verb}")
+    print(f"{kind}: {len(matched_slugs)}/{len(riders)} riders matched, {len(done)} {verb}")
     if unmatched:
         print(f"  unmatched files ({len(unmatched)}): {', '.join(unmatched)}")
     if no_photo:

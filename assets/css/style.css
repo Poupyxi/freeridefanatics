@@ -1645,3 +1645,20 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .rider-feedback-external{padding:10px 20px;text-align:right;font-size:13px;color:#9d451e}
 body.rider-feedback-open{overflow:hidden}
 @media(max-width:600px){.rider-feedback-dialog{top:0;left:0;transform:none;width:100%;height:100dvh;max-height:none;border-radius:0}.rider-feedback-header{padding-top:max(12px,env(safe-area-inset-top))}.rider-feedback-external{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
+
+/* Global preproduction season selector. Production does not render it. */
+[data-season-scope][hidden],.season-switch[hidden]{display:none!important}
+.season-switch{position:relative;flex:0 0 64px;width:64px;height:44px;padding:0;border:1px solid #c4d6d8;border-radius:28px;background:#95bbc2;overflow:hidden;box-shadow:inset 0 2px 5px #29445144;cursor:pointer}
+.season-switch::before{content:'';position:absolute;inset:8px -5px 0;background:#829e71;clip-path:polygon(0 100%,26% 15%,46% 75%,72% 0,100% 90%,100% 100%);transition:background .7s}
+.season-switch::after{content:'';position:absolute;top:7px;left:5px;width:28px;height:28px;border-radius:50%;background:#edcb72;box-shadow:0 0 0 7px #fff2;transition:transform .7s,background .7s}
+body.season-winter .season-switch::after{transform:translateX(24px);background:#eaf9ff}
+body.season-winter .season-switch::before{background:#d0e9f3}
+.season-logo-pair{position:relative;display:block;width:48px;height:48px;flex:0 0 48px}
+.season-logo-pair .site-brand-logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .65s}
+.season-winter-logo{opacity:0}
+body.season-winter .season-logo-pair .site-brand-logo:first-child{opacity:0}
+body.season-winter .season-winter-logo{opacity:1}
+body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box-shadow:inset 0 -2px 0 #fff8}
+@media(max-width:760px){.season-logo-pair{width:38px;height:38px;flex-basis:38px}}
+@media(max-width:560px){.season-switch{width:56px;flex-basis:56px}.season-switch::after{width:26px;height:26px;top:8px}.season-winter .season-switch::after{transform:translateX(18px)}.season-logo-pair{width:32px;height:32px;flex-basis:32px}}
+@media(prefers-reduced-motion:reduce){.season-switch::before,.season-switch::after,.season-logo-pair img{transition:none!important}}

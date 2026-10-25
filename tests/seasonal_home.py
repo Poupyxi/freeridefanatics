@@ -18,15 +18,19 @@ def render(preprod):
             riders, 0, 1,
             winter_counts={'ski': 4, 'snowboard': 3, 'winter': 6},
             source_rider_count=8,
-        ), build.header_html('../', seasonal=False)
+        ), build.header_html('../') + build.footer_html('../')
 
 
-preprod, other_header = render(True)
-production, _ = render(False)
+preprod, other_page = render(True)
+production, production_page = render(False)
 for marker in ('seasonal-home.css', 'seasonal-home.js', 'class="season-switch"', 'class="season-panorama"', 'class="season-destinations"', 'freeride-fanatics-winter.png'):
     assert marker in preprod, marker
     assert marker not in production, marker
-    assert marker not in other_header, marker
+for marker in ('class="season-switch"', 'freeride-fanatics-winter.png', 'season-routing.js'):
+    assert marker in other_page, marker
+    assert marker not in production_page, marker
+for marker in ('seasonal-home.css', 'seasonal-home.js', 'class="season-panorama"', 'class="season-destinations"'):
+    assert marker not in other_page, marker
 assert 'body class="home-page seasonal-home"' in preprod
 assert 'body class="home-page"' in production
 assert 'noindex,nofollow,noarchive' in preprod
@@ -35,7 +39,7 @@ assert preprod.count('class="season-peak') == 3
 assert preprod.count('class="season-tree"') == 5
 for marker in ('id="rankings"', 'id="equipment"', 'id="faq"', 'class="cta-dark"', 'data-random-rider=', 'compare.html', 'promo-pool.js', 'assets/js/site.js'):
     assert marker in preprod and marker in production, marker
-assert 'aria-describedby="season-appearance-status"' in preprod
+assert 'aria-label="Switch to Winter season"' in preprod
 assert 'id="season-appearance-status" role="status"' in preprod
 for marker in ('data-season-scope="summer"', 'data-season-scope="winter"',
                'id="winter-ski"', 'id="winter-snowboard"',

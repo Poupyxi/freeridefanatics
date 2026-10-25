@@ -9,7 +9,8 @@ them onto the names build.py looks for. Nothing in the library is modified.
 
   ~/Desktop/freeride/PPInstaRiders/@handle.jpg -> assets/img/riders/{slug}.jpg
                                                   (square avatar, grid cards)
-  ~/Desktop/freeride/PictureRiders/@handle.jpg -> assets/img/riders-action/{slug}.jpg
+  ~/Desktop/freeride/PictureFaceRiders/@handle.jpg
+                                               -> assets/img/riders-action/{slug}.jpg
                                                   (portrait, rider page hero)
   ~/Desktop/freeride/Equipment/{Cat}/Brand;Model.webp
                                                -> assets/img/equipment/{cat}-{brand}-{model}.jpg
@@ -49,22 +50,19 @@ except ImportError:
     HAS_CV2 = False
 
 LIBRARY = os.environ.get("RF_IMAGE_LIBRARY", os.path.expanduser("~/Desktop/freeride"))
-def portrait_source_folder(library):
-    """Use the current Drive folder name, with the legacy name as fallback.
-
-    The photo library was renamed from ``PPRiders`` to ``PPInstaRiders``.
-    Prefer the new explicit folder so stale legacy files cannot override fresh
-    grid portraits, while keeping old/local libraries compatible.
-    """
-    for folder_name in ("PPInstaRiders", "PPRiders"):
+def portrait_source_folder(library, current, legacy):
+    """Use a current Drive folder name, with its legacy name as fallback."""
+    for folder_name in (current, legacy):
         candidate = os.path.join(library, folder_name)
         if os.path.isdir(candidate):
             return candidate
-    return os.path.join(library, "PPInstaRiders")
+    return os.path.join(library, current)
 
 
-SRC_PP = portrait_source_folder(LIBRARY)
-SRC_ACTION = os.path.join(LIBRARY, "PictureRiders")
+SRC_PP = portrait_source_folder(LIBRARY, "PPInstaRiders", "PPRiders")
+SRC_ACTION = portrait_source_folder(
+    LIBRARY, "PictureFaceRiders", "PictureRiders"
+)
 SRC_EQUIP = os.path.join(LIBRARY, "Equipment")
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -304,7 +302,7 @@ def save_fitted(src, dest, max_side):
 
 # ---------------------------------------------------------------- riders
 
-def import_riders(riders, src_dir, out_dir, kind, square, force, dry):
+def import_riders(riders, src_dir, out_dir, kind, square, force, dry, prune=False):
     """Match library files to riders by Instagram handle."""
     by_handle = {norm_handle(r["instagram"]): r for r in riders if r.get("instagram")}
     by_name = defaultdict(list)
@@ -359,6 +357,12 @@ def import_riders(riders, src_dir, out_dir, kind, square, force, dry):
             unmatched.append(f)
 
     no_photo = sorted(r["slug"] for r in riders if r["slug"] not in matched_slugs)
+    if prune and force and not dry:
+        for slug in no_photo:
+            for extension in IMAGE_EXTS:
+                stale = os.path.join(out_dir, f"{slug}{extension}")
+                if os.path.isfile(stale):
+                    os.remove(stale)
     verb = "would import" if dry else "imported"
     print(f"{kind}: {len(matched_slugs)}/{len(riders)} riders matched, {len(done)} {verb}")
     if unmatched:
@@ -647,9 +651,12 @@ def main():
     if dry:
         print("REPORT ONLY — no files written\n")
 
-    import_riders(riders, SRC_PP, OUT_PP, "avatars", True, force, dry)
+    import_riders(riders, SRC_PP, OUT_PP, "avatars", True, force, dry, prune=True)
     print()
-    import_riders(riders, SRC_ACTION, OUT_ACTION, "action shots", False, force, dry)
+    import_riders(
+        riders, SRC_ACTION, OUT_ACTION, "page portraits", False, force, dry,
+        prune=True,
+    )
     print()
     _, missing = import_equipment(riders, force, dry)
     print()

@@ -34,13 +34,13 @@
 
 <header>
   <div class="wrap nav-row">
+    <button class="season-switch" type="button" role="switch" aria-checked="false" aria-label="Switch to Winter season" hidden><span class="season-switch-track" aria-hidden="true"><span class="season-switch-thumb"></span></span></button>
     <a class="logo" href="../">
-      <span class="mark">R</span>
-      RIDERSFANATICS
+      <img class="site-brand-image" data-season-brand="summer" src="../assets/img/brand/freeride-fanatics-summer.png" alt="RidersFanatics"><img class="site-brand-image" data-season-brand="winter" src="../assets/img/brand/freeride-fanatics-winter.png" alt="RidersFanatics" hidden>
     </a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
       <div class="nav-item has-dropdown competition-nav">
-        <a href="../competitions.html">Competitions <span class="caret">&#9662;</span></a>
+        <a href="../competitions.html" data-season-route="competitions">Competitions <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
             <a href="../competitions/uci-mtb-world-cup-dh-2026.html"><strong>World Cup DH</strong><small>Downhill · 2026</small></a>
@@ -49,7 +49,7 @@
         </div>
       </div>
       <div class="nav-item has-dropdown">
-        <a href="../riders.html#grid">Riders <span class="caret">&#9662;</span></a>
+        <a href="../riders.html#grid" data-season-route="riders">Riders <span class="caret">&#9662;</span></a>
         <div class="dropdown">
           <div class="dropdown-inner">
             <a href="../riders.html#men">Men</a>
@@ -57,11 +57,11 @@
           </div>
         </div>
       </div>
-      <a href="../equipment.html" class="active">Equipment</a>
+      <a href="../equipment.html" class="active" data-season-route="equipment">Equipment</a>
       <a href="../#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
-      <span class="icon-btn">64 Riders</span>
+      <span class="icon-btn" data-season-scope="summer">64 Riders</span><span class="icon-btn" data-season-scope="winter" hidden>Winter</span>
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -72,11 +72,11 @@
 <section class="equipment-editorial reveal"><div><div class="label">How to read this category</div><h2>What the body protection data tells us.</h2><p>Body protection is selected around coverage, mobility and the demands of the course. This list documents visible or published equipment only and should not be treated as a complete safety prescription.</p><p>The current RidersFanatics dataset connects 8 products from 8 brands to 18 rider profiles. DHaRCO leads by combined rider points and represents 41% of the points attached to this category. That figure measures competitive exposure, not technical superiority.</p></div><dl class="content-stats"><div><dt>8</dt><dd>Products</dd></div><div><dt>8</dt><dd>Brands</dd></div><div><dt>18</dt><dd>Riders</dd></div><div><dt>41%</dt><dd>Leader share</dd></div></dl></section>
 <div class="guide-callout"><strong>Editorial and data status</strong><p>This table records competitive usage within the RidersFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications. Counts are recalculated from the rider records at build time, so every category stays connected to its supporting profiles. Page generated from data updated 2026-08-10; see the <a href="../methodology.html">methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></div></section></main><footer>
   <div class="wrap footer-row">
-    <a class="footer-logo" href="../"><span class="mark">R</span>RIDERSFANATICS</a>
+    <a class="footer-logo" href="../"><img class="site-brand-image" data-season-brand="summer" src="../assets/img/brand/freeride-fanatics-summer.png" alt="RidersFanatics"><img class="site-brand-image" data-season-brand="winter" src="../assets/img/brand/freeride-fanatics-winter.png" alt="RidersFanatics" hidden></a>
     <nav class="footer-links" aria-label="Footer navigation">
-      <a href="../riders.html#grid">Riders</a>
-      <a href="../competitions.html">Competitions</a>
-      <a href="../equipment.html">Equipment</a>
+      <a href="../riders.html#grid" data-season-route="riders">Riders</a>
+      <a href="../competitions.html" data-season-route="competitions">Competitions</a>
+      <a href="../equipment.html" data-season-route="equipment">Equipment</a>
       <a href="../guides/en/">DH Guide</a>
       <a href="../#faq">FAQ</a>
       <a href="../methodology.html">Methodology</a>
@@ -92,5 +92,6 @@
 </footer>
 
 <script src="../assets/js/site.js?v=1786393107"></script>
+<script src="../assets/js/season-routing.js?v=1792891200"></script>
 </body>
 </html>

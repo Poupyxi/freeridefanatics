@@ -19,16 +19,17 @@
 
 <header>
   <div class="wrap nav-row">
-    <a class="logo" href="./"><span class="mark">R</span>RIDERSFANATICS</a>
+    <a class="logo" href="./"><img class="site-brand-image" data-season-brand="summer" src="assets/img/brand/freeride-fanatics-summer.png" alt="RidersFanatics"><img class="site-brand-image" data-season-brand="winter" src="assets/img/brand/freeride-fanatics-winter.png" alt="RidersFanatics" hidden></a>
     <nav class="links" id="primary-navigation" aria-label="Primary navigation">
-      <a href="competitions.html">Competitions</a>
-      <a href="riders.html#grid">Riders</a>
-      <a href="equipment.html">Equipment</a>
+      <a href="competitions.html" data-season-route="competitions">Competitions</a>
+      <a href="riders.html#grid" data-season-route="riders">Riders</a>
+      <a href="equipment.html" data-season-route="equipment">Equipment</a>
       <a href="favorites.html" class="active">Shop</a>
       <a href="./#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
-      <span class="icon-btn">Featured offers</span>
+      <button class="season-switch" type="button" role="switch" aria-checked="false" aria-label="Switch to Winter season" hidden><span class="season-switch-track" aria-hidden="true"><span class="season-switch-thumb"></span></span></button>
+      <span class="icon-btn" data-season-scope="summer">Featured offers</span><span class="icon-btn" data-season-scope="winter" hidden>Winter</span>
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -108,9 +109,9 @@
 
 <footer>
   <div class="wrap footer-row">
-    <a class="footer-logo" href="./"><span class="mark">R</span>RIDERSFANATICS</a>
+    <a class="footer-logo" href="./"><img class="site-brand-image" data-season-brand="summer" src="assets/img/brand/freeride-fanatics-summer.png" alt="RidersFanatics"><img class="site-brand-image" data-season-brand="winter" src="assets/img/brand/freeride-fanatics-winter.png" alt="RidersFanatics" hidden></a>
     <nav class="footer-links" aria-label="Footer navigation">
-      <a href="riders.html#grid">Riders</a><a href="competitions.html">Competitions</a><a href="equipment.html">Equipment</a><a href="favorites.html">Shop</a><a href="guides/en/">DH Guide</a><a href="./#faq">FAQ</a><a href="about.html">About</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a>
+      <a href="riders.html#grid" data-season-route="riders">Riders</a><a href="competitions.html" data-season-route="competitions">Competitions</a><a href="equipment.html" data-season-route="equipment">Equipment</a><a href="favorites.html">Shop</a><a href="guides/en/">DH Guide</a><a href="./#faq">FAQ</a><a href="about.html">About</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a>
     </nav>
     <span class="footer-copy">&copy; 2026 RidersFanatics</span>
   </div>
@@ -118,6 +119,7 @@
 </footer>
 
 <script src="assets/js/site.js?v=1787562311"></script>
+<script src="assets/js/season-routing.js?v=1792891200"></script>
 <script src="assets/js/favorites.js?v=1"></script>
 </body>
 </html>

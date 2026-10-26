@@ -72,10 +72,9 @@ class ResultStatusTests(unittest.TestCase):
 
     def test_global_rider_count_comes_from_the_active_dataset(self):
         self.assertEqual(build.RIDER_COUNT, len(build.PROMO_RIDERS))
-        self.assertIn(
-            f'<span class="icon-btn">{len(build.PROMO_RIDERS)} Riders</span>',
-            build.header_html(""),
-        )
+        header = build.header_html("")
+        self.assertIn('class="icon-btn"', header)
+        self.assertIn(f'>{len(build.PROMO_RIDERS)} Riders</span>', header)
 
     def test_site_update_date_comes_from_notion_sync_metadata(self):
         with tempfile.TemporaryDirectory() as directory:

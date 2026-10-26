@@ -90,6 +90,28 @@ def page(lang, d):
     active_lang = "ZH" if lang == "zh-cn" else lang.upper()
     header_langs = "".join(f'<a href="../{code}/" lang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[code]}</span>{escape(LANGS[code]["name"])}</a>' for code in ORDER)
     language_switcher = f'<details class="header-language"><summary aria-label="Change language"><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[lang]}</span><span>{active_lang}</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu">{header_langs}</div></details>'
+    season_switch = ""
+    season_script = ""
+    season_scope = ""
+    winter_counter = ""
+    season_routes = {"competitions": "", "riders": "", "equipment": ""}
+    header_logo = '<img class="site-brand-logo" src="../../assets/img/brand/freeride-fanatics-summer.png" alt="" width="48" height="48">'
+    footer_logo = '<img class="site-brand-logo" src="../../assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28">'
+    if IS_PREPROD:
+        season_switch = ('<button class="season-switch" type="button" role="switch" '
+                         'aria-label="Switch to Winter season" aria-checked="false" hidden></button>')
+        season_script = '<script src="../../assets/js/season-routing.js"></script>'
+        season_scope = ' data-season-scope="summer"'
+        winter_counter = '<span class="icon-btn" data-season-scope="winter" hidden>Winter</span>'
+        season_routes = {
+            "competitions": ' data-season-route="competitions"',
+            "riders": ' data-season-route="riders"',
+            "equipment": ' data-season-route="equipment"',
+        }
+        header_logo = ('<span class="season-logo-pair">' + header_logo +
+                       '<img class="site-brand-logo season-winter-logo" src="../../assets/img/brand/freeride-fanatics-winter.png" alt="" width="48" height="48"></span>')
+        footer_logo = ('<span class="season-logo-pair">' + footer_logo +
+                       '<img class="site-brand-logo season-winter-logo" src="../../assets/img/brand/freeride-fanatics-winter.png" alt="" width="28" height="28"></span>')
     faqs = "".join(f'<details><summary>{escape(q)}</summary><p>{escape(a)}</p></details>' for q,a in d["faq"])
     if lang == "en":
         hero = f'''<header class="guide-hero guide-hero-feature"><div class="wrap guide-hero-grid"><div class="guide-hero-copy"><div class="label">{escape(d["label"])}</div><h1>{escape(d["title"])}</h1><p class="lead">How professional downhill bikes are adjusted to the rider, track and race conditions.</p><div class="guide-hero-footer"><div class="hero-ctas guide-hero-actions"><a class="btn btn-solid" href="../../riders.html#grid">Explore rider setups</a><a class="btn" href="../../compare.html">Compare equipment</a></div><div class="guide-meta"><span>RidersFanatics</span><time datetime="{UPDATED}">Updated 10 August 2026</time></div></div></div></div></header>'''
@@ -103,11 +125,11 @@ def page(lang, d):
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{BASE}/assets/img/og-default.png"><link rel="icon" href="../../assets/img/favicon.ico" sizes="any"><link rel="apple-touch-icon" href="../../assets/img/brand/freeride-fanatics-summer-180.png"><script type="application/ld+json">{json.dumps(article,ensure_ascii=False)}</script><script type="application/ld+json">{json.dumps(faq,ensure_ascii=False)}</script><script type="application/ld+json">{json.dumps(breadcrumb,ensure_ascii=False)}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../../assets/css/style.css?v=20260825-guide-flags"></head>
 <body class="guide-page"><a class="skip-link" href="#main-content">Skip to main content</a>
-<header><div class="wrap nav-row"><a class="logo" href="../../"><img class="site-brand-logo" src="../../assets/img/brand/freeride-fanatics-summer.png" alt="" width="48" height="48">RIDERSFANATICS</a><nav class="links" id="primary-navigation" aria-label="Primary navigation"><a href="../../competitions.html">Competitions</a><a href="../../riders.html#grid">Riders</a><a href="../../equipment.html">Equipment</a><a href="../../#faq">FAQ</a></nav><div class="nav-icons">{language_switcher}<span class="icon-btn">{RIDER_COUNT} Riders</span><button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button></div></div></header>
+<header><div class="wrap nav-row"><a class="logo" href="../../">{header_logo}RIDERSFANATICS</a><nav class="links" id="primary-navigation" aria-label="Primary navigation"><a href="../../competitions.html"{season_routes['competitions']}>Competitions</a><a href="../../riders.html#grid"{season_routes['riders']}>Riders</a><a href="../../equipment.html"{season_routes['equipment']}>Equipment</a><a href="../../#faq">FAQ</a></nav><div class="nav-icons">{season_switch}{language_switcher}<span class="icon-btn"{season_scope}>{RIDER_COUNT} Riders</span>{winter_counter}<button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button></div></div></header>
 <main id="main-content"><article>{hero}
 <div class="wrap guide-layout"><div class="guide-content">{sections}<section class="guide-faq"><h2>FAQ</h2>{faqs}</section><div class="guide-callout"><strong>RidersFanatics</strong><p>{escape(d["lead"])}</p></div><div class="hero-ctas"><a class="btn btn-solid" href="../../riders.html#grid">{escape(d["cta1"])}</a><a class="btn" href="../../{STANDINGS}">{escape(d["cta2"])}</a></div></div>
 <aside class="guide-sidebar" aria-label="{escape(d["toc"],quote=True)}"><div class="guide-card"><h2>{escape(d["toc"])}</h2>{toc}</div><div class="guide-card"><h2>{escape(d["langlabel"])}</h2><div class="language-list">{langs}</div></div></aside></div></article></main>
-<footer><div class="wrap footer-row"><a class="footer-logo" href="../../"><img class="site-brand-logo" src="../../assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28">RIDERSFANATICS</a><nav class="footer-links" aria-label="Footer navigation"><a href="../../riders.html#grid">Riders</a><a href="../../competitions.html">Competitions</a><a href="../../equipment.html">Equipment</a><a href="../../brands.html">Brands</a><a href="../../contact.html">Contact</a><a href="../../privacy.html">Privacy</a></nav><span class="footer-copy">&copy; 2026 RidersFanatics</span></div><div class="wrap footer-updated">{escape(d["updated"])}</div></footer><script src="../../assets/js/site.js"></script></body></html>'''
+<footer><div class="wrap footer-row"><a class="footer-logo" href="../../">{footer_logo}RIDERSFANATICS</a><nav class="footer-links" aria-label="Footer navigation"><a href="../../riders.html#grid"{season_routes['riders']}>Riders</a><a href="../../competitions.html"{season_routes['competitions']}>Competitions</a><a href="../../equipment.html"{season_routes['equipment']}>Equipment</a><a href="../../brands.html"{season_scope}>Brands</a><a href="../../contact.html">Contact</a><a href="../../privacy.html">Privacy</a></nav><span class="footer-copy">&copy; 2026 RidersFanatics</span></div><div class="wrap footer-updated">{escape(d["updated"])}</div></footer><script src="../../assets/js/site.js"></script>{season_script}</body></html>'''
 
 for code in ORDER:
     target = ROOT / "guides" / code / "index.html"

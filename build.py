@@ -626,23 +626,32 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <a class="skip-link" href="#main-content">Skip to main content</a>
 """
 
-def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
+def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
     def cls(name):
         return " class=\"active\"" if active == name else ""
     competition_cls = " class=\"active\"" if active in ("competitions", "standings") else ""
     home_href = asset_prefix or "./"
-    seasonal = seasonal and IS_PREPROD
+    # Preproduction exposes more than one sport season. Keep the selector in
+    # the shared header so a visitor can change context from any generated
+    # page, rather than only from the homepage or a winter directory.
+    seasonal = IS_PREPROD if seasonal is None else seasonal and IS_PREPROD
     seasonal_counts = seasonal_counts or {}
     summer_scope = ' data-season-scope="summer"' if seasonal else ''
     winter_hidden = ' data-season-scope="winter" hidden' if seasonal else ''
     preprod_summer_scope = ' data-season-scope="summer"' if IS_PREPROD else ''
     seasonal_switch = ('    <button class="season-switch" type="button" role="switch" '
-                       'aria-label="Winter appearance" aria-checked="false" '
-                       'aria-describedby="season-appearance-status" hidden></button>\n' if seasonal else "")
+                       'aria-label="Switch to Winter season" aria-checked="false" '
+                       'hidden></button>\n' if seasonal else "")
     logo_html = f'<img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="48" height="48">'
     if seasonal:
         logo_html = (f'<span class="season-logo-pair">{logo_html}'
                      f'<img class="site-brand-logo season-winter-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-winter.png" alt="" width="48" height="48"></span>')
+    winter_count = seasonal_counts.get("winter")
+    winter_counter = ""
+    if seasonal:
+        winter_counter = (f'<span class="icon-btn"{winter_hidden}>{winter_count} Winter riders</span>'
+                          if winter_count is not None
+                          else f'<span class="icon-btn"{winter_hidden}>Winter</span>')
     competition_groups = []
     for organization in ORGANIZATIONS:
         items = []
@@ -667,7 +676,7 @@ def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
             )
     return f"""<header>
   <div class="wrap nav-row">
-{seasonal_switch}    <a class="logo" href="{home_href}">
+    <a class="logo" href="{home_href}">
       {logo_html}
       RIDERSFANATICS
     </a>
@@ -693,17 +702,18 @@ def header_html(asset_prefix, active="", seasonal=False, seasonal_counts=None):
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
+      {seasonal_switch.strip()}
       <span class="icon-btn"{summer_scope}>{RIDER_COUNT} Riders</span>
-      {f'<span class="icon-btn"{winter_hidden}>{seasonal_counts.get("winter", 0)} Winter riders</span>' if seasonal else ''}
+      {winter_counter}
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
 """
 
-def footer_html(asset_prefix, seasonal=False):
+def footer_html(asset_prefix, seasonal=None):
     home_href = asset_prefix or "./"
-    seasonal = seasonal and IS_PREPROD
+    seasonal = IS_PREPROD if seasonal is None else seasonal and IS_PREPROD
     summer_scope = ' data-season-scope="summer"' if seasonal else ''
     winter_hidden = ' data-season-scope="winter" hidden' if seasonal else ''
     footer_logo = f'<img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28">'

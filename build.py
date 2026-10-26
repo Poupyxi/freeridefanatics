@@ -676,7 +676,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
             )
     return f"""<header>
   <div class="wrap nav-row">
-{seasonal_switch}    <a class="logo" href="{home_href}">
+    <a class="logo" href="{home_href}">
       {logo_html}
       RIDERSFANATICS
     </a>
@@ -702,6 +702,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
       <a href="{home_href}#faq">FAQ</a>
     </nav>
     <div class="nav-icons">
+      {seasonal_switch.strip()}
       <span class="icon-btn"{summer_scope}>{RIDER_COUNT} Riders</span>
       {winter_counter}
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>

@@ -1656,3 +1656,8 @@ a.clean-standing-row:hover{background:#fff5ef;}
 .rider-feedback-external{padding:10px 20px;text-align:right;font-size:13px;color:#9d451e}
 body.rider-feedback-open{overflow:hidden}
 @media(max-width:600px){.rider-feedback-dialog{top:0;left:0;transform:none;width:100%;height:100dvh;max-height:none;border-radius:0}.rider-feedback-header{padding-top:max(12px,env(safe-area-inset-top))}.rider-feedback-external{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
+
+/* One responsive ad in the existing footer placement. */
+.footer-ad{margin-top:12px;padding:18px 0;border-top:1px solid var(--line);min-width:0;width:100%;}
+.footer-ad-unit{display:block;width:100%;min-height:100px;}
+.footer-ad:has(.adsbygoogle[data-ad-status="unfilled"]){display:none;}

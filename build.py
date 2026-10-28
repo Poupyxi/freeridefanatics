@@ -911,8 +911,8 @@ def build_editorial_page(slug, title, description, label, lead, sections):
 
 def build_privacy_page():
     path = "/privacy.html"
-    updated = "2026-09-10"
-    updated_label = "10 September 2026"
+    updated = "2026-10-28"
+    updated_label = "28 October 2026"
     description = "How RidersFanatics handles public sporting information, visitor data, newsletter subscriptions, technical logs, cookies and privacy requests."
 
     sections = [
@@ -986,7 +986,9 @@ def build_privacy_page():
         ]),
         ("10 — Cookies, Analytics and Affiliate Links", [
             ("p", "RidersFanatics aims to limit unnecessary tracking."),
-            ("p", "If non-essential analytics, advertising or tracking technologies requiring consent are used, appropriate consent mechanisms will be provided where required."),
+            ("p", "Google Analytics 4 is used to understand which rider, equipment and competition pages are useful. Its measurement identifier is G-NRR9X3275H."),
+            ("p", "Analytics stays disabled until you explicitly accept audience measurement. Advertising personalization signals and Google signals are disabled. Refusing Analytics does not limit access to any content."),
+            ("p", "Your choice is stored locally in your browser. You can change it at any time using the Analytics preferences control in the footer. Withdrawing consent stops new Analytics events from that browser."),
             ("p", "Some links on RidersFanatics may be affiliate links."),
             ("p", "When you follow an affiliate link, the external website may use referral identifiers or cookies to determine that the visit originated from RidersFanatics."),
             ("p", "Purchases are completed directly with the third-party retailer."),

@@ -6,6 +6,78 @@
     try { fn(); } catch(err) { console.error('[site.js] ' + name + ' failed:', err); }
   }
 
+  // GA4 is production-only and is loaded only after an explicit opt-in.
+  safe('analytics-consent', function(){
+    if(location.hostname !== 'ridersfanatics.com' && location.hostname !== 'www.ridersfanatics.com') return;
+
+    var measurementId = 'G-NRR9X3275H';
+    var storageKey = 'rf_analytics_consent';
+    var analyticsLoaded = false;
+
+    function loadAnalytics(){
+      if(analyticsLoaded) return;
+      analyticsLoaded = true;
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+      window.gtag('js', new Date());
+      window.gtag('config', measurementId, {
+        anonymize_ip: true,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false
+      });
+      var script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(measurementId);
+      document.head.appendChild(script);
+    }
+
+    function savedChoice(){
+      try { return localStorage.getItem(storageKey); } catch(error) { return null; }
+    }
+
+    function saveChoice(value){
+      try { localStorage.setItem(storageKey, value); } catch(error) {}
+    }
+
+    function removeBanner(){
+      var banner = document.querySelector('[data-analytics-consent]');
+      if(banner) banner.remove();
+    }
+
+    function choose(value){
+      saveChoice(value);
+      removeBanner();
+      if(value === 'granted') loadAnalytics();
+    }
+
+    function showBanner(){
+      removeBanner();
+      var banner = document.createElement('section');
+      banner.className = 'analytics-consent';
+      banner.setAttribute('data-analytics-consent', '');
+      banner.setAttribute('role', 'dialog');
+      banner.setAttribute('aria-label', 'Analytics preferences');
+      banner.innerHTML = '<div><strong>Anonymous audience measurement</strong><p>Allow Google Analytics to help us understand which rider and competition pages are useful. Analytics stays disabled until you accept. <a href="/privacy.html">Privacy details</a></p></div><div class="analytics-consent-actions"><button type="button" data-consent="denied">Refuse</button><button class="analytics-consent-accept" type="button" data-consent="granted">Accept</button></div>';
+      banner.querySelector('[data-consent="denied"]').addEventListener('click', function(){ choose('denied'); });
+      banner.querySelector('[data-consent="granted"]').addEventListener('click', function(){ choose('granted'); });
+      document.body.appendChild(banner);
+    }
+
+    var choice = savedChoice();
+    if(choice === 'granted') loadAnalytics();
+    else if(choice !== 'denied') showBanner();
+
+    var footerLinks = document.querySelector('.footer-links');
+    if(footerLinks){
+      var preferences = document.createElement('button');
+      preferences.type = 'button';
+      preferences.className = 'footer-consent-link';
+      preferences.textContent = 'Analytics preferences';
+      preferences.addEventListener('click', showBanner);
+      footerLinks.appendChild(preferences);
+    }
+  });
+
   // Header shadow on scroll
   safe('header-scroll', function(){
     var header = document.querySelector('header');

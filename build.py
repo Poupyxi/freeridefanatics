@@ -711,7 +711,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
 </header>
 """
 
-def footer_html(asset_prefix, seasonal=None):
+def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
     home_href = asset_prefix or "./"
     seasonal = IS_PREPROD if seasonal is None else seasonal and IS_PREPROD
     summer_scope = ' data-season-scope="summer"' if seasonal else ''
@@ -720,10 +720,11 @@ def footer_html(asset_prefix, seasonal=None):
     if seasonal:
         footer_logo = (f'<span class="season-logo-pair">{footer_logo}'
                        f'<img class="site-brand-logo season-winter-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-winter.png" alt="" width="28" height="28"></span>')
+    page_ad = page_ad_html() if include_page_ad else ""
     promo = promo_strip_html(asset_prefix)
     if seasonal:
         promo = f'<div data-season-scope="summer">{promo}</div>'
-    return f"""{promo}<footer>
+    return f"""{page_ad}{promo}<footer>
   <div class="wrap footer-row">
     <a class="footer-logo" href="{home_href}">{footer_logo}RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
@@ -766,6 +767,11 @@ def rider_ad_html():
     if IS_PREPROD:
         return '''<section class="rider-ad rider-ad-preview" aria-label="Advertisement preview"><span class="direct-ad-disclosure">Advertisement · Preproduction preview</span><div class="rider-ad-unit rider-ad-sample"><span class="rider-ad-preview-mark" aria-hidden="true">AD</span><div><strong>Advertising space</strong><p>Google AdSense · Responsive banner</p><small>Preview only — no live ad served.</small></div></div></section>'''
     return '''<section class="rider-ad" aria-label="Advertisement"><span class="direct-ad-disclosure">Advertisement</span><ins class="adsbygoogle rider-ad-unit" data-ad-client="ca-pub-6372404738608947" data-ad-slot="7556439197" data-ad-format="horizontal" data-full-width-responsive="false"></ins></section>'''
+
+
+def page_ad_html():
+    """Render one ad at the end of pages without a contextual rider placement."""
+    return f'''<aside class="page-ad-placement"><div class="wrap">{rider_ad_html()}</div></aside>'''
 
 
 def promo_strip_html(asset_prefix):
@@ -4328,7 +4334,7 @@ def build_rider_page(r, riders, winter=False):
 """
     if not winter:
         html += rider_feedback_html(r)
-    html += footer_html(prefix, seasonal=winter)
+    html += footer_html(prefix, seasonal=winter, include_page_ad=winter)
     return html
 
 # ---------------------------------------------------------------- main
@@ -4381,6 +4387,38 @@ def ensure_accessibility_landmarks():
                 markup = markup.replace("<main", '<main id="main-content"', 1)
                 with open(path, "w", encoding="utf-8") as target:
                     target.write(markup)
+
+
+def ensure_ad_placement():
+    """Add the shared placement to complete static pages not rendered by a builder."""
+    for directory, _, filenames in os.walk(ROOT):
+        if any(part in {".git", "node_modules"} for part in directory.split(os.sep)):
+            continue
+        for filename in filenames:
+            if not filename.endswith(".html"):
+                continue
+            path = os.path.join(directory, filename)
+            with open(path, encoding="utf-8") as source:
+                markup = source.read()
+            if "<footer>" not in markup or 'class="rider-ad ' in markup:
+                continue
+            depth = len(os.path.relpath(directory, ROOT).split(os.sep)) if directory != ROOT else 0
+            asset_prefix = "../" * depth
+            markup = markup.replace("<footer>", f"{page_ad_html()}<footer>", 1)
+            if "assets/js/footer-ad.js" not in markup:
+                markup = markup.replace(
+                    "</body>",
+                    f'<script src="{asset_prefix}assets/js/footer-ad.js?v={BUILD_VERSION}" defer></script>\n</body>',
+                    1,
+                )
+            if not IS_PREPROD and "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" not in markup:
+                markup = markup.replace(
+                    "</head>",
+                    '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" crossorigin="anonymous"></script>\n</head>',
+                    1,
+                )
+            with open(path, "w", encoding="utf-8") as target:
+                target.write(markup)
 
 def write_promo_pool(riders):
     """Small public dataset used to rotate footer discoveries after the daily first visit."""
@@ -4665,6 +4703,7 @@ def main():
         subprocess.run([sys.executable, i18n_normalizer], check=True)
 
     ensure_accessibility_landmarks()
+    ensure_ad_placement()
     run_image_optimizer()
 
     print(f"Built core pages + {len(riders)} rider pages + {len(equipment_data)} equipment category pages ({len(women)} women, {len(men)} men; {drive_portrait_count} Drive portraits matched; {excluded_rider_count} non-Bike Downhill riders excluded).")

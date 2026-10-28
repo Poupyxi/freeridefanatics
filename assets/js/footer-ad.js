@@ -3,14 +3,13 @@
   // Never request live advertisements on localhost or preproduction.
   if (!/^(www\.)?ridersfanatics\.com$/.test(location.hostname)) return;
   var unit = document.querySelector('.rider-ad-unit');
-  if (!unit) return;
   var requested = false;
   function requestAd() {
     if (requested || !unit.getBoundingClientRect().width) return;
     requested = true;
     (window.adsbygoogle = window.adsbygoogle || []).push({});
   }
-  if ('IntersectionObserver' in window) {
+  if (unit && 'IntersectionObserver' in window) {
     var observer = new IntersectionObserver(function (entries) {
       if (entries.some(function (entry) { return entry.isIntersecting; })) {
         requestAd();
@@ -18,12 +17,12 @@
       }
     }, {rootMargin: '300px'});
     observer.observe(unit);
-  } else {
+  } else if (unit) {
     requestAd();
   }
   // Use Google's supported callback so visitors can revisit their ad choices.
   var links = document.querySelector('.footer-links');
-  if (links) {
+  if (links && location.pathname === '/privacy.html') {
     var preferences = document.createElement('button');
     preferences.type = 'button';
     preferences.className = 'footer-consent-link';
@@ -43,18 +42,18 @@
         preferences.hidden = !(success && data && data.gdprApplies);
       });
     }});
+  }
 
-    // Google injects a large floating revocation control. The footer button above
-    // provides the same supported revocation flow in a less intrusive location.
-    function removeGoogleRevocationControl() {
-      document.querySelectorAll('.google-revocation-link-placeholder').forEach(function (control) {
-        control.remove();
-      });
-    }
-    removeGoogleRevocationControl();
-    if ('MutationObserver' in window && document.body) {
-      var revocationObserver = new MutationObserver(removeGoogleRevocationControl);
-      revocationObserver.observe(document.body, {childList: true, subtree: true});
-    }
+  // Google injects a large floating revocation control. The privacy page button
+  // above provides the same supported revocation flow in a less intrusive place.
+  function removeGoogleRevocationControl() {
+    document.querySelectorAll('.google-revocation-link-placeholder').forEach(function (control) {
+      control.remove();
+    });
+  }
+  removeGoogleRevocationControl();
+  if ('MutationObserver' in window && document.body) {
+    var revocationObserver = new MutationObserver(removeGoogleRevocationControl);
+    revocationObserver.observe(document.body, {childList: true, subtree: true});
   }
 })();

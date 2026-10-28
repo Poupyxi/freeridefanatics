@@ -1678,7 +1678,7 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
 /* One responsive ad immediately before the footer on every complete page. */
 .page-ad-placement{padding:28px 0 10px;background:var(--bg);}
 .page-ad-placement .rider-ad{margin:0;}
-.rider-ad{margin:32px 0 48px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0;width:100%;}
+.rider-ad{margin:32px 0 48px;padding:18px 0;border-bottom:1px solid var(--line);min-width:0;width:100%;}
 .rider-ad-unit{display:block;width:100%;min-height:100px;}
 .rider-ad:has(.adsbygoogle[data-ad-status="unfilled"]){display:none;}
 

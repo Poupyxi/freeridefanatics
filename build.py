@@ -690,11 +690,14 @@ def footer_html(asset_prefix):
 
 <script src="{asset_prefix}assets/js/promo-pool.js?v={BUILD_VERSION}"></script>
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
+<script src="{asset_prefix}assets/js/footer-ad.js?v={BUILD_VERSION}" defer></script>
 </body>
 </html>
 """
 
 def direct_ad_banner_html(asset_prefix):
+    if not IS_PREPROD:
+        return '''<section class="footer-ad" aria-label="Advertisement"><span class="direct-ad-disclosure">Advertisement</span><ins class="adsbygoogle footer-ad-unit" data-ad-client="ca-pub-6372404738608947" data-ad-slot="7556439197" data-ad-format="horizontal" data-full-width-responsive="false"></ins></section>'''
     campaign = next((item for item in AD_CATALOG.get("campaigns", []) if item.get("status") == "active"), None)
     if not campaign:
         return ""
@@ -932,7 +935,8 @@ def build_privacy_page():
             ("p", "RidersFanatics may also use third-party services for hosting, email delivery, security and other technical functions."),
             ("p", "These providers may process limited information when necessary to provide their services."),
         ]),
-        ("10 — Cookies, Analytics and Affiliate Links", [
+        ("10 — Cookies, Advertising, Analytics and Affiliate Links", [
+            ("p", "Google AdSense supplies advertisements in the footer. Google and its advertising partners may process IP addresses, device information and cookies for ad delivery, measurement and, where you consent, personalization. Google’s consent message lets visitors in the EEA, the UK and Switzerland accept, refuse or manage these choices. You can reopen it using Advertising preferences in the footer. Refusing consent does not restrict access to the site."),
             ("p", "RidersFanatics aims to limit unnecessary tracking."),
             ("p", "Google Analytics 4 is used to understand which rider, equipment and competition pages are useful. Its measurement identifier is G-NRR9X3275H."),
             ("p", "Analytics stays disabled until you explicitly accept audience measurement. Advertising personalization signals and Google signals are disabled. Refusing Analytics does not limit access to any content."),

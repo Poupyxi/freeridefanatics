@@ -57,6 +57,7 @@ jobs:
           python3 tests/rider_name_normalization.py
           python3 tests/rider_discipline_filter.py
           python3 tests/seo_priority_content.py
+          node tests/footer-ad.test.js
           python3 tests/drive_image_sync.py
           python3 tests/deployment_delta.py
           python3 tests/deployment_health.py

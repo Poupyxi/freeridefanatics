@@ -5,6 +5,19 @@
    burnt-orange accent, thin-border cards).
    ============================================================ */
 
+/* Analytics consent: deliberately compact so it does not obscure the site. */
+.analytics-consent{position:fixed;z-index:10000;right:18px;bottom:18px;left:18px;display:flex;align-items:center;justify-content:space-between;gap:24px;max-width:920px;margin:auto;padding:18px 20px;border:1px solid rgba(255,255,255,.18);background:#15161a;color:#fff;box-shadow:0 16px 50px rgba(0,0,0,.35)}
+.analytics-consent strong{display:block;margin-bottom:4px;font-family:'Space Mono',monospace;font-size:.85rem;text-transform:uppercase;letter-spacing:.08em}
+.analytics-consent p{margin:0;max-width:680px;color:#d2d3d6;font-size:.9rem;line-height:1.45}
+.analytics-consent a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.analytics-consent-actions{display:flex;gap:8px;flex:0 0 auto}
+.analytics-consent button,.footer-consent-link{font:inherit}
+.analytics-consent button{min-height:42px;padding:9px 16px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer}
+.analytics-consent .analytics-consent-accept{border-color:#b5421b;background:#b5421b}
+.analytics-consent button:focus-visible,.footer-consent-link:focus-visible{outline:3px solid #f2a477;outline-offset:3px}
+.footer-consent-link{padding:0;border:0;background:none;color:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:inherit}
+@media(max-width:680px){.analytics-consent{align-items:stretch;flex-direction:column;gap:14px}.analytics-consent-actions{width:100%}.analytics-consent button{flex:1}}
+
 :root{
   --bg:#eae9e5;
   --bg-card:#f5f4f1;

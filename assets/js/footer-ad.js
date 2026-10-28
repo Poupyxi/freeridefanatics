@@ -2,7 +2,7 @@
   'use strict';
   // Never request live advertisements on localhost or preproduction.
   if (!/^(www\.)?ridersfanatics\.com$/.test(location.hostname)) return;
-  var unit = document.querySelector('.footer-ad-unit');
+  var unit = document.querySelector('.rider-ad-unit');
   if (!unit) return;
   var requested = false;
   function requestAd() {

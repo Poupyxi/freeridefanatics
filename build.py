@@ -748,9 +748,24 @@ def footer_html(asset_prefix, seasonal=None):
 """
 
 def direct_ad_banner_html(asset_prefix):
-    if not IS_PREPROD:
-        return '''<section class="footer-ad" aria-label="Advertisement"><span class="direct-ad-disclosure">Advertisement</span><ins class="adsbygoogle footer-ad-unit" data-ad-client="ca-pub-6372404738608947" data-ad-slot="7556439197" data-ad-format="horizontal" data-full-width-responsive="false"></ins></section>'''
-    return '''<section class="footer-ad footer-ad-preview" aria-label="Advertisement preview"><span class="direct-ad-disclosure">Advertisement · Preproduction preview</span><div class="footer-ad-unit footer-ad-sample"><span class="footer-ad-preview-mark" aria-hidden="true">AD</span><div><strong>Advertising space</strong><p>Google AdSense · Responsive banner</p><small>Preview only — no live ad served.</small></div></div></section>'''
+    campaign = next((item for item in AD_CATALOG.get("campaigns", []) if item.get("status") == "active"), None)
+    if not campaign:
+        return ""
+    destination = campaign.get("url") or "/advertise.html"
+    is_external = destination.startswith(("http://", "https://"))
+    href = destination if is_external else asset_prefix + destination.lstrip("/")
+    link_attrs = ' target="_blank" rel="noopener sponsored"' if is_external or campaign.get("type") == "sponsor" else ""
+    media = (f'<img src="{asset_prefix}{esc_attr(campaign["image"].lstrip("/"))}" alt="" loading="lazy" width="320" height="180">'
+             if campaign.get("image") else '<span class="direct-ad-mark" aria-hidden="true">RF</span>')
+    disclosure = "Advertisement" if campaign.get("type") == "sponsor" else "Partnership"
+    return f'''<div class="direct-ad-shell" aria-label="{disclosure}"><div class="direct-ad-media">{media}</div><div class="direct-ad-copy"><span class="direct-ad-disclosure">{disclosure} · {esc(campaign.get('label'))}</span><strong>{esc(campaign.get('title'))}</strong><p>{esc(campaign.get('description'))}</p></div><a class="direct-ad-cta" href="{esc_attr(href)}"{link_attrs}>{esc(campaign.get('cta') or 'Learn more')} <span aria-hidden="true">→</span></a></div>'''
+
+
+def rider_ad_html():
+    """Render the ad directly after a rider's equipment, before results."""
+    if IS_PREPROD:
+        return '''<section class="rider-ad rider-ad-preview" aria-label="Advertisement preview"><span class="direct-ad-disclosure">Advertisement · Preproduction preview</span><div class="rider-ad-unit rider-ad-sample"><span class="rider-ad-preview-mark" aria-hidden="true">AD</span><div><strong>Advertising space</strong><p>Google AdSense · Responsive banner</p><small>Preview only — no live ad served.</small></div></div></section>'''
+    return '''<section class="rider-ad" aria-label="Advertisement"><span class="direct-ad-disclosure">Advertisement</span><ins class="adsbygoogle rider-ad-unit" data-ad-client="ca-pub-6372404738608947" data-ad-slot="7556439197" data-ad-format="horizontal" data-full-width-responsive="false"></ins></section>'''
 
 
 def promo_strip_html(asset_prefix):
@@ -4295,6 +4310,7 @@ def build_rider_page(r, riders, winter=False):
 
     {setup_head}{build_html}
     {equip_html}
+    {rider_ad_html() if not winter else ''}
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>

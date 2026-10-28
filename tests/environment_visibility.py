@@ -17,7 +17,14 @@ assert "google.com, pub-6372404738608947, DIRECT, f08c47fec0942fa0" in ads
 assert 'class="direct-ad promo-strip"' in home
 assert 1 <= home.count('<article class="promo-card') <= 3
 assert "Common equipment" in home
-assert ('footer-ad-preview' if environment == "preprod" else 'data-ad-slot="7556439197"') in home
+assert 'class="direct-ad-shell"' in home
+assert 'rider-ad-preview' not in home
+assert 'data-ad-slot="7556439197"' not in home
+rider_pages = list((root / "riders").glob("*.html"))
+assert rider_pages
+rider_source = rider_pages[0].read_text(encoding="utf-8")
+assert ('rider-ad-preview' if environment == "preprod" else 'data-ad-slot="7556439197"') in rider_source
+assert rider_source.index('class="rider-ad') < rider_source.index('>Results</h2>')
 assert red_bull.is_file()
 assert red_bull_rounds.joinpath("cerroabajo-2026.html").is_file()
 assert red_bull_rounds.joinpath("rampage-2026.html").is_file()

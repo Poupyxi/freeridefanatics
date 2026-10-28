@@ -763,9 +763,9 @@ def direct_ad_banner_html(asset_prefix):
 
 
 def rider_ad_html():
-    """Render the ad directly after a rider's equipment, before results."""
+    """Render the single ad placement used immediately before the footer."""
     if IS_PREPROD:
-        return '''<section class="rider-ad rider-ad-preview" aria-label="Advertisement preview"><span class="direct-ad-disclosure">Advertisement · Preproduction preview</span><div class="rider-ad-unit rider-ad-sample"><span class="rider-ad-preview-mark" aria-hidden="true">AD</span><div><strong>Advertising space</strong><p>Google AdSense · Responsive banner</p><small>Preview only — no live ad served.</small></div></div></section>'''
+        return '''<section class="rider-ad rider-ad-preview" aria-label="Advertisement preview"><div class="rider-ad-unit rider-ad-sample"><span class="rider-ad-preview-mark" aria-hidden="true">AD</span><div><strong>Advertising space</strong><p>Google AdSense · Responsive banner</p><small>Preview only — no live ad served.</small></div></div></section>'''
     return '''<section class="rider-ad" aria-label="Advertisement"><span class="direct-ad-disclosure">Advertisement</span><ins class="adsbygoogle rider-ad-unit" data-ad-client="ca-pub-6372404738608947" data-ad-slot="7556439197" data-ad-format="horizontal" data-full-width-responsive="false"></ins></section>'''
 
 

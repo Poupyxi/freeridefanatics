@@ -27,7 +27,7 @@
     var preferences = document.createElement('button');
     preferences.type = 'button';
     preferences.className = 'footer-consent-link';
-    preferences.textContent = 'Advertising preferences';
+    preferences.textContent = 'Privacy and cookie settings';
     preferences.hidden = true;
     preferences.addEventListener('click', function () {
       if (typeof window.googlefc.showRevocationMessage === 'function') {
@@ -43,5 +43,18 @@
         preferences.hidden = !(success && data && data.gdprApplies);
       });
     }});
+
+    // Google injects a large floating revocation control. The footer button above
+    // provides the same supported revocation flow in a less intrusive location.
+    function removeGoogleRevocationControl() {
+      document.querySelectorAll('.google-revocation-link-placeholder').forEach(function (control) {
+        control.remove();
+      });
+    }
+    removeGoogleRevocationControl();
+    if ('MutationObserver' in window && document.body) {
+      var revocationObserver = new MutationObserver(removeGoogleRevocationControl);
+      revocationObserver.observe(document.body, {childList: true, subtree: true});
+    }
   }
 })();

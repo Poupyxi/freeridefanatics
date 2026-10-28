@@ -7,7 +7,7 @@ function run(hostname, width = 800) {
   const unit = {getBoundingClientRect: () => ({width})};
   const window = {};
   const context = {window, location: {hostname}, document: {
-    querySelector: selector => selector === '.footer-ad-unit' ? unit : {appendChild: node => {button = node;}},
+    querySelector: selector => selector === '.rider-ad-unit' ? unit : {appendChild: node => {button = node;}},
     createElement: () => ({addEventListener(name, fn) {this[name] = fn;}})
   }, IntersectionObserver: function (fn) {callback = fn; this.observe = () => {}; this.disconnect = () => {disconnected = true;};}};
   window.IntersectionObserver = context.IntersectionObserver;

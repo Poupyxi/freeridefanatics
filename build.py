@@ -4382,7 +4382,9 @@ def ensure_ad_placement():
             path = os.path.join(directory, filename)
             with open(path, encoding="utf-8") as source:
                 markup = source.read()
-            if "<footer>" not in markup or 'class="rider-ad ' in markup:
+            if ("<footer>" not in markup
+                    or 'class="rider-ad"' in markup
+                    or 'class="rider-ad ' in markup):
                 continue
             depth = len(os.path.relpath(directory, ROOT).split(os.sep)) if directory != ROOT else 0
             asset_prefix = "../" * depth

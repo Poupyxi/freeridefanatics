@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Assert that generated content matches the selected deployment environment."""
 import os
+import re
 from pathlib import Path
+
+
+def ad_placement_count(source):
+    """Count the placement section in both preview and production markup."""
+    return len(re.findall(r'class="rider-ad(?:\s|")', source))
 
 root = Path(__file__).resolve().parent.parent
 environment = os.environ.get("RF_BUILD_ENV", "production")
@@ -27,7 +33,7 @@ rider_source = rider_pages[0].read_text(encoding="utf-8")
 assert ad_marker in rider_source
 assert rider_source.index('>Results</h2>') < rider_source.index('class="rider-ad')
 assert rider_source.index('class="rider-ad') < rider_source.index('<footer>')
-assert rider_source.count('class="rider-ad ') == 1
+assert ad_placement_count(rider_source) == 1
 
 # Every complete generated page gets exactly one placement. Redirect-only files
 # without the shared footer are intentionally excluded.
@@ -40,7 +46,7 @@ for page in root.rglob("*.html"):
         continue
     complete_pages.append(page)
     assert ad_marker in source, f"Missing ad placement: {page.relative_to(root)}"
-    assert source.count('class="rider-ad ') == 1, f"Duplicate ad placement: {page.relative_to(root)}"
+    assert ad_placement_count(source) == 1, f"Duplicate ad placement: {page.relative_to(root)}"
     assert source.index('class="rider-ad') < source.index('<footer>'), f"Ad must precede footer: {page.relative_to(root)}"
 assert complete_pages
 assert red_bull.is_file()

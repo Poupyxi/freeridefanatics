@@ -24,7 +24,8 @@ rider_pages = list((root / "riders").glob("*.html"))
 assert rider_pages
 rider_source = rider_pages[0].read_text(encoding="utf-8")
 assert ad_marker in rider_source
-assert rider_source.index('class="rider-ad') < rider_source.index('>Results</h2>')
+assert rider_source.index('>Results</h2>') < rider_source.index('class="rider-ad')
+assert rider_source.index('class="rider-ad') < rider_source.index('<footer>')
 assert rider_source.count('class="rider-ad ') == 1
 
 # Every complete generated page gets exactly one placement. Redirect-only files
@@ -39,6 +40,7 @@ for page in root.rglob("*.html"):
     complete_pages.append(page)
     assert ad_marker in source, f"Missing ad placement: {page.relative_to(root)}"
     assert source.count('class="rider-ad ') == 1, f"Duplicate ad placement: {page.relative_to(root)}"
+    assert source.index('class="rider-ad') < source.index('<footer>'), f"Ad must precede footer: {page.relative_to(root)}"
 assert complete_pages
 assert red_bull.is_file()
 assert red_bull_rounds.joinpath("cerroabajo-2026.html").is_file()

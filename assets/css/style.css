@@ -1675,7 +1675,7 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
 @media(max-width:760px){.season-logo-pair{width:38px;height:38px;flex-basis:38px}}
 @media(max-width:560px){.season-switch{width:56px;flex-basis:56px}.season-switch::after{width:26px;height:26px;top:8px}.season-winter .season-switch::after{transform:translateX(18px)}.season-logo-pair{width:32px;height:32px;flex-basis:32px}}
 @media(prefers-reduced-motion:reduce){.season-switch::before,.season-switch::after,.season-logo-pair img{transition:none!important}}
-/* One responsive ad per page: contextual on rider pages, before the footer elsewhere. */
+/* One responsive ad immediately before the footer on every complete page. */
 .page-ad-placement{padding:28px 0 10px;background:var(--bg);}
 .page-ad-placement .rider-ad{margin:0;}
 .rider-ad{margin:32px 0 48px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0;width:100%;}

@@ -724,7 +724,7 @@ def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
     promo = promo_strip_html(asset_prefix)
     if seasonal:
         promo = f'<div data-season-scope="summer">{promo}</div>'
-    return f"""{page_ad}{promo}<footer>
+    return f"""{promo}{page_ad}<footer>
   <div class="wrap footer-row">
     <a class="footer-logo" href="{home_href}">{footer_logo}RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
@@ -4316,7 +4316,6 @@ def build_rider_page(r, riders, winter=False):
 
     {setup_head}{build_html}
     {equip_html}
-    {rider_ad_html() if not winter else ''}
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>
@@ -4334,7 +4333,7 @@ def build_rider_page(r, riders, winter=False):
 """
     if not winter:
         html += rider_feedback_html(r)
-    html += footer_html(prefix, seasonal=winter, include_page_ad=winter)
+    html += footer_html(prefix, seasonal=winter)
     return html
 
 # ---------------------------------------------------------------- main

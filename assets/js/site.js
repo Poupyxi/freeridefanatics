@@ -68,7 +68,7 @@
     else if(choice !== 'denied') showBanner();
 
     var footerLinks = document.querySelector('.footer-links');
-    if(footerLinks){
+    if(footerLinks && location.pathname === '/privacy.html'){
       var preferences = document.createElement('button');
       preferences.type = 'button';
       preferences.className = 'footer-consent-link';

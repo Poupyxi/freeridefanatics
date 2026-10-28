@@ -2,11 +2,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync('assets/js/footer-ad.js', 'utf8');
-function run(hostname, width = 800) {
+function run(hostname, width = 800, pathname = '/privacy.html') {
   let callback, disconnected = false, button, mutationCallback, removed = false;
   const unit = {getBoundingClientRect: () => ({width})};
   const window = {};
-  const context = {window, location: {hostname}, document: {
+  const context = {window, location: {hostname, pathname}, document: {
     body: {},
     querySelector: selector => selector === '.rider-ad-unit' ? unit : {appendChild: node => {button = node;}},
     querySelectorAll: selector => selector === '.google-revocation-link-placeholder' ? [{remove: () => {removed = true;}}] : [],
@@ -37,4 +37,6 @@ page.button.click(); assert.equal(reopened, true);
 const hidden = run('ridersfanatics.com', 0); hidden.intersect();
 assert.equal(hidden.window.adsbygoogle, undefined);
 assert.equal(hidden.disconnected, false);
+const contentPage = run('ridersfanatics.com', 800, '/riders.html');
+assert.equal(contentPage.button, undefined);
 console.log('Footer ad checks passed: production-only, lazy, once, visible size, consent preferences.');

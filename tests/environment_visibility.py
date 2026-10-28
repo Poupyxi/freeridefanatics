@@ -17,7 +17,8 @@ assert "google.com, pub-6372404738608947, DIRECT, f08c47fec0942fa0" in ads
 assert 'class="direct-ad promo-strip"' in home
 assert 1 <= home.count('<article class="promo-card') <= 3
 assert "Common equipment" in home
-assert 'class="direct-ad-shell"' in home
+assert 'class="direct-ad-shell"' not in home
+assert "Reach downhill fans at the point of discovery." not in home
 ad_marker = 'rider-ad-preview' if environment == "preprod" else 'data-ad-slot="7556439197"'
 assert ad_marker in home
 rider_pages = list((root / "riders").glob("*.html"))

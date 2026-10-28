@@ -112,7 +112,6 @@ COMPETITIONS_PATH = os.environ.get(
     "RF_COMPETITIONS_PATH",
     os.path.join(ROOT, "data", "competitions.json"),
 )
-ADS_PATH = os.path.join(ROOT, "data", "ads.json")
 BRAND_LOGOS_PATH = os.path.join(ROOT, "data", "brand-logos.json")
 COMPETITION_LOGOS_PATH = os.path.join(ROOT, "data", "competition-logos.json")
 DRIVE_LOGO_MANIFEST_PATH = os.path.join(ROOT, "data", "drive-logo-manifest.json")
@@ -136,8 +135,6 @@ COMPETITIONS = [
 ]
 ORGANIZATIONS = [item for item in COMPETITION_CATALOG.get("organizations", []) if visible_status(item)]
 CURRENT_COMPETITION = COMPETITIONS[0]
-with open(ADS_PATH, encoding="utf-8") as ads_source:
-    AD_CATALOG = json.load(ads_source)
 with open(DATA_PATH, encoding="utf-8") as promo_source:
     PROMO_RIDERS = json.load(promo_source)
 RIDER_COUNT = len(PROMO_RIDERS)
@@ -748,20 +745,6 @@ def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
 </html>
 """
 
-def direct_ad_banner_html(asset_prefix):
-    campaign = next((item for item in AD_CATALOG.get("campaigns", []) if item.get("status") == "active"), None)
-    if not campaign:
-        return ""
-    destination = campaign.get("url") or "/advertise.html"
-    is_external = destination.startswith(("http://", "https://"))
-    href = destination if is_external else asset_prefix + destination.lstrip("/")
-    link_attrs = ' target="_blank" rel="noopener sponsored"' if is_external or campaign.get("type") == "sponsor" else ""
-    media = (f'<img src="{asset_prefix}{esc_attr(campaign["image"].lstrip("/"))}" alt="" loading="lazy" width="320" height="180">'
-             if campaign.get("image") else '<span class="direct-ad-mark" aria-hidden="true">RF</span>')
-    disclosure = "Advertisement" if campaign.get("type") == "sponsor" else "Partnership"
-    return f'''<div class="direct-ad-shell" aria-label="{disclosure}"><div class="direct-ad-media">{media}</div><div class="direct-ad-copy"><span class="direct-ad-disclosure">{disclosure} · {esc(campaign.get('label'))}</span><strong>{esc(campaign.get('title'))}</strong><p>{esc(campaign.get('description'))}</p></div><a class="direct-ad-cta" href="{esc_attr(href)}"{link_attrs}>{esc(campaign.get('cta') or 'Learn more')} <span aria-hidden="true">→</span></a></div>'''
-
-
 def rider_ad_html():
     """Render the single ad placement used immediately before the footer."""
     if IS_PREPROD:
@@ -838,7 +821,7 @@ def promo_strip_html(asset_prefix):
     equipment_media = (f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="" loading="lazy" width="180" height="180">'
                        if photo else '<span class="promo-equipment-icon" aria-hidden="true">+</span>')
     equipment_card = f'''<article class="promo-card" data-promo-role="equipment"><div class="promo-card-media">{equipment_media}</div><div class="promo-card-copy"><span class="direct-ad-disclosure">Common equipment · {esc(category)}</span><strong>{esc(equipment_title)}</strong><p>{equipment_note}</p></div><a class="promo-card-link" href="{asset_prefix}equipment/{category_slug}.html">Explore category <span aria-hidden="true">→</span></a></article>'''
-    return f'''<aside class="direct-ad promo-strip" data-promo-prefix="{esc_attr(asset_prefix)}" aria-label="Latest winners, equipment and advertising"><div class="wrap"><div class="promo-grid">{rider_card(women_winner, 'Top 1 Women')}{equipment_card}{rider_card(men_winner, 'Top 1 Men')}</div>{direct_ad_banner_html(asset_prefix)}</div></aside>'''
+    return f'''<aside class="direct-ad promo-strip" data-promo-prefix="{esc_attr(asset_prefix)}" aria-label="Latest winners and equipment"><div class="wrap"><div class="promo-grid">{rider_card(women_winner, 'Top 1 Women')}{equipment_card}{rider_card(men_winner, 'Top 1 Men')}</div></div></aside>'''
 
 def hero_waves_svg():
     return """<svg class="hero-waves" viewBox="0 0 1240 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">

@@ -985,7 +985,7 @@ def build_privacy_page():
         ("10 — Cookies, Advertising, Analytics and Affiliate Links", [
             ("p", "Google AdSense supplies advertisements in the footer. Google and its advertising partners may process IP addresses, device information and cookies for ad delivery, measurement and, where you consent, personalization. Google’s consent message lets visitors in the EEA, the UK and Switzerland accept, refuse or manage these choices. You can reopen it using Privacy and cookie settings in the footer. Refusing consent does not restrict access to the site."),
             ("p", "RidersFanatics aims to limit unnecessary tracking."),
-            ("p", "Google Analytics 4 is used to understand which rider, equipment and competition pages are useful. Its measurement identifier is G-NRR9X3275H."),
+            ("p", "Google Analytics 4 is used to understand which rider, equipment and competition pages are useful. Its measurement identifier is G-G82BKEDZ6P."),
             ("p", "Analytics stays disabled until you explicitly accept audience measurement. Advertising personalization signals and Google signals are disabled. Refusing Analytics does not limit access to any content."),
             ("p", "Your choice is stored locally in your browser. You can change it at any time using the Analytics preferences control in the footer. Withdrawing consent stops new Analytics events from that browser."),
             ("p", "Some links on RidersFanatics may be affiliate links."),

@@ -10,7 +10,7 @@
   safe('analytics-consent', function(){
     if(location.hostname !== 'ridersfanatics.com' && location.hostname !== 'www.ridersfanatics.com') return;
 
-    var measurementId = 'G-NRR9X3275H';
+    var measurementId = 'G-G82BKEDZ6P';
     var storageKey = 'rf_analytics_consent';
     var analyticsLoaded = false;
 

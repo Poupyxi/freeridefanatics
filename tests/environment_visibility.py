@@ -25,7 +25,7 @@ assert 1 <= home.count('<article class="promo-card') <= 3
 assert "Common equipment" in home
 assert 'class="direct-ad-shell"' not in home
 assert "Reach downhill fans at the point of discovery." not in home
-ad_marker = 'rider-ad-preview' if environment == "preprod" else 'data-ad-slot="7556439197"'
+ad_marker = 'rider-ad-preview' if (environment == "preprod" or os.environ.get("RF_ADS_MODE", "preview") != "live") else 'data-ad-slot="7556439197"'
 assert ad_marker in home
 rider_pages = list((root / "riders").glob("*.html"))
 assert rider_pages
@@ -61,6 +61,6 @@ if environment == "preprod":
     assert "pagead2.googlesyndication.com" not in home
 else:
     assert "Allow: /" in robots
-    assert "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" in home
+    assert "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" not in home
 
 print(f"Environment visibility checks passed for {environment}.")

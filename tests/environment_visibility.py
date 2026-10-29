@@ -31,7 +31,7 @@ rider_pages = list((root / "riders").glob("*.html"))
 assert rider_pages
 rider_source = rider_pages[0].read_text(encoding="utf-8")
 assert ad_marker in rider_source
-assert rider_source.index('>Results</h2>') < rider_source.index('class="rider-ad')
+assert rider_source.index('id="rider-results"') < rider_source.index('class="rider-ad')
 assert rider_source.index('class="rider-ad') < rider_source.index('<footer>')
 assert ad_placement_count(rider_source) == 1
 

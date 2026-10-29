@@ -587,7 +587,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
     image_dimensions = "" if image_path else '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'
     image_preload = f'<link rel="preload" as="image" href="{image}">' if image_path else ""
     schema_html = "\n".join(json_ld(s) for s in (schemas or []))
-    adsense_script = "" if IS_PREPROD else '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" crossorigin="anonymous"></script>'
+    adsense_script = "" # Loaded only by footer-ad.js after CMP consent.
     robots_content = robots or ('noindex,nofollow,noarchive' if IS_PREPROD else 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -747,9 +747,12 @@ def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
 
 def rider_ad_html():
     """Render the single ad placement used immediately before the footer."""
-    if IS_PREPROD:
+    client = os.environ.get("RF_ADS_CLIENT", "ca-pub-6372404738608947")
+    slot = os.environ.get("RF_ADS_SLOT", "7556439197")
+    configured = re.fullmatch(r"ca-pub-\d{16}", client) and re.fullmatch(r"\d{10}", slot)
+    if IS_PREPROD or os.environ.get("RF_ADS_MODE", "preview") != "live" or not configured:
         return '''<section class="rider-ad rider-ad-preview" aria-label="Advertisement preview"><div class="rider-ad-unit rider-ad-sample"><span class="rider-ad-preview-mark" aria-hidden="true">AD</span><div><strong>Advertising space</strong><p>Google AdSense · Responsive banner</p><small>Preview only — no live ad served.</small></div></div></section>'''
-    return '''<section class="rider-ad" aria-label="Advertisement"><span class="direct-ad-disclosure">Advertisement</span><ins class="adsbygoogle rider-ad-unit" data-ad-client="ca-pub-6372404738608947" data-ad-slot="7556439197" data-ad-format="horizontal" data-full-width-responsive="false"></ins></section>'''
+    return f'''<section class="rider-ad" aria-label="Advertisement"><span class="direct-ad-disclosure">Advertisement</span><ins class="adsbygoogle rider-ad-unit" data-ad-client="{client}" data-ad-slot="{slot}" data-ad-format="horizontal" data-full-width-responsive="false"></ins></section>'''
 
 
 def page_ad_html():
@@ -983,7 +986,7 @@ def build_privacy_page():
             ("p", "These providers may process limited information when necessary to provide their services."),
         ]),
         ("10 — Cookies, Advertising, Analytics and Affiliate Links", [
-            ("p", "Google AdSense supplies advertisements in the footer. Google and its advertising partners may process IP addresses, device information and cookies for ad delivery, measurement and, where you consent, personalization. Google’s consent message lets visitors in the EEA, the UK and Switzerland accept, refuse or manage these choices. You can reopen it using Privacy and cookie settings in the footer. Refusing consent does not restrict access to the site."),
+            ("p", "Preproduction displays a local advertising preview with no advertising cookies or external ad requests. Live advertising is disabled by default. When explicitly enabled, Google AdSense supplies advertisements in the footer only after advertising consent from a certified consent platform. Google and its advertising partners may process IP addresses, device information and cookies for ad delivery, measurement and, where you consent, personalization. Google’s consent message lets visitors in the EEA, the UK and Switzerland accept, refuse or manage these choices. You can reopen it using Privacy and cookie settings in the footer on every page. Withdrawing advertising consent reloads the page to stop the advertising scripts. Refusing consent does not restrict access to the site."),
             ("p", "RidersFanatics aims to limit unnecessary tracking."),
             ("p", "Google Analytics 4 is used to understand which rider, equipment and competition pages are useful. Its measurement identifier is G-G82BKEDZ6P."),
             ("p", "Analytics stays disabled until you explicitly accept audience measurement. Advertising personalization signals and Google signals are disabled. Refusing Analytics does not limit access to any content."),
@@ -4446,6 +4449,11 @@ def ensure_ad_placement():
             path = os.path.join(directory, filename)
             with open(path, encoding="utf-8") as source:
                 markup = source.read()
+            # Sanitize retained static pages too, including previous live builds.
+            markup = re.sub(r'<script\b[^>]*src=["\'][^"\']*pagead2\.googlesyndication\.com/pagead/js/adsbygoogle\.js[^"\']*["\'][^>]*>\s*</script>', '', markup, flags=re.I)
+            markup = re.sub(r'<section class="rider-ad(?: [^"]*)?"[^>]*>.*?</section>', lambda _: rider_ad_html(), markup, flags=re.S)
+            with open(path, "w", encoding="utf-8") as target:
+                target.write(markup)
             if ("<footer>" not in markup
                     or 'class="rider-ad"' in markup
                     or 'class="rider-ad ' in markup):
@@ -4457,12 +4465,6 @@ def ensure_ad_placement():
                 markup = markup.replace(
                     "</body>",
                     f'<script src="{asset_prefix}assets/js/footer-ad.js?v={BUILD_VERSION}" defer></script>\n</body>',
-                    1,
-                )
-            if not IS_PREPROD and "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" not in markup:
-                markup = markup.replace(
-                    "</head>",
-                    '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6372404738608947" crossorigin="anonymous"></script>\n</head>',
                     1,
                 )
             with open(path, "w", encoding="utf-8") as target:

@@ -345,6 +345,15 @@ def import_riders(riders, src_dir, out_dir, kind, square, force, dry, prune=Fals
         if dry:
             done.append(rider["slug"])
             continue
+        if force:
+            # A Drive refresh always writes the canonical JPEG. Remove older
+            # derived formats first: otherwise build.py can keep selecting a
+            # stale WebP/PNG ahead of the freshly imported PictureFaceRiders
+            # or PPInstaRiders image.
+            for extension in IMAGE_EXTS:
+                alternate = os.path.join(out_dir, f"{rider['slug']}{extension}")
+                if alternate != dest and os.path.isfile(alternate):
+                    os.remove(alternate)
         src = os.path.join(src_dir, f)
         try:
             if square:

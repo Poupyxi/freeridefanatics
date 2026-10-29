@@ -16,6 +16,32 @@ SPEC.loader.exec_module(health)
 
 
 class DataHealthReportTests(unittest.TestCase):
+    def test_current_portrait_folder_and_composite_filename_are_recognized(self):
+        sections, portraits = health.drive_inventory({
+            "image_count": 1,
+            "files": [{"path": "PPInstaRiders/MOGA_Abel__@abel_moga21.webp"}],
+        })
+        self.assertEqual(sections["ppinstariders"], 1)
+        self.assertEqual(
+            portraits["ppinstariders"],
+            ["PPInstaRiders/MOGA_Abel__@abel_moga21.webp"],
+        )
+        self.assertEqual(
+            health.portrait_handle(portraits["ppinstariders"][0]),
+            "abelmoga21",
+        )
+
+    def test_picture_face_riders_is_a_portrait_source(self):
+        sections, portraits = health.drive_inventory({
+            "image_count": 1,
+            "files": [{"path": "PictureFaceRiders/@abel_moga21.webp"}],
+        })
+        self.assertEqual(sections["picturefaceriders"], 1)
+        self.assertEqual(
+            portraits["picturefaceriders"],
+            ["PictureFaceRiders/@abel_moga21.webp"],
+        )
+
     def fixtures(self, root: Path):
         portraits = root / "portraits"
         actions = root / "actions"
@@ -68,8 +94,8 @@ class DataHealthReportTests(unittest.TestCase):
         drive = {
             "image_count": 3,
             "files": [
-                {"path": "PPRiders/complete_rider.webp"},
-                {"path": "PPRiders/orphan.webp"},
+                {"path": "PPInstaRiders/complete_rider.webp"},
+                {"path": "PPInstaRiders/orphan.webp"},
                 {"path": "Equipment/Frame/Brand;Model.webp"},
             ],
         }
@@ -113,7 +139,7 @@ class DataHealthReportTests(unittest.TestCase):
 
     def test_manifest_count_mismatch_is_rejected(self):
         with self.assertRaises(ValueError):
-            health.drive_inventory({"image_count": 2, "files": [{"path": "PPRiders/a.jpg"}]})
+            health.drive_inventory({"image_count": 2, "files": [{"path": "PPInstaRiders/a.jpg"}]})
 
     def test_cli_equipment_resolver_loads_build_from_the_repository_root(self):
         with tempfile.TemporaryDirectory() as directory:

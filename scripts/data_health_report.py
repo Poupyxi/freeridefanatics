@@ -33,6 +33,13 @@ def normalize_handle(value: object) -> str:
     return re.sub(r"[^a-z0-9]", "", raw.casefold().lstrip("@"))
 
 
+def portrait_handle(path: str) -> str:
+    """Extract the final Instagram handle from a Drive portrait filename."""
+    stem = Path(path).stem
+    explicit_handles = re.findall(r"@([A-Za-z0-9._]+)", stem)
+    return normalize_handle(explicit_handles[-1] if explicit_handles else stem)
+
+
 def normalize_reference(value: object) -> str:
     normalized = unicodedata.normalize("NFKD", str(value or ""))
     ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
@@ -77,7 +84,12 @@ def drive_inventory(manifest: dict) -> tuple[Counter, dict[str, list[str]]]:
             f"Drive manifest image_count mismatch: declared {declared}, found {len(files)}"
         )
     sections = Counter()
-    portrait_paths = {"ppriders": [], "pictureriders": []}
+    portrait_paths = {
+        "ppinstariders": [],
+        "ppriders": [],
+        "picturefaceriders": [],
+        "pictureriders": [],
+    }
     for row in files:
         if not isinstance(row, dict) or not row.get("path"):
             raise ValueError("each Drive manifest file needs a path")
@@ -250,7 +262,7 @@ def analyze(
 
     for paths in portrait_paths.values():
         for path in paths:
-            if normalize_handle(Path(path).name) not in handles:
+            if portrait_handle(path) not in handles:
                 issues["unmatched_drive_portraits"].append(path)
 
     if not team_assignments_available:

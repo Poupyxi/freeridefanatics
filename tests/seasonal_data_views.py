@@ -61,6 +61,24 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     assert "Setup analysis" not in rider_html
     assert "Winter Brand" in rider_html
     assert "Bike Brand" not in rider_html
+    assert "Bike Check · 2026" not in rider_html
+
+    bike_check_rider = {
+        **bike,
+        "equipment": [
+            {"category": "Frame", "brand": "Sample", "model_detail": "DH Frame"},
+            {"category": "Fork", "brand": "Sample", "model_detail": "Factory Fork"},
+            {"category": "RearShock", "brand": "Sample", "model_detail": "Coil Shock"},
+            {"category": "Handlebar", "brand": "Sample", "model_detail": "Carbon Bar"},
+        ],
+    }
+    bike_check_html = build.build_rider_page(bike_check_rider, [bike_check_rider])
+    for marker in (
+        "Bike Check · 2026", 'class="bike-check-nav"', 'class="bike-check-snapshot"',
+        "2026 race bike", "4 components", 'id="equipment-chassis"',
+        'id="equipment-cockpit"', 'id="rider-results"', 'class="bike-results"',
+    ):
+        assert marker in bike_check_html
 
     equipment_html = build.build_winter_equipment_directory([ski])
     summer_equipment_html = build.build_equipment_directory([bike])

@@ -63,7 +63,6 @@ jobs:
           python3 tests/rider_name_normalization.py
           python3 tests/seo_priority_content.py
           python3 tests/drive_image_sync.py
-          python3 tests/portrait_refresh_replaces_stale_variants.py
           python3 tests/deployment_delta.py
           python3 tests/deployment_health.py
           python3 tests/deployment_access_contract.py

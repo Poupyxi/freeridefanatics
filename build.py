@@ -3298,15 +3298,11 @@ def bike_build_html(equipment):
         part("frame", frame, "Frame"),
         part("fork", fork, "Fork"),
     ]))
-    return f"""<section class="bike-build reveal" id="bike-check-overview" aria-label="Bike build overview">
+    return f"""<div class="bike-build reveal">
       <div class="bb-stage">
         {parts_html}
       </div>
-    </section>"""
-
-def equipment_group_id(group):
-    """Stable, human-readable fragment used by the bike-check navigation."""
-    return re.sub(r"[^a-z0-9]+", "-", group.lower().replace("&", "and")).strip("-")
+    </div>"""
 
 def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category_href="../equipment/"):
     """Group equipment items into Chassis/Cockpit/Drivetrain/Wheels & Tyres/Protection
@@ -3332,8 +3328,7 @@ def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category
     for idx, group in enumerate(shown, start=1):
         icon = EQUIP_GROUP_ICONS.get(group, "")
         items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href) for i in buckets[group])
-        group_id = equipment_group_id(group)
-        sections.append(f"""<section class="equip-group reveal" id="equipment-{group_id}">
+        sections.append(f"""<div class="equip-group reveal">
       <div class="equip-group-head">
         <span class="icon">{icon}</span>
         <div>
@@ -3344,11 +3339,11 @@ def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category
       <div class="equip-grid">
         {items_html}
       </div>
-    </section>""")
+    </div>""")
 
     if other:
         items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href) for i in other)
-        sections.append(f"""<section class="equip-group reveal" id="equipment-additional-kit">
+        sections.append(f"""<div class="equip-group reveal">
       <div class="equip-group-head">
         <div>
           <div class="idx">Other</div>
@@ -3358,7 +3353,7 @@ def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category
       <div class="equip-grid">
         {items_html}
       </div>
-    </section>""")
+    </div>""")
 
     return "\n    ".join(sections)
 
@@ -4179,7 +4174,6 @@ def build_rider_page(r, riders, winter=False):
     setup_head = ""
     banner = {} if winter else (bike_build_parts(equipment) or {})
     shown_in_banner = [p["item"] for p in banner.values() if p]
-    shown_in_banner_ids = {id(item) for item in shown_in_banner}
     if equipment:
         equip_html = equipment_groups_html(
             equipment, hide_items=shown_in_banner, asset_prefix=prefix,
@@ -4206,59 +4200,6 @@ def build_rider_page(r, riders, winter=False):
     if highlight_parts:
         rider_summary += ", including " + ", ".join(highlight_parts)
     rider_summary += f". The season record below contains {len(history)} tracked result{'s' if len(history) != 1 else ''} and {rider_total_points(r)} cumulative points."
-
-    def equipment_name(category):
-        item = next((entry for entry in equipment if entry.get("category") == category), None)
-        if not item:
-            return None
-        details = [part.strip() for part in (item.get("model_detail") or "").split(";") if part.strip()]
-        return " ".join(filter(None, [item.get("brand") or "", details[0] if details else ""])).strip() or None
-
-    bike_check_snapshot = ""
-    bike_check_nav = ""
-    if not winter and equipment:
-        primary_specs = [
-            ("Frame", equipment_name("Frame")),
-            ("Fork", equipment_name("Fork")),
-            ("Rear shock", equipment_name("RearShock")),
-        ]
-        primary_specs = [(label, value) for label, value in primary_specs if value]
-        snapshot_specs = "".join(
-            f'<div class="bike-check-stat"><span>{esc(label)}</span><strong>{esc(value)}</strong></div>'
-            for label, value in primary_specs
-        )
-        snapshot_specs += (
-            f'<div class="bike-check-stat bike-check-count"><span>Documented build</span>'
-            f'<strong>{len(equipment)} component{"s" if len(equipment) != 1 else ""}</strong></div>'
-        )
-        bike_check_snapshot = f"""<section class="bike-check-snapshot" aria-labelledby="bike-check-snapshot-title">
-      <div class="bike-check-snapshot-head">
-        <div><span>Build snapshot</span><h2 id="bike-check-snapshot-title">2026 race bike</h2></div>
-        <small>Dataset updated {esc(SITE_UPDATED_LONG)}</small>
-      </div>
-      <div class="bike-check-stats">{snapshot_specs}</div>
-    </section>"""
-
-        remaining_groups = []
-        for group in EQUIP_GROUP_ORDER:
-            if any(
-                id(item) not in shown_in_banner_ids and EQUIP_GROUP_MAP.get(item.get("category")) == group
-                for item in equipment
-            ):
-                remaining_groups.append(group)
-        nav_links = ['<a href="#bike-check-snapshot-title">Overview</a>']
-        if build_html:
-            nav_links.append('<a href="#bike-check-overview">Bike build</a>')
-        nav_links.extend(
-            f'<a href="#equipment-{equipment_group_id(group)}">{esc(group)}</a>'
-            for group in remaining_groups
-        )
-        nav_links.append('<a href="#rider-results">Results</a>')
-        bike_check_nav = (
-            '<nav class="bike-check-nav" aria-label="Bike check sections">'
-            + "".join(nav_links)
-            + '</nav>'
-        )
     if winter:
         page_title = f"{r['display_name']} | Ski & Snowboard Athlete | {SITE_NAME}"
         meta_description = f"{r['display_name']} winter athlete profile, results and documented Ski or Snowboard equipment."
@@ -4350,7 +4291,6 @@ def build_rider_page(r, riders, winter=False):
     <div class="rider-hero">
       <div class="photo">{photo_html}</div>
       <div>
-        {'<div class="rider-kicker">Bike Check · 2026</div>' if not winter else ''}
         <h1>{esc(r['display_name'])}</h1>
         <div class="rider-meta">
           {meta_html}
@@ -4360,20 +4300,16 @@ def build_rider_page(r, riders, winter=False):
       </div>
     </div>
 
-    {bike_check_nav}
-    {bike_check_snapshot}
     {setup_head}{build_html}
     {equip_html}
 
-    <section id="rider-results" class="rider-results-section">
-      <details class="bike-results">
-        <summary>
-          <span><span class="label">Season 2026</span><strong>Results</strong></span>
-          <span class="bike-results-meta">{len(history)} event{'s' if len(history) != 1 else ''} · {rider_total_points(r)} pts</span>
-        </summary>
-        <div class="bike-results-content">{results_html}</div>
-      </details>
-    </section>
+    <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
+      <div>
+        <div class="label">Season 2026</div>
+        <h2>Results</h2>
+      </div>
+    </div>
+    {results_html}
     <section class="rider-related" aria-labelledby="related-riders-title">
       <div class="section-head"><div><div class="label">Continue exploring</div><h2 id="related-riders-title">Related 2026 {'winter athletes' if winter else 'downhill riders'}</h2></div><a class="see-all" href="../riders.html#grid">All riders →</a></div>
       <div class="rider-related-grid">{related_html}</div>

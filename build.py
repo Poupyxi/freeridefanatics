@@ -2588,11 +2588,17 @@ def competition_featured_event(competition):
     """Return the next dated event, or the latest event once the season has ended."""
     dated_events = sorted(
         (
-            event.get("date", "")[:10],
-            event,
-        )
-        for event in competition.get("events", [])
-        if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", (event.get("date") or "")[:10])
+            (
+                event.get("date", "")[:10],
+                event,
+            )
+            for event in competition.get("events", [])
+            if re.fullmatch(r"20\d{2}-\d{2}-\d{2}", (event.get("date") or "")[:10])
+        ),
+        key=lambda entry: (
+            entry[0],
+            str(entry[1].get("name") or entry[1].get("location") or "").casefold(),
+        ),
     )
     if not dated_events:
         return None

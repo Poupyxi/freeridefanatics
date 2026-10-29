@@ -454,61 +454,6 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
   font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.08em;
   border:1px solid var(--line); padding:5px 10px; color:var(--muted);
 }
-.rider-kicker{
-  margin-top:8px; font-family:var(--mono); font-size:11px; line-height:1;
-  text-transform:uppercase; letter-spacing:.16em; color:var(--orange);
-}
-.bike-check-nav{
-  position:sticky; top:85px; z-index:20;
-  display:flex; align-items:center; gap:4px; overflow-x:auto;
-  margin:0 calc(50% - 50vw) 0; padding:10px max(24px,calc((100vw - 1120px)/2));
-  border-bottom:1px solid var(--line); background:rgba(246,245,242,.94);
-  backdrop-filter:blur(12px); scrollbar-width:none;
-}
-.bike-check-nav::-webkit-scrollbar{display:none}
-.bike-check-nav a{
-  flex:0 0 auto; padding:8px 12px; border:1px solid transparent;
-  font-family:var(--mono); font-size:10px; text-transform:uppercase;
-  letter-spacing:.08em; color:var(--muted); transition:.15s ease;
-}
-.bike-check-nav a:hover,.bike-check-nav a:focus-visible{
-  color:var(--ink); border-color:var(--line); background:#fff;
-}
-.bike-check-snapshot{
-  padding:34px 0 30px; scroll-margin-top:150px;
-}
-.bike-check-snapshot-head{
-  display:flex; align-items:end; justify-content:space-between; gap:24px; margin-bottom:18px;
-}
-.bike-check-snapshot-head>div>span{
-  display:block; margin-bottom:5px; font-family:var(--mono); font-size:10px;
-  text-transform:uppercase; letter-spacing:.12em; color:var(--orange);
-}
-.bike-check-snapshot-head h2{
-  font-family:var(--head); font-size:clamp(24px,3.2vw,36px); text-transform:uppercase;
-}
-.bike-check-snapshot-head small{
-  font-family:var(--mono); font-size:10px; text-transform:uppercase;
-  letter-spacing:.06em; color:var(--muted);
-}
-.bike-check-stats{
-  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid var(--line);
-  background:rgba(255,255,255,.42);
-}
-.bike-check-stat{
-  min-width:0; padding:17px 18px; border-right:1px solid var(--line);
-}
-.bike-check-stat:last-child{border-right:0}
-.bike-check-stat span{
-  display:block; margin-bottom:6px; font-family:var(--mono); font-size:9px;
-  text-transform:uppercase; letter-spacing:.1em; color:var(--orange);
-}
-.bike-check-stat strong{
-  display:block; font-size:14px; line-height:1.3; overflow-wrap:anywhere;
-}
-.bike-check-count{background:var(--ink); color:#fff}
-.bike-check-count span{color:#ef9a70}
-.bike-build,.equip-group,.rider-results-section{scroll-margin-top:150px}
 
 /* Equipment — grouped sections */
 .equip-group{margin-bottom:34px;}
@@ -681,27 +626,6 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .results-table .p1{color:#b8860b;}
 .results-table .p2{color:#6b7076;}
 .results-table .p3{color:#a05a2c;}
-.rider-results-section{margin-top:48px}
-.bike-results{border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
-.bike-results summary{
-  list-style:none; display:flex; align-items:center; justify-content:space-between; gap:24px;
-  min-height:96px; padding:20px 2px; cursor:pointer;
-}
-.bike-results summary::-webkit-details-marker{display:none}
-.bike-results summary>span:first-child{display:flex; flex-direction:column; gap:4px}
-.bike-results summary strong{
-  font-family:var(--head); font-size:clamp(25px,3vw,34px); text-transform:uppercase;
-}
-.bike-results summary::after{
-  content:'+'; order:3; display:grid; place-items:center; width:38px; height:38px;
-  border:1px solid var(--line); font:24px/1 var(--mono); transition:transform .2s ease;
-}
-.bike-results[open] summary::after{transform:rotate(45deg)}
-.bike-results-meta{
-  margin-left:auto; font-family:var(--mono); font-size:11px; text-transform:uppercase;
-  letter-spacing:.08em; color:var(--muted);
-}
-.bike-results-content{padding:0 0 28px}
 
 /* ===== Standings page ===== */
 /* two stacked chip rows: competition first (broadest), then category */
@@ -1539,9 +1463,6 @@ a.clean-standing-row:hover{background:#fff5ef;}
 @media (max-width:1000px){
   .grid-riders{grid-template-columns:repeat(3,1fr);}
   .rider-hero{grid-template-columns:220px 1fr; gap:28px;}
-  .bike-check-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .bike-check-stat:nth-child(2n){border-right:0}
-  .bike-check-stat:nth-child(n+3){border-top:1px solid var(--line)}
   .equip-grid{grid-template-columns:1fr;}
   .rankings-grid{grid-template-columns:1fr;}
 }
@@ -1587,15 +1508,6 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .rider-hero .photo{max-width:220px;}
 }
 @media (max-width:560px){
-  .bike-check-nav{top:77px;padding:8px 15px}
-  .bike-check-snapshot{padding:26px 0 24px}
-  .bike-check-snapshot-head{align-items:start;flex-direction:column;gap:8px}
-  .bike-check-stats{grid-template-columns:1fr}
-  .bike-check-stat,.bike-check-stat:nth-child(2n){border-right:0}
-  .bike-check-stat:nth-child(n+2){border-top:1px solid var(--line)}
-  .bike-results summary{min-height:84px;gap:12px}
-  .bike-results-meta{font-size:9px;text-align:right}
-  .bike-results summary::after{width:34px;height:34px;flex:0 0 34px}
   .equip-item{display:grid; grid-template-columns:56px minmax(0,1fr); align-items:center; gap:12px; padding:14px;}
   .equip-item:not(:has(.equip-thumb)){grid-template-columns:minmax(0,1fr);}
   .equip-item .equip-thumb{grid-column:1; grid-row:1;}

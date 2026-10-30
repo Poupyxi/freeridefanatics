@@ -21,7 +21,10 @@
 .seasonal-home .home-hero .sub{max-width:52%;font-size:15px;line-height:1.65;margin-bottom:24px}
 .seasonal-home .home-hero .label{font-size:11px;max-width:58%}
 .seasonal-home .hero-ctas{max-width:60%;gap:12px;margin:0;align-items:center}
-.seasonal-home .hero-ctas .btn{font-size:11px;padding:14px 18px;min-height:48px;white-space:normal;text-align:center}
+.seasonal-home .hero-ctas .btn{font-size:11px;padding:14px 18px;min-height:48px;white-space:normal;text-align:center;color:#74401f;background:linear-gradient(155deg,#fffaf0,#efd0a0);border-color:#fff7e8;box-shadow:inset 2px 3px 0 #fff,inset -2px -3px 0 #c58b4c66;clip-path:polygon(0 0,94% 0,100% 22%,100% 100%,6% 100%,0 78%)}
+.seasonal-home .hero-ctas .btn:hover{filter:brightness(.96)}
+.seasonal-home .hero-ctas .btn:focus-visible{outline-offset:-5px}
+.seasonal-home .hero-ctas .btn-solid{color:#fff;background:linear-gradient(145deg,#ce6c35,#9f3f1b);border-color:#e79a61;box-shadow:inset 1px 2px 0 #f1b17f,inset -2px -3px 0 #762d16;text-shadow:0 1px 1px #65230f}
 .seasonal-home .home-text-link{font-size:11px}
 .seasonal-home .ticker-wrap{display:none}
 .seasonal-home .season-panorama{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
@@ -59,7 +62,7 @@
 .seasonal-home.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box-shadow:inset 0 -2px 0 #fff8}
 .seasonal-home .season-destinations a,.seasonal-home .hero-ctas .btn{transition:background 1.5s,color 1.5s,border-color 1.5s,box-shadow 1.5s;}
 .seasonal-home.season-winter .season-destinations a,.seasonal-home.season-winter .hero-ctas .btn{color:#194f6c;background:linear-gradient(155deg,#fff,#c0e1f0);border-color:#fff;box-shadow:inset 2px 3px 0 #fff,inset -2px -3px 0 #7eb6ce66;clip-path:polygon(0 0,94% 0,100% 22%,100% 100%,6% 100%,0 78%)}
-.seasonal-home.season-winter .season-destinations a:focus-visible,.seasonal-home.season-winter .hero-ctas .btn:focus-visible{outline-offset:-5px}
+.seasonal-home.season-winter .season-destinations a:focus-visible{outline-offset:-5px}
 .seasonal-home.season-winter .hero-ctas .btn-solid{color:#fff;background:linear-gradient(145deg,#367c9e,#175072);border-color:#70b7d4;box-shadow:inset 1px 2px 0 #92d4e7,inset -2px -3px 0 #0e3b5a;text-shadow:0 1px 1px #063450}
 .seasonal-home.season-winter .season-destinations a::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,transparent 59%,#ffffffb3 59.3%,#ffffffb3 59.8%,#6eaec344 60.1%,transparent 60.6%),linear-gradient(155deg,transparent 38%,#fff9 38.5%,transparent 39%)}
 .seasonal-home.season-winter .season-explore{background:linear-gradient(160deg,#eaf4f9,#dbeaf2)}

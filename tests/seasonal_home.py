@@ -8,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import build
 
+SEASONAL_CSS = (ROOT / "assets/css/seasonal-home.css").read_text(encoding="utf-8")
+
 
 def render(preprod):
     with patch.object(build, 'IS_PREPROD', preprod), \
@@ -65,6 +67,9 @@ assert 'data-random-rider="snowboard-fixture"' in winter_intro
 assert 'Random skier' in winter_intro and 'Random snowboarder' in winter_intro
 assert 'Compare equipment' not in winter_intro and 'Read the FAQ' not in winter_intro
 assert 'class="btn"' in winter_intro
+assert '.seasonal-home .hero-ctas .btn{' in SEASONAL_CSS
+assert 'clip-path:polygon(0 0,94% 0,100% 22%,100% 100%,6% 100%,0 78%)' in SEASONAL_CSS
+assert '.seasonal-home .hero-ctas .btn-solid{' in SEASONAL_CSS
 summer_intro = preprod.split('data-season-scope="summer"', 1)[1].split('class="season-winter-intro"', 1)[0]
 assert '>Random rider</a>' in summer_intro
 assert 'href="competitions.html" class="btn">Explore competitions</a>' in summer_intro

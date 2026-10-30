@@ -643,12 +643,9 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
     if seasonal:
         logo_html = (f'<span class="season-logo-pair">{logo_html}'
                      f'<img class="site-brand-logo season-winter-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-winter.png" alt="" width="48" height="48"></span>')
-    winter_count = seasonal_counts.get("winter")
-    winter_counter = ""
-    if seasonal:
-        winter_counter = (f'<span class="icon-btn"{winter_hidden}>{winter_count} Winter riders</span>'
-                          if winter_count is not None
-                          else f'<span class="icon-btn"{winter_hidden}>Winter</span>')
+    # The season switch already communicates the active context. Avoid adding
+    # a changing rider total beside it, which makes the compact header noisy.
+    rider_counter = "" if seasonal else f'<span class="icon-btn">{RIDER_COUNT} Riders</span>'
     competition_groups = []
     for organization in ORGANIZATIONS:
         items = []
@@ -719,8 +716,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
     </nav>
     <div class="nav-icons">
       {seasonal_switch.strip()}
-      <span class="icon-btn"{summer_scope}>{RIDER_COUNT} Riders</span>
-      {winter_counter}
+      {rider_counter}
       <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -3554,7 +3550,6 @@ def build_rankings_section(riders):
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="label">{esc(competition.get("short_name") or competition["name"])} · General and completed events</div>
         <h2>DH Rankings</h2>
       </div>
       <a class="see-all" href="standings.html">View all competition standings →</a>

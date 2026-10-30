@@ -1283,6 +1283,11 @@ def seasonal_explore_html(winter_counts=None):
 
 def build_index(riders, women_count, men_count, winter_counts=None, source_rider_count=None,
                 winter_riders=None):
+    displayed_rider_count = (
+        source_rider_count
+        if IS_PREPROD and source_rider_count is not None
+        else len(riders)
+    )
     prefix = ""
     faq_schema = {
         "@context": "https://schema.org", "@type": "FAQPage",
@@ -1307,10 +1312,9 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
         ],
     )
     if IS_PREPROD:
-        source_rider_count = source_rider_count if source_rider_count is not None else len(riders)
         html = html.replace(
             '</head>',
-            f'<meta name="rf-source-rider-count" content="{source_rider_count}">\n'
+            f'<meta name="rf-source-rider-count" content="{displayed_rider_count}">\n'
             f'<link rel="stylesheet" href="assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>',
         )
     winter_counts = winter_counts or {}
@@ -1332,7 +1336,7 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
     {('<div data-season-scope="summer">' if IS_PREPROD else '')}
     <div class="label">Professional racing · Riders · Equipment · Results</div>
     <h1>Their <em>exact</em> setup. Your next upgrade.</h1>
-    <p class="sub">Track {len(riders)} professional riders, explore their race setups and compare the equipment they trust across competitions.</p>
+    <p class="sub">Track {displayed_rider_count} professional riders, explore their race setups and compare the equipment they trust across competitions.</p>
     <div class="hero-ctas">
       {random_rider_button(riders)}
       <a href="competitions.html" class="btn">Explore competitions</a>

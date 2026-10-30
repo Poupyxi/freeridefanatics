@@ -2708,9 +2708,16 @@ def competition_featured_event(competition):
 
 
 def competition_display_name(competition):
-    return {"beyondgravity": "Beyond Gravity", "redbull-2026": "Red Bull"}.get(
+    name = {"beyondgravity": "Beyond Gravity", "redbull-2026": "Red Bull"}.get(
         competition["id"], competition["name"]
     )
+    # The season selector already carries the year, so avoid repeating it in
+    # the visible competition identity. Numeric brand names such as Project 17
+    # are unaffected because only four-digit years are removed.
+    name = re.sub(r"(?<!\d)20\d{2}(?!\d)", "", str(name))
+    name = re.sub(r"\(\s*\)", "", name)
+    name = re.sub(r"\s*[/|·-]\s*(?=$)", "", name)
+    return " ".join(name.split()).strip() or str(competition["name"])
 
 def competition_season_years(competition):
     """Return every four-digit year attached to a competition season/name."""
@@ -2730,6 +2737,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
     ordered_competitions = sorted(
         competitions,
         key=lambda competition: (
+            max((int(year) for year in competition_season_years(competition)), default=0),
             bool(competition_latest_race_date(competition)),
             competition_latest_race_date(competition),
         ),

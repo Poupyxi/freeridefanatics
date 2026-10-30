@@ -1233,7 +1233,7 @@ def rider_card(r, asset_prefix="", rider_prefix=None):
         </div>
       </a>"""
 
-def random_rider_button(riders, asset_prefix="", solid=True):
+def random_rider_button(riders, asset_prefix="", solid=True, label="Random rider"):
     """CTA that opens a different rider each time, favouring documented setups.
 
     The href points at a real rider page so the button still works without
@@ -1256,7 +1256,7 @@ def random_rider_button(riders, asset_prefix="", solid=True):
             f'data-random-rider="{",".join(slugs)}" '
             f'data-random-rider-priority="{",".join(equipped_slugs)}" '
             f'data-random-rider-priority-chance="{RANDOM_RIDER_EQUIPMENT_CHANCE}" '
-            f'data-rider-prefix="{asset_prefix}riders/">Random rider</a>')
+            f'data-rider-prefix="{asset_prefix}riders/">{esc(label)}</a>')
 
 def seasonal_panorama_html():
     """Seasonal scenery for the isolated preproduction homepage."""
@@ -1319,6 +1319,14 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
         )
     winter_counts = winter_counts or {}
     winter_riders = winter_riders or []
+    winter_ski_riders = [
+        rider for rider in winter_riders
+        if rider_has_winter_discipline(rider, "ski")
+    ]
+    winter_snowboard_riders = [
+        rider for rider in winter_riders
+        if rider_has_winter_discipline(rider, "snowboard")
+    ]
     html += header_html(prefix, active="riders", seasonal=IS_PREPROD, seasonal_counts=winter_counts)
     html += f"""
 <main id="main-content">
@@ -1345,10 +1353,9 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
       '<div class="label">Professional freeride · Riders · Equipment · Results</div>'
       '<h1>Their <em>exact</em> setup. Your next line.</h1>'
       f'<p class="sub">Track {len(winter_riders)} ski and snowboard athletes, explore their competition results and compare their documented equipment.</p>'
-      '<div class="hero-ctas"><a href="winter/riders.html#grid" class="btn btn-solid">Explore riders</a>'
-      f'{random_rider_button(winter_riders, asset_prefix="winter/", solid=False)}'
-      '<a href="winter/equipment.html" class="home-text-link">Compare equipment <span aria-hidden="true">→</span></a>'
-      '<a href="#faq" class="home-text-link">Read the FAQ <span aria-hidden="true">↓</span></a>'
+      '<div class="hero-ctas">'
+      f'{random_rider_button(winter_ski_riders, asset_prefix="winter/", label="Random skier")}'
+      f'{random_rider_button(winter_snowboard_riders, asset_prefix="winter/", solid=False, label="Random snowboarder")}'
       '</div></div>' if IS_PREPROD else '')}
   </div>
 </section>

@@ -2712,6 +2712,13 @@ def competition_display_name(competition):
         competition["id"], competition["name"]
     )
 
+def competition_season_years(competition):
+    """Return every four-digit year attached to a competition season/name."""
+    source = " ".join(str(value or "") for value in (
+        competition.get("season"), competition.get("name"), competition.get("id"),
+    ))
+    return tuple(dict.fromkeys(re.findall(r"\b20\d{2}\b", source)))
+
 
 def build_competitions_hub(riders, competitions=None, winter=False):
     competitions = COMPETITIONS if competitions is None else competitions
@@ -2754,7 +2761,8 @@ def build_competitions_hub(riders, competitions=None, winter=False):
             for value, singular, plural in card_stats
             if value > 0 and (singular != "team" or value >= 5)
         )
-        cards.append(f'''<article class="{card_class}">
+        competition_years = " ".join(competition_season_years(competition))
+        cards.append(f'''<article class="{card_class}" data-competition-year="{esc_attr(competition_years)}">
           <div class="competition-card-top"><span class="competition-status competition-status-{status_class}">{esc(status_label)}</span><span>{competition['season']}</span></div>
           {logo_html}
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
@@ -2769,7 +2777,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
     for organization in hub_organizations:
         children = [item for item in organization.get("competitions", []) if visible_status(item)]
         status_label = "Draft preview" if organization.get("status") == "draft" else "Published"
-        cards.append(f'''<article class="competition-card">
+        cards.append(f'''<article class="competition-card" data-competition-year="">
           <div class="competition-card-top"><span class="competition-status">{status_label}</span><span>Organisation</span></div>
           <div class="competition-sport">Action sports · Event family</div>
           <h2>{esc(organization['name'])}</h2><p>{esc(organization.get('description'))}</p>
@@ -2794,8 +2802,22 @@ def build_competitions_hub(riders, competitions=None, winter=False):
         html += winter_header(prefix, "competitions", len(riders))
     else:
         html += header_html(prefix, active="competitions")
+    competition_years = sorted(
+        {year for competition in competitions for year in competition_season_years(competition)},
+        reverse=True,
+    )
+    year_options = "".join(
+        f'<option value="{year}">{year}</option>' for year in competition_years
+    )
+    year_filter = (f'''<div class="competition-year-filter" data-competition-year-controls>
+      <label for="competition-year-select{'-winter' if winter else ''}">Season</label>
+      <select id="competition-year-select{'-winter' if winter else ''}" data-competition-year-filter>
+        <option value="all">All seasons</option>{year_options}
+      </select>
+      <span aria-live="polite" data-competition-year-count>{len(cards)} competitions</span>
+    </div>''' if competition_years else "")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(competitions) + len(hub_organizations)} competition series currently tracked here</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(competitions) + len(hub_organizations)} competition series currently tracked here</span></div>{year_filter}<div class="competition-grid" data-competition-year-list>{"".join(cards)}</div><p class="competition-year-empty" data-competition-year-empty hidden>No competition is currently tracked for this season.</p></div></section>
 </main>'''
     html += footer_html(prefix, seasonal=winter)
     return html

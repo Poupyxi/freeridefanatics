@@ -3402,39 +3402,35 @@ def season_rank_key(r):
     return (-rider_total_points(r), places, -last, r.get("display_name") or "")
 
 def build_rankings_section(riders):
-    competition_name = CURRENT_COMPETITION["name"]
+    recorded_categories = {
+        result.get("category")
+        for rider in riders
+        for result in rider.get("competition_history") or []
+        if result.get("category")
+    }
+    uci_competitions = [
+        competition for competition in COMPETITIONS
+        if "uci" in f'{competition.get("id", "")} {competition.get("name", "")}'.casefold()
+        and competition.get("name") in recorded_categories
+    ]
+    if not uci_competitions:
+        return ""
 
-    def event_results(rider, event_name):
+    def event_results(rider, competition_name, event_name):
         return [
             result for result in rider.get("competition_history") or []
             if result.get("category") == competition_name
             and result.get("event") == event_name
         ]
 
-    def final_result(rider, event_name):
+    def final_result(rider, competition_name, event_name):
         finals = [
-            final for result in event_results(rider, event_name)
+            final for result in event_results(rider, competition_name, event_name)
             if (final := result_stage(result, "Final")) is not None
         ]
         return finals[-1] if finals else None
 
-    finished_events = [
-        event for event in competition_events(riders, competition_name)
-        if any(
-            (final := final_result(rider, event)) is not None
-            and result_is_rankable(final)
-            for rider in riders
-        )
-    ]
-    # The latest completed round is the useful default and stays first in the
-    # horizontally scrollable selector on small screens.
-    finished_events.reverse()
-
-    if not finished_events:
-        return ""
-
-    def rider_row(rank, rider, final):
-        result_label = final.get("result") or ordinal(history_place(final)) or "—"
+    def rider_row(rank, rider, competition_name, metric):
         search = esc_attr(f"{rider['display_name']} {rider.get('team') or ''}".lower())
         return f"""<a class="ranking-row" href="riders/{rider['slug']}.html" data-standing-row data-search="{search}">
           <span class="ranking-rank">{rank:02d}</span>
@@ -3442,7 +3438,7 @@ def build_rankings_section(riders):
             <div class="name">{esc(rider['display_name'])}</div>
             <div class="sub">{esc(rider_team_for_competition(rider, competition_name) or 'Privateer')}</div>
           </div>
-          <span class="pts">{esc(str(result_label))}</span>
+          <span class="pts">{esc(str(metric))}</span>
         </a>"""
 
     def team_row(rank, team, points, team_riders):
@@ -3459,68 +3455,133 @@ def build_rankings_section(riders):
           <span class="pts">{points} pts</span>
         </div>"""
 
-    event_panels = []
-    event_buttons = []
-    for event_index, event_name in enumerate(finished_events):
-        event_key = competition_round_slug(event_name)
-        event_buttons.append(
-            f'<button class="filter-btn{" active" if event_index == 0 else ""}" '
-            f'type="button" data-standings-comp="{esc_attr(event_key)}" '
-            f'aria-selected="{str(event_index == 0).lower()}">'
-            f'{esc(competition_event_label(event_name))}</button>'
-        )
-        category_rows = {}
-        for category in ("Men Elite", "Women Elite"):
-            entries = [
-                (rider, final)
-                for rider in riders
-                if rider.get("gender_category") == category
-                if (final := final_result(rider, event_name)) is not None
-                and result_is_rankable(final)
-            ]
-            entries.sort(key=round_result_sort_key)
-            category_rows[category] = "\n".join(
-                rider_row(rank, rider, final)
-                for rank, (rider, final) in enumerate(entries[:5], 1)
-            )
-
+    def team_rows(competition_name, event_name=None):
         team_points = {}
         team_riders = {}
         for rider in riders:
-            final = final_result(rider, event_name)
-            if final is None or not result_counts_as_start(final):
-                continue
+            if event_name:
+                final = final_result(rider, competition_name, event_name)
+                if final is None or not result_counts_as_start(final):
+                    continue
+                points = sum(
+                    (result.get("points") or 0)
+                    for result in event_results(rider, competition_name, event_name)
+                )
+            else:
+                if not competition_has_participation(rider, competition_name):
+                    continue
+                points = competition_rider_points(rider, competition_name)
             team = rider_team_for_competition(rider, competition_name)
             if not team:
                 continue
-            points = sum((result.get("points") or 0) for result in event_results(rider, event_name))
             team_points[team] = team_points.get(team, 0) + points
             team_riders.setdefault(team, []).append(rider)
         teams = sorted(team_points, key=lambda team: (-team_points[team], team.casefold()))[:5]
-        team_rows = "\n".join(
+        return "\n".join(
             team_row(rank, team, team_points[team], team_riders)
             for rank, team in enumerate(teams, 1)
         )
-        shown = " is-shown" if event_index == 0 else ""
-        event_panels.extend([
-            f'''<div class="ranking-col standings-block{shown}" data-standings="Teams" data-competition="{esc_attr(event_key)}"><div class="ranking-col-head"><h3>Team Ranking</h3><span class="tag">Top 5</span></div>{team_rows}</div>''',
-            f'''<div class="ranking-col standings-block{shown}" data-standings="Men Elite" data-competition="{esc_attr(event_key)}"><div class="ranking-col-head"><h3>Men Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Men Elite"]}</div>''',
-            f'''<div class="ranking-col standings-block{shown}" data-standings="Women Elite" data-competition="{esc_attr(event_key)}"><div class="ranking-col-head"><h3>Women Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Women Elite"]}</div>''',
-        ])
+
+    def ranking_panels(competition, competition_index):
+        competition_name = competition["name"]
+        competition_key = competition["id"]
+        finished_events = [
+            event for event in competition_events(riders, competition_name)
+            if any(
+                (final := final_result(rider, competition_name, event)) is not None
+                and result_is_rankable(final)
+                for rider in riders
+            )
+        ]
+        finished_events.reverse()
+        views = [("global", "Global ranking", None)] + [
+            (competition_round_slug(event), competition_event_label(event), event)
+            for event in finished_events
+        ]
+        view_buttons = []
+        panels = []
+        for view_index, (view_key, view_label, event_name) in enumerate(views):
+            view_buttons.append(
+                f'<button class="filter-btn{" active" if view_index == 0 else ""}" type="button" '
+                f'data-home-ranking-view="{esc_attr(view_key)}" '
+                f'aria-selected="{str(view_index == 0).lower()}">{esc(view_label)}</button>'
+            )
+            category_rows = {}
+            for category in ("Men Elite", "Women Elite"):
+                if event_name:
+                    entries = [
+                        (rider, final)
+                        for rider in riders
+                        if rider.get("gender_category") == category
+                        if (final := final_result(rider, competition_name, event_name)) is not None
+                        and result_is_rankable(final)
+                    ]
+                    entries.sort(key=round_result_sort_key)
+                    category_rows[category] = "\n".join(
+                        rider_row(
+                            rank, rider, competition_name,
+                            final.get("result") or ordinal(history_place(final)) or "—",
+                        )
+                        for rank, (rider, final) in enumerate(entries[:5], 1)
+                    )
+                else:
+                    entries = [
+                        rider for rider in riders
+                        if rider.get("gender_category") == category
+                        and competition_has_rankable_result(rider, competition_name)
+                    ]
+                    entries.sort(key=lambda rider: competition_rank_key(rider, competition_name))
+                    category_rows[category] = "\n".join(
+                        rider_row(
+                            rank, rider, competition_name,
+                            f"{competition_rider_points(rider, competition_name)} pts",
+                        )
+                        for rank, rider in enumerate(entries[:5], 1)
+                    )
+            shown = " is-shown" if competition_index == 0 and view_index == 0 else ""
+            common = (f'data-home-ranking-panel data-ranking-competition="{esc_attr(competition_key)}" '
+                      f'data-ranking-view="{esc_attr(view_key)}"')
+            panels.extend([
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Team Ranking</h3><span class="tag">Top 5</span></div>{team_rows(competition_name, event_name)}</div>''',
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Men Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Men Elite"]}</div>''',
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Women Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Women Elite"]}</div>''',
+            ])
+        view_group = (
+            f'<div class="home-ranking-views filters" data-home-ranking-views="{esc_attr(competition_key)}"'
+            f'{"" if competition_index == 0 else " hidden"}>{"".join(view_buttons)}</div>'
+        )
+        return view_group, panels
+
+    competition_buttons = []
+    view_groups = []
+    all_panels = []
+    for competition_index, competition in enumerate(uci_competitions):
+        competition_buttons.append(
+            f'<button class="filter-btn{" active" if competition_index == 0 else ""}" type="button" '
+            f'data-home-ranking-competition="{esc_attr(competition["id"])}" '
+            f'aria-selected="{str(competition_index == 0).lower()}">'
+            f'{esc(competition.get("short_name") or competition["name"])}</button>'
+        )
+        view_group, panels = ranking_panels(competition, competition_index)
+        view_groups.append(view_group)
+        all_panels.extend(panels)
 
     return f"""<section class="section home-rankings" id="rankings">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="label">Completed events · Season {CURRENT_COMPETITION['season']}</div>
-        <h2>DH Event Rankings</h2>
+        <div class="label">UCI competitions · Global and completed events</div>
+        <h2>DH Rankings</h2>
       </div>
       <a class="see-all" href="standings.html">View all competition standings →</a>
     </div>
-    <div class="home-event-slider filters" role="tablist" aria-label="Completed DH event" data-standings-comp-filters>
-      {''.join(event_buttons)}
+    <div data-home-rankings>
+      <span class="toolbar-label">Competition</span>
+      <div class="home-event-slider filters" role="tablist" aria-label="UCI competition">{''.join(competition_buttons)}</div>
+      <span class="toolbar-label">Ranking</span>
+      {''.join(view_groups)}
+      <div class="rankings-grid">{''.join(all_panels)}</div>
     </div>
-    <div class="rankings-grid">{''.join(event_panels)}</div>
   </div>
 </section>"""
 

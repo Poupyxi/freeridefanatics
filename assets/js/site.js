@@ -485,6 +485,32 @@
     if(initial) apply(initial.getAttribute('data-competition-filter'));
   });
 
+  // Competition directory: filter the available series by their Notion season.
+  safe('competition-year-filter', function(){
+    var select = document.querySelector('[data-competition-year-filter]');
+    var list = document.querySelector('[data-competition-year-list]');
+    if(!select || !list) return;
+    var cards = Array.prototype.slice.call(list.querySelectorAll('[data-competition-year]'));
+    var count = document.querySelector('[data-competition-year-count]');
+    var empty = document.querySelector('[data-competition-year-empty]');
+
+    function applyYear(){
+      var year = select.value;
+      var visible = 0;
+      cards.forEach(function(card){
+        var years = (card.getAttribute('data-competition-year') || '').split(/\s+/).filter(Boolean);
+        var show = year === 'all' || years.indexOf(year) !== -1;
+        card.hidden = !show;
+        if(show) visible += 1;
+      });
+      if(count) count.textContent = visible + (visible === 1 ? ' competition' : ' competitions');
+      if(empty) empty.hidden = visible !== 0;
+    }
+
+    select.addEventListener('change', applyYear);
+    applyYear();
+  });
+
   // Frame reveal — the outline draws itself, turns into a pencil sketch, then
   // resolves into the photo. Held until the composition is scrolled into view
   // so nobody misses it, and replayable afterwards.

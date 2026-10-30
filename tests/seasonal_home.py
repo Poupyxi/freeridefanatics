@@ -14,7 +14,10 @@ def render(preprod):
          patch.object(build, 'build_rankings_section', return_value='<section id="rankings">Rankings</section>'), \
          patch.object(build, 'build_best_equipment_carousel', return_value='<section id="equipment">Equipment</section>'):
         riders = [{'slug': 'fixture-rider', 'equipment': []}]
-        winter_riders = [{'slug': 'winter-fixture', 'equipment': []}]
+        winter_riders = [
+            {'slug': 'ski-fixture', 'disciplines': ['Ski Freeride'], 'equipment': []},
+            {'slug': 'snowboard-fixture', 'disciplines': ['Snowboard Freeride'], 'equipment': []},
+        ]
         return build.build_index(
             riders, 0, 1,
             winter_counts={'ski': 4, 'snowboard': 3, 'winter': 6},
@@ -54,9 +57,13 @@ assert 'data-season-scope="summer"' not in explore
 assert 'data-season-scope="winter" hidden' in explore
 assert 'Dedicated pages coming soon' not in preprod
 assert 'Explore ski' not in preprod and 'Explore snowboard' not in preprod
-assert 'winter/riders/winter-fixture.html' in preprod
+assert 'winter/riders/ski-fixture.html' in preprod
+assert 'winter/riders/snowboard-fixture.html' in preprod
 winter_intro = preprod.split('class="season-winter-intro"', 1)[1].split('</div></div>', 1)[0]
-assert 'data-random-rider="winter-fixture"' in winter_intro
+assert 'data-random-rider="ski-fixture"' in winter_intro
+assert 'data-random-rider="snowboard-fixture"' in winter_intro
+assert 'Random skier' in winter_intro and 'Random snowboarder' in winter_intro
+assert 'Compare equipment' not in winter_intro and 'Read the FAQ' not in winter_intro
 assert 'class="btn"' in winter_intro
 assert '<meta name="rf-source-rider-count" content="8">' in preprod
 assert 'rf-source-rider-count' not in production

@@ -1818,12 +1818,61 @@ def competition_logo_key(competition):
     return competition["id"]
 
 def redbull_event_logo_key(event):
-    return {
-        "cerroabajo-2026": "red-bull-cerro-abajo-2026",
-        "ceroabajo-2026": "red-bull-cerro-abajo-2026",
-        "rampage-2026": "redbull-rampage-2026",
-        "hardline-2026": "redbull-hardline-2026",
-    }.get(competition_round_slug(event))
+    slug = competition_round_slug(event)
+    year_match = re.search(r"(?:^|-)(20\d{2})$", slug)
+    year_suffix = f"-{year_match.group(1)}" if year_match else ""
+    identity = re.sub(r"-20\d{2}$", "", slug)
+    if identity in {"cerroabajo", "ceroabajo", "cerro-abajo", "cero-abajo"}:
+        return f"red-bull-cerro-abajo{year_suffix}"
+    if identity in {"rampage", "hardline"}:
+        return f"redbull-{identity}{year_suffix}"
+    return slug
+
+def logo_identity_and_year(value):
+    """Return a stable event identity and optional year for logo matching."""
+    slug = competition_round_slug(value)
+    year_match = re.search(r"-(20\d{2})$", slug)
+    year = int(year_match.group(1)) if year_match else None
+    identity = slug[:year_match.start()] if year_match else slug
+    identity = identity.replace("ceroabajo", "cerro-abajo").replace("cerroabajo", "cerro-abajo")
+    identity = re.sub(r"^red-?bull-", "", identity)
+    return identity or "red-bull", year
+
+def resolve_logo(logo_assets, requested_key):
+    """Resolve an exact logo, then the same event from the nearest suitable year.
+
+    A previous edition is preferred over a future edition. Logos from a different
+    event are never selected merely because their year is close.
+    """
+    if not requested_key:
+        return None
+    exact = logo_assets.get(requested_key)
+    if exact:
+        return exact
+    requested_identity, requested_year = logo_identity_and_year(requested_key)
+    candidates = []
+    for key, logo in logo_assets.items():
+        identity, year = logo_identity_and_year(key)
+        if identity != requested_identity:
+            continue
+        if requested_year is None or year is None:
+            priority = (0, -(year or 0))
+        elif year <= requested_year:
+            priority = (0, requested_year - year)
+        else:
+            priority = (1, year - requested_year)
+        candidates.append((priority, key, logo))
+    return min(candidates, default=(None, None, None))[2]
+
+def competition_logo(logo_assets, competition):
+    return resolve_logo(logo_assets, competition_logo_key(competition))
+
+def competition_event_logo(logo_assets, competition, event):
+    """Resolve an event logo and fall back to its season/competition identity."""
+    requested_key = (redbull_event_logo_key(event)
+                     if competition.get("id") == "redbull-2026"
+                     else competition_round_slug(event))
+    return resolve_logo(logo_assets, requested_key) or competition_logo(logo_assets, competition)
 
 def competition_event_label(event):
     label = " ".join(event.split())
@@ -2195,8 +2244,7 @@ def build_competition_round(riders, competition, event, round_number, events):
                            f'aria-label="Event ranking session" data-standing-stage-filters '
                            f'data-filter-count="{len(available_stages)}">{stage_buttons}</div></div></div>{result_tables}'
                            f'</div></section>')
-    event_logo = (load_competition_logos().get(redbull_event_logo_key(event))
-                  if cid == "redbull-2026" else None)
+    event_logo = competition_event_logo(load_competition_logos(), competition, event)
     event_logo_html = (f'<div class="redbull-event-logo"><img src="../../../{event_logo["src"]}" '
                        f'alt="{esc_attr(event_logo["name"])}"></div>' if event_logo else "")
     visible_event_name = re.sub(r"\s+20\d{2}$", "", display_event).strip()
@@ -2249,8 +2297,7 @@ def build_competition_riders(riders, competition):
     else:
         page_title = f"{name} Riders | {SITE_NAME}"
     competition_logos = load_competition_logos()
-    logo_key = competition_logo_key(competition)
-    season_logo = competition_logos.get(logo_key)
+    season_logo = competition_logo(competition_logos, competition)
     season_logo_html = (
         f'<div class="competition-season-logo"><img src="../../{season_logo["src"]}" '
         f'alt="{esc_attr(season_logo["name"])}"></div>'
@@ -2679,8 +2726,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
         display_name = competition_display_name(competition)
         detail_path = f"{route_root}/competitions/{competition['id']}.html"
         card_description = ""
-        logo_key = competition_logo_key(competition)
-        logo = competition_logos.get(logo_key)
+        logo = competition_logo(competition_logos, competition)
         logo_html = (
             f'<div class="competition-card-logo"><img src="{prefix}{logo["src"]}" alt="{esc_attr(logo["name"])}" '
             'loading="eager" decoding="async"></div>'
@@ -2947,13 +2993,15 @@ def redbull_event_ranking_selector(riders, competition):
                            if event_has_points else "Teams are listed from the recorded participants; no team points are published for this event.")
             panels.append(f'''<section class="standings-block clean-standings-panel" data-standings="Teams" data-competition="{esc_attr(event_key)}"><div class="standings-scroll clean-standing-list{no_points_class}"><div class="clean-standing-head"><span>Rank</span><span>Team</span><span>Riders</span><span>Nation</span>{points_header}</div>{''.join(team_rows)}</div><p class="standings-empty" hidden>No team ranking is recorded for {esc(competition_event_label(event_name))} yet.</p><p class="team-ranking-method">{team_method}</p></section>''')
 
-    event_buttons = "".join(
-        f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
-        f'data-standings-comp="{esc_attr(competition_round_slug(event_name))}" '
-        f'aria-selected="{"true" if index == 0 else "false"}">'
-        f'{esc(re.sub(r"\s+20\d{2}$", "", competition_event_label(event_name)).strip())}</button>'
-        for index, event_name in enumerate(events)
-    )
+    event_buttons = []
+    for index, event_name in enumerate(events):
+        event_label = re.sub(r"\s+20\d{2}$", "", competition_event_label(event_name)).strip()
+        event_buttons.append(
+            f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
+            f'data-standings-comp="{esc_attr(competition_round_slug(event_name))}" '
+            f'aria-selected="{"true" if index == 0 else "false"}">{esc(event_label)}</button>'
+        )
+    event_buttons = "".join(event_buttons)
     group_order = (("Men Elite", "Men"), ("Women Elite", "Women"), ("Teams", "Teams"))
     group_buttons = "".join(
         f'<button class="filter-btn{" active" if index == 0 else ""}" role="tab" '
@@ -3021,8 +3069,7 @@ def build_competition_detail(riders, competition, winter=False):
     else:
         html += header_html(prefix, active="competitions")
     competition_logos = load_competition_logos()
-    logo_key = competition_logo_key(competition)
-    season_logo = competition_logos.get(logo_key)
+    season_logo = competition_logo(competition_logos, competition)
     season_logo_html = (
         f'<div class="competition-season-logo"><img src="{prefix}{season_logo["src"]}" '
         f'alt="{esc_attr(season_logo["name"])}"></div>'
@@ -3057,8 +3104,7 @@ def build_competition_detail(riders, competition, winter=False):
                       if has_results or competition["id"] == "redbull-2026"
                       else '<span class="season-race-pending">Awaiting results</span>')
             event_summary = f'<p>{esc(official_event["summary"])}</p>' if official_event else ""
-            event_logo_key = redbull_event_logo_key(event_name) if competition["id"] == "redbull-2026" else None
-            event_logo = competition_logos.get(event_logo_key) if event_logo_key else None
+            event_logo = competition_event_logo(competition_logos, competition, event_name)
             event_logo_html = (f'<img class="season-race-logo" src="{prefix}{event_logo["src"]}" '
                                f'alt="{esc_attr(event_logo["name"])}" loading="lazy">' if event_logo else "")
             visible_event_name = re.sub(r"\s+20\d{2}$", "", competition_event_label(event_name)).strip()

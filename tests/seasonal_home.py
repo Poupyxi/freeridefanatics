@@ -42,7 +42,7 @@ assert 'noindex,nofollow,noarchive' in preprod
 assert preprod.count('role="switch"') == 1
 assert preprod.count('class="season-peak') == 3
 assert preprod.count('class="season-tree"') == 5
-for marker in ('id="rankings"', 'id="equipment"', 'id="faq"', 'class="cta-dark"', 'data-random-rider=', 'compare.html', 'promo-pool.js', 'assets/js/site.js'):
+for marker in ('id="rankings"', 'id="equipment"', 'id="faq"', 'class="cta-dark"', 'data-random-rider=', 'promo-pool.js', 'assets/js/site.js'):
     assert marker in preprod and marker in production, marker
 assert 'aria-label="Switch to Winter season"' in preprod
 assert 'id="season-appearance-status" role="status"' in preprod
@@ -65,6 +65,11 @@ assert 'data-random-rider="snowboard-fixture"' in winter_intro
 assert 'Random skier' in winter_intro and 'Random snowboarder' in winter_intro
 assert 'Compare equipment' not in winter_intro and 'Read the FAQ' not in winter_intro
 assert 'class="btn"' in winter_intro
+summer_intro = preprod.split('data-season-scope="summer"', 1)[1].split('class="season-winter-intro"', 1)[0]
+assert '>Random rider</a>' in summer_intro
+assert 'href="competitions.html" class="btn">Explore competitions</a>' in summer_intro
+assert 'Explore riders' not in summer_intro
+assert 'Compare equipment' not in summer_intro and 'Read the FAQ' not in summer_intro
 assert '<meta name="rf-source-rider-count" content="8">' in preprod
 assert 'rf-source-rider-count' not in production
 header = preprod.split('</header>', 1)[0]

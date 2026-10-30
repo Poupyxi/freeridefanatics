@@ -53,5 +53,7 @@ assert "Winter Tour 2026 2027</h2>" not in html
 script = (ROOT / "assets" / "js" / "site.js").read_text(encoding="utf-8")
 assert "safe('competition-year-filter'" in script
 assert "years.indexOf(year) !== -1" in script
+styles = (ROOT / "assets" / "css" / "style.css").read_text(encoding="utf-8")
+assert ".competition-card[hidden]{display:none!important;}" in styles
 
 print("Competition year filter supports current, future and cross-year seasons.")

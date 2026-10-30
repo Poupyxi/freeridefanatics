@@ -1836,6 +1836,11 @@ def logo_identity_and_year(value):
     identity = slug[:year_match.start()] if year_match else slug
     identity = identity.replace("ceroabajo", "cerro-abajo").replace("cerroabajo", "cerro-abajo")
     identity = re.sub(r"^red-?bull-", "", identity)
+    # Notion uses both "UCI MTB World Cup" and "UCI World Series", with a
+    # discipline suffix for newer seasons. They share the same UCI series
+    # identity and may safely reuse the nearest available official logo.
+    if identity.startswith("uci-") and ("world-series" in identity or "world-cup" in identity):
+        identity = "uci-world-series"
     return identity or "red-bull", year
 
 def resolve_logo(logo_assets, requested_key):

@@ -22,6 +22,7 @@ logos = {
     "redbull-rampage-2028": logo("rampage-2028"),
     "redbull-hardline-2026": logo("hardline-2026"),
     "redbull-2026": logo("redbull-2026"),
+    "uci-mtb-world-cup-dh-2026": logo("uci-2026"),
 }
 
 # Exact matches always win.
@@ -41,6 +42,11 @@ assert build.competition_event_logo(logos, competition, "Unknown Event 2026") ==
 
 # Missing competition editions follow the same year rule.
 assert build.competition_logo(logos, {"id": "redbull-2027"}) == logos["redbull-2026"]
+
+# Notion's newer UCI World Series DH/CC identifiers reuse the nearest UCI
+# series logo even though the older Drive filename says MTB World Cup DH.
+assert build.competition_logo(logos, {"id": "uci-world-series-dh-2027"}) == logos["uci-mtb-world-cup-dh-2026"]
+assert build.competition_logo(logos, {"id": "uci-world-series-cc-2027"}) == logos["uci-mtb-world-cup-dh-2026"]
 
 # A Drive-managed logo must not be overwritten by the embedded fallback while
 # pages are built and the next validated snapshot is prepared.

@@ -14,10 +14,12 @@ def render(preprod):
          patch.object(build, 'build_rankings_section', return_value='<section id="rankings">Rankings</section>'), \
          patch.object(build, 'build_best_equipment_carousel', return_value='<section id="equipment">Equipment</section>'):
         riders = [{'slug': 'fixture-rider', 'equipment': []}]
+        winter_riders = [{'slug': 'winter-fixture', 'equipment': []}]
         return build.build_index(
             riders, 0, 1,
             winter_counts={'ski': 4, 'snowboard': 3, 'winter': 6},
             source_rider_count=8,
+            winter_riders=winter_riders,
         ), build.header_html('../') + build.footer_html('../')
 
 
@@ -42,12 +44,14 @@ for marker in ('id="rankings"', 'id="equipment"', 'id="faq"', 'class="cta-dark"'
 assert 'aria-label="Switch to Winter season"' in preprod
 assert 'id="season-appearance-status" role="status"' in preprod
 for marker in ('data-season-scope="summer"', 'data-season-scope="winter"',
-               'id="winter-ski"', 'id="winter-snowboard"',
-               '4 riders', '3 riders', '6 Winter riders'):
+               'winter/competitions.html', 'winter/riders.html#grid',
+               'winter/equipment.html', '6 Winter riders'):
     assert marker in preprod, marker
     assert marker not in production, marker
 assert 'Explore Bike Downhill' in preprod
-assert 'Bike Downhill content stays in Summer.' in preprod
+assert 'Dedicated pages coming soon' not in preprod
+assert 'Explore ski' not in preprod and 'Explore snowboard' not in preprod
+assert 'winter/riders/winter-fixture.html' in preprod
 assert '<meta name="rf-source-rider-count" content="8">' in preprod
 assert 'rf-source-rider-count' not in production
 header = preprod.split('</header>', 1)[0]

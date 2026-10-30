@@ -1273,9 +1273,6 @@ def seasonal_panorama_html():
 
 
 def seasonal_explore_html(winter_counts=None):
-    winter_counts = winter_counts or {}
-    ski_count = winter_counts.get("ski", 0)
-    snowboard_count = winter_counts.get("snowboard", 0)
     return f'''<section class="season-explore" aria-labelledby="season-explore-title">
       <div class="wrap"><div class="season-explore-heading">
         <h2 id="season-explore-title">Explore</h2>
@@ -1284,14 +1281,16 @@ def seasonal_explore_html(winter_counts=None):
         <a href="competitions.html"><span>Competitions</span><span aria-hidden="true">↗</span></a>
         <a href="riders.html#grid"><span>Riders</span><span aria-hidden="true">↗</span></a>
         <a href="equipment.html"><span>Equipment</span><span aria-hidden="true">↗</span></a>
-      </nav><div class="season-destinations season-winter-destinations" aria-label="Explore winter disciplines" data-season-scope="winter" hidden>
-        <article id="winter-ski" class="season-discipline-card"><span>Ski</span><strong>{ski_count} riders</strong><small>Dedicated pages coming soon</small></article>
-        <article id="winter-snowboard" class="season-discipline-card"><span>Snowboard</span><strong>{snowboard_count} riders</strong><small>Dedicated pages coming soon</small></article>
-      </div></div>
+      </nav><nav class="season-destinations" aria-label="Explore Ski and Snowboard" data-season-scope="winter" hidden>
+        <a href="winter/competitions.html"><span>Competitions</span><span aria-hidden="true">↗</span></a>
+        <a href="winter/riders.html#grid"><span>Riders</span><span aria-hidden="true">↗</span></a>
+        <a href="winter/equipment.html"><span>Equipment</span><span aria-hidden="true">↗</span></a>
+      </nav></div>
     </section>'''
 
 
-def build_index(riders, women_count, men_count, winter_counts=None, source_rider_count=None):
+def build_index(riders, women_count, men_count, winter_counts=None, source_rider_count=None,
+                winter_riders=None):
     prefix = ""
     faq_schema = {
         "@context": "https://schema.org", "@type": "FAQPage",
@@ -1323,6 +1322,7 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
             f'<link rel="stylesheet" href="assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>',
         )
     winter_counts = winter_counts or {}
+    winter_riders = winter_riders or []
     html += header_html(prefix, active="riders", seasonal=IS_PREPROD, seasonal_counts=winter_counts)
     html += f"""
 <main id="main-content">
@@ -1346,11 +1346,14 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
       </div>
     </div>
     {('</div><div class="season-winter-intro" data-season-scope="winter" hidden>'
-      '<div class="label">Winter · Ski · Snowboard</div>'
-      '<h1>Freeride lives beyond one season.</h1>'
-      f'<p class="sub">Explore the winter athletes we track: {winter_counts.get("ski", 0)} ski riders and {winter_counts.get("snowboard", 0)} snowboard riders. Bike Downhill content stays in Summer.</p>'
-      '<div class="hero-ctas"><a href="#winter-ski" class="btn btn-solid">Explore ski</a>'
-      '<a href="#winter-snowboard" class="btn">Explore snowboard</a></div></div>' if IS_PREPROD else '')}
+      '<div class="label">Professional freeride · Riders · Equipment · Results</div>'
+      '<h1>Their <em>exact</em> setup. Your next line.</h1>'
+      f'<p class="sub">Track {len(winter_riders)} ski and snowboard athletes, explore their competition results and compare their documented equipment.</p>'
+      '<div class="hero-ctas"><a href="winter/riders.html#grid" class="btn btn-solid">Explore riders</a>'
+      f'{random_rider_button(winter_riders, asset_prefix="winter/", solid=False)}'
+      '<a href="winter/equipment.html" class="home-text-link">Compare equipment <span aria-hidden="true">→</span></a>'
+      '<a href="#faq" class="home-text-link">Read the FAQ <span aria-hidden="true">↓</span></a>'
+      '</div></div>' if IS_PREPROD else '')}
   </div>
 </section>
 
@@ -4601,6 +4604,7 @@ def main():
             "winter": len(winter_riders),
         },
         source_rider_count=len(all_riders),
+        winter_riders=winter_riders,
     )
     with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)

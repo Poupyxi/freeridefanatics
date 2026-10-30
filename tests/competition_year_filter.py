@@ -29,6 +29,10 @@ cross_year = competition("winter-tour", "Winter Tour 2026 2027", "2026/2027")
 assert build.competition_season_years(events_2026) == ("2026",)
 assert build.competition_season_years(events_2027) == ("2027",)
 assert build.competition_season_years(cross_year) == ("2026", "2027")
+assert build.competition_display_name(events_2026) == "Event"
+assert build.competition_display_name(events_2027) == "Event"
+assert build.competition_display_name(cross_year) == "Winter Tour"
+assert build.competition_display_name(competition("project-17", "Project 17", 2026)) == "Project 17"
 
 with patch.object(build, "load_competition_logos", return_value={}), \
      patch.object(build, "ORGANIZATIONS", []):
@@ -42,6 +46,9 @@ assert 'data-competition-year="2026"' in html
 assert 'data-competition-year="2027"' in html
 assert 'data-competition-year="2026 2027"' in html
 assert html.index('<option value="2027">') < html.index('<option value="2026">')
+assert html.index('data-competition-year="2027"') < html.index('data-competition-year="2026"')
+assert "Event 2026</h2>" not in html and "Event 2027</h2>" not in html
+assert "Winter Tour 2026 2027</h2>" not in html
 
 script = (ROOT / "assets" / "js" / "site.js").read_text(encoding="utf-8")
 assert "safe('competition-year-filter'" in script

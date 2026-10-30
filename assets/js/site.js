@@ -317,57 +317,29 @@
     });
   });
 
-  // Homepage DH rankings: UCI competition first, then global or one completed event.
+  // Homepage DH rankings: general UCI order first, then one completed event.
   safe('home-rankings', function(){
     var root = document.querySelector('[data-home-rankings]');
     if(!root) return;
-    var competitionButtons = Array.prototype.slice.call(root.querySelectorAll('[data-home-ranking-competition]'));
-    var viewGroups = Array.prototype.slice.call(root.querySelectorAll('[data-home-ranking-views]'));
+    var viewButtons = Array.prototype.slice.call(root.querySelectorAll('[data-home-ranking-view]'));
     var panels = Array.prototype.slice.call(root.querySelectorAll('[data-home-ranking-panel]'));
 
-    function activeCompetition(){
-      var active = competitionButtons.find(function(button){ return button.classList.contains('active'); });
-      return active && active.getAttribute('data-home-ranking-competition');
-    }
     function render(){
-      var competition = activeCompetition();
-      var activeView = 'global';
-      viewGroups.forEach(function(group){
-        var matches = group.getAttribute('data-home-ranking-views') === competition;
-        group.hidden = !matches;
-        if(matches){
-          var active = group.querySelector('.filter-btn.active') || group.querySelector('.filter-btn');
-          if(active) activeView = active.getAttribute('data-home-ranking-view');
-        }
-      });
+      var active = viewButtons.find(function(button){ return button.classList.contains('active'); });
+      var activeView = active ? active.getAttribute('data-home-ranking-view') : 'global';
       panels.forEach(function(panel){
-        panel.classList.toggle('is-shown',
-          panel.getAttribute('data-ranking-competition') === competition &&
-          panel.getAttribute('data-ranking-view') === activeView);
+        panel.classList.toggle('is-shown', panel.getAttribute('data-ranking-view') === activeView);
       });
     }
-    competitionButtons.forEach(function(button){
+    viewButtons.forEach(function(button){
       button.addEventListener('click', function(){
-        competitionButtons.forEach(function(item){
+        viewButtons.forEach(function(item){
           item.classList.remove('active');
           item.setAttribute('aria-selected', 'false');
         });
         button.classList.add('active');
         button.setAttribute('aria-selected', 'true');
         render();
-      });
-    });
-    viewGroups.forEach(function(group){
-      group.querySelectorAll('[data-home-ranking-view]').forEach(function(button){
-        button.addEventListener('click', function(){
-          group.querySelectorAll('[data-home-ranking-view]').forEach(function(item){
-            item.classList.remove('active');
-            item.setAttribute('aria-selected', 'false');
-          });
-          button.classList.add('active');
-          button.setAttribute('aria-selected', 'true');
-          render();
-        });
       });
     });
     render();

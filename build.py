@@ -3415,6 +3415,7 @@ def build_rankings_section(riders):
     ]
     if not uci_competitions:
         return ""
+    competition = uci_competitions[0]
 
     def event_results(rider, competition_name, event_name):
         return [
@@ -3482,9 +3483,8 @@ def build_rankings_section(riders):
             for rank, team in enumerate(teams, 1)
         )
 
-    def ranking_panels(competition, competition_index):
+    def ranking_panels(competition):
         competition_name = competition["name"]
-        competition_key = competition["id"]
         finished_events = [
             event for event in competition_events(riders, competition_name)
             if any(
@@ -3538,48 +3538,30 @@ def build_rankings_section(riders):
                         )
                         for rank, rider in enumerate(entries[:5], 1)
                     )
-            shown = " is-shown" if competition_index == 0 and view_index == 0 else ""
-            common = (f'data-home-ranking-panel data-ranking-competition="{esc_attr(competition_key)}" '
-                      f'data-ranking-view="{esc_attr(view_key)}"')
+            shown = " is-shown" if view_index == 0 else ""
+            common = f'data-home-ranking-panel data-ranking-view="{esc_attr(view_key)}"'
             panels.extend([
                 f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Team Ranking</h3><span class="tag">Top 5</span></div>{team_rows(competition_name, event_name)}</div>''',
                 f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Men Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Men Elite"]}</div>''',
                 f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Women Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Women Elite"]}</div>''',
             ])
-        view_group = (
-            f'<div class="home-ranking-views filters" data-home-ranking-views="{esc_attr(competition_key)}"'
-            f'{"" if competition_index == 0 else " hidden"}>{"".join(view_buttons)}</div>'
-        )
+        view_group = f'<div class="home-event-slider home-ranking-views filters">{"".join(view_buttons)}</div>'
         return view_group, panels
 
-    competition_buttons = []
-    view_groups = []
-    all_panels = []
-    for competition_index, competition in enumerate(uci_competitions):
-        competition_buttons.append(
-            f'<button class="filter-btn{" active" if competition_index == 0 else ""}" type="button" '
-            f'data-home-ranking-competition="{esc_attr(competition["id"])}" '
-            f'aria-selected="{str(competition_index == 0).lower()}">'
-            f'{esc(competition.get("short_name") or competition["name"])}</button>'
-        )
-        view_group, panels = ranking_panels(competition, competition_index)
-        view_groups.append(view_group)
-        all_panels.extend(panels)
+    view_group, all_panels = ranking_panels(competition)
 
     return f"""<section class="section home-rankings" id="rankings">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="label">UCI competitions · Global and completed events</div>
+        <div class="label">{esc(competition.get("short_name") or competition["name"])} · General and completed events</div>
         <h2>DH Rankings</h2>
       </div>
       <a class="see-all" href="standings.html">View all competition standings →</a>
     </div>
     <div data-home-rankings>
-      <span class="toolbar-label">Competition</span>
-      <div class="home-event-slider filters" role="tablist" aria-label="UCI competition">{''.join(competition_buttons)}</div>
       <span class="toolbar-label">Ranking</span>
-      {''.join(view_groups)}
+      {view_group}
       <div class="rankings-grid">{''.join(all_panels)}</div>
     </div>
   </div>

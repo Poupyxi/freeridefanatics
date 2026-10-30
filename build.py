@@ -655,6 +655,8 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
         for competition in organization.get("competitions", []):
             if not visible_status(competition):
                 continue
+            if competition_is_winter(competition):
+                continue
             href = competition.get("existing_path")
             if href:
                 href = asset_prefix + href.lstrip("/")
@@ -666,8 +668,20 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
             competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
     if not competition_groups:
         for competition in COMPETITIONS:
+            if competition_is_winter(competition):
+                continue
             competition_groups.append(
                 f'<a href="{asset_prefix}competitions/{competition["id"]}.html">'
+                f'<strong>{esc(competition["short_name"])}</strong>'
+                f'<small>{esc(competition["discipline"])} · {competition["season"]}</small></a>'
+            )
+    winter_competition_groups = []
+    if seasonal:
+        for competition in COMPETITIONS:
+            if not competition_is_winter(competition) or not visible_status(competition):
+                continue
+            winter_competition_groups.append(
+                f'<a href="{asset_prefix}winter/competitions/{competition["id"]}.html">'
                 f'<strong>{esc(competition["short_name"])}</strong>'
                 f'<small>{esc(competition["discipline"])} · {competition["season"]}</small></a>'
             )
@@ -685,6 +699,11 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
             {''.join(competition_groups)}
           </div>
         </div>
+        {f'''<div class="dropdown"{winter_hidden}>
+          <div class="dropdown-inner">
+            {''.join(winter_competition_groups)}
+          </div>
+        </div>''' if seasonal else ''}
       </div>
       <div class="nav-item has-dropdown">
         <a href="{asset_prefix}riders.html#grid" data-season-route="riders"{cls('riders')}>Riders <span class="caret">&#9662;</span></a>

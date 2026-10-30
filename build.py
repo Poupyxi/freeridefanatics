@@ -1338,10 +1338,8 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
     <h1>Their <em>exact</em> setup. Your next upgrade.</h1>
     <p class="sub">Track {len(riders)} professional riders, explore their race setups and compare the equipment they trust across competitions.</p>
     <div class="hero-ctas">
-      <a href="riders.html#grid" class="btn btn-solid">Explore riders</a>
-      {random_rider_button(riders, solid=False)}
-      <a href="compare.html" class="home-text-link">Compare equipment <span aria-hidden="true">→</span></a>
-      <a href="#faq" class="home-text-link">Read the FAQ <span aria-hidden="true">↓</span></a>
+      {random_rider_button(riders)}
+      <a href="competitions.html" class="btn">Explore competitions</a>
     </div>
     <div class="ticker-wrap">
       <div class="ticker-track">

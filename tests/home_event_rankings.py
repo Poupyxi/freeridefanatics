@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Homepage DH rankings switch between completed events only."""
+"""Homepage DH rankings switch from UCI general to other competitions."""
 from pathlib import Path
 import sys
 from unittest.mock import patch
@@ -22,9 +22,9 @@ older_competition = {
     "season": 2025,
 }
 non_uci_competition = {
-    "id": "redbull-test",
-    "name": "Red Bull Test",
-    "short_name": "Red Bull Test",
+    "id": "redbull-2026",
+    "name": "Red Bull 2026",
+    "short_name": "Red Bull",
     "season": 2026,
 }
 
@@ -43,11 +43,15 @@ riders = [
     rider("man-one", "Man One", "Men Elite", "Team A", [
         {"category": competition["name"], "event": "Round One", "place": 1, "points": 100},
         {"category": competition["name"], "event": "Round Two", "stages": {"Qualifier": {"place": 1}}},
+        {"category": non_uci_competition["name"], "event": "Rampage 2026", "place": 2, "points": 80},
+        {"category": non_uci_competition["name"], "event": "Hardline 2026", "place": 1, "points": 100},
     ]),
     rider("woman-one", "Woman One", "Women Elite", "Team B", [
         {"category": competition["name"], "event": "Round One", "place": 1, "points": 100},
         {"category": older_competition["name"], "event": "Old Round", "place": 2, "points": 80},
-        {"category": non_uci_competition["name"], "event": "Urban Round", "place": 1, "points": 999},
+        {"category": non_uci_competition["name"], "event": "Rampage 2026", "place": 1, "points": 100},
+        {"category": non_uci_competition["name"], "event": "CeroAbajo 2026", "place": 1, "points": 100},
+        {"category": non_uci_competition["name"], "event": "Future Event 2026", "stages": {"Qualifier": {"place": 1}}},
     ]),
 ]
 
@@ -59,13 +63,19 @@ assert "General and completed events" not in html
 assert "UCI Test ·" not in html
 assert 'data-home-ranking-competition=' not in html
 assert 'data-home-ranking-view="global"' in html
-assert 'data-home-ranking-view="round-one"' in html
-assert "Round One" in html
-assert "Round Two" not in html  # qualifier only: the event is not finished
+assert 'data-home-ranking-view="round-one"' not in html
+assert "Round One" not in html
+assert "Round Two" not in html
+assert "UCI WC 2026" in html
+assert "Rampage" in html
+assert "Cerro Abajo" in html
+assert "Hardline" in html
+assert html.index("Rampage") < html.index("Cerro Abajo") < html.index("Hardline")
+assert "Future Event" not in html  # qualifier only: the event is not finished
 assert "Man One" in html and "Woman One" in html
 assert "100 pts" in html
 assert 'data-ranking-competition=' not in html
-assert 'data-ranking-view="round-one"' in html
+assert 'data-ranking-view="redbull-2026-rampage-2026"' in html
 assert "home-event-slider" in html
 assert "Men General Ranking" in html
 assert "Women General Ranking" in html
@@ -73,6 +83,5 @@ assert "Team General Ranking" in html
 global_panel = html.split('data-ranking-view="global"', 1)[1]
 assert global_panel.index("Men General Ranking") < global_panel.index("Women General Ranking")
 assert global_panel.index("Women General Ranking") < global_panel.index("Team General Ranking")
-assert "999 pts" not in html
 assert "Old Round" not in html
 print("Homepage event rankings: finished-event slider passed.")

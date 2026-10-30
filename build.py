@@ -1792,6 +1792,23 @@ def competition_round_slug(event):
     value = unicodedata.normalize("NFKD", event or "").encode("ascii", "ignore").decode("ascii")
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-") or "round"
 
+UCI_2026_ROUND_SLUGS = {
+    "mona-yongpyong-south-korea-may": "mona-yongpyong",
+    "loudenvielle-france-may": "loudenvielle",
+    "leogang-austria-june": "leogang",
+    "switzerland-june": "lenzerheide",
+    "la-thuile-italy-july": "la-thuile",
+    "andorra-july": "pal-arinsal",
+}
+
+def competition_round_path_slug(competition, event):
+    """Keep public round URLs stable when Notion event titles gain a year."""
+    slug = competition_round_slug(event)
+    if competition.get("id") != "uci-mtb-world-cup-dh-2026":
+        return slug
+    slug = re.sub(r"-20\d{2}$", "", slug)
+    return UCI_2026_ROUND_SLUGS.get(slug, slug)
+
 def is_red_bull_cerro_abajo(competition):
     return competition.get("id") == "red-bull-cerro-abajo-2026"
 
@@ -1810,7 +1827,7 @@ def redbull_event_logo_key(event):
 
 def competition_event_label(event):
     label = " ".join(event.split())
-    return re.sub(r"\bCero\s*Abajo\b", "Cerro Abajo", label, flags=re.IGNORECASE)
+    return re.sub(r"\b(?:Cero|Cerro)\s*Abajo\b", "Cerro Abajo", label, flags=re.IGNORECASE)
 
 
 def competition_round_notice(competition, event):
@@ -1833,7 +1850,7 @@ def competition_round_notice(competition, event):
 def priority_round_seo(competition, event, rider_count, category_description,
                        has_points, show_team_ranking):
     """Return focused search copy for the event pages with the strongest intent."""
-    slug = competition_round_slug(event)
+    slug = competition_round_path_slug(competition, event)
     teams = ", team standings" if show_team_ranking else ""
     points = ", points" if has_points else ""
     if competition.get("id") == "uci-mtb-world-cup-dh-2026" and slug == "whistler":
@@ -2073,10 +2090,10 @@ def build_competition_round(riders, competition, event, round_number, events):
     next_link = ""
     if round_number > 1:
         previous = events[round_number - 2]
-        previous_link = f'<a href="{competition_round_slug(previous)}.html"><span>Previous round</span><strong>{esc(competition_event_label(previous))}</strong></a>'
+        previous_link = f'<a href="{competition_round_path_slug(competition, previous)}.html"><span>Previous round</span><strong>{esc(competition_event_label(previous))}</strong></a>'
     if round_number < len(events):
         following = events[round_number]
-        next_link = f'<a href="{competition_round_slug(following)}.html"><span>Next round</span><strong>{esc(competition_event_label(following))}</strong></a>'
+        next_link = f'<a href="{competition_round_path_slug(competition, following)}.html"><span>Next round</span><strong>{esc(competition_event_label(following))}</strong></a>'
 
     item_list = [
         {"@type": "ListItem", "position": position, "name": rider["display_name"],
@@ -2333,7 +2350,7 @@ def build_competition_standings(riders, competition):
         if not has_stage_results or not events:
             return ""
         event_headers = "".join(
-            f'<th scope="col"><a href="rounds/{competition_round_slug(event)}.html">'
+            f'<th scope="col"><a href="rounds/{competition_round_path_slug(competition, event)}.html">'
             f'{esc(competition_event_label(event))}</a></th>'
             for event in events
         )
@@ -2417,7 +2434,7 @@ def build_competition_standings(riders, competition):
                       else "recorded places and race times")
     description = f"{name} standings for Elite Men, Elite Women and teams: {ranking_metric}, season leaders and linked rider profiles."
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
-    latest_round_href = (f"rounds/{competition_round_slug(latest_round)}.html"
+    latest_round_href = (f"rounds/{competition_round_path_slug(competition, latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
     html = head(
         f"{name} Standings | Men, Women & Teams", description, "../../",
@@ -3034,7 +3051,7 @@ def build_competition_detail(riders, competition, winter=False):
                 date_label = f"{start.tm_mday}–{end.tm_mday} {time.strftime('%b %Y', end)}"
             has_results = event_name in recorded_events
             status = "Results available" if has_results else "No results recorded"
-            event_href = f'{competition["id"]}/rounds/{competition_round_slug(event_name)}.html'
+            event_href = f'{competition["id"]}/rounds/{competition_round_path_slug(competition, event_name)}.html'
             action = (f'<a class="season-race-link" href="{event_href}">'
                       f'{"View results" if has_results else "View event"} <span aria-hidden="true">→</span></a>'
                       if has_results or competition["id"] == "redbull-2026"
@@ -4129,7 +4146,7 @@ def results_rows(history):
         event_label = esc(h.get('event'))
         if competition and h.get("event"):
             event_label = (f'<a href="../competitions/{competition["id"]}/rounds/'
-                           f'{competition_round_slug(h["event"])}.html">{event_label}</a>')
+                           f'{competition_round_path_slug(competition, h["event"])}.html">{event_label}</a>')
         rows.append(f"""<tr data-competition="{esc(comp)}">
           <td>{esc(h.get('year'))}</td>
           <td>{event_label}</td>
@@ -4803,7 +4820,7 @@ def main():
         rounds_dir = os.path.join(standings_dir, "rounds")
         os.makedirs(rounds_dir, exist_ok=True)
         for round_number, event in enumerate(events, 1):
-            round_file = os.path.join(rounds_dir, f"{competition_round_slug(event)}.html")
+            round_file = os.path.join(rounds_dir, f"{competition_round_path_slug(competition, event)}.html")
             with open(round_file, "w", encoding="utf-8") as f:
                 f.write(build_competition_round(competition_riders, competition, event, round_number, events))
     for organization in ORGANIZATIONS:

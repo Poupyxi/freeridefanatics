@@ -3485,22 +3485,52 @@ def build_rankings_section(riders):
 
     def ranking_panels(competition):
         competition_name = competition["name"]
-        finished_events = [
-            event for event in competition_events(riders, competition_name)
-            if any(
-                (final := final_result(rider, competition_name, event)) is not None
-                and result_is_rankable(final)
-                for rider in riders
-            )
+        uci_label = f'UCI WC {competition.get("season") or "2026"}'
+        views = [("global", uci_label, competition, None)]
+
+        # The homepage compares competitions, not the individual UCI rounds.
+        # Red Bull is stored as an umbrella competition, so each finished event
+        # becomes one view. Other competitions use their own overall order.
+        other_competitions = [
+            item for item in COMPETITIONS
+            if item is not competition
+            and item.get("name") in recorded_categories
+            and not competition_is_winter(item)
+            and "uci" not in f'{item.get("id", "")} {item.get("name", "")}'.casefold()
         ]
-        finished_events.reverse()
-        views = [("global", "Global ranking", None)] + [
-            (competition_round_slug(event), competition_event_label(event), event)
-            for event in finished_events
-        ]
+        red_bull_priority = {"rampage": 0, "cerro abajo": 1, "hardline": 2}
+        for item in other_competitions:
+            item_name = item["name"]
+            if item.get("id") == "redbull-2026":
+                finished_events = [
+                    event for event in competition_events(riders, item_name)
+                    if any(
+                        (final := final_result(rider, item_name, event)) is not None
+                        and result_is_rankable(final)
+                        for rider in riders
+                    )
+                ]
+                finished_events.sort(key=lambda event: (
+                    next((priority for token, priority in red_bull_priority.items()
+                          if token in competition_event_label(event).casefold()), 99),
+                    competition_event_label(event).casefold(),
+                ))
+                views.extend(
+                    (f'{item["id"]}-{competition_round_slug(event)}',
+                     re.sub(r"\s+20\d{2}$", "", competition_event_label(event)), item, event)
+                    for event in finished_events
+                )
+            elif any(competition_has_rankable_result(rider, item_name) for rider in riders):
+                views.append((
+                    item["id"],
+                    item.get("short_name") or competition_display_name(item),
+                    item,
+                    None,
+                ))
         view_buttons = []
         panels = []
-        for view_index, (view_key, view_label, event_name) in enumerate(views):
+        for view_index, (view_key, view_label, view_competition, event_name) in enumerate(views):
+            view_competition_name = view_competition["name"]
             view_buttons.append(
                 f'<button class="filter-btn{" active" if view_index == 0 else ""}" type="button" '
                 f'data-home-ranking-view="{esc_attr(view_key)}" '
@@ -3513,13 +3543,13 @@ def build_rankings_section(riders):
                         (rider, final)
                         for rider in riders
                         if rider.get("gender_category") == category
-                        if (final := final_result(rider, competition_name, event_name)) is not None
+                        if (final := final_result(rider, view_competition_name, event_name)) is not None
                         and result_is_rankable(final)
                     ]
                     entries.sort(key=round_result_sort_key)
                     category_rows[category] = "\n".join(
                         rider_row(
-                            rank, rider, competition_name,
+                            rank, rider, view_competition_name,
                             final.get("result") or ordinal(history_place(final)) or "—",
                         )
                         for rank, (rider, final) in enumerate(entries[:5], 1)
@@ -3528,13 +3558,13 @@ def build_rankings_section(riders):
                     entries = [
                         rider for rider in riders
                         if rider.get("gender_category") == category
-                        and competition_has_rankable_result(rider, competition_name)
+                        and competition_has_rankable_result(rider, view_competition_name)
                     ]
-                    entries.sort(key=lambda rider: competition_rank_key(rider, competition_name))
+                    entries.sort(key=lambda rider: competition_rank_key(rider, view_competition_name))
                     category_rows[category] = "\n".join(
                         rider_row(
-                            rank, rider, competition_name,
-                            f"{competition_rider_points(rider, competition_name)} pts",
+                            rank, rider, view_competition_name,
+                            f"{competition_rider_points(rider, view_competition_name)} pts",
                         )
                         for rank, rider in enumerate(entries[:5], 1)
                     )
@@ -3544,7 +3574,7 @@ def build_rankings_section(riders):
             panels.extend([
                 f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Men {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Men Elite"]}</div>''',
                 f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Women {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Women Elite"]}</div>''',
-                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Team {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{team_rows(competition_name, event_name)}</div>''',
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Team {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{team_rows(view_competition_name, event_name)}</div>''',
             ])
         view_group = f'<div class="home-event-slider home-ranking-views filters">{"".join(view_buttons)}</div>'
         return view_group, panels

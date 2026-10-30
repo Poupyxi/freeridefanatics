@@ -3540,10 +3540,11 @@ def build_rankings_section(riders):
                     )
             shown = " is-shown" if view_index == 0 else ""
             common = f'data-home-ranking-panel data-ranking-view="{esc_attr(view_key)}"'
+            heading_prefix = "General " if event_name is None else ""
             panels.extend([
-                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Team Ranking</h3><span class="tag">Top 5</span></div>{team_rows(competition_name, event_name)}</div>''',
-                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Men Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Men Elite"]}</div>''',
-                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Women Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Women Elite"]}</div>''',
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Men {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Men Elite"]}</div>''',
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Women {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Women Elite"]}</div>''',
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Team {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{team_rows(competition_name, event_name)}</div>''',
             ])
         view_group = f'<div class="home-event-slider home-ranking-views filters">{"".join(view_buttons)}</div>'
         return view_group, panels

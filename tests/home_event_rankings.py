@@ -67,6 +67,12 @@ assert "100 pts" in html
 assert 'data-ranking-competition=' not in html
 assert 'data-ranking-view="round-one"' in html
 assert "home-event-slider" in html
+assert "Men General Ranking" in html
+assert "Women General Ranking" in html
+assert "Team General Ranking" in html
+global_panel = html.split('data-ranking-view="global"', 1)[1]
+assert global_panel.index("Men General Ranking") < global_panel.index("Women General Ranking")
+assert global_panel.index("Women General Ranking") < global_panel.index("Team General Ranking")
 assert "999 pts" not in html
 assert "Old Round" not in html
 print("Homepage event rankings: finished-event slider passed.")

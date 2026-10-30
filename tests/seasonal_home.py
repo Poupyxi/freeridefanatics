@@ -48,7 +48,7 @@ assert 'aria-label="Switch to Winter season"' in preprod
 assert 'id="season-appearance-status" role="status"' in preprod
 for marker in ('data-season-scope="summer"', 'data-season-scope="winter"',
                'winter/competitions.html', 'winter/riders.html#grid',
-               'winter/equipment.html', '6 Winter riders'):
+               'winter/equipment.html'):
     assert marker in preprod, marker
     assert marker not in production, marker
 explore = build.seasonal_explore_html()
@@ -71,6 +71,8 @@ assert 'href="competitions.html" class="btn">Explore competitions</a>' in summer
 assert 'Explore riders' not in summer_intro
 assert 'Compare equipment' not in summer_intro and 'Read the FAQ' not in summer_intro
 assert '<meta name="rf-source-rider-count" content="8">' in preprod
+assert 'Track 8 professional riders' in preprod
+assert 'Track 1 professional riders' in production
 assert 'rf-source-rider-count' not in production
 header = preprod.split('</header>', 1)[0]
 for href in ('competitions.html', 'riders.html#grid', 'equipment.html', './#faq'):

@@ -55,17 +55,16 @@ with patch.object(build, "COMPETITIONS", [competition, older_competition, non_uc
     html = build.build_rankings_section(riders)
 
 assert "DH Rankings" in html
-assert 'data-home-ranking-competition="uci-test"' in html
-assert 'data-home-ranking-competition="uci-test-2025"' in html
-assert 'data-home-ranking-competition="redbull-test"' not in html
+assert 'data-home-ranking-competition=' not in html
 assert 'data-home-ranking-view="global"' in html
 assert 'data-home-ranking-view="round-one"' in html
 assert "Round One" in html
 assert "Round Two" not in html  # qualifier only: the event is not finished
 assert "Man One" in html and "Woman One" in html
 assert "100 pts" in html
-assert 'data-ranking-competition="uci-test"' in html
+assert 'data-ranking-competition=' not in html
 assert 'data-ranking-view="round-one"' in html
 assert "home-event-slider" in html
 assert "999 pts" not in html
+assert "Old Round" not in html
 print("Homepage event rankings: finished-event slider passed.")

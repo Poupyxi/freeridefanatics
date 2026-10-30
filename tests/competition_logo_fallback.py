@@ -1,6 +1,10 @@
 """Regression checks for competition and event logo fallback rules."""
 from pathlib import Path
+import base64
+import json
 import sys
+import tempfile
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,3 +41,37 @@ assert build.competition_event_logo(logos, competition, "Unknown Event 2026") ==
 
 # Missing competition editions follow the same year rule.
 assert build.competition_logo(logos, {"id": "redbull-2027"}) == logos["redbull-2026"]
+
+# A Drive-managed logo must not be overwritten by the embedded fallback while
+# pages are built and the next validated snapshot is prepared.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    (root / "data").mkdir()
+    image_dir = root / "assets" / "img" / "competitions"
+    image_dir.mkdir(parents=True)
+    embedded_path = root / "data" / "competition-logos.json"
+    embedded_path.write_text(json.dumps({"logos": [{
+        "key": "shared-event-2026", "name": "Embedded", "mime": "image/webp",
+        "data": base64.b64encode(b"old-embedded-logo").decode("ascii"),
+    }]}), encoding="utf-8")
+    (root / "data" / "redbull-logos.json").write_text('{"logos": []}', encoding="utf-8")
+    drive_path = image_dir / "shared-event-2026.webp"
+    drive_path.write_bytes(b"current-drive-logo")
+    drive_manifest = {
+        "competitions": [{
+            "key": "shared-event-2026",
+            "name": "Drive",
+            "src": "assets/img/competitions/shared-event-2026.webp",
+        }],
+        "brands": [],
+        "teams": [],
+    }
+    with (
+        patch.object(build, "ROOT", str(root)),
+        patch.object(build, "COMPETITION_IMG_DIR", str(image_dir)),
+        patch.object(build, "COMPETITION_LOGOS_PATH", str(embedded_path)),
+        patch.object(build, "load_drive_logo_manifest", return_value=drive_manifest),
+    ):
+        loaded = build.load_competition_logos()
+    assert loaded["shared-event-2026"]["name"] == "Drive"
+    assert drive_path.read_bytes() == b"current-drive-logo"

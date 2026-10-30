@@ -55,6 +55,8 @@ with patch.object(build, "COMPETITIONS", [competition, older_competition, non_uc
     html = build.build_rankings_section(riders)
 
 assert "DH Rankings" in html
+assert "General and completed events" not in html
+assert "UCI Test ·" not in html
 assert 'data-home-ranking-competition=' not in html
 assert 'data-home-ranking-view="global"' in html
 assert 'data-home-ranking-view="round-one"' in html

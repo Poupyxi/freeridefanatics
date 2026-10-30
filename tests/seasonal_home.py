@@ -48,10 +48,16 @@ for marker in ('data-season-scope="summer"', 'data-season-scope="winter"',
                'winter/equipment.html', '6 Winter riders'):
     assert marker in preprod, marker
     assert marker not in production, marker
-assert 'Explore Bike Downhill' in preprod
+explore = build.seasonal_explore_html()
+assert 'Explore Bike Downhill' not in explore
+assert 'data-season-scope="summer"' not in explore
+assert 'data-season-scope="winter" hidden' in explore
 assert 'Dedicated pages coming soon' not in preprod
 assert 'Explore ski' not in preprod and 'Explore snowboard' not in preprod
 assert 'winter/riders/winter-fixture.html' in preprod
+winter_intro = preprod.split('class="season-winter-intro"', 1)[1].split('</div></div>', 1)[0]
+assert 'data-random-rider="winter-fixture"' in winter_intro
+assert 'class="btn"' in winter_intro
 assert '<meta name="rf-source-rider-count" content="8">' in preprod
 assert 'rf-source-rider-count' not in production
 header = preprod.split('</header>', 1)[0]

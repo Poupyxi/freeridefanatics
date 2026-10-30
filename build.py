@@ -1273,15 +1273,11 @@ def seasonal_panorama_html():
 
 
 def seasonal_explore_html(winter_counts=None):
-    return f'''<section class="season-explore" aria-labelledby="season-explore-title">
+    return f'''<section class="season-explore" aria-labelledby="season-explore-title" data-season-scope="winter" hidden>
       <div class="wrap"><div class="season-explore-heading">
         <h2 id="season-explore-title">Explore</h2>
-        <span id="season-appearance-status" role="status" aria-live="polite">Summer</span>
-      </div><nav class="season-destinations" aria-label="Explore Bike Downhill" data-season-scope="summer">
-        <a href="competitions.html"><span>Competitions</span><span aria-hidden="true">↗</span></a>
-        <a href="riders.html#grid"><span>Riders</span><span aria-hidden="true">↗</span></a>
-        <a href="equipment.html"><span>Equipment</span><span aria-hidden="true">↗</span></a>
-      </nav><nav class="season-destinations" aria-label="Explore Ski and Snowboard" data-season-scope="winter" hidden>
+        <span id="season-appearance-status" role="status" aria-live="polite">Winter</span>
+      </div><nav class="season-destinations" aria-label="Explore Ski and Snowboard">
         <a href="winter/competitions.html"><span>Competitions</span><span aria-hidden="true">↗</span></a>
         <a href="winter/riders.html#grid"><span>Riders</span><span aria-hidden="true">↗</span></a>
         <a href="winter/equipment.html"><span>Equipment</span><span aria-hidden="true">↗</span></a>

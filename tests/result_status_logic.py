@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -72,9 +73,14 @@ class ResultStatusTests(unittest.TestCase):
 
     def test_global_rider_count_comes_from_the_active_dataset(self):
         self.assertEqual(build.RIDER_COUNT, len(build.PROMO_RIDERS))
-        header = build.header_html("")
-        self.assertIn('class="icon-btn"', header)
-        self.assertIn(f'>{len(build.PROMO_RIDERS)} Riders</span>', header)
+        standard_header = build.header_html("", seasonal=False)
+        self.assertIn('class="icon-btn"', standard_header)
+        self.assertIn(f'>{len(build.PROMO_RIDERS)} Riders</span>', standard_header)
+
+        with patch.object(build, "IS_PREPROD", True):
+            seasonal_header = build.header_html("", seasonal=True)
+        self.assertNotIn('class="icon-btn"', seasonal_header)
+        self.assertNotIn(f'>{len(build.PROMO_RIDERS)} Riders</span>', seasonal_header)
 
     def test_site_update_date_comes_from_notion_sync_metadata(self):
         with tempfile.TemporaryDirectory() as directory:

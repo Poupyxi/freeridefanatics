@@ -2612,9 +2612,16 @@ def load_competition_logos():
         logo_data["logos"].extend(json.load(logo_source)["logos"])
     os.makedirs(COMPETITION_IMG_DIR, exist_ok=True)
     logo_assets = {}
+    drive_logos = load_drive_logo_manifest()["competitions"]
+    drive_logo_keys = {logo["key"] for logo in drive_logos}
     for logo in logo_data.get("logos", []):
         logo_key = logo.get("key", "")
         if not re.fullmatch(r"[a-z0-9-]+", logo_key):
+            continue
+        # The Drive mirror is authoritative when both sources contain a logo.
+        # Never overwrite that file with the older embedded fallback, otherwise
+        # the validated manifest and the saved deployment snapshot diverge.
+        if logo_key in drive_logo_keys:
             continue
         logo_extension = {
             "image/jpeg": "jpg",
@@ -2635,7 +2642,7 @@ def load_competition_logos():
             "src": f"assets/img/competitions/{logo_key}.{logo_extension}",
             "name": logo.get("name") or logo_key,
         }
-    for logo in load_drive_logo_manifest()["competitions"]:
+    for logo in drive_logos:
         logo_assets[logo["key"]] = {
             "src": logo["src"],
             "name": logo.get("name") or logo["key"],

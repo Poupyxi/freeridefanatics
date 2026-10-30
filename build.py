@@ -2721,7 +2721,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
     else:
         html += header_html(prefix, active="competitions")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(competitions) + len(hub_organizations)} active series</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(competitions) + len(hub_organizations)} competition series currently tracked here</span></div><div class="competition-grid">{"".join(cards)}</div></div></section>
 </main>'''
     html += footer_html(prefix, seasonal=winter)
     return html

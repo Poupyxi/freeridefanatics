@@ -76,4 +76,15 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     for shared_marker in ('class="section competitions-list"', 'class="competition-grid"', 'class="competition-card'):
         assert shared_marker in competitions_html and shared_marker in summer_competitions_html
 
+    with patch.object(build, "COMPETITIONS", [bike_competition, ski_competition, snowboard_competition]), \
+         patch.object(build, "ORGANIZATIONS", []):
+        seasonal_header = build.header_html("../", seasonal=True)
+        summer_menu = seasonal_header.split('class="dropdown" data-season-scope="summer"', 1)[1].split('</div>\n        </div>', 1)[0]
+        winter_menu = seasonal_header.split('class="dropdown" data-season-scope="winter" hidden', 1)[1].split('</div>\n        </div>', 1)[0]
+        assert "Bike DH" in summer_menu
+        assert "Ski Tour" not in summer_menu and "Snow Tour" not in summer_menu
+        assert "Bike DH" not in winter_menu
+        assert "Ski Tour" in winter_menu and "Snow Tour" in winter_menu
+        assert '../winter/competitions/ski-tour.html' in winter_menu
+
 print("Seasonal data views: Bike Summer and Ski/Snowboard Winter scopes passed.")

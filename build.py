@@ -3634,13 +3634,8 @@ def build_rankings_section(riders):
                 ))
         view_buttons = []
         panels = []
-        for view_index, (view_key, view_label, view_competition, event_name) in enumerate(views):
+        for view_key, view_label, view_competition, event_name in views:
             view_competition_name = view_competition["name"]
-            view_buttons.append(
-                f'<button class="filter-btn{" active" if view_index == 0 else ""}" type="button" '
-                f'data-home-ranking-view="{esc_attr(view_key)}" '
-                f'aria-selected="{str(view_index == 0).lower()}">{esc(view_label)}</button>'
-            )
             category_rows = {}
             for category in ("Men Elite", "Women Elite"):
                 if event_name:
@@ -3673,14 +3668,31 @@ def build_rankings_section(riders):
                         )
                         for rank, rider in enumerate(entries[:5], 1)
                     )
+            team_ranking_rows = team_rows(view_competition_name, event_name)
+            available_panels = [
+                ("Men", category_rows["Men Elite"]),
+                ("Women", category_rows["Women Elite"]),
+                ("Team", team_ranking_rows),
+            ]
+            available_panels = [
+                (label, rows) for label, rows in available_panels if rows.strip()
+            ]
+            if not available_panels:
+                continue
+
+            view_index = len(view_buttons)
+            view_buttons.append(
+                f'<button class="filter-btn{" active" if view_index == 0 else ""}" type="button" '
+                f'data-home-ranking-view="{esc_attr(view_key)}" '
+                f'aria-selected="{str(view_index == 0).lower()}">{esc(view_label)}</button>'
+            )
             shown = " is-shown" if view_index == 0 else ""
             common = f'data-home-ranking-panel data-ranking-view="{esc_attr(view_key)}"'
             heading_prefix = "General " if event_name is None else ""
-            panels.extend([
-                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Men {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Men Elite"]}</div>''',
-                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Women {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{category_rows["Women Elite"]}</div>''',
-                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>Team {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{team_rows(view_competition_name, event_name)}</div>''',
-            ])
+            panels.extend(
+                f'''<div class="ranking-col standings-block{shown}" {common}><div class="ranking-col-head"><h3>{label} {heading_prefix}Ranking</h3><span class="tag">Top 5</span></div>{rows}</div>'''
+                for label, rows in available_panels
+            )
         view_group = f'<div class="home-event-slider home-ranking-views filters">{"".join(view_buttons)}</div>'
         return view_group, panels
 

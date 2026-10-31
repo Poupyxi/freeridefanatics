@@ -290,7 +290,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .search-input::placeholder{color:var(--muted);}
 
 /* ===== Rankings (homepage) ===== */
-.rankings-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:22px;}
+.rankings-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:22px;}
 .ranking-col{min-width:0; background:var(--bg-card); border:1px solid var(--line);}
 .ranking-col-head{
   padding:18px 20px; border-bottom:1px solid var(--line);

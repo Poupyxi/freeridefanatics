@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Homepage DH rankings switch from UCI general to other competitions."""
 from pathlib import Path
+import re
 import sys
 from unittest.mock import patch
 
@@ -80,6 +81,18 @@ assert "home-event-slider" in html
 assert "Men General Ranking" in html
 assert "Women General Ranking" in html
 assert "Team General Ranking" in html
+hardline_panels = re.findall(
+    r'<div class="ranking-col[^\"]*" data-home-ranking-panel '
+    r'data-ranking-view="redbull-2026-hardline-2026">.*?<h3>(.*?)</h3>',
+    html,
+)
+assert hardline_panels == ["Men Ranking", "Team Ranking"]
+cerro_panels = re.findall(
+    r'<div class="ranking-col[^\"]*" data-home-ranking-panel '
+    r'data-ranking-view="redbull-2026-ceroabajo-2026">.*?<h3>(.*?)</h3>',
+    html,
+)
+assert cerro_panels == ["Women Ranking", "Team Ranking"]
 global_panel = html.split('data-ranking-view="global"', 1)[1]
 assert global_panel.index("Men General Ranking") < global_panel.index("Women General Ranking")
 assert global_panel.index("Women General Ranking") < global_panel.index("Team General Ranking")

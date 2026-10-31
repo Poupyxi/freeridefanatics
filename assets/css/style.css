@@ -313,6 +313,9 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .home-ranking-views .filter-btn{flex:0 0 auto;white-space:nowrap;}
 .home-rankings .toolbar-label{display:block;margin:10px 0 6px;}
 .home-rankings .rankings-grid>.standings-block{margin:0;}
+.ranking-status-notice{min-height:180px;padding:28px 20px;display:flex;flex-direction:column;justify-content:center;gap:10px;background:color-mix(in srgb,var(--orange) 8%,var(--bg-card));}
+.ranking-status-notice strong{font-family:var(--head);font-size:18px;text-transform:uppercase;line-height:1.1;color:var(--orange);}
+.ranking-status-notice span{max-width:34ch;color:var(--muted);font-size:12px;line-height:1.6;}
 
 /* ===== Best Equipment marquee (continuous slow scroll, one card per category) ===== */
 .eq-carousel-section{overflow:hidden;}

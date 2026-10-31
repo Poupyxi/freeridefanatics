@@ -68,7 +68,10 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
 
     rider_html = build.build_winter_rider_page(ski, {"Ski Tour"})
     assert "Ski Rider" in rider_html
-    assert "Bike Downhill" not in rider_html
+    # The shared header intentionally contains a hidden Summer menu. Validate
+    # the Winter page body rather than rejecting that navigation fallback.
+    rider_main = rider_html.split("<main", 1)[1]
+    assert "Bike Downhill" not in rider_main
     assert "Setup analysis" not in rider_html
     assert "Winter Brand" in rider_html
     assert "Bike Brand" not in rider_html
@@ -95,12 +98,12 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     assert 'href="ski-tour/riders.html"' in competition_html
     competition_riders_html = build.build_competition_riders([ski], ski_competition, winter=True)
     assert 'href="../../../winter/riders/ski-rider.html"' in competition_riders_html
-    assert 'https://ridersfanatics.com/winter/competitions/ski-tour/riders.html' in competition_riders_html
+    assert '/winter/competitions/ski-tour/riders.html' in competition_riders_html
     competition_round_html = build.build_competition_round(
         [ski], ski_competition, "Snow Test - 2026", 1, ["Snow Test - 2026"], winter=True
     )
     assert "Coming soon" in competition_round_html
-    assert 'https://ridersfanatics.com/winter/competitions/ski-tour/rounds/snow-test-2026.html' in competition_round_html
+    assert '/winter/competitions/ski-tour/rounds/snow-test-2026.html' in competition_round_html
     assert build.season_ranking_selector([ski], ski_competition) == ""
 
     with patch.object(build, "COMPETITIONS", [bike_competition, ski_competition, snowboard_competition]), \

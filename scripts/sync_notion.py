@@ -372,9 +372,21 @@ def instagram_handle(url: str | None) -> str | None:
     if not url:
         return None
     candidate = url.strip().rstrip("/").split("/")[-1].split("?")[0]
-    if candidate and candidate.lower() not in {"instagram.com", "www.instagram.com"}:
-        return "@" + candidate.lstrip("@")
-    return url if url.startswith("@") else None
+    candidate = candidate.lstrip("@")
+    # Instagram usernames contain only letters, numbers, periods and
+    # underscores. Reject domains and editorial placeholders instead of
+    # publishing a confidently broken instagram.com URL.
+    looks_like_domain = candidate.casefold().startswith("www.") or bool(
+        re.search(r"\.(?:com|net|org|io|co|fr)$", candidate, re.I)
+    )
+    if not looks_like_domain and re.fullmatch(r"[A-Za-z0-9._]{1,30}", candidate or ""):
+        return "@" + candidate
+    return None
+
+
+def season_short_name(name: str) -> str:
+    """Remove a terminal season year and its separator from menu labels."""
+    return re.sub(r"\s*(?:[-–—/|·]\s*)?20\d{2}\s*$", "", name or "").strip()
 
 
 def season_edition_count(page) -> int | None:
@@ -585,7 +597,7 @@ def export(client: Notion):
         competition_catalog["series"].append({
             "id": competition_id(season["name"]),
             "name": season["name"],
-            "short_name": re.sub(r"\s+20\d{2}\s*$", "", season["name"]).strip(),
+            "short_name": season_short_name(season["name"]),
             "sport": sport,
             "discipline": discipline,
             "season": competition_year(season["name"], event_records),
@@ -794,6 +806,13 @@ def export(client: Notion):
             for discipline_id in discipline_ids
             if disciplines.get(discipline_id)
         })
+        season_memberships = sorted({
+            seasons[season_id]["name"]
+            for season_id in related_ids(
+                item, seasons, "☀️ Saison", "Saison", "Season", "Seasons"
+            )
+            if season_id in seasons
+        })
         raw_name = name.strip()
         route_handle = (handle or "").lower().lstrip("@")
         public_slug = ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(raw_name)
@@ -827,6 +846,9 @@ def export(client: Notion):
             "bio": scalar_value(item, "Biographie et principaux résultats") or "",
             "competition_history": history,
             "competition_participation": sorted(participations_by_rider.get(identifier, set())),
+            # A season membership means registered/associated, not started.
+            # DNS logic remains exclusively in competition_participation.
+            "competition_memberships": season_memberships,
             "equipment": equipment_by_rider.get(identifier, []),
             "winter_equipment": winter_equipment_by_rider.get(identifier, []),
             "season": 2026,
@@ -859,6 +881,9 @@ def export(client: Notion):
         )
         current["competition_participation"] = sorted(set(
             current.get("competition_participation", []) + rider.get("competition_participation", [])
+        ))
+        current["competition_memberships"] = sorted(set(
+            current.get("competition_memberships", []) + rider.get("competition_memberships", [])
         ))
         merged_disciplines = sorted(set(
             (current.get("disciplines") or []) + (rider.get("disciplines") or [])

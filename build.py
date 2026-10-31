@@ -1836,6 +1836,12 @@ def logo_identity_and_year(value):
     year_match = re.search(r"-(20\d{2})$", slug)
     year = int(year_match.group(1)) if year_match else None
     identity = slug[:year_match.start()] if year_match else slug
+    # Drive filenames may carry a purely descriptive ``-logo`` suffix, while
+    # Notion competition IDs do not.  Apostrophes are also slugged differently
+    # depending on whether the source was "Corbet's" (``corbet-s``) or a plain
+    # filename such as ``corbets``.  Both forms describe the same identity.
+    identity = re.sub(r"-logo$", "", identity)
+    identity = identity.replace("kings-queens-of-corbet-s", "kings-queens-of-corbets")
     identity = identity.replace("ceroabajo", "cerro-abajo").replace("cerroabajo", "cerro-abajo")
     identity = re.sub(r"^red-?bull-", "", identity)
     # Notion uses both "UCI MTB World Cup" and "UCI World Series", with a

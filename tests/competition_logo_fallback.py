@@ -48,6 +48,18 @@ assert build.competition_logo(logos, {"id": "redbull-2027"}) == logos["redbull-2
 assert build.competition_logo(logos, {"id": "uci-world-series-dh-2027"}) == logos["uci-mtb-world-cup-dh-2026"]
 assert build.competition_logo(logos, {"id": "uci-world-series-cc-2027"}) == logos["uci-mtb-world-cup-dh-2026"]
 
+# Drive filenames can include a descriptive ``-logo`` suffix and omit the
+# apostrophe separator used by the Notion-generated competition slug.
+corbets_logo = {
+    "src": "assets/img/competitions/kings-queens-of-corbets-logo.webp",
+    "name": "Kings & Queens of Corbet's",
+}
+corbets_logos = {"kings-queens-of-corbets-logo": corbets_logo}
+assert build.competition_logo(
+    corbets_logos,
+    {"id": "kings-queens-of-corbet-s-2027"},
+) == corbets_logo
+
 # A Drive-managed logo must not be overwritten by the embedded fallback while
 # pages are built and the next validated snapshot is prepared.
 with tempfile.TemporaryDirectory() as directory:

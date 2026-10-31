@@ -44,7 +44,6 @@ riders = [
     rider("man-one", "Man One", "Men Elite", "Team A", [
         {"category": competition["name"], "event": "Round One", "place": 1, "points": 100},
         {"category": competition["name"], "event": "Round Two", "stages": {"Qualifier": {"place": 1}}},
-        {"category": non_uci_competition["name"], "event": "Rampage 2026", "place": 2, "points": 80},
         {"category": non_uci_competition["name"], "event": "Hardline 2026", "place": 1, "points": 100},
     ]),
     rider("woman-one", "Woman One", "Women Elite", "Team B", [
@@ -87,6 +86,14 @@ hardline_panels = re.findall(
     html,
 )
 assert hardline_panels == ["Men Ranking", "Team Ranking"]
+rampage_panels = re.findall(
+    r'<div class="ranking-col[^\"]*" data-home-ranking-panel '
+    r'data-ranking-view="redbull-2026-rampage-2026">.*?<h3>(.*?)</h3>',
+    html,
+)
+assert rampage_panels == ["Men Ranking", "Women Ranking", "Team Ranking"]
+assert "Event canceled due to weather" in html
+assert "No official final ranking is available." in html
 cerro_panels = re.findall(
     r'<div class="ranking-col[^\"]*" data-home-ranking-panel '
     r'data-ranking-view="redbull-2026-ceroabajo-2026">.*?<h3>(.*?)</h3>',

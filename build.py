@@ -3669,8 +3669,19 @@ def build_rankings_section(riders):
                         for rank, rider in enumerate(entries[:5], 1)
                     )
             team_ranking_rows = team_rows(view_competition_name, event_name)
+            event_notice = (competition_round_notice(view_competition, event_name)
+                            if event_name else None)
+            men_rows = category_rows["Men Elite"]
+            if (not men_rows.strip() and event_notice
+                    and event_notice.get("category") == "Men Elite"):
+                men_rows = (
+                    '<div class="ranking-status-notice" role="note">'
+                    '<strong>Event canceled due to weather</strong>'
+                    '<span>The men\'s competition was suspended because of high winds. '
+                    'No official final ranking is available.</span></div>'
+                )
             available_panels = [
-                ("Men", category_rows["Men Elite"]),
+                ("Men", men_rows),
                 ("Women", category_rows["Women Elite"]),
                 ("Team", team_ranking_rows),
             ]

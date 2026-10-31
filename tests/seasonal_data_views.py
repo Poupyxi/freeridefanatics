@@ -21,7 +21,7 @@ ski = {
         {"category": "Skis", "brand": "Winter Brand", "model_detail": "Powder 110"},
         {"category": "Frame", "brand": "Bike Brand", "model_detail": "DH Frame"},
     ],
-    "competition_history": [],
+    "competition_history": [], "competition_memberships": ["Ski Tour - 2026"],
 }
 snowboard = {
     "slug": "snowboard-rider", "display_name": "Snowboard Rider", "disciplines": ["Snowboard Freeride"],
@@ -29,7 +29,7 @@ snowboard = {
 }
 
 bike_competition = {"id": "bike-dh", "name": "Bike DH", "short_name": "Bike DH", "sport": "Mountain bike", "discipline": "Downhill", "season": 2026, "events": []}
-ski_competition = {"id": "ski-tour", "name": "Ski Tour", "short_name": "Ski Tour", "sport": "Ski", "discipline": "Freeride", "season": 2026, "events": []}
+ski_competition = {"id": "ski-tour", "name": "Ski Tour - 2026", "short_name": "Ski Tour -", "sport": "Ski", "discipline": "Freeride", "season": 2026, "events": [{"name": "Snow Test - 2026", "date": "2026-12-10", "location": "Alps"}]}
 snowboard_competition = {"id": "snow-tour", "name": "Snow Tour", "short_name": "Snow Tour", "sport": "Snowboard", "discipline": "Freeride", "season": 2026, "events": []}
 
 assert build.rider_has_discipline(bike)
@@ -43,6 +43,17 @@ assert build.competition_is_winter(snowboard_competition)
 assert sync_notion.season_sport_and_discipline(["Ski Freeride"]) == ("Ski", "Ski Freeride")
 assert sync_notion.season_sport_and_discipline(["Snowboard Freeride"]) == ("Snowboard", "Snowboard Freeride")
 assert sync_notion.season_sport_and_discipline(["Bike Downhill"]) == ("Mountain bike", "Bike Downhill")
+assert sync_notion.season_short_name("FreeRideWorldTour - 2027") == "FreeRideWorldTour"
+assert sync_notion.instagram_handle("https://instagram.com/valid.handle") == "@valid.handle"
+assert sync_notion.instagram_handle("@www.freerideworldtour.com") is None
+assert sync_notion.instagram_handle("@kings-queens-corbets") is None
+season_id = "4089cf6b-f148-8051-9dc5-d685f4e935ce"
+season_relation = {"properties": {"☀️ Saison": {
+    "type": "relation", "relation": [{"id": season_id}],
+}}}
+assert sync_notion.related_ids(
+    season_relation, {season_id: {"name": "Winter Tour"}}, "☀️ Saison", "Season"
+) == [season_id]
 
 with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT", 3):
     riders_html = build.build_winter_riders_directory([ski, snowboard])
@@ -75,6 +86,22 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     summer_competitions_html = build.build_competitions_hub([bike], [bike_competition])
     for shared_marker in ('class="section competitions-list"', 'class="competition-grid"', 'class="competition-card'):
         assert shared_marker in competitions_html and shared_marker in summer_competitions_html
+    assert "Ski Tour -</strong>" not in competitions_html
+    assert "<strong>1</strong> rider" in competitions_html
+
+    competition_html = build.build_winter_competition_page([ski], ski_competition)
+    assert 'href="ski-tour/rounds/snow-test-2026.html"' in competition_html
+    assert "View event" in competition_html
+    assert 'href="ski-tour/riders.html"' in competition_html
+    competition_riders_html = build.build_competition_riders([ski], ski_competition, winter=True)
+    assert 'href="../../../winter/riders/ski-rider.html"' in competition_riders_html
+    assert 'https://ridersfanatics.com/winter/competitions/ski-tour/riders.html' in competition_riders_html
+    competition_round_html = build.build_competition_round(
+        [ski], ski_competition, "Snow Test - 2026", 1, ["Snow Test - 2026"], winter=True
+    )
+    assert "Coming soon" in competition_round_html
+    assert 'https://ridersfanatics.com/winter/competitions/ski-tour/rounds/snow-test-2026.html' in competition_round_html
+    assert build.season_ranking_selector([ski], ski_competition) == ""
 
     with patch.object(build, "COMPETITIONS", [bike_competition, ski_competition, snowboard_competition]), \
          patch.object(build, "ORGANIZATIONS", []):

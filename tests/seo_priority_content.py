@@ -51,7 +51,7 @@ uci = {
 assert_round(
     uci,
     "Whistler",
-    "UCI Downhill Whistler 2026 Results | Riders &amp; Rankings",
+    "UCI Downhill Whistler 2026 Results: Riders &amp; Rankings",
     "Whistler UCI Downhill World Cup 2026",
 )
 
@@ -82,14 +82,14 @@ red_bull = {
 rampage_html = assert_round(
     red_bull,
     "Rampage 2026",
-    "Red Bull Rampage 2026 Results | Women's Ranking",
+    "Red Bull Rampage 2026: Women's Results &amp; Weather Update",
     "Red Bull Rampage 2026 riders and results",
 )
 assert "The men's competition was suspended because of high winds." in rampage_html
 hardline_html = assert_round(
     red_bull,
     "Hardline 2026",
-    "Red Bull Hardline 2026 | Riders, Results &amp; Rankings",
+    "Red Bull Hardline 2026 Results: Riders &amp; Rankings",
     "Red Bull Hardline 2026 riders and results",
 )
 assert '"@type": "SportsEvent"' in rampage_html
@@ -112,14 +112,14 @@ women_panel = rampage_women_html.index('data-standings="Women Elite"')
 assert men_panel < notice < women_panel
 
 priority_riders = {
-    "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",
-    "holl-valentina": "Valentina Höll Bike Check 2026 | UCI DH Results",
-    "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026 | Results & Setup",
-    "lisa-bouladou": "Lisa Bouladou 2026 | DH Results & Bike Check",
-    "asa-vermette": "Asa Vermette Bike Check 2026 | Results & Equipment",
-    "amaury-pierron": "Amaury Pierron Bike Check 2026 | UCI DH Results",
-    "max-alran": "Max Alran Bike Check 2026 | UCI DH Results",
-    "jordan-williams": "Jordan Williams Bike Check 2026 | Setup & Results",
+    "valentina-holl": "Valentina Höll Bike Check 2026: Setup & UCI Results",
+    "holl-valentina": "Valentina Höll Bike Check 2026: Setup & UCI Results",
+    "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026: Frame, Fork & Results",
+    "lisa-bouladou": "Lisa Bouladou 2026: DH Results, Ranking & Bike Check",
+    "asa-vermette": "Asa Vermette Bike Check 2026: Frameworks DH & Results",
+    "amaury-pierron": "Amaury Pierron Bike Check 2026: Setup & UCI Results",
+    "max-alran": "Max Alran Bike Check 2026: Setup & UCI Results",
+    "jordan-williams": "Jordan Williams Bike Check 2026: Setup & DH Results",
 }
 for slug, expected in priority_riders.items():
     rider = {
@@ -162,6 +162,8 @@ for equipment, history, expected_phrase in search_intent_cases:
     assert expected_phrase in description
     assert "Canada rider" in description
     assert len(description) <= 160
+    assert not description.endswith("…")
+    assert description.endswith(".")
 
 competitions_hub_html = build.build_competitions_hub([])
 assert '<h1 class="label competition-hub-title">Competitions tracked</h1>' in competitions_hub_html

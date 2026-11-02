@@ -55,6 +55,11 @@ assert_round(
     "Whistler UCI Downhill World Cup 2026",
 )
 
+whistler_winner_html = build.build_competition_round(
+    [sample_rider("Whistler", uci["name"])], uci, "Whistler", 1, ["Whistler"]
+)
+assert "Winners: Men — Sample Rider." in whistler_winner_html
+
 build.IS_PREPROD = True
 uci["events"] = [{
     "name": "Lake Placid",
@@ -164,6 +169,39 @@ for equipment, history, expected_phrase in search_intent_cases:
     assert len(description) <= 160
     assert not description.endswith("…")
     assert description.endswith(".")
+
+best_result_rider = {
+    "display_name": "Best Result Rider",
+    "slug": "best-result-rider",
+    "country": "Canada",
+    "competition_history": [
+        {"event": "Whistler", "place": 4, "points": 80},
+        {"event": "Lake Placid", "place": 2, "points": 160},
+    ],
+}
+_, best_result_description = build.rider_seo_metadata(
+    best_result_rider, [], best_result_rider["competition_history"], 3, [],
+)
+assert "best result 2nd at Lake Placid" in best_result_description
+
+previous_build_environment = build.IS_PREPROD
+build.IS_PREPROD = False
+production_head = build.head(
+    "Unique title", "Unique description", "", canonical_path="/unique.html",
+    page_type="article", image_path="/assets/img/riders/example.webp",
+)
+build.IS_PREPROD = previous_build_environment
+assert f'<link rel="canonical" href="{build.SITE_URL}/unique.html">' in production_head
+assert '<meta property="og:updated_time"' in production_head
+assert '<meta property="article:modified_time"' in production_head
+assert '<meta property="og:image:alt" content="Unique title">' in production_head
+assert 'max-image-preview:large' in production_head
+
+long_description = "A complete sentence with useful search context. " + ("extra context " * 30)
+fitted_description = build.fit_meta_description(long_description)
+assert len(fitted_description) <= 160
+assert fitted_description.endswith(".")
+assert "…" not in fitted_description
 
 competitions_hub_html = build.build_competitions_hub([])
 assert '<h1 class="label competition-hub-title">Competitions tracked</h1>' in competitions_hub_html

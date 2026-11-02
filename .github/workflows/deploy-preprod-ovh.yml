@@ -73,6 +73,7 @@ jobs:
           python3 tests/data_health_report.py
           python3 tests/workflow_contract.py
           python3 build.py
+          python3 tests/seo_ctr_contract.py
           python3 tests/adsense_seo_readiness.py
           python3 tests/ad_preview.py
           node tests/footer-ad.test.js
@@ -408,6 +409,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 build.py
+          python3 tests/seo_ctr_contract.py
           python3 tests/competition_featured_event.py
           python3 tests/seasonal_data_views.py
           python3 tests/adsense_seo_readiness.py

@@ -191,7 +191,7 @@ production_head = build.head(
     page_type="article", image_path="/assets/img/riders/example.webp",
 )
 build.IS_PREPROD = previous_build_environment
-assert '<link rel="canonical" href="https://ridersfanatics.com/unique.html">' in production_head
+assert f'<link rel="canonical" href="{build.SITE_URL}/unique.html">' in production_head
 assert '<meta property="og:updated_time"' in production_head
 assert '<meta property="article:modified_time"' in production_head
 assert '<meta property="og:image:alt" content="Unique title">' in production_head

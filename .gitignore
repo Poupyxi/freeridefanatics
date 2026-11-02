@@ -10,6 +10,7 @@ __pycache__/
 
 # Working files (research exports, scratch)
 tmp/
+.search-console/
 .results-latest.csv
 .profiles-latest.csv
 assets/js/promo-pool.js

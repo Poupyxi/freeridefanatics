@@ -3,6 +3,7 @@
 
 from html.parser import HTMLParser
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -81,6 +82,9 @@ for relative in PRIORITY_PAGES:
 
 competitions = (ROOT / "competitions.html").read_text(encoding="utf-8")
 assert ">Open competition<" not in competitions
-assert "Explore UCI MTB World Cup DH results" in competitions
+assert re.search(
+    r'href="competitions/uci-mtb-world-cup-dh-2026\.html">Explore [^<]+ results</a>',
+    competitions,
+), "The UCI competition link must use a descriptive results anchor"
 
 print(f"CTR metadata contract passed for {len(PRIORITY_PAGES)} priority pages.")

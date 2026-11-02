@@ -1917,7 +1917,7 @@ def priority_round_seo(competition, event, rider_count, category_description,
     points = ", points" if has_points else ""
     if competition.get("id") == "uci-mtb-world-cup-dh-2026" and slug == "whistler":
         return {
-            "title": "UCI Downhill Whistler 2026 Results | Riders & Rankings",
+            "title": "UCI Downhill Whistler 2026 Results: Riders & Rankings",
             "description": (
                 f"Whistler UCI Downhill World Cup 2026 results: {category_description} placings"
                 f"{points}{teams} and {rider_count} linked rider profiles."
@@ -1931,7 +1931,7 @@ def priority_round_seo(competition, event, rider_count, category_description,
         }
     if competition.get("id") == "redbull-2026" and "hardline" in slug:
         return {
-            "title": "Red Bull Hardline 2026 | Riders, Results & Rankings",
+            "title": "Red Bull Hardline 2026 Results: Riders & Rankings",
             "description": (
                 f"Red Bull Hardline 2026 riders and results: {category_description} rankings"
                 f"{points}{teams}, event information and {rider_count} linked athlete profiles."
@@ -1945,7 +1945,7 @@ def priority_round_seo(competition, event, rider_count, category_description,
         }
     if competition.get("id") == "redbull-2026" and "rampage" in slug:
         return {
-            "title": "Red Bull Rampage 2026 Results | Women's Ranking",
+            "title": "Red Bull Rampage 2026: Women's Results & Weather Update",
             "description": (
                 "Red Bull Rampage 2026 women's results and ranking, with linked rider profiles. "
                 "The men's competition was suspended because of high winds."
@@ -2507,12 +2507,15 @@ def build_competition_standings(riders, competition):
     ]
     ranking_metric = ("current points" if has_points
                       else "recorded places and race times")
-    description = f"{name} standings for Elite Men, Elite Women and teams: {ranking_metric}, season leaders and linked rider profiles."
+    is_uci_downhill = cid == "uci-mtb-world-cup-dh-2026"
+    seo_name = "UCI Downhill World Cup 2026" if is_uci_downhill else name
+    description = (f"{seo_name} standings: {ranking_metric} for Elite Men, Elite Women and "
+                   "teams, season leaders and linked rider profiles.")
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
     latest_round_href = (f"rounds/{competition_round_path_slug(competition, latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
     html = head(
-        f"{name} Standings | Men, Women & Teams", description, "../../",
+        f"{seo_name} Standings: Men, Women & Teams", description, "../../",
         body_class="competition-standings-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage",
@@ -4361,11 +4364,11 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
     points = rider_total_points(rider)
     frame = highlight_parts[0] if highlight_parts else ""
     if equipment and history:
-        title = f"{name} Bike Check 2026 | DH Results & Equipment"
+        title = f"{name} Bike Check 2026: Equipment & DH Results"
     elif history:
-        title = f"{name} 2026 Downhill Results, Ranking & Profile"
+        title = f"{name} 2026 Downhill Results & Ranking"
     elif equipment:
-        title = f"{name} Bike Check 2026 | Mountain Bike Equipment"
+        title = f"{name} Bike Check 2026: Frame, Fork & Setup"
     else:
         title = f"{name} Downhill Rider Profile | {SITE_NAME}"
 
@@ -4391,24 +4394,28 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
         intent = "downhill rider profile, biography and race participation"
     description = f"{name} 2026 {intent}"
     if details:
-        description += ": " + ", ".join(details)
-    description += "."
-    if len(description) > 160:
-        description = description[:157].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
+        description += ": "
+        included_details = []
+        for detail in details:
+            candidate = description + ", ".join(included_details + [detail]) + "."
+            if len(candidate) <= 160:
+                included_details.append(detail)
+        description += ", ".join(included_details)
+    description = description.rstrip(" :") + "."
 
     priority_titles = {
-        "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",
-        "holl-valentina": "Valentina Höll Bike Check 2026 | UCI DH Results",
-        "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026 | Results & Setup",
-        "lisa-bouladou": "Lisa Bouladou 2026 | DH Results & Bike Check",
-        "asa-vermette": "Asa Vermette Bike Check 2026 | Results & Equipment",
-        "amaury-pierron": "Amaury Pierron Bike Check 2026 | UCI DH Results",
-        "max-alran": "Max Alran Bike Check 2026 | UCI DH Results",
-        "jackson-goldstone": "Jackson Goldstone Bike Check 2026 | UCI DH Results",
-        "jordan-williams": "Jordan Williams Bike Check 2026 | Setup & Results",
-        "anna-newkirk": "Anna Newkirk Bike Check 2026 | DH Results & Setup",
-        "gloria-scarsi": "Gloria Scarsi Bike Check 2026 | DH Results & Setup",
-        "sacha-earnest": "Sacha Earnest Bike Check 2026 | DH Results & Setup",
+        "valentina-holl": "Valentina Höll Bike Check 2026: Setup & UCI Results",
+        "holl-valentina": "Valentina Höll Bike Check 2026: Setup & UCI Results",
+        "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026: Frame, Fork & Results",
+        "lisa-bouladou": "Lisa Bouladou 2026: DH Results, Ranking & Bike Check",
+        "asa-vermette": "Asa Vermette Bike Check 2026: Frameworks DH & Results",
+        "amaury-pierron": "Amaury Pierron Bike Check 2026: Setup & UCI Results",
+        "max-alran": "Max Alran Bike Check 2026: Setup & UCI Results",
+        "jackson-goldstone": "Jackson Goldstone Bike Check 2026: Frame, Fork & Race Setup",
+        "jordan-williams": "Jordan Williams Bike Check 2026: Setup & DH Results",
+        "anna-newkirk": "Anna Newkirk Bike Check 2026: Setup & DH Results",
+        "gloria-scarsi": "Gloria Scarsi Bike Check 2026: Setup & DH Results",
+        "sacha-earnest": "Sacha Earnest Bike Check 2026: Setup & DH Results",
     }
     priority_descriptions = {
         "valentina-holl": (

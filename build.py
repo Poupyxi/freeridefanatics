@@ -579,6 +579,14 @@ def breadcrumb_schema(items):
 def breadcrumb_html(items):
     return ""
 
+def fit_meta_description(value, limit=160):
+    """Keep search copy complete and mobile-friendly without an ellipsis."""
+    value = " ".join(str(value or "").split())
+    if len(value) <= limit:
+        return value
+    shortened = value[:limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:.-")
+    return shortened + "."
+
 def head(title, description, asset_prefix, body_class="", canonical_path="/",
          schemas=None, image_path=None, page_type="website", robots=None):
     body_attr = f' class="{esc(body_class)}"' if body_class else ""
@@ -586,6 +594,10 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
     image = absolute_url(image_path) if image_path else absolute_url("/assets/img/og-default.png")
     image_dimensions = "" if image_path else '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'
     image_preload = f'<link rel="preload" as="image" href="{image}">' if image_path else ""
+    freshness_meta = (
+        f'<meta property="article:modified_time" content="{SITE_UPDATED}">\n'
+        if page_type == "article" else ""
+    )
     schema_html = "\n".join(json_ld(s) for s in (schemas or []))
     adsense_script = "" # Loaded only by footer-ad.js after CMP consent.
     robots_content = robots or ('noindex,nofollow,noarchive' if IS_PREPROD else 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
@@ -603,8 +615,11 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(description)}">
 <meta property="og:url" content="{canonical}">
+<meta property="og:updated_time" content="{SITE_UPDATED}">
 <meta property="og:image" content="{image}">
+<meta property="og:image:alt" content="{esc(title)}">
 {image_dimensions}
+{freshness_meta}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(title)}">
 <meta name="twitter:description" content="{esc(description)}">
@@ -1910,17 +1925,19 @@ def competition_round_notice(competition, event):
 
 
 def priority_round_seo(competition, event, rider_count, category_description,
-                       has_points, show_team_ranking):
+                       has_points, show_team_ranking, winner_summary=""):
     """Return focused search copy for the event pages with the strongest intent."""
     slug = competition_round_path_slug(competition, event)
     teams = ", team standings" if show_team_ranking else ""
     points = ", points" if has_points else ""
+    winners = f" Winners: {winner_summary}." if winner_summary else ""
+    rider_profiles = f"{rider_count} linked rider profile{'s' if rider_count != 1 else ''}"
     if competition.get("id") == "uci-mtb-world-cup-dh-2026" and slug == "whistler":
         return {
             "title": "UCI Downhill Whistler 2026 Results: Riders & Rankings",
             "description": (
                 f"Whistler UCI Downhill World Cup 2026 results: {category_description} placings"
-                f"{points}{teams} and {rider_count} linked rider profiles."
+                f"{points}{teams} and {rider_profiles}.{winners}"
             ),
             "heading": "Whistler UCI Downhill World Cup 2026",
             "copy": (
@@ -1934,7 +1951,7 @@ def priority_round_seo(competition, event, rider_count, category_description,
             "title": "Red Bull Hardline 2026 Results: Riders & Rankings",
             "description": (
                 f"Red Bull Hardline 2026 riders and results: {category_description} rankings"
-                f"{points}{teams}, event information and {rider_count} linked athlete profiles."
+                f"{points}{teams}, event information and {rider_profiles}.{winners}"
             ),
             "heading": "Red Bull Hardline 2026 riders and results",
             "copy": (
@@ -2171,6 +2188,12 @@ def build_competition_round(riders, competition, event, round_number, events, wi
     focused_seo = priority_round_seo(
         competition, event, len(all_entries), category_description,
         has_points, show_team_ranking,
+        ", ".join(
+            f"{label} — {entries[0][0]['display_name']}"
+            for category, label in (("Men Elite", "Men"), ("Women Elite", "Women"))
+            if (entries := [entry for entry in categories[category]
+                            if history_place(entry[1]) is not None])
+        ),
     )
     if cid == "redbull-2026" and not all_entries:
         page_title = f"Red Bull {display_event} | 2026 Event & Riders | {SITE_NAME}"
@@ -2189,6 +2212,15 @@ def build_competition_round(riders, competition, event, round_number, events, wi
         page_title = f"{display_event} Downhill Results | {competition['season']} {SITE_NAME}"
         points_copy = ", points" if has_points else ""
         description = f"{event} downhill results from the {name}: {category_description} placings{points_copy}{team_description} and linked rider profiles."
+    winner_names = ", ".join(
+        f"{label} winner {entries[0][0]['display_name']}"
+        for category, label in (("Men Elite", "men"), ("Women Elite", "women"))
+        if (entries := [entry for entry in categories[category]
+                        if history_place(entry[1]) is not None])
+    )
+    if winner_names and not focused_seo:
+        description = description.rstrip(".") + f"; {winner_names}."
+    description = fit_meta_description(description)
     if focused_seo:
         page_title = focused_seo["title"]
         description = focused_seo["description"]
@@ -2509,8 +2541,15 @@ def build_competition_standings(riders, competition):
                       else "recorded places and race times")
     is_uci_downhill = cid == "uci-mtb-world-cup-dh-2026"
     seo_name = "UCI Downhill World Cup 2026" if is_uci_downhill else name
-    description = (f"{seo_name} standings: {ranking_metric} for Elite Men, Elite Women and "
-                   "teams, season leaders and linked rider profiles.")
+    ranking_groups = [label for key, label in (("Men Elite", "Elite Men"),
+                                                ("Women Elite", "Elite Women"))
+                      if categories[key]]
+    if teams:
+        ranking_groups.append("teams")
+    description = fit_meta_description(
+        f"{seo_name} standings: {ranking_metric} for {', '.join(ranking_groups)}, "
+        f"led by {leader_summary or 'the current season leaders'}, with linked rider profiles."
+    )
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
     latest_round_href = (f"rounds/{competition_round_path_slug(competition, latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
@@ -2808,7 +2847,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
           <h2>{esc(display_name)}</h2>
           {description_html}
           {f'<div class="competition-card-stats">{stats_html}</div>' if stats_html else ''}
-          <a class="btn btn-solid" href="competitions/{competition['id']}.html">{esc('Explore ' + display_name) if competition['id'] in {'beyondgravity', 'project-17'} else 'Open competition'}</a>
+          <a class="btn btn-solid" href="competitions/{competition['id']}.html">Explore {esc(display_name)} results</a>
         </article>''')
         item_list.append({"@type": "ListItem", "position": position,
                           "name": competition["name"], "url": absolute_url(detail_path)})
@@ -3117,6 +3156,7 @@ def build_competition_detail(riders, competition, winter=False):
         page_title = f"{name} | Riders & Events"
         description = (f"{name} competition guide: riders, event schedule, results, standings, "
                        f"rankings and documented {'winter sports' if winter else 'mountain bike'} equipment.")
+    description = fit_meta_description(description)
     html = head(
         page_title, description, prefix,
         body_class="competition-detail-page" + (" seasonal-home season-winter winter-data-page" if winter else ""), canonical_path=path,
@@ -4382,6 +4422,12 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
     if history:
         ranking = f"ranked {ordinal(category_rank)}" if category_rank else "season results"
         details.append(f"{ranking} with {points} tracked points")
+        placed_results = [(history_place(result), result) for result in history
+                          if history_place(result) is not None]
+        if placed_results:
+            best_place, best_result = min(placed_results, key=lambda item: item[0])
+            if best_result.get("event"):
+                details.append(f"best result {ordinal(best_place)} at {best_result['event']}")
     if equipment:
         details.append(f"{len(equipment)} documented bike components")
     if equipment and history:

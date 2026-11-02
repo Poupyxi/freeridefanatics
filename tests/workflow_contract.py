@@ -79,6 +79,9 @@ assert "assets/img/competitions/uci-mtb-world-cup-dh-2026.png" not in production
 assert "test -f competitions/beyondgravity.html" not in production, (
     "Draft 2027 competitions must not be required in a production build"
 )
+assert "ridersfanatics.com/competitions/beyondgravity.html" not in production, (
+    "Draft 2027 competitions must not be required by live production verification"
+)
 assert "UCI World Series - 2026 Standings" in production
 assert 'select(.event != "pull_request")' in production
 assert "actions/runs/$candidate/artifacts?per_page=100" in production

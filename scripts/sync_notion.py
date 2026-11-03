@@ -61,6 +61,7 @@ CATEGORY_MAP = {
     "Wheels": "Wheels",
     "Seatposts": "DropperPost",
     "Dropper Post": "DropperPost",
+    "Seat Clamp": "SeatClamp",
     "Handlebar": "Handlebar",
     "Saddle": "Saddle",
     "Crankset": "Crankset",
@@ -83,6 +84,19 @@ CATEGORY_MAP = {
     "Helmet": "Helmet",
     "Protection": "Protection",
     "Goggles": "Goggles",
+    "Ski": "Skis",
+    "Skis": "Skis",
+    "Snowboard": "Snowboard",
+    "Snowboards": "Snowboard",
+    "Binding": "Bindings",
+    "Bindings": "Bindings",
+    "Ski Boots": "Ski Boots",
+    "Snowboard Boots": "Snowboard Boots",
+    "Boots": "Boots",
+    "Poles": "Poles",
+    "Ski Poles": "Poles",
+    "Avalanche Safety": "Avalanche Safety",
+    "Avalanche Equipment": "Avalanche Safety",
 }
 
 RESULT_STATUS_ALIASES = {
@@ -279,6 +293,17 @@ def title_map(pages, *preferred_names):
     return mapped
 
 
+def season_sport_and_discipline(names):
+    """Map the season's explicit Notion disciplines to the public sport fields."""
+    cleaned = sorted({str(name).strip() for name in names if str(name).strip()})
+    words = " ".join(cleaned).casefold().replace("-", " ").split()
+    if "snowboard" in words:
+        return "Snowboard", " / ".join(cleaned)
+    if "ski" in words:
+        return "Ski", " / ".join(cleaned)
+    return "Mountain bike", " / ".join(cleaned) or "Downhill"
+
+
 def related_ids(page, targets, *preferred_names):
     """Resolve relations by target page ids, even after a property rename."""
     ordered_names = list(preferred_names)
@@ -348,9 +373,21 @@ def instagram_handle(url: str | None) -> str | None:
     if not url:
         return None
     candidate = url.strip().rstrip("/").split("/")[-1].split("?")[0]
-    if candidate and candidate.lower() not in {"instagram.com", "www.instagram.com"}:
-        return "@" + candidate.lstrip("@")
-    return url if url.startswith("@") else None
+    candidate = candidate.lstrip("@")
+    # Instagram usernames contain only letters, numbers, periods and
+    # underscores. Reject domains and editorial placeholders instead of
+    # publishing a confidently broken instagram.com URL.
+    looks_like_domain = candidate.casefold().startswith("www.") or bool(
+        re.search(r"\.(?:com|net|org|io|co|fr)$", candidate, re.I)
+    )
+    if not looks_like_domain and re.fullmatch(r"[A-Za-z0-9._]{1,30}", candidate or ""):
+        return "@" + candidate
+    return None
+
+
+def season_short_name(name: str) -> str:
+    """Remove a terminal season year and its separator from menu labels."""
+    return re.sub(r"\s*(?:[-–—/|·]\s*)?20\d{2}\s*$", "", name or "").strip()
 
 
 def season_edition_count(page) -> int | None:
@@ -507,12 +544,17 @@ def export(client: Notion):
         pages["team_links"] = []
         team_links_accessible = False
         team_links_unavailable_reason = "database_not_shared_with_integration"
+    disciplines = title_map(pages["disciplines"], "Nom", "Name")
     seasons = {}
     event_seasons = {}
     for item in pages["seasons"]:
         identifier = page_id(item.get("id"))
         name = scalar_value(item, "Nom") or ""
         event_ids = list_value(item, "🏆 Event ")
+        discipline_names = [
+            disciplines[discipline_id]
+            for discipline_id in related_ids(item, disciplines, "Discipline", "Disciplines", "Sport")
+        ]
         if not identifier or not name or not event_ids:
             continue
         seasons[identifier] = {
@@ -520,6 +562,7 @@ def export(client: Notion):
             "event_ids": event_ids,
             "instagram": instagram_handle(scalar_value(item, "Instagram")),
             "edition_count": season_edition_count(item),
+            "disciplines": discipline_names,
         }
         for event_id in event_ids:
             event_seasons.setdefault(event_id, identifier)
@@ -529,7 +572,6 @@ def export(client: Notion):
     teams = title_map(pages["teams"], "Nom", "Name", "Team")
     countries = title_map(pages["countries"], "Name")
     brands = title_map(pages["brands"], "Name")
-    disciplines = title_map(pages["disciplines"], "Nom", "Name")
     if pages["teams"] and not teams:
         raise RuntimeError("The Notion Teams database was queried but no title property could be resolved")
     rider_ids = {page_id(item.get("id")) for item in pages["riders"] if page_id(item.get("id"))}
@@ -552,12 +594,13 @@ def export(client: Notion):
     )
     for identifier, season in ordered_seasons:
         event_records = [events[event_id] for event_id in season["event_ids"] if event_id in events]
+        sport, discipline = season_sport_and_discipline(season.get("disciplines") or [])
         competition_catalog["series"].append({
             "id": competition_id(season["name"]),
             "name": season["name"],
-            "short_name": re.sub(r"\s+20\d{2}\s*$", "", season["name"]).strip(),
-            "sport": "Mountain bike",
-            "discipline": "Downhill",
+            "short_name": season_short_name(season["name"]),
+            "sport": sport,
+            "discipline": discipline,
             "season": competition_year(season["name"], event_records),
             "status": "published",
             "notion_page_id": identifier,
@@ -705,7 +748,12 @@ def export(client: Notion):
         }
 
     equipment_by_rider = {}
+    winter_equipment_by_rider = {}
     primary_season_id = page_id(os.environ.get("NOTION_SEASON_PAGE_ID", PRIMARY_SEASON_PAGE_ID))
+    winter_season_ids = {
+        season_id for season_id, season in seasons.items()
+        if season_sport_and_discipline(season.get("disciplines") or [])[0] in {"Ski", "Snowboard"}
+    }
     for item in pages["equipment_links"]:
         season_ids = set(list_value(item, "☀️ Saison"))
         # New equipment links are sometimes created before their season field
@@ -714,7 +762,9 @@ def export(client: Notion):
         # participates in, or has a result for, that season. This prevents a
         # complete rider setup from disappearing because only the link's season
         # cell was left blank.
-        if season_ids and primary_season_id not in season_ids:
+        is_primary_link = not season_ids or primary_season_id in season_ids
+        is_winter_link = bool(season_ids & winter_season_ids)
+        if season_ids and not is_primary_link and not is_winter_link:
             continue
         rider_ids = list_value(item, "🚻 Riders")
         if not season_ids:
@@ -729,7 +779,10 @@ def export(client: Notion):
                 if product and product.get("category") and (product.get("brand") or product.get("model_detail")):
                     normalized = dict(product)
                     normalized["brand_model"] = ";".join(part for part in (normalized["brand"], normalized["model_detail"]) if part)
-                    equipment_by_rider.setdefault(rider_id, []).append(normalized)
+                    if is_primary_link:
+                        equipment_by_rider.setdefault(rider_id, []).append(normalized)
+                    if is_winter_link:
+                        winter_equipment_by_rider.setdefault(rider_id, []).append(normalized)
 
     riders = []
     for item in pages["riders"]:
@@ -753,6 +806,13 @@ def export(client: Notion):
             disciplines[discipline_id]
             for discipline_id in discipline_ids
             if disciplines.get(discipline_id)
+        })
+        season_memberships = sorted({
+            seasons[season_id]["name"]
+            for season_id in related_ids(
+                item, seasons, "☀️ Saison", "Saison", "Season", "Seasons"
+            )
+            if season_id in seasons
         })
         raw_name = name.strip()
         route_handle = (handle or "").lower().lstrip("@")
@@ -787,7 +847,11 @@ def export(client: Notion):
             "bio": scalar_value(item, "Biographie et principaux résultats") or "",
             "competition_history": history,
             "competition_participation": sorted(participations_by_rider.get(identifier, set())),
+            # A season membership means registered/associated, not started.
+            # DNS logic remains exclusively in competition_participation.
+            "competition_memberships": season_memberships,
             "equipment": equipment_by_rider.get(identifier, []),
+            "winter_equipment": winter_equipment_by_rider.get(identifier, []),
             "season": 2026,
         }
         frame = next((part for part in rider["equipment"] if part.get("category") == "Frame"), None)
@@ -819,6 +883,9 @@ def export(client: Notion):
         current["competition_participation"] = sorted(set(
             current.get("competition_participation", []) + rider.get("competition_participation", [])
         ))
+        current["competition_memberships"] = sorted(set(
+            current.get("competition_memberships", []) + rider.get("competition_memberships", [])
+        ))
         merged_disciplines = sorted(set(
             (current.get("disciplines") or []) + (rider.get("disciplines") or [])
         ))
@@ -836,6 +903,11 @@ def export(client: Notion):
             key = (part.get("category"), part.get("brand"), part.get("model_detail"))
             equipment_rows.setdefault(key, part)
         current["equipment"] = list(equipment_rows.values())
+        winter_equipment_rows = {}
+        for part in current.get("winter_equipment", []) + rider.get("winter_equipment", []):
+            key = (part.get("category"), part.get("brand"), part.get("model_detail"))
+            winter_equipment_rows.setdefault(key, part)
+        current["winter_equipment"] = list(winter_equipment_rows.values())
         for field in ("team", "country", "instagram", "hometown", "date_of_birth", "bio"):
             if not current.get(field) and rider.get(field):
                 current[field] = rider[field]

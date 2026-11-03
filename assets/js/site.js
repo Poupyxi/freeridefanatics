@@ -68,7 +68,7 @@
     else if(choice !== 'denied') showBanner();
 
     var footerLinks = document.querySelector('.footer-links');
-    if(footerLinks){
+    if(footerLinks && location.pathname === '/privacy.html'){
       var preferences = document.createElement('button');
       preferences.type = 'button';
       preferences.className = 'footer-consent-link';
@@ -317,6 +317,34 @@
     });
   });
 
+  // Homepage DH rankings: general UCI order first, then one completed event.
+  safe('home-rankings', function(){
+    var root = document.querySelector('[data-home-rankings]');
+    if(!root) return;
+    var viewButtons = Array.prototype.slice.call(root.querySelectorAll('[data-home-ranking-view]'));
+    var panels = Array.prototype.slice.call(root.querySelectorAll('[data-home-ranking-panel]'));
+
+    function render(){
+      var active = viewButtons.find(function(button){ return button.classList.contains('active'); });
+      var activeView = active ? active.getAttribute('data-home-ranking-view') : 'global';
+      panels.forEach(function(panel){
+        panel.classList.toggle('is-shown', panel.getAttribute('data-ranking-view') === activeView);
+      });
+    }
+    viewButtons.forEach(function(button){
+      button.addEventListener('click', function(){
+        viewButtons.forEach(function(item){
+          item.classList.remove('active');
+          item.setAttribute('aria-selected', 'false');
+        });
+        button.classList.add('active');
+        button.setAttribute('aria-selected', 'true');
+        render();
+      });
+    });
+    render();
+  });
+
   // Standings page: pick a group (Men / Women / Teams) and a competition.
   // Every table is rendered; only the matching one is shown.
   safe('standings', function(){
@@ -455,6 +483,32 @@
     // competitions while a single chip claims to be selected.
     var initial = bar.querySelector('.filter-btn.active') || btns[0];
     if(initial) apply(initial.getAttribute('data-competition-filter'));
+  });
+
+  // Competition directory: filter the available series by their Notion season.
+  safe('competition-year-filter', function(){
+    var select = document.querySelector('[data-competition-year-filter]');
+    var list = document.querySelector('[data-competition-year-list]');
+    if(!select || !list) return;
+    var cards = Array.prototype.slice.call(list.querySelectorAll('[data-competition-year]'));
+    var count = document.querySelector('[data-competition-year-count]');
+    var empty = document.querySelector('[data-competition-year-empty]');
+
+    function applyYear(){
+      var year = select.value;
+      var visible = 0;
+      cards.forEach(function(card){
+        var years = (card.getAttribute('data-competition-year') || '').split(/\s+/).filter(Boolean);
+        var show = year === 'all' || years.indexOf(year) !== -1;
+        card.hidden = !show;
+        if(show) visible += 1;
+      });
+      if(count) count.textContent = visible + (visible === 1 ? ' competition' : ' competitions');
+      if(empty) empty.hidden = visible !== 0;
+    }
+
+    select.addEventListener('change', applyYear);
+    applyYear();
   });
 
   // Frame reveal — the outline draws itself, turns into a pencil sketch, then
@@ -699,18 +753,22 @@
   safe('random-rider', function(){
     document.querySelectorAll('[data-random-rider]').forEach(function(btn){
       var slugs = (btn.getAttribute('data-random-rider') || '').split(',').filter(Boolean);
+      var prioritySlugs = (btn.getAttribute('data-random-rider-priority') || '').split(',').filter(Boolean);
+      var configuredChance = Number(btn.getAttribute('data-random-rider-priority-chance'));
+      var priorityChance = Number.isFinite(configuredChance)
+        ? Math.max(0, Math.min(1, configuredChance))
+        : 0;
       if(slugs.length < 2) return;
       var prefix = btn.getAttribute('data-rider-prefix') || 'riders/';
       var last = null;
 
       function roll(){
-        var slug = slugs[Math.floor(Math.random() * slugs.length)];
-        if(slugs.length > 1){
-          // avoid repeating the previous pick — a repeat reads as a broken button
-          while(slug === last){
-            slug = slugs[Math.floor(Math.random() * slugs.length)];
-          }
-        }
+        var pool = prioritySlugs.length && Math.random() < priorityChance ? prioritySlugs : slugs;
+        var choices = pool.filter(function(slug){ return slug !== last; });
+        // A priority pool containing only the previous rider must not trap the
+        // selector. Fall back to every other rider while keeping all profiles eligible.
+        if(!choices.length) choices = slugs.filter(function(slug){ return slug !== last; });
+        var slug = choices[Math.floor(Math.random() * choices.length)];
         last = slug;
         return prefix + slug + '.html';
       }

@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Keep the UCI mountain tour on the complete Notion-backed round pages."""
 from pathlib import Path
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+import build
 TOUR = (ROOT / "assets/js/uci-iconic-tour.js").read_text(encoding="utf-8")
 BUILD = (ROOT / "build.py").read_text(encoding="utf-8")
 WORKFLOW = (ROOT / ".github/workflows/deploy-preprod-ovh.yml").read_text(encoding="utf-8")
@@ -28,6 +31,10 @@ LEGACY = {
     "la-thuile-italy-july.html": "la-thuile.html",
     "andorra-july.html": "pal-arinsal.html",
 }
+
+UCI_COMPETITION = {"id": "uci-mtb-world-cup-dh-2026"}
+for event, filename in CANONICAL.items():
+    assert build.competition_round_path_slug(UCI_COMPETITION, f"{event} - 2026") + ".html" == filename
 
 for event, filename in CANONICAL.items():
     expected = f"'{event}': '/competitions/uci-mtb-world-cup-dh-2026/rounds/{filename}'"

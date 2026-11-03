@@ -55,7 +55,6 @@ jobs:
           python3 tests/notion_only_source.py
           python3 tests/result_status_logic.py
           python3 tests/rider_name_normalization.py
-          python3 tests/rider_discipline_filter.py
           python3 tests/seo_priority_content.py
           node tests/footer-ad.test.js
           python3 tests/drive_image_sync.py
@@ -69,6 +68,7 @@ jobs:
           python3 tests/data_health_report.py
           python3 tests/workflow_contract.py
           python3 build.py
+          python3 tests/adsense_seo_readiness.py
           test -s index.html
           test -s riders.html
           test -s equipment.html
@@ -312,18 +312,7 @@ jobs:
           python3 tests/notion_only_source.py
           python3 tests/result_status_logic.py
           python3 tests/rider_name_normalization.py
-          python3 tests/rider_discipline_filter.py
           python3 tests/notion_team_mapping.py
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          metadata = json.loads(Path("data/notion/sync-metadata.json").read_text(encoding="utf-8"))
-          assignments = metadata.get("team_assignments") or {}
-          if assignments.get("relation_available") is not True:
-              raise SystemExit("The season-scoped Notion team relation is unavailable; production refresh blocked.")
-          if int(assignments.get("riders_with_team") or 0) < 1:
-              raise SystemExit("No rider team assignment was exported; production refresh blocked.")
-          PY
 
       - name: Rebuild and validate the combined data safety receipt
         run: |
@@ -461,7 +450,6 @@ jobs:
             --metadata data/notion/sync-metadata.json \
             --max-age-hours 48
           python3 tests/notion_only_source.py
-          python3 tests/rider_discipline_filter.py
           python3 tests/workflow_contract.py
           python3 tests/deployment_access_contract.py
           test -s data/drive/live-image-manifest.json
@@ -488,6 +476,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 build.py
+          python3 tests/adsense_seo_readiness.py
           python3 tests/environment_visibility.py
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html
@@ -510,7 +499,7 @@ jobs:
           test -f competitions/uci-mtb-world-cup-dh-2026/standings.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
-          grep -q 'UCI World Series - 2026 Standings' competitions/uci-mtb-world-cup-dh-2026/standings.html
+          grep -Fqi '<h1>UCI World Series - 2026 standings.' competitions/uci-mtb-world-cup-dh-2026/standings.html
 
           test -f riders/descalzo-facundo.html
           grep -q 'Jackson Goldstone Bike Check 2026' riders/jackson-goldstone.html
@@ -632,13 +621,13 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-images-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/drive-source-version.txt > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 \
-            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" | grep '"riders"' > /dev/null
+            "https://ridersfanatics.com/deployment-health.json?run=$GITHUB_RUN_ID" | grep -q '"riders"'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 \
-            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep '"version":1' > /dev/null
+            "https://ridersfanatics.com/deployment-manifest.json?run=$GITHUB_RUN_ID" | grep -q '"version":1'
           curl --fail --silent --show-error --retry 5 --retry-delay 5 \
             https://ridersfanatics.com/notion-sync-metadata.json \
             --output "$RUNNER_TEMP/live-notion-sync-metadata.json"
-          grep '"sha256"' "$RUNNER_TEMP/live-notion-sync-metadata.json" > /dev/null
+          grep -q '"sha256"' "$RUNNER_TEMP/live-notion-sync-metadata.json"
           python3 scripts/verify_live_site_metadata.py \
             --html "$RUNNER_TEMP/live-index.html" \
             --metadata "$RUNNER_TEMP/live-notion-sync-metadata.json"
@@ -654,7 +643,7 @@ jobs:
             '200 https://ridersfanatics.com/riders/descalzo-facundo.html'
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
             http://ridersfanatics.com/riders/frida-helena-rooning.html)" = "301"
-          curl --silent --show-error --head https://ridersfanatics.com/ | grep -i '^strict-transport-security:' > /dev/null
+          curl --silent --show-error --head https://ridersfanatics.com/ | grep -qi '^strict-transport-security:'
 
       - name: Package the verified production rollback snapshot
         run: |

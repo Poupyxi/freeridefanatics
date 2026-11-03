@@ -51,9 +51,14 @@ uci = {
 assert_round(
     uci,
     "Whistler",
-    "UCI Downhill Whistler 2026 Results | Riders &amp; Rankings",
+    "UCI Downhill Whistler 2026 Results: Riders &amp; Rankings",
     "Whistler UCI Downhill World Cup 2026",
 )
+
+whistler_winner_html = build.build_competition_round(
+    [sample_rider("Whistler", uci["name"])], uci, "Whistler", 1, ["Whistler"]
+)
+assert "Winners: Men — Sample Rider." in whistler_winner_html
 
 build.IS_PREPROD = True
 uci["events"] = [{
@@ -82,25 +87,44 @@ red_bull = {
 rampage_html = assert_round(
     red_bull,
     "Rampage 2026",
-    "Red Bull Rampage 2026 | Riders, Results &amp; Rankings",
+    "Red Bull Rampage 2026: Women's Results &amp; Weather Update",
     "Red Bull Rampage 2026 riders and results",
 )
+assert "The men's competition was suspended because of high winds." in rampage_html
 hardline_html = assert_round(
     red_bull,
     "Hardline 2026",
-    "Red Bull Hardline 2026 | Riders, Results &amp; Rankings",
+    "Red Bull Hardline 2026 Results: Riders &amp; Rankings",
     "Red Bull Hardline 2026 riders and results",
 )
 assert '"@type": "SportsEvent"' in rampage_html
 assert '"@type": "SportsEvent"' in hardline_html
+assert "Men's ranking" in rampage_html
+assert "Competition suspended" in rampage_html
+assert "severe weather and high winds" in rampage_html
+assert "round-status-notice" in rampage_html
+assert "Competition suspended" not in hardline_html
+
+women_only = sample_rider("Rampage 2026", red_bull["name"])
+women_only["gender_category"] = "Women Elite"
+rampage_women_html = build.build_competition_round(
+    [women_only], red_bull, "Rampage 2026", 1, ["Rampage 2026"]
+)
+assert 'data-standings-group="Men Elite"' in rampage_women_html
+men_panel = rampage_women_html.index('data-standings="Men Elite"')
+notice = rampage_women_html.index("Competition suspended")
+women_panel = rampage_women_html.index('data-standings="Women Elite"')
+assert men_panel < notice < women_panel
 
 priority_riders = {
-    "valentina-holl": "Valentina Höll Bike Check 2026 | UCI DH Results",
-    "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026 | Results & Setup",
-    "lisa-bouladou": "Lisa Bouladou 2026 | DH Results & Bike Check",
-    "asa-vermette": "Asa Vermette Bike Check 2026 | Results & Equipment",
-    "amaury-pierron": "Amaury Pierron Bike Check 2026 | UCI DH Results",
-    "max-alran": "Max Alran Bike Check 2026 | UCI DH Results",
+    "valentina-holl": "Valentina Höll Bike Check 2026: Setup & UCI Results",
+    "holl-valentina": "Valentina Höll Bike Check 2026: Setup & UCI Results",
+    "gracey-hemstreet": "Gracey Hemstreet Bike Check 2026: Frame, Fork & Results",
+    "lisa-bouladou": "Lisa Bouladou 2026: DH Results, Ranking & Bike Check",
+    "asa-vermette": "Asa Vermette Bike Check 2026: Frameworks DH & Results",
+    "amaury-pierron": "Amaury Pierron Bike Check 2026: Setup & UCI Results",
+    "max-alran": "Max Alran Bike Check 2026: Setup & UCI Results",
+    "jordan-williams": "Jordan Williams Bike Check 2026: Setup & DH Results",
 }
 for slug, expected in priority_riders.items():
     rider = {
@@ -114,6 +138,13 @@ for slug, expected in priority_riders.items():
     )
     assert title == expected
     assert rider["display_name"] in description
+    assert len(description) <= 160
+    assert not description.endswith("…")
+
+assert "Frameworks DH frame" in build.rider_seo_metadata(
+    {"display_name": "Asa Vermette", "slug": "asa-vermette"},
+    [{"category": "Frame"}], [{"points": 100}], 1, ["Frameworks DH"],
+)[1]
 
 search_intent_cases = [
     ([{"category": "Frame"}], [{"points": 100}], "bike check, race setup, equipment, downhill results and ranking"),
@@ -136,6 +167,41 @@ for equipment, history, expected_phrase in search_intent_cases:
     assert expected_phrase in description
     assert "Canada rider" in description
     assert len(description) <= 160
+    assert not description.endswith("…")
+    assert description.endswith(".")
+
+best_result_rider = {
+    "display_name": "Best Result Rider",
+    "slug": "best-result-rider",
+    "country": "Canada",
+    "competition_history": [
+        {"event": "Whistler", "place": 4, "points": 80},
+        {"event": "Lake Placid", "place": 2, "points": 160},
+    ],
+}
+_, best_result_description = build.rider_seo_metadata(
+    best_result_rider, [], best_result_rider["competition_history"], 3, [],
+)
+assert "best result 2nd at Lake Placid" in best_result_description
+
+previous_build_environment = build.IS_PREPROD
+build.IS_PREPROD = False
+production_head = build.head(
+    "Unique title", "Unique description", "", canonical_path="/unique.html",
+    page_type="article", image_path="/assets/img/riders/example.webp",
+)
+build.IS_PREPROD = previous_build_environment
+assert f'<link rel="canonical" href="{build.SITE_URL}/unique.html">' in production_head
+assert '<meta property="og:updated_time"' in production_head
+assert '<meta property="article:modified_time"' in production_head
+assert '<meta property="og:image:alt" content="Unique title">' in production_head
+assert 'max-image-preview:large' in production_head
+
+long_description = "A complete sentence with useful search context. " + ("extra context " * 30)
+fitted_description = build.fit_meta_description(long_description)
+assert len(fitted_description) <= 160
+assert fitted_description.endswith(".")
+assert "…" not in fitted_description
 
 competitions_hub_html = build.build_competitions_hub([])
 assert '<h1 class="label competition-hub-title">Competitions tracked</h1>' in competitions_hub_html

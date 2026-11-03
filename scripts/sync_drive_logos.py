@@ -181,6 +181,32 @@ def to_webp(raw: bytes) -> bytes:
         return output.getvalue()
 
 
+def needs_negative_filter(raw: bytes) -> bool:
+    """Detect logos that would disappear against the site's light background.
+
+    Transparent pixels are ignored so a small white mark on a transparent
+    canvas is measured as a white logo, not as an empty image.  The thresholds
+    intentionally require a strongly light-dominant asset; mixed and coloured
+    logos keep their original rendering.
+    """
+    with Image.open(io.BytesIO(raw)) as image:
+        pixels = [
+            pixel
+            for pixel in image.convert("RGBA").getdata()
+            if pixel[3] >= 32
+        ]
+    if not pixels:
+        return False
+    luminance = [
+        (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255
+        for red, green, blue, _alpha in pixels
+    ]
+    mean_luminance = sum(luminance) / len(luminance)
+    light_ratio = sum(value > 0.82 for value in luminance) / len(luminance)
+    dark_ratio = sum(value < 0.25 for value in luminance) / len(luminance)
+    return mean_luminance >= 0.80 and light_ratio >= 0.65 and dark_ratio <= 0.12
+
+
 def previous_managed_assets(manifest_path: Path) -> set[str]:
     if not manifest_path.exists():
         return set()
@@ -233,6 +259,11 @@ def synchronize(sections, root: Path, manifest_path: Path, source_folder_id: str
                 "drive_id": record.get("id"),
                 "modified_time": record.get("modifiedTime"),
                 "sha256": hashlib.sha256(converted).hexdigest(),
+                **(
+                    {"negative_on_light": needs_negative_filter(converted)}
+                    if section == "teams"
+                    else {}
+                ),
             })
 
     missing_sections = [name for name, entries in manifest["logos"].items() if not entries]

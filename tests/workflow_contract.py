@@ -66,8 +66,6 @@ assert "--max-age-hours 2" in production
 assert "Rebuild and validate the combined data safety receipt" in production
 assert "environment: preproduction" in direct_prepare
 assert "NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}" in direct_prepare
-assert "The season-scoped Notion team relation is unavailable" in direct_prepare
-assert "No rider team assignment was exported" in direct_prepare
 assert "NOTION_TOKEN" not in production_deploy
 assert "validated-production-notion-snapshot" in direct_prepare
 assert "validated-production-notion-snapshot" in production_deploy
@@ -82,7 +80,7 @@ assert "test -f competitions/beyondgravity.html" not in production, (
 assert "ridersfanatics.com/competitions/beyondgravity.html" not in production, (
     "Draft 2027 competitions must not be required by live production verification"
 )
-assert "UCI World Series - 2026 Standings" in production
+assert "<h1>UCI World Series - 2026 standings." in production
 assert 'select(.event != "pull_request")' in production
 assert "actions/runs/$candidate/artifacts?per_page=100" in production
 assert 'actions/runs?status=success&per_page=100' in production

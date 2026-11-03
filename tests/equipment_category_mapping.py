@@ -22,6 +22,7 @@ expected_drive = {
     "Hub": "Hub",
     "Spacer": "Spacer",
     "Stems": "Stem",
+    "Seat Clamp": "SeatClamp",
 }
 for source, category in expected_drive.items():
     assert import_images.FOLDER_TO_CATEGORY[source] == category
@@ -32,8 +33,22 @@ expected_notion = {
     "Hub": "Hub",
     "Spacer": "Spacer",
     "Stems": "Stem",
+    "Seat Clamp": "SeatClamp",
 }
 for source, category in expected_notion.items():
     assert sync_notion.CATEGORY_MAP[source] == category
+
+amaury_frame = import_images.pick_photo(
+    [{
+        "brand": "commencal",
+        "model": "supreme dh v5 2 pure white 2027 amaury pierron",
+        "full": "commencal supreme dh v5 2 pure white 2027 amaury pierron",
+        "path": "/drive/frame.png",
+        "name": "COMMENCAL_SUPREME DH V5.2 PURE WHITE 2027 AmauryPierron.png",
+    }],
+    "commencal",
+    "cadre commencal supreme dh v5 2 pure white 2027 amaury pierron",
+)
+assert amaury_frame and amaury_frame["name"].endswith("AmauryPierron.png")
 
 print("equipment category mapping: passed")

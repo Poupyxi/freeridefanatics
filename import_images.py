@@ -86,6 +86,7 @@ IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".avif")
 FOLDER_TO_CATEGORY = {
     "Frame": "Frame", "Fork": "Fork", "Rear Shock": "RearShock",
     "Handle bar": "Handlebar", "Dropper Post": "DropperPost", "Seatpost": "DropperPost",
+    "Seat Clamp": "SeatClamp",
     "Saddle": "Saddle", "Crank": "Crankset", "Crankseat": "Crankset",
     "Derailleur": "Derailleur", "Gearbox": "Derailleur",
     "Hub": "Hub", "Spacer": "Spacer", "Stems": "Stem", "Stem": "Stem",
@@ -99,6 +100,11 @@ FOLDER_TO_CATEGORY = {
 # Keep these overrides explicit so a loose fuzzy match never shows the wrong
 # component (for example alloy wheels for a carbon-wheel specification).
 PHOTO_ALIASES = {
+    # The Drive library keeps the spelling used by the product image while
+    # Notion uses the official Burgtec brand spelling.
+    ("DropperPost", "burgtec", "xpress alloy seat post"): ("burgtech", "xpress alloy seat post"),
+    ("DropperPost", "burgtec", "xpress carbon seat post"): ("burgtecc", "xpress carbon seat post"),
+    ("SeatClamp", "burgtec", "seat clamp"): ("burgtech", "seat clamp"),
     ("Fork", "sr suntour", "rux"): ("sr suntour", "rux38 evo boost eq rc"),
     ("Fork", "sr suntour", "rux 29"): ("sr suntour", "rux38 evo boost eq rc"),
     ("Fork", "sr suntour", "rux 38"): ("sr suntour", "rux38 evo boost eq rc"),
@@ -439,6 +445,19 @@ def pick_photo(candidates, brand, model):
     compact_model = compact_text(model)
     compact_full = compact_text(target_full)
 
+    # Product titles imported into Notion sometimes repeat both the component
+    # kind and the brand (for example ``CADRE COMMENCAL ...``), while Drive
+    # stores ``COMMENCAL_...``. Remove only those redundant leading words for
+    # matching; the public product title remains untouched.
+    match_model = norm_text(model)
+    model_words = match_model.split()
+    while model_words and model_words[0] in {"cadre", "frame"}:
+        model_words.pop(0)
+    brand_words = norm_text(brand).split()
+    if brand_words and model_words[:len(brand_words)] == brand_words:
+        model_words = model_words[len(brand_words):]
+    simplified_compact_model = compact_text(" ".join(model_words))
+
     # 1. brand and model both match exactly
     for c in candidates:
         if c["brand"] == brand and c["model"] and c["model"] == model:
@@ -455,6 +474,14 @@ def pick_photo(candidates, brand, model):
                          if c["model"] and compact_text(c["model"]) == compact_model]
         if compact_exact:
             return min(compact_exact, key=lambda c: len(c["full"]))
+
+        if simplified_compact_model and simplified_compact_model != compact_model:
+            simplified_exact = [
+                c for c in same_brand
+                if c["model"] and compact_text(c["model"]) == simplified_compact_model
+            ]
+            if simplified_exact:
+                return min(simplified_exact, key=lambda c: len(c["full"]))
 
         # A library filename may append a tune, generation or colour after the
         # actual sheet model (`RUX38-EVO...`). Require a substantial shared

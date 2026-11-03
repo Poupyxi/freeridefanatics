@@ -61,6 +61,7 @@ CATEGORY_MAP = {
     "Wheels": "Wheels",
     "Seatposts": "DropperPost",
     "Dropper Post": "DropperPost",
+    "Seat Clamp": "SeatClamp",
     "Handlebar": "Handlebar",
     "Saddle": "Saddle",
     "Crankset": "Crankset",

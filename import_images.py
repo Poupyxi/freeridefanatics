@@ -100,10 +100,9 @@ FOLDER_TO_CATEGORY = {
 # Keep these overrides explicit so a loose fuzzy match never shows the wrong
 # component (for example alloy wheels for a carbon-wheel specification).
 PHOTO_ALIASES = {
-    # The Drive library keeps the spelling used by the product image while
-    # Notion uses the official Burgtec brand spelling.
-    ("DropperPost", "burgtec", "xpress alloy seat post"): ("burgtech", "xpress alloy seat post"),
-    ("DropperPost", "burgtec", "xpress carbon seat post"): ("burgtecc", "xpress carbon seat post"),
+    # The clamp image still carries the legacy Burgtech spelling in Drive.
+    # Seatpost filenames now use the official Burgtec spelling and therefore
+    # resolve through the exact matcher without an override.
     ("SeatClamp", "burgtec", "seat clamp"): ("burgtech", "seat clamp"),
     ("Fork", "sr suntour", "rux"): ("sr suntour", "rux38 evo boost eq rc"),
     ("Fork", "sr suntour", "rux 29"): ("sr suntour", "rux38 evo boost eq rc"),

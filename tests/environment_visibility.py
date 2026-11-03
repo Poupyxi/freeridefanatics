@@ -62,5 +62,18 @@ if environment == "preprod":
 else:
     assert "Allow: /" in robots
     assert "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" not in home
+    # Winter and the seasonal homepage direction remain preproduction-only.
+    # A promotion may share the same source revision, but production must keep
+    # the established Summer homepage and must not expose Winter navigation.
+    for marker in (
+        'class="season-switch"',
+        'seasonal-home.css',
+        'seasonal-home.js',
+        'season-routing.js',
+        'data-season-scope="winter"',
+        'href="winter/',
+    ):
+        assert marker not in home, f"Preproduction-only seasonal marker leaked to production: {marker}"
+    assert not (root / "winter").exists(), "Winter routes must not be generated in production"
 
 print(f"Environment visibility checks passed for {environment}.")

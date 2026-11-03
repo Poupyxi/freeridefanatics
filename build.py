@@ -154,7 +154,7 @@ NEWSLETTER_FORM_URL = (
 
 EQUIP_GROUP_MAP = {
     "Frame": "Chassis", "Fork": "Chassis", "RearShock": "Chassis",
-    "Handlebar": "Cockpit", "Saddle": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit",
+    "Handlebar": "Cockpit", "Saddle": "Cockpit", "DropperPost": "Cockpit", "SeatClamp": "Cockpit", "GRIP": "Cockpit",
     "Stem": "Cockpit", "Spacer": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "BrakeLever": "Drivetrain",
     "Disk": "Drivetrain", "CHAIN": "Drivetrain",
@@ -3828,7 +3828,7 @@ EQUIPMENT_CATEGORY_PLURALS = {
     "Handlebar": "Handlebars", "Wheels": "Wheels", "Tires": "Tires",
     "BrakeLever": "Brake Levers", "Crankset": "Cranksets",
     "Derailleur": "Derailleurs", "Pedals": "Pedals", "Saddle": "Saddles",
-    "DropperPost": "Dropper Posts", "Helmet": "Helmets", "Goggles": "Goggles",
+    "DropperPost": "Dropper Posts", "SeatClamp": "Seat Clamps", "Helmet": "Helmets", "Goggles": "Goggles",
     "Protection": "Body Protection", "Shoes": "Shoes", "CHAIN": "Chains",
     "Disk": "Brake Rotors", "GRIP": "Grips", "Stem": "Stems",
     "Hub": "Hubs", "Spacer": "Spacers",
@@ -3837,7 +3837,7 @@ EQUIPMENT_CATEGORY_PLURALS = {
 
 DIRECTORY_GROUP_MAP = {
     "Frame": "Frame & suspension", "Fork": "Frame & suspension", "RearShock": "Frame & suspension",
-    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit", "Spacer": "Cockpit",
+    "Handlebar": "Cockpit", "DropperPost": "Cockpit", "SeatClamp": "Cockpit", "GRIP": "Cockpit", "Stem": "Cockpit", "Spacer": "Cockpit",
     "BrakeLever": "Cockpit", "BrakeCaliper": "Cockpit", "Disk": "Cockpit",
     "Crankset": "Drivetrain", "Derailleur": "Drivetrain", "CHAIN": "Drivetrain", "Shifter": "Drivetrain",
     "Wheels": "Wheels", "Hub": "Wheels", "Tires": "Wheels",
@@ -4091,6 +4091,7 @@ EQUIPMENT_EDITORIAL = {
     "Pedals": ("Pedals are a critical rider-to-bike contact point, with choice shaped by feel, retention and confidence.", "Adoption is useful evidence of paddock presence, but it is not a universal recommendation for every riding style."),
     "Saddle": ("Saddles contribute to bike control and rider movement even though downhill riders spend limited time seated.", "The database records named models, not individual position, angle or customisation."),
     "DropperPost": ("Seatposts and dropper posts help define clearance and saddle position on a race bike.", "Use the ranking to compare documented use; travel and setup dimensions may vary by rider and frame size."),
+    "SeatClamp": ("Seat clamps secure the seatpost and complete the rider's documented cockpit and contact-point setup.", "Use the linked rider profiles to view each clamp in the context of the complete bike build."),
     "Helmet": ("Full-face helmets are central protective equipment for professional downhill racing.", "Product presence does not replace fit checks, current certification guidance or manufacturer replacement advice."),
     "Goggles": ("Goggles protect vision and help riders manage changing light, dust and mud.", "The recorded brand or model may cover several lens choices used across different race conditions."),
     "Protection": ("Body protection is selected around coverage, mobility and the demands of the course.", "This list documents visible or published equipment only and should not be treated as a complete safety prescription."),
@@ -4197,7 +4198,7 @@ def build_compare_page():
 CAROUSEL_CATEGORY_ORDER = [
     "Frame", "Fork", "RearShock", "Handlebar", "Stem", "Spacer", "Wheels", "Hub", "Tires",
     "BrakeLever", "Crankset", "Derailleur", "Pedals", "Saddle",
-    "DropperPost", "Helmet", "Goggles", "Protection", "Shoes",
+    "DropperPost", "SeatClamp", "Helmet", "Goggles", "Protection", "Shoes",
 ]
 
 def build_best_equipment_carousel(riders):

@@ -51,4 +51,14 @@ amaury_frame = import_images.pick_photo(
 )
 assert amaury_frame and amaury_frame["name"].endswith("AmauryPierron.png")
 
+# Notion uses public-facing brand names while Jordan Williams' Drive files use
+# the manufacturers' shorter catalogue labels. Keep these exact aliases so a
+# future cleanup cannot silently remove the corresponding product photos.
+assert import_images.PHOTO_ALIASES[
+    ("Frame", "specialized", "demo 11 ltd jordan williams")
+] == ("s works", "demo 11 ltd jordan williams")
+assert import_images.PHOTO_ALIASES[
+    ("Wheels", "fanatik bike", "ex 471")
+] == ("dtswiss", "fanatik")
+
 print("equipment category mapping: passed")

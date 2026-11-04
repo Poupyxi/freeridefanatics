@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 workflows = ROOT / ".github" / "workflows"
 actual = {path.name for path in workflows.glob("*.yml")}
 expected = {
+    "audit-equipment-photos.yml",
     "deploy-preprod-drive-ovh.yml",
     "deploy-preprod-ovh.yml",
     "deploy-ovh.yml",
@@ -22,6 +23,7 @@ assert dependabot.count("target-branch: preprod") == 2, (
 
 preprod = (workflows / "deploy-preprod-ovh.yml").read_text(encoding="utf-8")
 drive = (workflows / "deploy-preprod-drive-ovh.yml").read_text(encoding="utf-8")
+audit = (workflows / "audit-equipment-photos.yml").read_text(encoding="utf-8")
 production = (workflows / "deploy-ovh.yml").read_text(encoding="utf-8")
 direct_prepare = production.split("  prepare-notion-production:", 1)[1].split("\n  deploy:", 1)[0]
 production_deploy = production.split("\n  deploy:", 1)[1].split("\n  restore:", 1)[0]
@@ -86,7 +88,7 @@ assert "actions/runs/$candidate/artifacts?per_page=100" in production
 assert 'actions/runs?status=success&per_page=100' in production
 assert "No successful preproduction run with a live validated snapshot" in production
 
-for name, contents in (("notion", preprod), ("drive", drive), ("production", production)):
+for name, contents in (("notion", preprod), ("drive", drive), ("audit", audit), ("production", production)):
     action_refs = re.findall(r"^\s*uses:\s+([^\s#]+)", contents, flags=re.MULTILINE)
     assert action_refs, f"No external actions found in {name} workflow"
     for reference in action_refs:
@@ -114,5 +116,18 @@ assert "retention-days: 30" in preprod
 assert "retention-days: 14" in production
 assert "OVH_SFTP_KNOWN_HOSTS" in preprod
 assert production.count("OVH_SFTP_KNOWN_HOSTS") >= 2
+
+assert "workflow_dispatch:" in audit
+assert "schedule:" not in audit
+assert "push:" not in audit
+assert "pull_request:" not in audit
+assert "ref: preprod" in audit
+assert "scripts/sync_notion.py" in audit
+assert "scripts/sync_drive_images.py" in audit
+assert "scripts/audit_equipment_photos.py" in audit
+assert "equipment-photo-audit" in audit
+assert "actions/upload-artifact@" in audit
+assert "environment: preproduction" in audit
+assert "notion.pages.update" not in audit
 
 print("workflow contract: isolated Notion/Drive refreshes plus controlled production")

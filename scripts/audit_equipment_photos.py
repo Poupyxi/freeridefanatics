@@ -88,7 +88,7 @@ def candidate_suggestions(candidates: list[dict], brand: str, model: str) -> lis
     return [candidate for _score, candidate in ranked[:3]]
 
 
-def relation_audit(importer, library_index: dict, rider: dict, item: dict) -> dict:
+def relation_audit(importer, library_index: dict, drive_files: dict, rider: dict, item: dict) -> dict:
     category = str(item.get("category") or "").strip()
     brand = str(item.get("brand") or "").strip()
     model = model_from_item(item)
@@ -109,11 +109,17 @@ def relation_audit(importer, library_index: dict, rider: dict, item: dict) -> di
         "status": "missing",
         "match_type": "none",
         "drive_file": "",
+        "drive_file_id": "",
+        "drive_url": "",
         "suggestion": "",
         "suggestion_count": len(suggestions),
     }
     if choice:
         row["drive_file"] = str(Path(choice["path"]).relative_to(Path(importer.LIBRARY)))
+        drive_record = drive_files.get(row["drive_file"], {})
+        row["drive_file_id"] = str(drive_record.get("drive_id") or "")
+        if row["drive_file_id"]:
+            row["drive_url"] = f"https://drive.google.com/open?id={row['drive_file_id']}"
         row["status"] = "found"
         row["match_type"] = "alias" if alias else "exact"
         if choice.get("rider_slug") == rider.get("slug"):
@@ -189,6 +195,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--riders", type=Path, required=True)
     parser.add_argument("--drive-library", type=Path, required=True)
+    parser.add_argument("--drive-manifest", type=Path)
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-csv", type=Path, required=True)
     parser.add_argument("--output-markdown", type=Path, required=True)
@@ -201,10 +208,16 @@ def main() -> int:
         raise SystemExit(f"Drive library does not exist: {library}")
     importer = load_importer(library)
     library_index, skipped_folders = importer.index_library_equipment(riders)
+    drive_files = {}
+    if args.drive_manifest:
+        manifest = read_json(args.drive_manifest)
+        for record in manifest.get("files") or []:
+            if isinstance(record, dict) and record.get("path"):
+                drive_files[str(record["path"])] = record
     rows = []
     for rider in riders:
         for item in rider.get("equipment") or []:
-            rows.append(relation_audit(importer, library_index, rider, item))
+            rows.append(relation_audit(importer, library_index, drive_files, rider, item))
     counts = Counter(row["status"] for row in rows)
     payload = {
         "schema_version": 1,

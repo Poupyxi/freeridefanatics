@@ -2,6 +2,12 @@ name: Audit Equipment Photos
 
 on:
   workflow_dispatch:
+    inputs:
+      annotate_notion:
+        description: Write only audit fields back to Notion (never changes equipment data)
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -63,6 +69,7 @@ jobs:
           python3 scripts/audit_equipment_photos.py \
             --riders data/notion/riders.json \
             --drive-library "$RUNNER_TEMP/freeride-images" \
+            --drive-manifest "$RUNNER_TEMP/drive-manifest.json" \
             --output-json "$RUNNER_TEMP/equipment-photo-audit/audit.json" \
             --output-csv "$RUNNER_TEMP/equipment-photo-audit/audit.csv" \
             --output-markdown "$RUNNER_TEMP/equipment-photo-audit/audit.md"
@@ -75,3 +82,15 @@ jobs:
           path: ${{ runner.temp }}/equipment-photo-audit/
           retention-days: 30
           if-no-files-found: error
+
+      - name: Annotate Notion audit fields
+        if: inputs.annotate_notion == true
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$NOTION_TOKEN"
+          python3 scripts/annotate_notion_equipment_photos.py \
+            --audit-json "$RUNNER_TEMP/equipment-photo-audit/audit.json" \
+            --token "$NOTION_TOKEN" \
+            --apply

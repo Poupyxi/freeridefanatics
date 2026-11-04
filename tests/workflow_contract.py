@@ -125,6 +125,10 @@ assert "ref: preprod" in audit
 assert "scripts/sync_notion.py" in audit
 assert "scripts/sync_drive_images.py" in audit
 assert "scripts/audit_equipment_photos.py" in audit
+assert "scripts/annotate_notion_equipment_photos.py" in audit
+assert "annotate_notion:" in audit
+assert "default: false" in audit
+assert "--apply" in audit
 assert "equipment-photo-audit" in audit
 assert "actions/upload-artifact@" in audit
 assert "environment: preproduction" in audit

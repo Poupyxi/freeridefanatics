@@ -1716,6 +1716,12 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   text-align: left;
 }
 
+[data-equipment-card="true"] { cursor: zoom-in; }
+[data-equipment-card="true"]:focus-visible {
+  outline: 2px solid var(--accent, #b84d20);
+  outline-offset: 4px;
+}
+
 .equip-thumb-trigger:focus-visible {
   outline: 2px solid var(--accent, #b84d20);
   outline-offset: 3px;
@@ -1758,6 +1764,15 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   color: var(--ink, #16171b);
   font-size: 1rem;
   letter-spacing: .04em;
+}
+
+.equipment-lightbox-category {
+  color: var(--accent, #b84d20);
+  font-family: var(--mono, monospace);
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-decoration: underline;
 }
 
 .equipment-lightbox-close {

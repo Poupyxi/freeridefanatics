@@ -3443,7 +3443,10 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rid
         actions.append(f'<a class="shop-btn amazon-btn" href="{esc(amazon_link)}" target="_blank" rel="noopener sponsored">Amazon</a>')
     actions_html = f'<div class="equip-actions">{"".join(actions)}</div>' if actions else ""
     actions_line = f"        {actions_html}\n" if actions_html else ""
-    return f"""<div class="equip-item reveal">
+    item_attrs = (f' data-equipment-card="true" tabindex="0" role="button"'
+                  f' aria-label="Zoom {esc_attr(title)}"'
+                  f' data-equipment-category-url="{esc_attr(category_url)}"') if photo else ""
+    return f"""<div class="equip-item reveal"{item_attrs}>
         {photo_html}
         <div>
           <a class="cat" href="{category_url}">{esc(cat)}</a>

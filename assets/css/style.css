@@ -1742,6 +1742,7 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
 .equipment-lightbox-panel {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
   gap: 14px;
   width: min(620px, 100%);
   max-height: min(88vh, 860px);
@@ -1757,6 +1758,7 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   max-height: 76vh;
   object-fit: contain;
   background: #fff;
+  grid-row: 1 / span 4;
 }
 
 .equipment-lightbox-title {
@@ -1765,6 +1767,9 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   font-size: 1rem;
   letter-spacing: .04em;
 }
+.equipment-lightbox-stats, .equipment-lightbox-leader, .equipment-lightbox-category { grid-column: 2; }
+.equipment-lightbox-leader { margin: 0; padding: 10px; border-left: 2px solid var(--accent, #b84d20); color: var(--ink, #16171b); font-family: var(--mono, monospace); font-size: .75rem; line-height: 1.5; }
+.equipment-lightbox-leader small { color: var(--muted, #66707a); }
 
 .equipment-lightbox-category {
   color: var(--accent, #b84d20);
@@ -1793,3 +1798,4 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
 }
 
 body.equipment-lightbox-open { overflow: hidden; }
+@media(max-width:640px){.equipment-lightbox-panel{grid-template-columns:1fr}.equipment-lightbox-image{grid-row:auto}.equipment-lightbox-stats,.equipment-lightbox-leader,.equipment-lightbox-category{grid-column:auto}}

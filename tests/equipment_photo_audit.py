@@ -51,6 +51,20 @@ class EquipmentPhotoAuditTests(unittest.TestCase):
         self.assertEqual(payload["Photo status"]["select"]["name"], "Alias")
         self.assertFalse(payload["Needs review"]["checkbox"])
 
+    def test_annotation_targets_equipment_rows_and_aggregates_relations(self):
+        build = ANNOTATE.load_build_module()
+        self.assertIn("equipment", ANNOTATE.DATA_SOURCES)
+        self.assertNotIn("equipment_links", ANNOTATE.DATA_SOURCES)
+        rows = [
+            {"category": "Frame", "brand": "Acme", "reference": "DH 1", "status": "found", "match_type": "exact", "drive_url": "https://drive.google.com/open?id=ok"},
+            {"category": "Frame", "brand": "Acme", "reference": "DH 1", "status": "missing", "match_type": "none", "drive_url": ""},
+        ]
+        key, result = next(iter(ANNOTATE.aggregate_rows(build, rows).items()))
+        self.assertEqual(key[0], "Frame")
+        self.assertEqual(result["status"], "missing")
+        self.assertEqual(result["missing_relations"], 1)
+        self.assertEqual(result["drive_url"], "https://drive.google.com/open?id=ok")
+
 
 if __name__ == "__main__":
     unittest.main()

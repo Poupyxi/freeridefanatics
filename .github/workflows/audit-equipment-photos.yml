@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       annotate_notion:
-        description: Write only audit fields back to Notion (never changes equipment data)
+        description: Write only audit fields to Equipments (never changes product data)
         required: true
         type: boolean
         default: false

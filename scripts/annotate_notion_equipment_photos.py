@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Write a completed equipment-photo audit into Notion audit properties.
+"""Write a completed equipment-photo audit into the canonical Equipments DB.
 
-This script changes only the audit fields on Equipment Rider Link pages. It
-never changes rider, equipment, discipline, season, brand, or reference data.
-Use ``--apply`` explicitly; without it the script only reports what it would
-update.
+The audit itself is produced per rider/equipment relation, but its durable
+annotation belongs to the product row in ``Equipments``.  This script therefore
+aggregates relation results by canonical category/brand/model and only changes
+the five audit fields on the matching equipment pages.  It never changes rider
+links, seasons, brands, or product names.  Use ``--apply`` explicitly; without
+it the script only reports what it would update.
 """
 from __future__ import annotations
 
@@ -20,12 +22,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SYNC_PATH = ROOT / "scripts" / "sync_notion.py"
+BUILD_PATH = ROOT / "build.py"
 
 DATA_SOURCES = {
-    "riders": "3c89cf6b-f148-8044-9283-000b552443a8",
     "equipment": "3c99cf6b-f148-8010-a1c7-000b9ef9ef98",
     "brands": "3cb9cf6b-f148-8090-b481-000b49ff2d90",
-    "equipment_links": "3ca9cf6b-f148-8018-9a11-000b4b610ef2",
 }
 LINK_FIELDS = {
     "Photo status",
@@ -34,6 +35,8 @@ LINK_FIELDS = {
     "Needs review",
     "Last photo audit",
 }
+# A product is only considered healthy when every checked rider relation found
+# a safe image.  A missing relation therefore takes precedence over a match.
 STATUS_PRIORITY = {"Exact": 0, "Alias": 1, "Similar": 2, "Ambiguous": 3, "Missing": 4}
 
 
@@ -41,6 +44,15 @@ def load_sync_module():
     spec = importlib.util.spec_from_file_location("ridersfanatics_sync_notion", SYNC_PATH)
     if spec is None or spec.loader is None:
         raise RuntimeError("cannot load sync_notion.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_build_module():
+    spec = importlib.util.spec_from_file_location("ridersfanatics_build", BUILD_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load build.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -91,6 +103,50 @@ def property_payload(row: dict, now: str) -> dict:
     }
 
 
+def equipment_key(build, category: object, brand: object, model: object) -> tuple[str, str, str]:
+    """Return the same normalized product key used by the photo audit."""
+    canonical_brand, canonical_model = build.canonical_equipment_product(
+        str(category or "").strip(), str(brand or "").strip(), str(model or "").strip()
+    )
+    return (
+        str(category or "").strip(),
+        norm(canonical_brand),
+        norm(canonical_model),
+    )
+
+
+def aggregate_rows(build, rows: list[dict]) -> dict[tuple[str, str, str], dict]:
+    """Collapse relation-level rows to one conservative result per product."""
+    grouped: dict[tuple[str, str, str], list[dict]] = defaultdict(list)
+    for row in rows:
+        grouped[equipment_key(build, row.get("category"), row.get("brand"), row.get("reference"))].append(row)
+
+    aggregate = {}
+    for key, candidates in grouped.items():
+        worst = max(
+            candidates,
+            key=lambda item: STATUS_PRIORITY.get(
+                "Missing" if item.get("status") == "missing" else
+                "Ambiguous" if item.get("status") == "ambiguous" else
+                "Similar" if item.get("status") == "review" else
+                "Alias" if item.get("match_type") == "alias" else "Exact",
+                4,
+            ),
+        )
+        # Prefer a usable Drive file even when another rider relation is the
+        # one that triggered the conservative status.
+        found = next((item for item in candidates if item.get("drive_url")), None)
+        result = dict(worst)
+        if found:
+            result["drive_url"] = found.get("drive_url")
+            result["drive_file"] = found.get("drive_file")
+        result["relation_count"] = len(candidates)
+        result["missing_relations"] = sum(item.get("status") == "missing" for item in candidates)
+        result["ambiguous_relations"] = sum(item.get("status") == "ambiguous" for item in candidates)
+        aggregate[key] = result
+    return aggregate
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--audit-json", type=Path, required=True)
@@ -105,19 +161,8 @@ def main() -> int:
     if not isinstance(rows, list):
         raise SystemExit("audit JSON rows must be an array")
     sync = load_sync_module()
+    build = load_build_module()
     client = sync.Notion(token)
-
-    rider_pages = client.query(DATA_SOURCES["riders"])
-    rider_slugs = {}
-    for page in rider_pages:
-        identifier = page_key(sync, page.get("id"))
-        if not identifier:
-            continue
-        raw_name = sync.scalar_value(page, "First Name") or sync.page_title(page, "Name", "Nom") or ""
-        display_name = sync.display_rider_name(raw_name)
-        if display_name:
-            handle = (sync.instagram_handle(sync.scalar_value(page, "Instagram")) or "").lower().lstrip("@")
-            rider_slugs[identifier] = sync.ROUTE_SLUGS_BY_HANDLE.get(handle, sync.slugify(display_name))
 
     brand_pages = client.query(DATA_SOURCES["brands"])
     brands = sync.title_map(brand_pages, "Name", "Nom", "Brand")
@@ -132,40 +177,17 @@ def main() -> int:
         brand = next((brands.get(item) for item in sync.list_value(page, "Brand") if brands.get(item)), "")
         model = sync.scalar_value(page, "Product") or ""
         model = next((part.strip() for part in str(model).split(";") if part.strip()), "")
-        canonical_brand, canonical_model = sync.canonical_equipment_product(category, brand, model)
-        equipment_keys[identifier] = (category, norm(canonical_brand), norm(canonical_model))
+        equipment_keys[identifier] = equipment_key(build, category, brand, model)
 
-    relation_pages = client.query(DATA_SOURCES["equipment_links"])
-    relation_map = defaultdict(list)
-    for page in relation_pages:
-        identifier = page_key(sync, page.get("id"))
-        if not identifier:
-            continue
-        rider_ids = sync.list_value(page, "🚻 Riders")
-        product_ids = sync.list_value(page, "Equipments")
-        for rider_id in rider_ids:
-            rider_slug = rider_slugs.get(rider_id)
-            if not rider_slug:
-                continue
-            for product_id in product_ids:
-                product_key = equipment_keys.get(product_id)
-                if product_key:
-                    relation_map[(rider_slug, *product_key)].append(identifier)
-
-    by_key = {}
-    for row in rows:
-        key = row_key(row)
-        current = by_key.get(key)
-        if current is None or STATUS_PRIORITY.get(str(row.get("status")), 4) > STATUS_PRIORITY.get(str(current.get("status")), 4):
-            by_key[key] = row
+    by_key = aggregate_rows(build, rows)
 
     now = dt.datetime.now(dt.timezone.utc).isoformat()
     updates = 0
     unmatched = []
     for key, row in by_key.items():
-        page_ids = relation_map.get(key, [])
+        page_ids = [page_id for page_id, product_key in equipment_keys.items() if product_key == key]
         if not page_ids:
-            unmatched.append({"rider": row.get("rider"), "category": row.get("category"), "reference": row.get("reference")})
+            unmatched.append({"category": row.get("category"), "brand": row.get("brand"), "reference": row.get("reference")})
             continue
         payload = property_payload(row, now)
         for page_id in page_ids:
@@ -174,7 +196,7 @@ def main() -> int:
             updates += 1
 
     mode = "updated" if args.apply else "would update"
-    print(f"Notion photo audit: {mode} {updates} relation row(s); unmatched={len(unmatched)}")
+    print(f"Notion photo audit: {mode} {updates} equipment row(s); unmatched={len(unmatched)}")
     if unmatched:
         print(json.dumps({"unmatched": unmatched[:20]}, ensure_ascii=False))
     return 0 if not unmatched else 2

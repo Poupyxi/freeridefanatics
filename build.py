@@ -3404,7 +3404,11 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/"):
     photo = has_equip_photo(item.get("category"), brand, main_model)
     category_slug = equip_image_slug(raw_cat, '', '')
     category_url = f"{category_href}{category_slug}" if category_href.endswith("#") else f"{category_href}{category_slug}.html"
-    photo_html = f'<span class="equip-thumb"><img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></span>' if photo else ""
+    photo_html = (f'<button class="equip-thumb equip-thumb-trigger" type="button" '
+                  f'data-equipment-image="{asset_prefix}assets/img/equipment/{photo}" '
+                  f'data-equipment-title="{esc_attr(title)}" aria-label="Zoom {esc_attr(title)}">'
+                  f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></button>'
+                  if photo else "")
     detail_line = f'          <div class="detail">{esc(extra)}</div>\n' if extra else ""
     actions = []
     if link:
@@ -3996,6 +4000,7 @@ def build_equipment_directory(riders, winter=False):
 {compare_banner}
 <div class="guide-callout"><strong>How to read these rankings</strong><p>Combined rider points describe competitive presence in the tracked field. They are not a laboratory comparison: sponsorship, rider count and team selection influence every total.</p></div></div></section></main>'''
     html += footer_html(prefix, seasonal=winter)
+    html += f'<script src="{prefix}assets/js/equipment-lightbox.js" defer></script>\n'
     return html
 
 def collect_brands(riders):
@@ -4684,6 +4689,7 @@ def build_rider_page(r, riders, winter=False):
     if not winter:
         html += rider_feedback_html(r)
     html += footer_html(prefix, seasonal=winter)
+    html += f'<script src="{prefix}assets/js/equipment-lightbox.js" defer></script>\n'
     return html
 
 # ---------------------------------------------------------------- main

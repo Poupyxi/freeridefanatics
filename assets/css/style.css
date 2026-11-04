@@ -1768,7 +1768,9 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   letter-spacing: .04em;
 }
 .equipment-lightbox-stats, .equipment-lightbox-leader, .equipment-lightbox-category { grid-column: 2; }
-.equipment-lightbox-leader { margin: 0; padding: 10px; border-left: 2px solid var(--accent, #b84d20); color: var(--ink, #16171b); font-family: var(--mono, monospace); font-size: .75rem; line-height: 1.5; }
+.equipment-lightbox-leader { display: flex; align-items: center; gap: 9px; margin: 0; padding: 10px; border-left: 2px solid var(--accent, #b84d20); color: var(--ink, #16171b); font-family: var(--mono, monospace); font-size: .75rem; line-height: 1.5; }
+.equipment-lightbox-leader-photo { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%; object-fit: cover; background: #e8e5df; }
+.equipment-lightbox-leader-copy { min-width: 0; }
 .equipment-lightbox-leader small { color: var(--muted, #66707a); }
 
 .equipment-lightbox-category {

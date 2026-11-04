@@ -22,7 +22,7 @@
       '<img class="equipment-lightbox-image" alt="">' +
       '<h2 class="equipment-lightbox-title" id="equipment-lightbox-title"></h2>' +
       '<p class="equipment-lightbox-stats"></p>' +
-      '<p class="equipment-lightbox-leader"></p>' +
+      '<p class="equipment-lightbox-leader"><img class="equipment-lightbox-leader-photo" alt=""><span class="equipment-lightbox-leader-copy"></span></p>' +
       '<a class="equipment-lightbox-category" href="">View category</a>' +
       '</div>';
     document.body.appendChild(dialog);
@@ -39,6 +39,8 @@
     var category = layer.querySelector('.equipment-lightbox-category');
     var stats = layer.querySelector('.equipment-lightbox-stats');
     var leader = layer.querySelector('.equipment-lightbox-leader');
+    var leaderPhoto = layer.querySelector('.equipment-lightbox-leader-photo');
+    var leaderCopy = layer.querySelector('.equipment-lightbox-leader-copy');
     var label = button.getAttribute('data-equipment-title') || 'Equipment';
     image.src = button.getAttribute('data-equipment-image');
     image.alt = label;
@@ -53,11 +55,15 @@
     var leaderName = button.getAttribute('data-equipment-leader') || '—';
     var leaderPoints = button.getAttribute('data-equipment-leader-points') || '0';
     var leaderPlace = button.getAttribute('data-equipment-leader-place') || '0';
+    var leaderImage = button.getAttribute('data-equipment-leader-image') || '';
     stats.innerHTML = '<span title="Professional downhill riders using this equipment">👥 Used by <strong>' + users + '</strong> / ' + total + ' downhill riders</span>' +
       '<span title="First-place finishes">🥇 <strong>' + first + '</strong> 1st</span>' +
       '<span title="Second-place finishes">🥈 <strong>' + second + '</strong> 2nd</span>' +
       '<span title="Third-place finishes">🥉 <strong>' + third + '</strong> 3rd</span>';
-    leader.innerHTML = leaderName === '—' ? '' : '⭐ <strong>' + leaderName + '</strong><br><small>' + leaderPoints + ' pts · best ' + ordinal(leaderPlace) + '</small>';
+    leader.hidden = leaderName === '—';
+    leaderPhoto.hidden = !leaderImage;
+    if (leaderImage) { leaderPhoto.src = leaderImage; leaderPhoto.alt = leaderName; }
+    leaderCopy.innerHTML = leaderName === '—' ? '' : '⭐ <strong>' + leaderName + '</strong><br><small>' + leaderPoints + ' pts · best ' + ordinal(leaderPlace) + '</small>';
     previousFocus = document.activeElement;
     layer.hidden = false;
     document.body.classList.add('equipment-lightbox-open');

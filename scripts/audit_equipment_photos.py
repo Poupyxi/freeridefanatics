@@ -22,6 +22,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# The workflow invokes this file as ``python3 scripts/audit_equipment_photos.py``
+# from the repository root.  Keep the repository root importable so the
+# dynamically loaded image importer can resolve the shared ``build`` module.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 
 def read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))

@@ -42,7 +42,10 @@
     var first = button.getAttribute('data-equipment-first') || '0';
     var second = button.getAttribute('data-equipment-second') || '0';
     var third = button.getAttribute('data-equipment-third') || '0';
-    stats.textContent = 'Used by ' + users + ' pro rider' + (users === '1' ? '' : 's') + ' · 1st: ' + first + ' · 2nd: ' + second + ' · 3rd: ' + third;
+    stats.innerHTML = '<span title="Professional riders using this equipment">👥 ' + users + ' pro' + (users === '1' ? '' : 's') + '</span>' +
+      '<span title="First-place finishes">🥇 ' + first + '</span>' +
+      '<span title="Second-place finishes">🥈 ' + second + '</span>' +
+      '<span title="Third-place finishes">🥉 ' + third + '</span>';
     previousFocus = document.activeElement;
     layer.hidden = false;
     document.body.classList.add('equipment-lightbox-open');

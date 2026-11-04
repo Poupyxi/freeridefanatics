@@ -3439,9 +3439,9 @@ def equipment_usage_stats(item, riders):
             if place in podium:
                 podium[place] += 1
             places.append(place)
-        leaders.append((sum((result.get("points") or 0) for result in results), min(places) if places else 999, rider.get("display_name") or "Rider"))
+        leaders.append((sum((result.get("points") or 0) for result in results), min(places) if places else 999, rider.get("display_name") or "Rider", rider.get("slug") or ""))
     leaders.sort(key=lambda entry: (-entry[0], entry[1], entry[2]))
-    leader = leaders[0] if leaders else (0, 0, "—")
+    leader = leaders[0] if leaders else (0, 0, "—", "")
     return users, podium, leader
 
 def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rider_slug="", rider_name="", riders=None):
@@ -3457,12 +3457,13 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rid
     amazon_link = item.get("amazon_link")
     photo = has_equip_photo(item.get("category"), brand, raw_model, rider_slug, rider_name)
     usage_count, podium, leader = equipment_usage_stats(item, riders or [])
+    leader_photo = has_photo(leader[3]) if leader[3] else ""
     category_slug = equip_image_slug(raw_cat, '', '')
     category_url = f"{category_href}{category_slug}" if category_href.endswith("#") else f"{category_href}{category_slug}.html"
     photo_html = (f'<button class="equip-thumb equip-thumb-trigger" type="button" '
                   f'data-equipment-image="{asset_prefix}assets/img/equipment/{photo}" '
                   f'data-equipment-title="{esc_attr(title)}" data-equipment-category-url="{esc_attr(category_url)}" '
-                  f'data-equipment-users="{usage_count}" data-equipment-total="{len(riders or [])}" data-equipment-leader="{esc_attr(leader[2])}" data-equipment-leader-points="{leader[0]}" data-equipment-leader-place="{leader[1] if leader[1] != 999 else 0}" data-equipment-first="{podium[1]}" '
+                  f'data-equipment-users="{usage_count}" data-equipment-total="{len(riders or [])}" data-equipment-leader="{esc_attr(leader[2])}" data-equipment-leader-image="{asset_prefix}assets/img/riders/{leader_photo}" data-equipment-leader-points="{leader[0]}" data-equipment-leader-place="{leader[1] if leader[1] != 999 else 0}" data-equipment-first="{podium[1]}" '
                   f'data-equipment-second="{podium[2]}" data-equipment-third="{podium[3]}" aria-label="Zoom {esc_attr(title)}">'
                   f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></button>'
                   if photo else "")

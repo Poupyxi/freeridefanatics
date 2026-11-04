@@ -3,6 +3,11 @@
 
   var dialog;
   var previousFocus;
+  function ordinal(value) {
+    var n = Number(value) || 0;
+    if (n % 100 >= 11 && n % 100 <= 13) return n + 'th';
+    return n + ({1:'st', 2:'nd', 3:'rd'}[n % 10] || 'th');
+  }
 
   function createDialog() {
     if (dialog) return dialog;
@@ -17,6 +22,7 @@
       '<img class="equipment-lightbox-image" alt="">' +
       '<h2 class="equipment-lightbox-title" id="equipment-lightbox-title"></h2>' +
       '<p class="equipment-lightbox-stats"></p>' +
+      '<p class="equipment-lightbox-leader"></p>' +
       '<a class="equipment-lightbox-category" href="">View category</a>' +
       '</div>';
     document.body.appendChild(dialog);
@@ -32,6 +38,7 @@
     var title = layer.querySelector('.equipment-lightbox-title');
     var category = layer.querySelector('.equipment-lightbox-category');
     var stats = layer.querySelector('.equipment-lightbox-stats');
+    var leader = layer.querySelector('.equipment-lightbox-leader');
     var label = button.getAttribute('data-equipment-title') || 'Equipment';
     image.src = button.getAttribute('data-equipment-image');
     image.alt = label;
@@ -43,10 +50,14 @@
     var first = button.getAttribute('data-equipment-first') || '0';
     var second = button.getAttribute('data-equipment-second') || '0';
     var third = button.getAttribute('data-equipment-third') || '0';
+    var leaderName = button.getAttribute('data-equipment-leader') || '—';
+    var leaderPoints = button.getAttribute('data-equipment-leader-points') || '0';
+    var leaderPlace = button.getAttribute('data-equipment-leader-place') || '0';
     stats.innerHTML = '<span title="Professional downhill riders using this equipment">👥 Used by <strong>' + users + '</strong> / ' + total + ' downhill riders</span>' +
       '<span title="First-place finishes">🥇 <strong>' + first + '</strong> 1st</span>' +
       '<span title="Second-place finishes">🥈 <strong>' + second + '</strong> 2nd</span>' +
       '<span title="Third-place finishes">🥉 <strong>' + third + '</strong> 3rd</span>';
+    leader.innerHTML = leaderName === '—' ? '' : '⭐ <strong>' + leaderName + '</strong><br><small>' + leaderPoints + ' pts · best ' + ordinal(leaderPlace) + '</small>';
     previousFocus = document.activeElement;
     layer.hidden = false;
     document.body.classList.add('equipment-lightbox-open');

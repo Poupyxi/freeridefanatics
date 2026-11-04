@@ -1743,9 +1743,9 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   position: relative;
   display: grid;
   gap: 14px;
-  width: min(760px, 100%);
+  width: min(620px, 100%);
   max-height: min(88vh, 860px);
-  padding: 18px;
+  padding: 14px;
   border: 1px solid rgba(255,255,255,.28);
   background: var(--paper, #f5f3ef);
   box-shadow: 0 24px 80px rgba(0,0,0,.34);
@@ -1774,8 +1774,9 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   text-transform: uppercase;
   text-decoration: underline;
 }
-.equipment-lightbox-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--muted, #66707a); font-family: var(--mono, monospace); font-size: .78rem; letter-spacing: .03em; }
-.equipment-lightbox-stats span { padding: 7px 9px; border: 1px solid rgba(0,0,0,.12); background: rgba(255,255,255,.62); white-space: nowrap; }
+.equipment-lightbox-stats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; color: var(--muted, #66707a); font-family: var(--mono, monospace); font-size: .72rem; letter-spacing: .02em; }
+.equipment-lightbox-stats span { padding: 6px 8px; border: 1px solid rgba(0,0,0,.12); background: rgba(255,255,255,.62); white-space: nowrap; }
+.equipment-lightbox-stats strong { color: var(--ink, #16171b); font-weight: 700; }
 
 .equipment-lightbox-close {
   position: absolute;

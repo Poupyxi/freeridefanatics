@@ -63,7 +63,7 @@
     leader.hidden = leaderName === '—';
     leaderPhoto.hidden = !leaderImage;
     if (leaderImage) { leaderPhoto.src = leaderImage; leaderPhoto.alt = leaderName; }
-    leaderCopy.innerHTML = leaderName === '—' ? '' : '⭐ <strong>' + leaderName + '</strong><br><small>' + leaderPoints + ' pts · best ' + ordinal(leaderPlace) + '</small>';
+    leaderCopy.innerHTML = leaderName === '—' ? '' : '⭐ <strong>' + leaderName + '</strong><br><small>best ' + ordinal(leaderPlace) + '</small>';
     previousFocus = document.activeElement;
     layer.hidden = false;
     document.body.classList.add('equipment-lightbox-open');

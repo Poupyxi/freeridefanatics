@@ -3455,7 +3455,7 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rid
     photo_html = (f'<button class="equip-thumb equip-thumb-trigger" type="button" '
                   f'data-equipment-image="{asset_prefix}assets/img/equipment/{photo}" '
                   f'data-equipment-title="{esc_attr(title)}" data-equipment-category-url="{esc_attr(category_url)}" '
-                  f'data-equipment-users="{usage_count}" data-equipment-first="{podium[1]}" '
+                  f'data-equipment-users="{usage_count}" data-equipment-total="{len(riders or [])}" data-equipment-first="{podium[1]}" '
                   f'data-equipment-second="{podium[2]}" data-equipment-third="{podium[3]}" aria-label="Zoom {esc_attr(title)}">'
                   f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></button>'
                   if photo else "")

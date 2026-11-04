@@ -39,13 +39,14 @@
     category.href = button.getAttribute('data-equipment-category-url') || '#';
     category.hidden = !button.getAttribute('data-equipment-category-url');
     var users = button.getAttribute('data-equipment-users') || '0';
+    var total = button.getAttribute('data-equipment-total') || '0';
     var first = button.getAttribute('data-equipment-first') || '0';
     var second = button.getAttribute('data-equipment-second') || '0';
     var third = button.getAttribute('data-equipment-third') || '0';
-    stats.innerHTML = '<span title="Professional riders using this equipment">👥 ' + users + ' pro' + (users === '1' ? '' : 's') + '</span>' +
-      '<span title="First-place finishes">🥇 ' + first + '</span>' +
-      '<span title="Second-place finishes">🥈 ' + second + '</span>' +
-      '<span title="Third-place finishes">🥉 ' + third + '</span>';
+    stats.innerHTML = '<span title="Professional downhill riders using this equipment">👥 Used by <strong>' + users + '</strong> / ' + total + ' downhill riders</span>' +
+      '<span title="First-place finishes">🥇 <strong>' + first + '</strong> 1st</span>' +
+      '<span title="Second-place finishes">🥈 <strong>' + second + '</strong> 2nd</span>' +
+      '<span title="Third-place finishes">🥉 <strong>' + third + '</strong> 3rd</span>';
     previousFocus = document.activeElement;
     layer.hidden = false;
     document.body.classList.add('equipment-lightbox-open');

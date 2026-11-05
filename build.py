@@ -3391,22 +3391,55 @@ def build_winter_competition_page(riders, competition):
 
 # ---------------------------------------------------------------- rider page
 
-def equip_item_html(item, asset_prefix="../", category_href="../equipment/"):
+def equipment_stat_key(item):
+    details = [p.strip().casefold() for p in (item.get("model_detail") or "").split(";") if p.strip()]
+    return (str(item.get("category") or "").casefold(), str(item.get("brand") or "").casefold(), details[0] if details else "")
+
+def equipment_usage_stats(item, riders):
+    key = equipment_stat_key(item)
+    users = 0
+    podium = {1: 0, 2: 0, 3: 0}
+    leaders = []
+    for rider in riders or []:
+        if not any(equipment_stat_key(candidate) == key for candidate in (rider.get("equipment") or [])):
+            continue
+        users += 1
+        results = rider.get("competition_history") or []
+        places = []
+        for result in rider.get("competition_history") or []:
+            try:
+                place = int(result.get("place"))
+            except (TypeError, ValueError):
+                continue
+            if place in podium:
+                podium[place] += 1
+            places.append(place)
+        leaders.append((sum((result.get("points") or 0) for result in results), min(places) if places else 999, rider.get("display_name") or "Rider", rider.get("slug") or ""))
+    leaders.sort(key=lambda entry: (-entry[0], entry[1], entry[2]))
+    leader = leaders[0] if leaders else (0, 0, "—", "")
+    return users, podium, leader
+
+def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rider_slug="", rider_name="", riders=None):
     raw_cat = item.get("category")
     cat = prettify_category(raw_cat)
     brand = item.get("brand") or ""
     detail_parts = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
     main_model = detail_parts[0] if detail_parts else ""
+    raw_model = main_model
     extra = " · ".join(detail_parts[1:]) if len(detail_parts) > 1 else ""
     title = " ".join([brand, main_model]).strip() or "—"
     link = item.get("affiliate_link")
     amazon_link = item.get("amazon_link")
-    photo = has_equip_photo(item.get("category"), brand, main_model)
+    photo = has_equip_photo(item.get("category"), brand, raw_model)
+    usage_count, podium, leader = equipment_usage_stats(item, riders or [])
+    leader_photo = has_photo(leader[3]) if leader[3] else ""
     category_slug = equip_image_slug(raw_cat, '', '')
     category_url = f"{category_href}{category_slug}" if category_href.endswith("#") else f"{category_href}{category_slug}.html"
     photo_html = (f'<button class="equip-thumb equip-thumb-trigger" type="button" '
                   f'data-equipment-image="{asset_prefix}assets/img/equipment/{photo}" '
-                  f'data-equipment-title="{esc_attr(title)}" aria-label="Zoom {esc_attr(title)}">'
+                  f'data-equipment-title="{esc_attr(title)}" data-equipment-category-url="{esc_attr(category_url)}" '
+                  f'data-equipment-users="{usage_count}" data-equipment-total="{len(riders or [])}" data-equipment-leader="{esc_attr(leader[2])}" data-equipment-leader-image="{asset_prefix}assets/img/riders/{leader_photo}" data-equipment-leader-points="{leader[0]}" data-equipment-leader-place="{leader[1] if leader[1] != 999 else 0}" data-equipment-first="{podium[1]}" '
+                  f'data-equipment-second="{podium[2]}" data-equipment-third="{podium[3]}" aria-label="Zoom {esc_attr(title)}">'
                   f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></button>'
                   if photo else "")
     detail_line = f'          <div class="detail">{esc(extra)}</div>\n' if extra else ""
@@ -3417,7 +3450,10 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/"):
         actions.append(f'<a class="shop-btn amazon-btn" href="{esc(amazon_link)}" target="_blank" rel="noopener sponsored">Amazon</a>')
     actions_html = f'<div class="equip-actions">{"".join(actions)}</div>' if actions else ""
     actions_line = f"        {actions_html}\n" if actions_html else ""
-    return f"""<div class="equip-item reveal">
+    item_attrs = (f' data-equipment-card="true" tabindex="0" role="button"'
+                  f' aria-label="Zoom {esc_attr(title)}"'
+                  f' data-equipment-category-url="{esc_attr(category_url)}"') if photo else ""
+    return f"""<div class="equip-item reveal"{item_attrs}>
         {photo_html}
         <div>
           <a class="cat" href="{category_url}">{esc(cat)}</a>
@@ -3510,7 +3546,7 @@ def bike_build_html(equipment):
       </div>
     </div>"""
 
-def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category_href="../equipment/"):
+def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category_href="../equipment/", rider_slug="", rider_name="", riders=None):
     """Group equipment items into Chassis/Cockpit/Drivetrain/Wheels & Tyres/Protection
     sections, each with an icon + index number, matching the rest unsorted at the end."""
     # Parts already shown in the banner above are dropped so the page doesn't
@@ -3533,7 +3569,7 @@ def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category
     sections = []
     for idx, group in enumerate(shown, start=1):
         icon = EQUIP_GROUP_ICONS.get(group, "")
-        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href) for i in buckets[group])
+        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href, rider_slug, rider_name, riders) for i in buckets[group])
         sections.append(f"""<div class="equip-group reveal">
       <div class="equip-group-head">
         <span class="icon">{icon}</span>
@@ -3548,7 +3584,7 @@ def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category
     </div>""")
 
     if other:
-        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href) for i in other)
+        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href, rider_slug, rider_name, riders) for i in other)
         sections.append(f"""<div class="equip-group reveal">
       <div class="equip-group-head">
         <div>
@@ -4547,6 +4583,8 @@ def build_rider_page(r, riders, winter=False):
         equip_html = equipment_groups_html(
             equipment, hide_items=shown_in_banner, asset_prefix=prefix,
             category_href="../equipment.html#" if winter else "../equipment/",
+            rider_slug=r["slug"], rider_name=r["display_name"],
+            riders=riders,
         )
     else:
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'

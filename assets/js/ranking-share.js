@@ -7,6 +7,12 @@
     const text = String(value || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/$/, '');
     return /^[\w.]{1,30}$/.test(text) ? '@' + text : '';
   }
+  function socialLinks(url, title) {
+    return {
+      x: 'https://x.com/intent/tweet?' + new URLSearchParams({text:title,url}),
+      linkedin: 'https://www.linkedin.com/sharing/share-offsite/?' + new URLSearchParams({url}),
+    };
+  }
   const codes = {FRA:'FR',CAN:'CA',GBR:'GB',USA:'US',AUS:'AU',NZL:'NZ',GER:'DE',DEU:'DE',ITA:'IT',ESP:'ES',SUI:'CH',CHE:'CH',AUT:'AT',BEL:'BE',NED:'NL',NLD:'NL',NOR:'NO',SWE:'SE',DEN:'DK',DNK:'DK',FIN:'FI',POL:'PL',CZE:'CZ',SVK:'SK',SLO:'SI',SVN:'SI',POR:'PT',PRT:'PT',RSA:'ZA',ZAF:'ZA',JPN:'JP',KOR:'KR',BRA:'BR',ARG:'AR',CHI:'CL',CHL:'CL',COL:'CO',ECU:'EC',MEX:'MX',PER:'PE',IRL:'IE',ISR:'IL',UKR:'UA',HUN:'HU',CRO:'HR',HRV:'HR',EST:'EE',LAT:'LV',LVA:'LV',LTU:'LT',ROU:'RO',BUL:'BG',BGR:'BG',GRE:'GR',GRC:'GR',TUR:'TR',CHN:'CN',TPE:'TW',HKG:'HK',INA:'ID',IDN:'ID',MAS:'MY',MYS:'MY',THA:'TH',PHI:'PH',PHL:'PH',IND:'IN',NEP:'NP',NPL:'NP',VEN:'VE',URU:'UY',URY:'UY',CRC:'CR',CRI:'CR',GUA:'GT',GTM:'GT',BOL:'BO',AND:'AD',LUX:'LU',ISL:'IS',RUS:'RU',SRB:'RS',BIH:'BA',MKD:'MK',KAZ:'KZ',GEO:'GE',ARM:'AM',CYP:'CY',MLT:'MT',LIE:'LI',MON:'MC',MCO:'MC'};
   function flag(value) {
     let code = String(value || '').toUpperCase().trim();
@@ -20,7 +26,7 @@
     }
     return /^[A-Z]{2}$/.test(code) ? [...code].map(c => String.fromCodePoint(127397 + c.charCodeAt(0))).join('') : '';
   }
-  if (typeof module !== 'undefined') module.exports = {chunks, handle, flag};
+  if (typeof module !== 'undefined') module.exports = {chunks, handle, flag, socialLinks};
   if (typeof document === 'undefined') return;
   const source = document.getElementById('ranking-share-data');
   if (!source) return;
@@ -123,6 +129,18 @@
     const label = el('label','Format ',dialog), select = el('select','',label);
     [['1350','Portrait · 1080 × 1350'],['1080','Square · 1080 × 1080']].forEach(([value,name]) => { const option=el('option',name,select); option.value=value; });
     const status=el('p','',dialog); status.setAttribute('role','status');
+    const social=el('nav','',dialog); social.className='ranking-share-social'; social.setAttribute('aria-label','Share on social media');
+    const links=socialLinks(location.href.split('#')[0],context.title+' — '+context.subtitle);
+    [['X',links.x],['LinkedIn',links.linkedin]].forEach(([name,url])=>{
+      const link=el('a',name+' ↗',social);link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+      link.setAttribute('aria-label','Share link on '+name+' (new tab)');
+    });
+    const instagram=el('button','Instagram',social); instagram.type='button';
+    el('p','X and LinkedIn open a link-sharing composer. To publish the ranking images, download them and attach them to your post, or use your phone’s image-sharing menu. Instagram handles are not reused as X handles.',dialog);
+    if(location.hostname.startsWith('preprod.')) el('p','Preview: this page link is password-protected. Downloaded images can still be shared.',dialog);
+    const instagramHelp=el('div','',dialog);instagramHelp.hidden=true;instagramHelp.className='ranking-share-instagram-help';
+    el('p','Download the selected images, copy the caption, then create an Instagram post and select the images in order. On a compatible phone, choose Instagram from the sharing menu.',instagramHelp);
+    const instagramLink=el('a','Open Instagram ↗',instagramHelp);instagramLink.href='https://www.instagram.com/';instagramLink.target='_blank';instagramLink.rel='noopener noreferrer';
     const gallery=el('div','',dialog); gallery.className='ranking-share-gallery';
     const captionLabel=el('label','Instagram caption',dialog), caption=el('textarea','',captionLabel);
     caption.value=[context.title+' — '+context.subtitle,context.handle,location.href.split('#')[0],'#RidersFanatics'].filter(Boolean).join('\n');
@@ -140,7 +158,7 @@
     async function render() {
       const token=++version;
       const previous=rendered.map(item=>item.checkbox.checked);
-      share.disabled=download.disabled=true; status.textContent='Generating images…';
+      share.disabled=download.disabled=instagram.disabled=true; status.textContent='Generating images…';
       release(); rendered=[]; gallery.replaceChildren();
       try {
         for(let i=0;i<pages.length;i++) {
@@ -158,7 +176,7 @@
           rendered.push({checkbox,file,url});
         }
         status.textContent=pages.length+' images ready. Select only the pages you want.';
-        share.disabled=download.disabled=false;
+        share.disabled=download.disabled=instagram.disabled=false;
       } catch (_) { if(token===version)status.textContent='Could not generate the images. Try another format or reload the page.'; }
     }
     download.onclick=()=>{ const chosen=selected(); if(!chosen.length){status.textContent='Select at least one image.';return;}
@@ -167,6 +185,18 @@
     share.onclick=async()=>{const files=selected().map(item=>item.file);if(!files.length){status.textContent='Select at least one image.';return;}
       if(!navigator.canShare || !navigator.canShare({files})){status.textContent='File sharing is unavailable in this browser. Download the images and copy the caption instead.';return;}
       try{await navigator.share({files,title:context.title,text:caption.value});status.textContent='Images shared.';}catch(e){status.textContent=e.name==='AbortError'?'Sharing cancelled.':'Sharing failed. Download the images instead.';}};
+    instagram.onclick=async()=>{
+      const files=selected().map(item=>item.file);
+      if(!files.length){status.textContent='Select at least one image.';return;}
+      instagramHelp.hidden=false;
+      if(navigator.share && navigator.canShare && navigator.canShare({files})) {
+        try { await navigator.share({files}); status.textContent='Images handed to the sharing menu. Paste the caption in Instagram to finish your post.'; }
+        catch(e){status.textContent=e.name==='AbortError'?'Sharing cancelled.':'Could not share the images. Download them and open Instagram instead.';}
+      } else {
+        status.textContent='Instagram image sharing is unavailable in this browser. Download the images, copy the caption, then open Instagram.';
+        instagramHelp.scrollIntoView({block:'nearest'});
+      }
+    };
     select.onchange=render;
     document.body.append(dialog);dialog.showModal();await render();
   }

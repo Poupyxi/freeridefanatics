@@ -1,6 +1,6 @@
 .ranking-share-trigger{margin:12px 0 20px;padding:12px 18px;border:1px solid #b4491c;background:#f5f1e9;color:#17181b;font:600 14px var(--mono,monospace);cursor:pointer}
 .ranking-share-trigger:disabled{opacity:.6;cursor:default}
-.ranking-share-dialog{width:min(960px,calc(100% - 32px));max-height:90vh;overflow:auto;padding:28px;background:#f5f1e9;color:#17181b;border:1px solid #aaa;box-sizing:border-box}
+.ranking-share-dialog{position:fixed;inset:0;margin:auto;width:min(960px,calc(100% - 32px));max-height:90vh;max-height:90dvh;overflow:auto;padding:28px;background:#f5f1e9;color:#17181b;border:1px solid #aaa;box-sizing:border-box}
 .ranking-share-dialog::backdrop{background:#10151bc9}
 .ranking-share-dialog h2{font-size:28px;margin:0 80px 18px 0}
 .ranking-share-dialog p{font:14px/1.5 Arial,sans-serif;margin:14px 0}
@@ -14,3 +14,7 @@
 .ranking-share-gallery a{color:#98401c;text-decoration:underline;font-size:14px}
 .ranking-share-dialog textarea{display:block;width:100%;box-sizing:border-box;min-height:130px;margin-top:8px;padding:12px;background:white;color:#17181b;border:1px solid #999;font:14px/1.5 Arial,sans-serif}
 .ranking-share-dialog :focus-visible{outline:3px solid #b4491c;outline-offset:3px}
+.ranking-share-social{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0}
+.ranking-share-social a,.ranking-share-social button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;margin:0;border:1px solid #777;background:#fff;color:#17181b;text-decoration:none;font:600 14px Arial,sans-serif;box-sizing:border-box}
+.ranking-share-instagram-help{padding:12px;border-left:3px solid #b4491c;background:white}
+.ranking-share-instagram-help a{color:#98401c;text-decoration:underline}

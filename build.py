@@ -2068,8 +2068,8 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         "riders": portraits, "events": events,
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
-            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=1">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=1" defer></script>')
+            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=2">'
+            f'<script src="{prefix}assets/js/ranking-share.js?v=2" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):

@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const {chunks,handle,flag} = require('../assets/js/ranking-share.js');
+const {chunks,handle,flag,socialLinks} = require('../assets/js/ranking-share.js');
 for (const n of [0,1,10,11,20,21,100]) {
   const rows=Array.from({length:n},(_,i)=>i);
   const pages=chunks(rows);
@@ -16,4 +16,7 @@ assert.equal(flag('FRA'),'🇫🇷');
 assert.equal(flag('France'),'🇫🇷');
 assert.equal(flag('CA'),'🇨🇦');
 assert.equal(flag('unknown'),'');
+const links=socialLinks('https://preprod.ridersfanatics.com/test.html?a=1&b=2','Final / Men & Women');
+assert.equal(new URL(links.x).searchParams.get('text'),'Final / Men & Women');
+assert.equal(new URL(links.linkedin).searchParams.get('url'),'https://preprod.ridersfanatics.com/test.html?a=1&b=2');
 console.log('Ranking share pagination, handles and flags: PASS');

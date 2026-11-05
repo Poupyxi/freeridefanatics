@@ -387,7 +387,61 @@ def import_riders(riders, src_dir, out_dir, kind, square, force, dry, prune=Fals
 
 # ---------------------------------------------------------------- equipment
 
-def index_library_equipment():
+def bounded_edit_distance(left, right, limit=2):
+    """Return the edit distance up to ``limit`` without fuzzy broad matches."""
+    if abs(len(left) - len(right)) > limit:
+        return limit + 1
+    previous = list(range(len(right) + 1))
+    for row, left_char in enumerate(left, 1):
+        current = [row]
+        row_best = row
+        for column, right_char in enumerate(right, 1):
+            current.append(min(
+                current[-1] + 1,
+                previous[column] + 1,
+                previous[column - 1] + (left_char != right_char),
+            ))
+            row_best = min(row_best, current[-1])
+        if row_best > limit:
+            return limit + 1
+        previous = current
+    return previous[-1]
+
+
+def rider_slug_from_equipment_filename(stem, riders):
+    """Find a rider name embedded in a Drive equipment filename.
+
+    Contributors occasionally mistype one or two letters.  Compare only
+    complete name-sized word windows so product words cannot accidentally be
+    treated as rider names.
+    """
+    words = norm_text(stem).split()
+    matches = []
+    for rider in riders or []:
+        rider_words = norm_text(rider.get("display_name") or "").split()
+        if not rider_words:
+            continue
+        targets = (rider_words, list(reversed(rider_words)))
+        for target_words in targets:
+            width = len(target_words)
+            target = compact_text(" ".join(target_words))
+            if len(target) < 7 or width > len(words):
+                continue
+            best = min(
+                bounded_edit_distance(
+                    compact_text(" ".join(words[index:index + width])), target, 2
+                )
+                for index in range(len(words) - width + 1)
+            )
+            if best <= 2:
+                matches.append((best, rider["slug"]))
+    if not matches:
+        return ""
+    matches.sort()
+    return matches[0][1] if len(matches) == 1 or matches[0][0] < matches[1][0] else ""
+
+
+def index_library_equipment(riders=()):
     """category -> [{'brand','model','full','path'}], parsed from 'Brand;Model;Variant.ext'."""
     index = defaultdict(list)
     skipped_folders = []
@@ -432,11 +486,30 @@ def index_library_equipment():
                 "full": norm_text(" ".join(parts[:2])),
                 "path": source_path,
                 "name": f,
+                "rider_slug": rider_slug_from_equipment_filename(stem, riders),
             })
     return index, skipped_folders
 
-def pick_photo(candidates, brand, model):
+def pick_photo(candidates, brand, model, rider_slug=""):
     """Best library file for one product, from strictest to loosest match."""
+    if not candidates:
+        return None
+    rider_candidates = [candidate for candidate in candidates
+                        if candidate.get("rider_slug") == rider_slug] if rider_slug else []
+    generic_candidates = [candidate for candidate in candidates
+                          if not candidate.get("rider_slug")]
+    # A named rider photo always wins when it also matches the product. If the
+    # named file is unrelated, continue with the generic product library.
+    if rider_candidates:
+        rider_choice = pick_photo(
+            [{**candidate, "rider_slug": ""} for candidate in rider_candidates],
+            brand,
+            model,
+        )
+        if rider_choice:
+            return next(candidate for candidate in rider_candidates
+                        if candidate["path"] == rider_choice["path"])
+    candidates = generic_candidates
     if not candidates:
         return None
     target_full = f"{brand} {model}".strip()
@@ -517,7 +590,7 @@ def pick_photo(candidates, brand, model):
     return None
 
 def import_equipment(riders, force, dry):
-    index, skipped_folders = index_library_equipment()
+    index, skipped_folders = index_library_equipment(riders)
     if not index:
         print(f"equipment: source folder empty or missing ({SRC_EQUIP})")
         return [], []
@@ -561,6 +634,40 @@ def import_equipment(riders, force, dry):
         except Exception as e:
             print(f"  ! {choice['name']}: {e}")
             missing.append(slug)
+
+    # Import rider-specific variants next to the generic product image. The
+    # public builder resolves ``--<rider-slug>`` first and falls back to the
+    # generic filename when no named photo exists.
+    for rider in riders:
+        for item in rider.get("equipment") or []:
+            detail = [part.strip() for part in (item.get("model_detail") or "").split(";") if part.strip()]
+            model = detail[0] if detail else ""
+            brand, model = build.canonical_equipment_product(
+                item.get("category"), item.get("brand") or "", model
+            )
+            category = item.get("category")
+            photo_brand, photo_model = PHOTO_ALIASES.get(
+                (category, norm_text(brand), norm_text(model)),
+                (norm_text(brand), norm_text(model)),
+            )
+            choice = pick_photo(index.get(category, []), photo_brand, photo_model, rider["slug"])
+            if not choice or choice.get("rider_slug") != rider["slug"]:
+                continue
+            destination = os.path.join(
+                OUT_EQUIP,
+                f"{build.equip_image_slug(category, brand, model)}--{rider['slug']}.jpg",
+            )
+            used_files.add(choice["path"])
+            if os.path.exists(destination) and not force:
+                continue
+            if dry:
+                imported.append(os.path.splitext(os.path.basename(destination))[0])
+                continue
+            try:
+                save_fitted(choice["path"], destination, EQUIP_MAX)
+                imported.append(os.path.splitext(os.path.basename(destination))[0])
+            except Exception as error:
+                print(f"  ! {choice['name']}: {error}")
 
     # Tires are a deliberate exception: a rider product can be a front/rear
     # combo, while the library stores one file per tread. Import every tire so

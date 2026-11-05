@@ -416,18 +416,42 @@ def equip_image_slug(category, brand, main_model):
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
-def has_equip_photo(category, brand, main_model):
-    canonical_slug = equip_image_slug(category, brand, main_model)
-    raw_slug = re.sub(
-        r"[^a-z0-9]+", "-",
-        unicodedata.normalize("NFKD", f"{category} {brand} {main_model}")
-        .encode("ascii", "ignore").decode("ascii").lower(),
-    ).strip("-")
+def equipment_model_without_rider(main_model, rider_name=""):
+    """Remove an athlete name from a public equipment label."""
+    model = re.sub(r"\s+", " ", (main_model or "").replace("\u00a0", " ")).strip()
+    name_parts = [part for part in re.split(r"\s+", rider_name or "") if part]
+    if not model or not name_parts:
+        return model
+    for ordered in (name_parts, list(reversed(name_parts))):
+        pattern = r"[\s._-]+".join(re.escape(part) for part in ordered)
+        model = re.sub(pattern, " ", model, flags=re.I)
+    return re.sub(r"\s+", " ", model).strip(" _-.,")
+
+
+def has_equip_photo(category, brand, main_model, rider_slug="", rider_name=""):
+    clean_model = equipment_model_without_rider(main_model, rider_name)
+    identities = [(brand, main_model)]
+    if clean_model and clean_model != main_model:
+        identities.append((brand, clean_model))
+    slugs = []
+    for identity_brand, identity_model in identities:
+        canonical_slug = equip_image_slug(category, identity_brand, identity_model)
+        raw_slug = re.sub(
+            r"[^a-z0-9]+", "-",
+            unicodedata.normalize("NFKD", f"{category} {identity_brand} {identity_model}")
+            .encode("ascii", "ignore").decode("ascii").lower(),
+        ).strip("-")
+        slugs.extend((raw_slug, canonical_slug))
 
     # Notion stores the commercial reference while Drive filenames can also
     # contain a colour, tune, wheel position or model year. Try both the
     # canonical site identity and the unmodified Notion identity first.
-    for slug in dict.fromkeys((raw_slug, canonical_slug)):
+    for slug in dict.fromkeys(slugs):
+        if rider_slug:
+            for ext in ("webp", "jpg", "jpeg", "png"):
+                filename = f"{slug}--{rider_slug}.{ext}"
+                if os.path.exists(os.path.join(EQUIP_IMG_DIR, filename)):
+                    return filename
         for ext in ("webp", "jpg", "jpeg", "png"):
             if os.path.exists(os.path.join(EQUIP_IMG_DIR, f"{slug}.{ext}")):
                 return f"{slug}.{ext}"
@@ -436,10 +460,11 @@ def has_equip_photo(category, brand, main_model):
     # accepted when it has the same category and brand and at least two model
     # tokens overlap. This links e.g. `BoXXer Ultimate Electric Red` to the
     # existing `BoXXer Ultimate` image without confusing neighbouring models.
-    desired = set(raw_slug.split("-"))
+    comparison_model = clean_model or main_model
+    desired = set(equip_image_slug(category, brand, comparison_model).split("-"))
     category_tokens = set(equip_image_slug(category, "", "").split("-"))
     brand_tokens = set(re.sub(r"[^a-z0-9]+", "-", norm_product_text(brand)).split("-")) - {""}
-    model_tokens = set(re.sub(r"[^a-z0-9]+", "-", norm_product_text(main_model)).split("-")) - {""}
+    model_tokens = set(re.sub(r"[^a-z0-9]+", "-", norm_product_text(comparison_model)).split("-")) - {""}
     candidates_by_stem = {}
     if os.path.isdir(EQUIP_IMG_DIR):
         for filename in os.listdir(EQUIP_IMG_DIR):
@@ -3391,20 +3416,57 @@ def build_winter_competition_page(riders, competition):
 
 # ---------------------------------------------------------------- rider page
 
-def equip_item_html(item, asset_prefix="../", category_href="../equipment/"):
+def equipment_stat_key(item):
+    details = [p.strip().casefold() for p in (item.get("model_detail") or "").split(";") if p.strip()]
+    return (str(item.get("category") or "").casefold(), str(item.get("brand") or "").casefold(), details[0] if details else "")
+
+def equipment_usage_stats(item, riders):
+    key = equipment_stat_key(item)
+    users = 0
+    podium = {1: 0, 2: 0, 3: 0}
+    leaders = []
+    for rider in riders or []:
+        if not any(equipment_stat_key(candidate) == key for candidate in (rider.get("equipment") or [])):
+            continue
+        users += 1
+        results = rider.get("competition_history") or []
+        places = []
+        for result in rider.get("competition_history") or []:
+            try:
+                place = int(result.get("place"))
+            except (TypeError, ValueError):
+                continue
+            if place in podium:
+                podium[place] += 1
+            places.append(place)
+        leaders.append((sum((result.get("points") or 0) for result in results), min(places) if places else 999, rider.get("display_name") or "Rider", rider.get("slug") or ""))
+    leaders.sort(key=lambda entry: (-entry[0], entry[1], entry[2]))
+    leader = leaders[0] if leaders else (0, 0, "—", "")
+    return users, podium, leader
+
+def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rider_slug="", rider_name="", riders=None):
     raw_cat = item.get("category")
     cat = prettify_category(raw_cat)
     brand = item.get("brand") or ""
     detail_parts = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
-    main_model = detail_parts[0] if detail_parts else ""
+    raw_model = detail_parts[0] if detail_parts else ""
+    main_model = equipment_model_without_rider(raw_model, rider_name)
     extra = " · ".join(detail_parts[1:]) if len(detail_parts) > 1 else ""
     title = " ".join([brand, main_model]).strip() or "—"
     link = item.get("affiliate_link")
     amazon_link = item.get("amazon_link")
-    photo = has_equip_photo(item.get("category"), brand, main_model)
+    photo = has_equip_photo(item.get("category"), brand, raw_model, rider_slug, rider_name)
+    usage_count, podium, leader = equipment_usage_stats(item, riders or [])
+    leader_photo = has_photo(leader[3]) if leader[3] else ""
     category_slug = equip_image_slug(raw_cat, '', '')
     category_url = f"{category_href}{category_slug}" if category_href.endswith("#") else f"{category_href}{category_slug}.html"
-    photo_html = f'<span class="equip-thumb"><img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></span>' if photo else ""
+    photo_html = (f'<button class="equip-thumb equip-thumb-trigger" type="button" '
+                  f'data-equipment-image="{asset_prefix}assets/img/equipment/{photo}" '
+                  f'data-equipment-title="{esc_attr(title)}" data-equipment-category-url="{esc_attr(category_url)}" '
+                  f'data-equipment-users="{usage_count}" data-equipment-total="{len(riders or [])}" data-equipment-leader="{esc_attr(leader[2])}" data-equipment-leader-image="{asset_prefix}assets/img/riders/{leader_photo}" data-equipment-leader-points="{leader[0]}" data-equipment-leader-place="{leader[1] if leader[1] != 999 else 0}" data-equipment-first="{podium[1]}" '
+                  f'data-equipment-second="{podium[2]}" data-equipment-third="{podium[3]}" aria-label="Zoom {esc_attr(title)}">'
+                  f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></button>'
+                  if photo else "")
     detail_line = f'          <div class="detail">{esc(extra)}</div>\n' if extra else ""
     actions = []
     if link:
@@ -3413,7 +3475,10 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/"):
         actions.append(f'<a class="shop-btn amazon-btn" href="{esc(amazon_link)}" target="_blank" rel="noopener sponsored">Amazon</a>')
     actions_html = f'<div class="equip-actions">{"".join(actions)}</div>' if actions else ""
     actions_line = f"        {actions_html}\n" if actions_html else ""
-    return f"""<div class="equip-item reveal">
+    item_attrs = (f' data-equipment-card="true" tabindex="0" role="button"'
+                  f' aria-label="Zoom {esc_attr(title)}"'
+                  f' data-equipment-category-url="{esc_attr(category_url)}"') if photo else ""
+    return f"""<div class="equip-item reveal"{item_attrs}>
         {photo_html}
         <div>
           <a class="cat" href="{category_url}">{esc(cat)}</a>
@@ -3421,15 +3486,16 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/"):
 {detail_line}        </div>
 {actions_line}      </div>"""
 
-def find_equip(equipment, category):
+def find_equip(equipment, category, rider_slug="", rider_name=""):
     """First item of a category, with its photo resolved (or None)."""
     for item in equipment or []:
         if item.get("category") != category:
             continue
         brand = item.get("brand") or ""
         detail = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
-        main_model = detail[0] if detail else ""
-        photo = has_equip_photo(category, brand, main_model)
+        raw_model = detail[0] if detail else ""
+        main_model = equipment_model_without_rider(raw_model, rider_name)
+        photo = has_equip_photo(category, brand, raw_model, rider_slug, rider_name)
         if photo:
             return {
                 "photo": photo,
@@ -3439,17 +3505,17 @@ def find_equip(equipment, category):
             }
     return None
 
-def bike_build_parts(equipment):
+def bike_build_parts(equipment, rider_slug="", rider_name=""):
     """The frame/fork/shock actually shown in the banner, so the kit list below
     can drop exactly those and keep anything the banner couldn't display."""
-    frame = find_equip(equipment, "Frame")
+    frame = find_equip(equipment, "Frame", rider_slug, rider_name)
     if not frame:
         return None
-    fork = find_equip(equipment, "Fork")
-    shock = find_equip(equipment, "RearShock")
+    fork = find_equip(equipment, "Fork", rider_slug, rider_name)
+    shock = find_equip(equipment, "RearShock", rider_slug, rider_name)
     return {"frame": frame, "fork": fork, "shock": shock}
 
-def bike_build_html(equipment):
+def bike_build_html(equipment, rider_slug="", rider_name=""):
     """Hero composition for the rider's chassis: the frame large in the middle,
     the fork laid over the front and the rear shock sitting behind.
 
@@ -3457,7 +3523,7 @@ def bike_build_html(equipment):
     product shots have inconsistent viewpoints (frames in profile, forks head-on),
     so they can never line up into an actual bike. Rendered only when the frame
     photo exists — with no centrepiece the composition has nothing to hold it."""
-    parts = bike_build_parts(equipment)
+    parts = bike_build_parts(equipment, rider_slug, rider_name)
     if not parts:
         return ""
     frame, fork, shock = parts["frame"], parts["fork"], parts["shock"]
@@ -3506,7 +3572,7 @@ def bike_build_html(equipment):
       </div>
     </div>"""
 
-def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category_href="../equipment/"):
+def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category_href="../equipment/", rider_slug="", rider_name="", riders=None):
     """Group equipment items into Chassis/Cockpit/Drivetrain/Wheels & Tyres/Protection
     sections, each with an icon + index number, matching the rest unsorted at the end."""
     # Parts already shown in the banner above are dropped so the page doesn't
@@ -3529,7 +3595,7 @@ def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category
     sections = []
     for idx, group in enumerate(shown, start=1):
         icon = EQUIP_GROUP_ICONS.get(group, "")
-        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href) for i in buckets[group])
+        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href, rider_slug, rider_name, riders) for i in buckets[group])
         sections.append(f"""<div class="equip-group reveal">
       <div class="equip-group-head">
         <span class="icon">{icon}</span>
@@ -3544,7 +3610,7 @@ def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category
     </div>""")
 
     if other:
-        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href) for i in other)
+        items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href, rider_slug, rider_name, riders) for i in other)
         sections.append(f"""<div class="equip-group reveal">
       <div class="equip-group-head">
         <div>
@@ -3996,6 +4062,7 @@ def build_equipment_directory(riders, winter=False):
 {compare_banner}
 <div class="guide-callout"><strong>How to read these rankings</strong><p>Combined rider points describe competitive presence in the tracked field. They are not a laboratory comparison: sponsorship, rider count and team selection influence every total.</p></div></div></section></main>'''
     html += footer_html(prefix, seasonal=winter)
+    html += f'<script src="{prefix}assets/js/equipment-lightbox.js" defer></script>\n'
     return html
 
 def collect_brands(riders):
@@ -4534,14 +4601,20 @@ def build_rider_page(r, riders, winter=False):
         sponsor_html = f'<div class="sponsor-row">{chips}</div>'
 
     equipment = r.get("equipment") or []
-    build_html = "" if winter else bike_build_html(equipment)
+    build_html = "" if winter else bike_build_html(
+        equipment, r["slug"], r["display_name"]
+    )
     setup_head = ""
-    banner = {} if winter else (bike_build_parts(equipment) or {})
+    banner = {} if winter else (bike_build_parts(
+        equipment, r["slug"], r["display_name"]
+    ) or {})
     shown_in_banner = [p["item"] for p in banner.values() if p]
     if equipment:
         equip_html = equipment_groups_html(
             equipment, hide_items=shown_in_banner, asset_prefix=prefix,
             category_href="../equipment.html#" if winter else "../equipment/",
+            rider_slug=r["slug"], rider_name=r["display_name"],
+            riders=riders,
         )
     else:
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'
@@ -4554,7 +4627,10 @@ def build_rider_page(r, riders, winter=False):
         if not item:
             continue
         details = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
-        product = " ".join([item.get("brand") or "", details[0] if details else ""]).strip()
+        clean_model = equipment_model_without_rider(
+            details[0] if details else "", r["display_name"]
+        )
+        product = " ".join([item.get("brand") or "", clean_model]).strip()
         if product:
             highlight_parts.append(product)
     identity = (f"a {r.get('country')} winter athlete" if r.get("country") else "a professional winter athlete") if winter else (f"a {r.get('country')} downhill rider" if r.get("country") else "a professional downhill rider")
@@ -4684,6 +4760,7 @@ def build_rider_page(r, riders, winter=False):
     if not winter:
         html += rider_feedback_html(r)
     html += footer_html(prefix, seasonal=winter)
+    html += f'<script src="{prefix}assets/js/equipment-lightbox.js" defer></script>\n'
     return html
 
 # ---------------------------------------------------------------- main

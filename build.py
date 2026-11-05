@@ -2037,6 +2037,41 @@ RED_BULL_CERRO_ABAJO_EVENTS = {
 def red_bull_event_info(event):
     return RED_BULL_CERRO_ABAJO_EVENTS.get(competition_round_slug(event))
 
+def ranking_share_assets(riders, competition, prefix, event=None):
+    """Preview-only sharing: never change or recompute the published ranking."""
+    if not IS_PREPROD:
+        return ""
+    logos = load_competition_logos()
+    logo = (competition_event_logo(logos, competition, event) if event
+            else competition_logo(logos, competition))
+    portraits = {}
+    for rider in riders:
+        photo = has_photo(rider.get("slug", ""))
+        portraits[rider.get("slug", "")] = {
+            "photo": f"{prefix}assets/img/riders/{photo}" if photo else "",
+            "country": rider.get("country_code") or rider.get("country") or "",
+        }
+    events = {}
+    for entry in competition.get("events") or []:
+        name = entry.get("name") or ""
+        event_logo = competition_event_logo(logos, competition, name)
+        events[competition_round_slug(name)] = {
+            "name": name, "instagram": entry.get("instagram") or "",
+            "logo": prefix + event_logo["src"] if event_logo else "",
+        }
+    entry = next((entry for entry in competition.get("events") or []
+                  if entry.get("name") == event), {})
+    payload = {
+        "title": event or competition["name"], "season": competition.get("season"),
+        "instagram": entry.get("instagram") or competition.get("instagram") or "",
+        "logo": prefix + logo["src"] if logo else "",
+        "riders": portraits, "events": events,
+    }
+    return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
+            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=1">'
+            f'<script src="{prefix}assets/js/ranking-share.js?v=1" defer></script>')
+
+
 def build_competition_round(riders, competition, event, round_number, events, winter=False):
     """One crawlable page per recorded round or scheduled RedBull event."""
     name = competition["name"]
@@ -2333,6 +2368,7 @@ def build_competition_round(riders, competition, event, round_number, events, wi
 {seo_context}
 <nav class="wrap round-pagination" aria-label="Round pagination">{previous_link}{next_link}</nav>
 </main>'''
+    html += ranking_share_assets(riders, competition, asset_prefix, event)
     html += footer_html(asset_prefix, seasonal=winter)
     return html
 
@@ -2606,6 +2642,7 @@ def build_competition_standings(riders, competition):
 {rider_panel('Men Elite', 'Men')}{rider_panel('Women Elite', 'Women')}{team_panel}
 <div class="clean-standings-note"><strong>How to read this ranking</strong><p>{'Points are attached to this competition only.' if has_points else 'No points are recorded for this competition; rankings use the published finishing order and race times remain available in each event.'} The detailed view keeps every recorded round visible, while this page focuses on the competition order. Dataset updated {SITE_UPDATED_LONG}.</p><div><a href="../../methodology.html">Methodology →</a><br><a href="../../data-license.html">Data license →</a></div></div>
 </div></section></main>'''
+    html += ranking_share_assets(riders, competition, "../../")
     html += footer_html("../../")
     return html
 
@@ -3278,6 +3315,7 @@ def build_competition_detail(riders, competition, winter=False):
 {seo_context}
 {ranking_section}
 </main>'''
+    html += ranking_share_assets(riders, competition, prefix)
     html += footer_html(prefix, seasonal=winter)
     if is_uci_dh:
         html = html.replace(

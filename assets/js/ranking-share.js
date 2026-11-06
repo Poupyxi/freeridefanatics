@@ -52,7 +52,7 @@
       const slug = link ? new URL(link.href).pathname.split('/').pop().replace(/\.html$/, '') : '';
       const rider = data.riders[slug] || {};
       const name = text(row.querySelector('.clean-standing-name strong, th a, .who a, .team-identity strong')) || text(row.querySelector('th, .who'));
-      const metric = row.querySelector('.round-points, .total, .clean-standing-row > b');
+      const metric = row.querySelector('.round-points, .total') || (row.matches('.clean-standing-row') ? row.querySelector(':scope > b') : null);
       const time = row.querySelector('.round-time');
       const metricText = metric ? text(metric).replace(/\s*pts$/, '') : text(time);
       return {rank: text(row.querySelector('.clean-standing-rank, .round-place, .pos')), name,
@@ -142,13 +142,23 @@
     const context = {title:event.name || data.title, logo:event.logo || data.logo,
       handle:handle(event.instagram || data.instagram), team:panel?.dataset.standings === 'Teams',
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
-    const pages = isEvent ? [[]] : chunks(rows), urls = [];
+    const allPages = isEvent ? [[]] : chunks(rows), urls = [];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
     const heading = el('h2',isEvent ? (data.shareKind === 'competition' ? 'Share competition' : 'Share event') : 'Share ranking',dialog); heading.id='ranking-share-title'; dialog.setAttribute('aria-labelledby',heading.id);
     const close = el('button','Close ×',dialog); close.type='button'; close.className='ranking-share-close';
-    el('p',isEvent ? 'Share the event card, even before results are available.' : 'Choose your format and the pages to include. Each image contains up to 10 ranked entries.',dialog);
-    const label = el('label','Format ',dialog), select = el('select','',label);
+    el('p',isEvent ? 'Share the event card, even before results are available.' : 'Choose how much of the ranking to prepare. Each image contains up to 10 entries.',dialog);
+    const controls=el('div','',dialog);controls.className='ranking-share-controls';
+    const label = el('label','Format ',controls), select = el('select','',label);
     [['1350','Portrait · 1080 × 1350'],['1080','Square · 1080 × 1080']].forEach(([value,name]) => { const option=el('option',name,select); option.value=value; });
+    let range=null;
+    if(!isEvent && allPages.length>1){
+      const rangeLabel=el('label','Entries ',controls);range=el('select','',rangeLabel);
+      const choices=[[1,'Top 10']];
+      if(allPages.length>1)choices.push([2,'Top 20']);
+      choices.push([allPages.length,'Full ranking · '+rows.length]);
+      choices.forEach(([value,name])=>{const option=el('option',name,range);option.value=String(value);});
+      range.value=String(Math.min(2,allPages.length));
+    }
     const status=el('p','',dialog); status.setAttribute('role','status');
     const social=el('nav','',dialog); social.className='ranking-share-social'; social.setAttribute('aria-label','Share on social media');
     const links=socialLinks(location.href.split('#')[0],context.title+' — '+context.subtitle);
@@ -182,6 +192,7 @@
       share.disabled=download.disabled=instagram.disabled=true; status.textContent='Generating images…';
       release(); rendered=[]; gallery.replaceChildren();
       try {
+        const pages=allPages.slice(0,range ? Number(range.value) : allPages.length);
         for(let i=0;i<pages.length;i++) {
           const canvas=isEvent ? await drawEvent(Number(select.value),context) : await draw(pages[i],i,pages.length,Number(select.value),context);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
@@ -218,20 +229,31 @@
         instagramHelp.scrollIntoView({block:'nearest'});
       }
     };
-    select.onchange=render;
+    select.onchange=render;if(range)range.onchange=render;
     document.body.append(dialog);dialog.showModal();await render();
   }
   if(data.eventCard){
-    const main=document.querySelector('main .wrap') || document.querySelector('main');
-    if(main){const button=el('button',data.shareKind === 'competition' ? 'Share competition ↗' : 'Share event ↗');button.type='button';button.className='ranking-share-trigger event-share-trigger';button.onclick=()=>open(null,button);main.prepend(button);}
+    const isCompetition=data.shareKind === 'competition';
+    const countHeading=isCompetition ? document.querySelector('#events .section-head h2') : null;
+    const host=countHeading?.parentElement || document.querySelector('.round-hero .wrap') || document.querySelector('main .wrap');
+    if(host){
+      host.classList.add(isCompetition ? 'ranking-share-count-host' : 'ranking-share-event-host');
+      const button=el('button',isCompetition ? 'Share' : 'Share event');button.type='button';
+      button.className='ranking-share-trigger event-share-trigger'+(isCompetition?' competition-share-trigger':'');
+      button.setAttribute('aria-label',(isCompetition ? 'Share competition' : 'Share event')+' as an image');
+      button.onclick=()=>open(null,button);host.append(button);
+    }
   }
-  document.querySelectorAll('main .standings-block').forEach(panel=>{
-    if (!readRows(panel).length) return;
-    const button=el('button','Share ranking ↗');button.type='button';button.className='ranking-share-trigger';
-    button.onclick=()=>open(panel,button);panel.prepend(button);
+  document.querySelectorAll('main .standings-toolbar').forEach(toolbar=>{
+    const section=toolbar.closest('section') || toolbar.parentElement;
+    const panels=[...section.querySelectorAll('.standings-block')].filter(panel=>readRows(panel).length);
+    if(!panels.length)return;
+    const button=el('button','Share ranking');button.type='button';button.className='ranking-share-trigger ranking-share-ranking-trigger';
+    button.setAttribute('aria-label','Share the currently displayed ranking as images');
+    button.onclick=()=>{
+      const panel=panels.find(item=>!item.hidden && getComputedStyle(item).display!=='none') || panels[0];
+      open(panel,button);
+    };
+    toolbar.classList.add('ranking-share-toolbar-host');toolbar.append(button);
   });
-  if(!document.querySelector('.ranking-share-trigger')){
-    const main=document.querySelector('main .wrap');
-    if(main){const button=el('button','Share ranking — results not yet available',main);button.type='button';button.disabled=true;button.className='ranking-share-trigger';}
-  }
 }());

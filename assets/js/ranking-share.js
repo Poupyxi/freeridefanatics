@@ -114,18 +114,39 @@
     fit(ctx,(index+1)+' / '+count,900,height-36,130,23);
     return canvas;
   }
+  async function drawEvent(height, context) {
+    const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#f5f1e9';ctx.fillRect(0,0,1080,height);
+    ctx.fillStyle='#17181b';fit(ctx,'RIDERSFANATICS / EVENTS',64,80,950,26,true);
+    ctx.strokeStyle='#ccc5b9';ctx.lineWidth=1;
+    for(let y=120;y<height-100;y+=64){ctx.beginPath();ctx.moveTo(64,y);ctx.lineTo(1016,y);ctx.stroke();}
+    const logo=await loadImage(context.logo);
+    if(logo){const scale=Math.min(650/logo.width,260/logo.height);ctx.drawImage(logo,64,150,logo.width*scale,logo.height*scale);}
+    ctx.fillStyle='#b4491c';ctx.fillRect(64,455,8,110);
+    ctx.fillStyle='#17181b';fit(ctx,context.title.toUpperCase(),94,505,920,60,true);
+    fit(ctx,String(data.season || ''),94,553,920,30);
+    const card=data.eventCard;
+    const details=[['DATE',card.date || 'To be announced'],['LOCATION',card.location || 'To be announced'],['DISCIPLINE',card.discipline || 'To be announced'],['STATUS',card.status]];
+    details.forEach(([label,value],i)=>{const y=635+i*80;ctx.fillStyle='#b4491c';fit(ctx,label,64,y,210,20,true);ctx.fillStyle='#17181b';fit(ctx,value,285,y,730,30,true);});
+    ctx.fillStyle='#b4491c';ctx.fillRect(64,height-120,952,3);
+    ctx.fillStyle='#17181b';fit(ctx,context.handle || 'ridersfanatics.com',64,height-75,950,26,true);
+    fit(ctx,location.host+location.pathname,64,height-35,950,18);
+    return canvas;
+  }
   async function open(panel, opener) {
-    const rows = readRows(panel);
-    if (!rows.length) return;
-    const event = data.events[panel.dataset.competition] || {};
+    const isEvent=!panel;
+    const rows = isEvent ? [] : readRows(panel);
+    if (!isEvent && !rows.length) return;
+    const event = isEvent ? {} : data.events[panel.dataset.competition] || {};
     const context = {title:event.name || data.title, logo:event.logo || data.logo,
-      handle:handle(event.instagram || data.instagram), team:panel.dataset.standings === 'Teams',
-      subtitle:[panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
-    const pages = chunks(rows), urls = [];
+      handle:handle(event.instagram || data.instagram), team:panel?.dataset.standings === 'Teams',
+      subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
+    const pages = isEvent ? [[]] : chunks(rows), urls = [];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
-    const heading = el('h2','Share ranking',dialog); heading.id='ranking-share-title'; dialog.setAttribute('aria-labelledby',heading.id);
+    const heading = el('h2',isEvent ? 'Share event' : 'Share ranking',dialog); heading.id='ranking-share-title'; dialog.setAttribute('aria-labelledby',heading.id);
     const close = el('button','Close ×',dialog); close.type='button'; close.className='ranking-share-close';
-    el('p','Choose your format and the pages to include. Each image contains up to 10 ranked entries.',dialog);
+    el('p',isEvent ? 'Share the event card, even before results are available.' : 'Choose your format and the pages to include. Each image contains up to 10 ranked entries.',dialog);
     const label = el('label','Format ',dialog), select = el('select','',label);
     [['1350','Portrait · 1080 × 1350'],['1080','Square · 1080 × 1080']].forEach(([value,name]) => { const option=el('option',name,select); option.value=value; });
     const status=el('p','',dialog); status.setAttribute('role','status');
@@ -162,16 +183,16 @@
       release(); rendered=[]; gallery.replaceChildren();
       try {
         for(let i=0;i<pages.length;i++) {
-          const canvas=await draw(pages[i],i,pages.length,Number(select.value),context);
+          const canvas=isEvent ? await drawEvent(Number(select.value),context) : await draw(pages[i],i,pages.length,Number(select.value),context);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
           if(token!==version)return;
           if(!blob)throw new Error('Image generation failed');
           const item=el('div','',gallery), choice=el('label','',item), checkbox=el('input','',choice);
           checkbox.type='checkbox'; checkbox.checked=previous[i] ?? true;
-          choice.append(document.createTextNode(' Entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)));
+          choice.append(document.createTextNode(isEvent ? ' Event card' : ' Entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)));
           const url=URL.createObjectURL(blob); urls.push(url);
-          canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',context.title+' — entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)); item.append(canvas);
-          const file=new File([blob],'ridersfanatics-ranking-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'});
+          canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',isEvent ? context.title+' — event card' : context.title+' — entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)); item.append(canvas);
+          const file=new File([blob],'ridersfanatics-'+(isEvent ? 'event' : 'ranking')+'-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'});
           const link=el('a','Download this image',item); link.href=url; link.download=file.name;
           rendered.push({checkbox,file,url});
         }
@@ -199,6 +220,10 @@
     };
     select.onchange=render;
     document.body.append(dialog);dialog.showModal();await render();
+  }
+  if(data.eventCard){
+    const main=document.querySelector('main .wrap') || document.querySelector('main');
+    if(main){const button=el('button','Share event ↗');button.type='button';button.className='ranking-share-trigger event-share-trigger';button.onclick=()=>open(null,button);main.prepend(button);}
   }
   document.querySelectorAll('main .standings-block').forEach(panel=>{
     if (!readRows(panel).length) return;

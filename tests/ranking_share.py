@@ -21,6 +21,7 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "load_competit
     assert payload["riders"]["sample"]["photo"] == "../assets/img/riders/sample.webp"
     assert payload["eventCard"] is not None
     assert payload["competitionCard"]["eventsCount"] == 0
+    assert payload["competitionCard"]["calendar"] == []
     assert payload["shareKind"] == "competition"
     competition["events"] = [{"name": "Future race", "date": "2099-01-20", "location": "Test venue"}]
     with patch.object(build, "competition_event_logo", return_value=None):
@@ -30,4 +31,5 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "load_competit
         assert payload["eventCard"]["location"] == "Test venue"
         assert payload["competitionCard"]["eventsCount"] == 1
         assert payload["competitionCard"]["nextEvent"]["name"] == "Future race"
+        assert payload["competitionCard"]["calendar"][0]["location"] == "Test venue"
 print("Ranking share environment and metadata: PASS")

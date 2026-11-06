@@ -55,6 +55,18 @@ const {chromium} = require('playwright');
     await page.getByText('Download this image',{exact:true}).click();
     assert.equal((await eventDownload).suggestedFilename(),'ridersfanatics-event-01.png');
     await page.screenshot({path:'/tmp/event-share-preview.png'});
+    await page.keyboard.press('Escape');
+    await page.goto(base+'/competitions/uci-world-series-dh-2027.html');
+    await page.getByRole('button',{name:'Share competition ↗',exact:true}).click();
+    await page.getByRole('status').filter({hasText:'images ready'}).waitFor();
+    assert.equal(await page.locator('.ranking-share-gallery canvas').count(),1);
+    await page.keyboard.press('Escape');
+    const upcoming=await page.locator('a[href*="/rounds/"]').first().getAttribute('href');
+    assert(upcoming,'Upcoming event must have a page link');
+    await page.goto(new URL(upcoming,page.url()).href);
+    await page.getByRole('button',{name:'Share event ↗',exact:true}).click();
+    await page.getByRole('status').filter({hasText:'images ready'}).waitFor();
+    assert.equal(await page.locator('.ranking-share-gallery canvas').count(),1);
     assert.deepEqual(errors,[]);
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

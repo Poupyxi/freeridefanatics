@@ -144,7 +144,7 @@
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
     const pages = isEvent ? [[]] : chunks(rows), urls = [];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
-    const heading = el('h2',isEvent ? 'Share event' : 'Share ranking',dialog); heading.id='ranking-share-title'; dialog.setAttribute('aria-labelledby',heading.id);
+    const heading = el('h2',isEvent ? (data.shareKind === 'competition' ? 'Share competition' : 'Share event') : 'Share ranking',dialog); heading.id='ranking-share-title'; dialog.setAttribute('aria-labelledby',heading.id);
     const close = el('button','Close ×',dialog); close.type='button'; close.className='ranking-share-close';
     el('p',isEvent ? 'Share the event card, even before results are available.' : 'Choose your format and the pages to include. Each image contains up to 10 ranked entries.',dialog);
     const label = el('label','Format ',dialog), select = el('select','',label);
@@ -223,7 +223,7 @@
   }
   if(data.eventCard){
     const main=document.querySelector('main .wrap') || document.querySelector('main');
-    if(main){const button=el('button','Share event ↗');button.type='button';button.className='ranking-share-trigger event-share-trigger';button.onclick=()=>open(null,button);main.prepend(button);}
+    if(main){const button=el('button',data.shareKind === 'competition' ? 'Share competition ↗' : 'Share event ↗');button.type='button';button.className='ranking-share-trigger event-share-trigger';button.onclick=()=>open(null,button);main.prepend(button);}
   }
   document.querySelectorAll('main .standings-block').forEach(panel=>{
     if (!readRows(panel).length) return;

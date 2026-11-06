@@ -45,6 +45,9 @@ assert sync_notion.season_sport_and_discipline(["Snowboard Freeride"]) == ("Snow
 assert sync_notion.season_sport_and_discipline(["Bike Downhill"]) == ("Mountain bike", "Bike Downhill")
 assert sync_notion.season_short_name("FreeRideWorldTour - 2027") == "FreeRideWorldTour"
 assert sync_notion.instagram_handle("https://instagram.com/valid.handle") == "@valid.handle"
+assert sync_notion.instagram_handle("https://www.ucimtbworldseries.com/calendar") is None
+assert sync_notion.instagram_handle("https://instagram.com/p/fakehandle") is None
+assert sync_notion.instagram_handle("https://www.instagram.com/uci_mtbworldseries/?hl=en") == "@uci_mtbworldseries"
 assert sync_notion.instagram_handle("@www.freerideworldtour.com") is None
 assert sync_notion.instagram_handle("@kings-queens-corbets") is None
 season_id = "4089cf6b-f148-8051-9dc5-d685f4e935ce"

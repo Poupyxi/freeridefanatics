@@ -19,7 +19,8 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "load_competit
     assert payload["instagram"] == "demo.cup"
     assert payload["riders"]["sample"]["country"] == "FRA"
     assert payload["riders"]["sample"]["photo"] == "../assets/img/riders/sample.webp"
-    assert payload["eventCard"] is None
+    assert payload["eventCard"] is not None
+    assert payload["shareKind"] == "competition"
     competition["events"] = [{"name": "Future race", "date": "2099-01-20", "location": "Test venue"}]
     with patch.object(build, "competition_event_logo", return_value=None):
         markup = build.ranking_share_assets([], competition, "../", "Future race")

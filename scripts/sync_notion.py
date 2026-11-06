@@ -116,6 +116,11 @@ def slugify(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
 
+ROUTE_SLUGS_BY_NAME = {
+    slugify(name): slug for slug, name in PRIORITY_PUBLIC_NAMES.items()
+}
+
+
 def page_id(value: str | None) -> str | None:
     if not value:
         return None
@@ -816,7 +821,11 @@ def export(client: Notion):
         })
         raw_name = name.strip()
         route_handle = (handle or "").lower().lstrip("@")
-        public_slug = ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(raw_name)
+        public_slug = (
+            ROUTE_SLUGS_BY_HANDLE.get(route_handle)
+            or ROUTE_SLUGS_BY_NAME.get(slugify(raw_name))
+            or slugify(raw_name)
+        )
         display_name = PRIORITY_PUBLIC_NAMES.get(public_slug, display_rider_name(raw_name))
         if not display_name:
             continue

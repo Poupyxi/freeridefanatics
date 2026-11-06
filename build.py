@@ -2061,15 +2061,31 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         }
     entry = next((entry for entry in competition.get("events") or []
                   if entry.get("name") == event), {})
+    event_card = None
+    if event:
+        date = entry.get("date") or ""
+        if date.startswith("9999-"):
+            date = ""
+        recorded = any(result.get("event") == event and result.get("category") == competition["name"]
+                       for rider in riders for result in rider.get("competition_history") or [])
+        today = os.environ.get("RF_TODAY", time.strftime("%Y-%m-%d"))
+        status = "Results available" if recorded else "Results pending"
+        if date and date[:10] > today:
+            status = "Coming soon"
+        if str(entry.get("status", "")).lower() in ("cancelled", "canceled"):
+            status = "Cancelled"
+        event_card = {"date": date, "location": entry.get("location") or "",
+                      "discipline": competition.get("discipline") or "",
+                      "status": status}
     payload = {
         "title": event or competition["name"], "season": competition.get("season"),
         "instagram": entry.get("instagram") or competition.get("instagram") or "",
         "logo": prefix + logo["src"] if logo else "",
-        "riders": portraits, "events": events,
+        "riders": portraits, "events": events, "eventCard": event_card,
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
-            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=2">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=2" defer></script>')
+            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=3">'
+            f'<script src="{prefix}assets/js/ranking-share.js?v=3" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):

@@ -19,4 +19,11 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "load_competit
     assert payload["instagram"] == "demo.cup"
     assert payload["riders"]["sample"]["country"] == "FRA"
     assert payload["riders"]["sample"]["photo"] == "../assets/img/riders/sample.webp"
+    assert payload["eventCard"] is None
+    competition["events"] = [{"name": "Future race", "date": "2099-01-20", "location": "Test venue"}]
+    with patch.object(build, "competition_event_logo", return_value=None):
+        markup = build.ranking_share_assets([], competition, "../", "Future race")
+        payload = json.loads(unescape(re.search('data-payload="([^"]+)"', markup)[1]))
+        assert payload["eventCard"]["status"] == "Coming soon"
+        assert payload["eventCard"]["location"] == "Test venue"
 print("Ranking share environment and metadata: PASS")

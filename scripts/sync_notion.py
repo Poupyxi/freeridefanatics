@@ -377,7 +377,15 @@ def team_season_assignments(link_pages, rider_ids, teams, seasons):
 def instagram_handle(url: str | None) -> str | None:
     if not url:
         return None
-    candidate = url.strip().rstrip("/").split("/")[-1].split("?")[0]
+    candidate = url.strip()
+    if "://" in candidate or candidate.lower().startswith(("instagram.com/", "www.instagram.com/")):
+        parsed = urllib.parse.urlparse(candidate if "://" in candidate else "https://" + candidate)
+        if parsed.scheme not in ("http", "https") or parsed.hostname not in ("instagram.com", "www.instagram.com"):
+            return None
+        parts = parsed.path.strip("/").split("/")
+        if len(parts) != 1 or parts[0].lower() in ("p", "reel", "reels", "stories", "explore", "accounts"):
+            return None
+        candidate = parts[0]
     candidate = candidate.lstrip("@")
     # Instagram usernames contain only letters, numbers, periods and
     # underscores. Reject domains and editorial placeholders instead of
@@ -588,6 +596,7 @@ def export(client: Notion):
             "name": scalar_value(item, "Name competition"),
             "date": scalar_value(item, "Date") or "9999-12-31",
             "location": event_location(item),
+            "instagram": instagram_handle(scalar_value(item, "Instagram")),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }

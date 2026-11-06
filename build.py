@@ -2061,7 +2061,8 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         }
     entry = next((entry for entry in competition.get("events") or []
                   if entry.get("name") == event), {})
-    event_card = None
+    event_card = {"date": "", "location": "", "discipline": competition.get("discipline") or "",
+                  "status": competition_schedule_status(competition)[0]}
     if event:
         date = entry.get("date") or ""
         if date.startswith("9999-"):
@@ -2082,10 +2083,11 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         "instagram": entry.get("instagram") or competition.get("instagram") or "",
         "logo": prefix + logo["src"] if logo else "",
         "riders": portraits, "events": events, "eventCard": event_card,
+        "shareKind": "event" if event else "competition",
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
             f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=3">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=3" defer></script>')
+            f'<script src="{prefix}assets/js/ranking-share.js?v=4" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):
@@ -3289,7 +3291,7 @@ def build_competition_detail(riders, competition, winter=False):
             event_href = f'{competition["id"]}/rounds/{competition_round_path_slug(competition, event_name)}.html'
             action = (f'<a class="season-race-link" href="{event_href}">'
                       f'{"View results" if has_results else "View event"} <span aria-hidden="true">→</span></a>'
-                      if has_results or competition["id"] == "redbull-2026" or winter
+                      if IS_PREPROD or has_results or competition["id"] == "redbull-2026" or winter
                       else '<span class="season-race-pending">Awaiting results</span>')
             event_summary = f'<p>{esc(official_event["summary"])}</p>' if official_event else ""
             event_logo = competition_event_logo(competition_logos, competition, event_name)

@@ -175,23 +175,23 @@
   async function drawCompetition(height,context){
     const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
     const ctx=canvas.getContext('2d'),card=data.competitionCard||{},calendar=(card.calendar||[]).slice(0,10);
-    const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,'#050607');gradient.addColorStop(.55,'#101315');gradient.addColorStop(1,'#030405');ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,height);
-    ctx.fillStyle='#14191b';ctx.beginPath();ctx.moveTo(0,height*.62);ctx.lineTo(210,height*.36);ctx.lineTo(390,height*.58);ctx.lineTo(620,height*.29);ctx.lineTo(880,height*.61);ctx.lineTo(1080,height*.4);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
-    ctx.fillStyle='#0b0e10';ctx.beginPath();ctx.moveTo(0,height*.75);ctx.lineTo(260,height*.5);ctx.lineTo(450,height*.7);ctx.lineTo(720,height*.46);ctx.lineTo(1080,height*.73);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
+    const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,'#111214');gradient.addColorStop(.55,'#1b1816');gradient.addColorStop(1,'#090a0b');ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,height);
+    ctx.fillStyle='#27211d';ctx.beginPath();ctx.moveTo(0,height*.62);ctx.lineTo(210,height*.36);ctx.lineTo(390,height*.58);ctx.lineTo(620,height*.29);ctx.lineTo(880,height*.61);ctx.lineTo(1080,height*.4);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
+    ctx.fillStyle='#171515';ctx.beginPath();ctx.moveTo(0,height*.75);ctx.lineTo(260,height*.5);ctx.lineTo(450,height*.7);ctx.lineTo(720,height*.46);ctx.lineTo(1080,height*.73);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
     const compact=height===1080,panelTop=compact?38:52,panelHeight=compact?138:178;
-    ctx.fillStyle='#090b0ce8';ctx.beginPath();ctx.roundRect(54,panelTop,972,panelHeight,18);ctx.fill();
+    ctx.fillStyle='#0d0e10ee';ctx.beginPath();ctx.roundRect(54,panelTop,972,panelHeight,18);ctx.fill();
     const logo=await loadImage(context.logo);
     if(logo){const scale=Math.min(650/logo.width,(panelHeight-34)/logo.height);const w=logo.width*scale,h=logo.height*scale;ctx.drawImage(logo,540-w/2,panelTop+(panelHeight-h)/2,w,h);}
     else{ctx.fillStyle='#fff';fit(ctx,'COMPETITION',140,panelTop+panelHeight/2+15,800,54,true);}
     const title=String(context.title||'').replace(new RegExp('\\s+'+String(data.season||'')+'$'),'').toUpperCase();
     const titleTop=panelTop+panelHeight+(compact?58:72),titleSize=compact?37:48;
-    ctx.fillStyle='#95e100';ctx.fillRect(34,titleTop-35,5,86);ctx.fillStyle='#f20b58';ctx.fillRect(1041,titleTop-35,5,86);
-    ctx.fillStyle='#fff';ctx.textAlign='center';lines(ctx,String(data.season||'')+' '+title+' CALENDAR',540,titleTop,960,titleSize,titleSize+6,2,true);ctx.textAlign='left';
+    ctx.fillStyle='#b4491c';ctx.fillRect(34,titleTop-35,5,86);ctx.fillStyle='#e8dfd1';ctx.fillRect(1041,titleTop-35,5,86);
+    ctx.fillStyle='#f5f1e9';ctx.textAlign='center';lines(ctx,String(data.season||'')+' '+title+' CALENDAR',540,titleTop,960,titleSize,titleSize+6,2,true);ctx.textAlign='left';
     const listTop=titleTop+(compact?104:128),footerY=height-58,rowHeight=Math.min(compact?58:75,(footerY-listTop-18)/Math.max(calendar.length,1));
-    calendar.forEach((item,index)=>{const y=listTop+index*rowHeight,baseline=y+rowHeight*.66,nation=eventNation(item);ctx.fillStyle=index%2?'#090b0caa':'#171b1dcc';ctx.fillRect(48,y,984,rowHeight-3);ctx.font=(compact?24:30)+'px Arial, sans-serif';ctx.fillText(flag(nation),68,baseline);ctx.fillStyle='#fff';fit(ctx,nation,124,baseline,72,compact?18:21,true);ctx.fillStyle='#d9dcde';fit(ctx,compactDate(item.date),205,baseline,145,compact?18:22);ctx.fillStyle='#fff';fit(ctx,String(item.name||item.location||'Event').replace(/\s*-\s*20\d{2}\s*$/,''),365,baseline,510,compact?21:27,true);ctx.fillStyle='#d9dcde';fit(ctx,disciplineCode(item.discipline||card.discipline),925,baseline,82,compact?17:20);});
+    calendar.forEach((item,index)=>{const y=listTop+index*rowHeight,baseline=y+rowHeight*.66,nation=eventNation(item);ctx.fillStyle=index%2?'#121112cc':'#211c19dd';ctx.fillRect(48,y,984,rowHeight-3);ctx.font=(compact?24:30)+'px Arial, sans-serif';ctx.fillText(flag(nation),68,baseline);ctx.fillStyle='#f5f1e9';fit(ctx,nation,124,baseline,72,compact?18:21,true);ctx.fillStyle='#c9c0b5';fit(ctx,compactDate(item.date),205,baseline,145,compact?18:22);ctx.fillStyle='#f5f1e9';fit(ctx,String(item.name||item.location||'Event').replace(/\s*-\s*20\d{2}\s*$/,''),365,baseline,510,compact?21:27,true);ctx.fillStyle='#c9c0b5';fit(ctx,disciplineCode(item.discipline||card.discipline),925,baseline,82,compact?17:20);});
     if(!calendar.length){ctx.fillStyle='#fff';fit(ctx,'CALENDAR COMING SOON',120,listTop+90,840,44,true);}
-    ctx.fillStyle='#95e100';ctx.fillRect(48,height-94,54,5);ctx.fillStyle='#f20b58';ctx.fillRect(102,height-94,54,5);
-    ctx.fillStyle='#fff';fit(ctx,context.handle||'@ridersfanatics',48,height-50,510,20,true);ctx.fillStyle='#aeb2b4';fit(ctx,'RIDERSFANATICS.COM',760,height-50,270,17,true);
+    ctx.fillStyle='#b4491c';ctx.fillRect(48,height-94,54,5);ctx.fillStyle='#e8dfd1';ctx.fillRect(102,height-94,54,5);
+    ctx.fillStyle='#f5f1e9';fit(ctx,context.handle||'@ridersfanatics',48,height-50,510,20,true);ctx.fillStyle='#a99f94';fit(ctx,'RIDERSFANATICS.COM',760,height-50,270,17,true);
     return canvas;
   }
   async function open(panel, opener) {

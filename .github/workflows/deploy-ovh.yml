@@ -41,6 +41,7 @@ jobs:
     timeout-minutes: 15
     env:
       RF_BUILD_ENV: production
+      RF_ADS_MODE: live
       RF_DATA_SOURCE: notion
       RF_DATA_PATH: data/riders.json
       RF_COMPETITIONS_PATH: data/competitions.json
@@ -378,6 +379,7 @@ jobs:
     environment: production
     env:
       RF_BUILD_ENV: production
+      RF_ADS_MODE: live
       RF_DATA_SOURCE: notion
       RF_DATA_PATH: data/notion/riders.json
       RF_COMPETITIONS_PATH: data/notion/competitions.json
@@ -478,6 +480,9 @@ jobs:
           python3 build.py
           python3 tests/adsense_seo_readiness.py
           python3 tests/environment_visibility.py
+          grep -q 'data-ad-client="ca-pub-6372404738608947"' index.html
+          grep -q 'data-ad-slot="7556439197"' index.html
+          ! grep -q 'Preview only — no live ad served' index.html
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html
 

@@ -26,7 +26,7 @@
     }
     return /^[A-Z]{2}$/.test(code) ? [...code].map(c => String.fromCodePoint(127397 + c.charCodeAt(0))).join('') : '';
   }
-  if (typeof module !== 'undefined') module.exports = {chunks, handle, flag, socialLinks};
+  if (typeof module !== 'undefined') module.exports = {chunks, handle, flag, socialLinks, eventNation};
   if (typeof document === 'undefined') return;
   const source = document.getElementById('ranking-share-data');
   if (!source) return;
@@ -99,7 +99,7 @@
     const explicit=String(item.country||'').trim();
     if(explicit)return explicit.toUpperCase();
     const value=(String(item.name||'')+' '+String(item.location||'')).toLowerCase();
-    const nations=[['nové město','CZE'],['czech','CZE'],['loudenvielle','FRA'],['les gets','FRA'],['france','FRA'],['leogang','AUT'],['austria','AUT'],['la thuile','ITA'],['val di sole','ITA'],['italy','ITA'],['pal arinsal','AND'],['andorra','AND'],['lenzerheide','SUI'],['switzerland','SUI'],['soldier hollow','USA'],['midway','USA'],['utah','USA'],['united states','USA'],['whistler','CAN'],['british columbia','CAN'],['canada','CAN']];
+    const nations=[['nové město','CZE'],['czech','CZE'],['mona yongpyong','KOR'],['mona pyongyong','KOR'],['yongpyong','KOR'],['south korea','KOR'],['korea','KOR'],['loudenvielle','FRA'],['les gets','FRA'],['france','FRA'],['leogang','AUT'],['austria','AUT'],['la thuile','ITA'],['val di sole','ITA'],['italy','ITA'],['pal arinsal','AND'],['andorra','AND'],['lenzerheide','SUI'],['switzerland','SUI'],['lake placid','USA'],['soldier hollow','USA'],['midway','USA'],['utah','USA'],['united states','USA'],['whistler','CAN'],['british columbia','CAN'],['canada','CAN']];
     return nations.find(([label])=>value.includes(label))?.[1]||'—';
   }
   function disciplineCode(value){

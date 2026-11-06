@@ -2073,6 +2073,16 @@ def ranking_share_assets(riders, competition, prefix, event=None):
     competition_card = {
         "discipline": competition.get("discipline") or "",
         "eventsCount": len(competition_events),
+        "calendar": [
+            {
+                "name": item.get("name") or "",
+                "date": "" if str(item.get("date") or "").startswith("9999-") else item.get("date") or "",
+                "location": item.get("location") or "",
+                "country": item.get("country_code") or item.get("country") or "",
+                "discipline": item.get("discipline") or competition.get("discipline") or "",
+            }
+            for item in sorted(competition_events, key=lambda current: str(current.get("date") or "9999"))
+        ],
         "nextEvent": {
             "name": next_event.get("name") or "",
             "date": next_event.get("date") or "",
@@ -2104,8 +2114,8 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         "shareKind": "event" if event else "competition",
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
-            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=6">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=7" defer></script>')
+            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=7">'
+            f'<script src="{prefix}assets/js/ranking-share.js?v=8" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):

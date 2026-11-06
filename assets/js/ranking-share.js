@@ -72,6 +72,23 @@
     while (ctx.measureText(label).width > width && font > 16);
     ctx.fillText(label, x, y, width);
   }
+  function lines(ctx,label,x,y,width,size,lineHeight,maxLines=2,bold=false){
+    ctx.font=(bold?'800 ':'400 ')+size+'px Arial, sans-serif';
+    const words=String(label||'').trim().split(/\s+/), output=[];
+    let current='';
+    words.forEach(word=>{const candidate=current?current+' '+word:word;if(ctx.measureText(candidate).width<=width||!current)current=candidate;else{output.push(current);current=word;}});
+    if(current)output.push(current);
+    const visible=output.slice(0,maxLines);
+    if(output.length>maxLines)visible[maxLines-1]=visible[maxLines-1].replace(/[.…]*$/,'')+'…';
+    visible.forEach((line,index)=>ctx.fillText(line,x,y+index*lineHeight,width));
+    return visible.length;
+  }
+  function prettyDate(value){
+    if(!value)return 'DATE TBA';
+    const date=new Date(String(value).slice(0,10)+'T12:00:00Z');
+    if(Number.isNaN(date.getTime()))return String(value).toUpperCase();
+    return new Intl.DateTimeFormat('en',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(date).toUpperCase();
+  }
   async function draw(rows, index, count, height, context) {
     const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = height;
     const ctx = canvas.getContext('2d');
@@ -134,6 +151,36 @@
     fit(ctx,location.host+location.pathname,64,height-35,950,18);
     return canvas;
   }
+  async function drawCompetition(height,context){
+    const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
+    const ctx=canvas.getContext('2d'),card=data.competitionCard||{},next=card.nextEvent||{};
+    ctx.fillStyle='#f3f0e9';ctx.fillRect(0,0,1080,height);
+    ctx.fillStyle='#17181b';ctx.fillRect(0,0,1080,112);
+    ctx.fillStyle='#f3f0e9';fit(ctx,'RIDERSFANATICS',60,70,500,27,true);
+    ctx.fillStyle='#d76332';fit(ctx,'COMPETITION / '+String(data.season||'SEASON'),720,70,300,20,true);
+    const panelTop=154,panelHeight=height===1080?270:340;
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect(60,panelTop,960,panelHeight,24);ctx.fill();
+    const logo=await loadImage(context.logo);
+    if(logo){const scale=Math.min(720/logo.width,(panelHeight-80)/logo.height);const w=logo.width*scale,h=logo.height*scale;ctx.drawImage(logo,540-w/2,panelTop+(panelHeight-h)/2,w,h);}
+    else{ctx.fillStyle='#17181b';fit(ctx,'COMPETITION',140,panelTop+panelHeight/2+15,800,60,true);}
+    const title=String(context.title||'').replace(new RegExp('\\s+'+String(data.season||'')+'$'),'').toUpperCase();
+    const titleTop=panelTop+panelHeight+92;
+    ctx.fillStyle='#d76332';ctx.fillRect(60,titleTop-48,9,178);
+    ctx.fillStyle='#17181b';lines(ctx,title,96,titleTop,900,height===1080?56:68,height===1080?62:75,2,true);
+    const metaY=titleTop+(height===1080?155:185);
+    ctx.strokeStyle='#c9c3b8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(60,metaY);ctx.lineTo(1020,metaY);ctx.stroke();
+    const cells=[
+      [String(card.eventsCount||0).padStart(2,'0'),'EVENTS'],
+      [prettyDate(next.date),next.name?'NEXT EVENT':'CALENDAR'],
+      [next.location||card.discipline||'TO BE ANNOUNCED',next.location?'LOCATION':'DISCIPLINE'],
+    ];
+    const cellTop=metaY+52,cellWidth=320;
+    cells.forEach(([value,label],index)=>{const x=60+index*cellWidth;if(index){ctx.strokeStyle='#c9c3b8';ctx.beginPath();ctx.moveTo(x,cellTop-18);ctx.lineTo(x,cellTop+105);ctx.stroke();}ctx.fillStyle='#d76332';fit(ctx,label,x+(index?28:0),cellTop,cellWidth-38,17,true);ctx.fillStyle='#17181b';lines(ctx,value,x+(index?28:0),cellTop+48,cellWidth-42,25,30,2,true);});
+    ctx.fillStyle='#17181b';ctx.fillRect(60,height-118,960,2);
+    ctx.fillStyle='#17181b';fit(ctx,context.handle||'@ridersfanatics',60,height-70,500,22,true);
+    ctx.fillStyle='#6e6f72';fit(ctx,'ridersfanatics.com',760,height-70,260,19);
+    return canvas;
+  }
   async function open(panel, opener) {
     const isEvent=!panel;
     const rows = isEvent ? [] : readRows(panel);
@@ -194,7 +241,7 @@
       try {
         const pages=allPages.slice(0,range ? Number(range.value) : allPages.length);
         for(let i=0;i<pages.length;i++) {
-          const canvas=isEvent ? await drawEvent(Number(select.value),context) : await draw(pages[i],i,pages.length,Number(select.value),context);
+          const canvas=isEvent ? (data.shareKind==='competition' ? await drawCompetition(Number(select.value),context) : await drawEvent(Number(select.value),context)) : await draw(pages[i],i,pages.length,Number(select.value),context);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
           if(token!==version)return;
           if(!blob)throw new Error('Image generation failed');

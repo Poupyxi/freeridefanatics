@@ -2059,8 +2059,26 @@ def ranking_share_assets(riders, competition, prefix, event=None):
             "name": name, "instagram": entry.get("instagram") or "",
             "logo": prefix + event_logo["src"] if event_logo else "",
         }
-    entry = next((entry for entry in competition.get("events") or []
+    competition_events = [item for item in (competition.get("events") or []) if item.get("name")]
+    entry = next((entry for entry in competition_events
                   if entry.get("name") == event), {})
+    today = os.environ.get("RF_TODAY", time.strftime("%Y-%m-%d"))
+    dated_events = [item for item in competition_events
+                    if item.get("date") and not str(item.get("date")).startswith("9999-")]
+    upcoming_events = sorted(
+        (item for item in dated_events if str(item.get("date"))[:10] >= today),
+        key=lambda item: str(item.get("date")),
+    )
+    next_event = upcoming_events[0] if upcoming_events else (dated_events[-1] if dated_events else {})
+    competition_card = {
+        "discipline": competition.get("discipline") or "",
+        "eventsCount": len(competition_events),
+        "nextEvent": {
+            "name": next_event.get("name") or "",
+            "date": next_event.get("date") or "",
+            "location": next_event.get("location") or "",
+        },
+    }
     event_card = {"date": "", "location": "", "discipline": competition.get("discipline") or "",
                   "status": competition_schedule_status(competition)[0]}
     if event:
@@ -2069,7 +2087,6 @@ def ranking_share_assets(riders, competition, prefix, event=None):
             date = ""
         recorded = any(result.get("event") == event and result.get("category") == competition["name"]
                        for rider in riders for result in rider.get("competition_history") or [])
-        today = os.environ.get("RF_TODAY", time.strftime("%Y-%m-%d"))
         status = "Results available" if recorded else "Results pending"
         if date and date[:10] > today:
             status = "Coming soon"
@@ -2083,11 +2100,12 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         "instagram": entry.get("instagram") or competition.get("instagram") or "",
         "logo": prefix + logo["src"] if logo else "",
         "riders": portraits, "events": events, "eventCard": event_card,
+        "competitionCard": competition_card,
         "shareKind": "event" if event else "competition",
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
-            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=5">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=6" defer></script>')
+            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=6">'
+            f'<script src="{prefix}assets/js/ranking-share.js?v=7" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):

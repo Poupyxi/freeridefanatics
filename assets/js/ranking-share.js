@@ -89,6 +89,27 @@
     if(Number.isNaN(date.getTime()))return String(value).toUpperCase();
     return new Intl.DateTimeFormat('en',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(date).toUpperCase();
   }
+  function compactDate(value){
+    if(!value)return 'TBA';
+    const date=new Date(String(value).slice(0,10)+'T12:00:00Z');
+    if(Number.isNaN(date.getTime()))return String(value).toUpperCase();
+    return new Intl.DateTimeFormat('en',{day:'2-digit',month:'short',timeZone:'UTC'}).format(date).toUpperCase();
+  }
+  function eventNation(item){
+    const explicit=String(item.country||'').trim();
+    if(explicit)return explicit.toUpperCase();
+    const value=(String(item.name||'')+' '+String(item.location||'')).toLowerCase();
+    const nations=[['nové město','CZE'],['czech','CZE'],['loudenvielle','FRA'],['les gets','FRA'],['france','FRA'],['leogang','AUT'],['austria','AUT'],['la thuile','ITA'],['val di sole','ITA'],['italy','ITA'],['pal arinsal','AND'],['andorra','AND'],['lenzerheide','SUI'],['switzerland','SUI'],['soldier hollow','USA'],['midway','USA'],['utah','USA'],['united states','USA'],['whistler','CAN'],['british columbia','CAN'],['canada','CAN']];
+    return nations.find(([label])=>value.includes(label))?.[1]||'—';
+  }
+  function disciplineCode(value){
+    const text=String(value||'').toLowerCase();
+    if(text.includes('downhill'))return 'DHI';
+    if(text.includes('cross'))return 'XC';
+    if(text.includes('snowboard'))return 'SNB';
+    if(text.includes('ski'))return 'SKI';
+    return String(value||'EVENT').replace(/bike\s*/i,'').slice(0,8).toUpperCase();
+  }
   async function draw(rows, index, count, height, context) {
     const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = height;
     const ctx = canvas.getContext('2d');
@@ -153,32 +174,24 @@
   }
   async function drawCompetition(height,context){
     const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
-    const ctx=canvas.getContext('2d'),card=data.competitionCard||{},next=card.nextEvent||{};
-    ctx.fillStyle='#f3f0e9';ctx.fillRect(0,0,1080,height);
-    ctx.fillStyle='#17181b';ctx.fillRect(0,0,1080,112);
-    ctx.fillStyle='#f3f0e9';fit(ctx,'RIDERSFANATICS',60,70,500,27,true);
-    ctx.fillStyle='#d76332';fit(ctx,'COMPETITION / '+String(data.season||'SEASON'),720,70,300,20,true);
-    const panelTop=154,panelHeight=height===1080?270:340;
-    ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect(60,panelTop,960,panelHeight,24);ctx.fill();
+    const ctx=canvas.getContext('2d'),card=data.competitionCard||{},calendar=(card.calendar||[]).slice(0,10);
+    const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,'#050607');gradient.addColorStop(.55,'#101315');gradient.addColorStop(1,'#030405');ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,height);
+    ctx.fillStyle='#14191b';ctx.beginPath();ctx.moveTo(0,height*.62);ctx.lineTo(210,height*.36);ctx.lineTo(390,height*.58);ctx.lineTo(620,height*.29);ctx.lineTo(880,height*.61);ctx.lineTo(1080,height*.4);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
+    ctx.fillStyle='#0b0e10';ctx.beginPath();ctx.moveTo(0,height*.75);ctx.lineTo(260,height*.5);ctx.lineTo(450,height*.7);ctx.lineTo(720,height*.46);ctx.lineTo(1080,height*.73);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
+    const compact=height===1080,panelTop=compact?38:52,panelHeight=compact?138:178;
+    ctx.fillStyle='#090b0ce8';ctx.beginPath();ctx.roundRect(54,panelTop,972,panelHeight,18);ctx.fill();
     const logo=await loadImage(context.logo);
-    if(logo){const scale=Math.min(720/logo.width,(panelHeight-80)/logo.height);const w=logo.width*scale,h=logo.height*scale;ctx.drawImage(logo,540-w/2,panelTop+(panelHeight-h)/2,w,h);}
-    else{ctx.fillStyle='#17181b';fit(ctx,'COMPETITION',140,panelTop+panelHeight/2+15,800,60,true);}
+    if(logo){const scale=Math.min(650/logo.width,(panelHeight-34)/logo.height);const w=logo.width*scale,h=logo.height*scale;ctx.drawImage(logo,540-w/2,panelTop+(panelHeight-h)/2,w,h);}
+    else{ctx.fillStyle='#fff';fit(ctx,'COMPETITION',140,panelTop+panelHeight/2+15,800,54,true);}
     const title=String(context.title||'').replace(new RegExp('\\s+'+String(data.season||'')+'$'),'').toUpperCase();
-    const titleTop=panelTop+panelHeight+92;
-    ctx.fillStyle='#d76332';ctx.fillRect(60,titleTop-48,9,178);
-    ctx.fillStyle='#17181b';lines(ctx,title,96,titleTop,900,height===1080?56:68,height===1080?62:75,2,true);
-    const metaY=titleTop+(height===1080?155:185);
-    ctx.strokeStyle='#c9c3b8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(60,metaY);ctx.lineTo(1020,metaY);ctx.stroke();
-    const cells=[
-      [String(card.eventsCount||0).padStart(2,'0'),'EVENTS'],
-      [prettyDate(next.date),next.name?'NEXT EVENT':'CALENDAR'],
-      [next.location||card.discipline||'TO BE ANNOUNCED',next.location?'LOCATION':'DISCIPLINE'],
-    ];
-    const cellTop=metaY+52,cellWidth=320;
-    cells.forEach(([value,label],index)=>{const x=60+index*cellWidth;if(index){ctx.strokeStyle='#c9c3b8';ctx.beginPath();ctx.moveTo(x,cellTop-18);ctx.lineTo(x,cellTop+105);ctx.stroke();}ctx.fillStyle='#d76332';fit(ctx,label,x+(index?28:0),cellTop,cellWidth-38,17,true);ctx.fillStyle='#17181b';lines(ctx,value,x+(index?28:0),cellTop+48,cellWidth-42,25,30,2,true);});
-    ctx.fillStyle='#17181b';ctx.fillRect(60,height-118,960,2);
-    ctx.fillStyle='#17181b';fit(ctx,context.handle||'@ridersfanatics',60,height-70,500,22,true);
-    ctx.fillStyle='#6e6f72';fit(ctx,'ridersfanatics.com',760,height-70,260,19);
+    const titleTop=panelTop+panelHeight+(compact?58:72),titleSize=compact?37:48;
+    ctx.fillStyle='#95e100';ctx.fillRect(34,titleTop-35,5,86);ctx.fillStyle='#f20b58';ctx.fillRect(1041,titleTop-35,5,86);
+    ctx.fillStyle='#fff';ctx.textAlign='center';lines(ctx,String(data.season||'')+' '+title+' CALENDAR',540,titleTop,960,titleSize,titleSize+6,2,true);ctx.textAlign='left';
+    const listTop=titleTop+(compact?104:128),footerY=height-58,rowHeight=Math.min(compact?58:75,(footerY-listTop-18)/Math.max(calendar.length,1));
+    calendar.forEach((item,index)=>{const y=listTop+index*rowHeight,baseline=y+rowHeight*.66,nation=eventNation(item);ctx.fillStyle=index%2?'#090b0caa':'#171b1dcc';ctx.fillRect(48,y,984,rowHeight-3);ctx.font=(compact?24:30)+'px Arial, sans-serif';ctx.fillText(flag(nation),68,baseline);ctx.fillStyle='#fff';fit(ctx,nation,124,baseline,72,compact?18:21,true);ctx.fillStyle='#d9dcde';fit(ctx,compactDate(item.date),205,baseline,145,compact?18:22);ctx.fillStyle='#fff';fit(ctx,String(item.name||item.location||'Event').replace(/\s*-\s*20\d{2}\s*$/,''),365,baseline,510,compact?21:27,true);ctx.fillStyle='#d9dcde';fit(ctx,disciplineCode(item.discipline||card.discipline),925,baseline,82,compact?17:20);});
+    if(!calendar.length){ctx.fillStyle='#fff';fit(ctx,'CALENDAR COMING SOON',120,listTop+90,840,44,true);}
+    ctx.fillStyle='#95e100';ctx.fillRect(48,height-94,54,5);ctx.fillStyle='#f20b58';ctx.fillRect(102,height-94,54,5);
+    ctx.fillStyle='#fff';fit(ctx,context.handle||'@ridersfanatics',48,height-50,510,20,true);ctx.fillStyle='#aeb2b4';fit(ctx,'RIDERSFANATICS.COM',760,height-50,270,17,true);
     return canvas;
   }
   async function open(panel, opener) {

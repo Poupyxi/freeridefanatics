@@ -116,8 +116,13 @@ def slugify(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
 
+def rider_name_route_key(value: str) -> str:
+    """Match stable public routes even when Notion stores LAST First."""
+    return "-".join(sorted(part for part in slugify(value).split("-") if part))
+
+
 ROUTE_SLUGS_BY_NAME = {
-    slugify(name): slug for slug, name in PRIORITY_PUBLIC_NAMES.items()
+    rider_name_route_key(name): slug for slug, name in PRIORITY_PUBLIC_NAMES.items()
 }
 
 
@@ -832,7 +837,7 @@ def export(client: Notion):
         route_handle = (handle or "").lower().lstrip("@")
         public_slug = (
             ROUTE_SLUGS_BY_HANDLE.get(route_handle)
-            or ROUTE_SLUGS_BY_NAME.get(slugify(raw_name))
+            or ROUTE_SLUGS_BY_NAME.get(rider_name_route_key(raw_name))
             or slugify(raw_name)
         )
         display_name = PRIORITY_PUBLIC_NAMES.get(public_slug, display_rider_name(raw_name))

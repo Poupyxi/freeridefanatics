@@ -36,7 +36,7 @@ if routes.get("finniles") != "finn-iles":
     raise SystemExit("Established rider URLs are not protected")
 if routes.get("valihoell") != "valentina-holl":
     raise SystemExit("Valentina Höll's current handle must preserve her established public URL")
-if sync_notion.ROUTE_SLUGS_BY_NAME.get("max-alran") != "max-alran":
+if sync_notion.ROUTE_SLUGS_BY_NAME.get(sync_notion.rider_name_route_key("ALRAN Max")) != "max-alran":
     raise SystemExit("Max Alran's URL must remain stable when his Instagram handle changes")
 
 print("Notion-only profile contract valid; portraits remain a build-time Drive concern.")

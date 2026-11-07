@@ -126,7 +126,8 @@ PRODUCTION_COMPETITION_IDS = {
     "uci-world-series-dh-2027",
     "redbull-2026",
     "project-17",
-    "beyondgravity",
+    "beyondgravity-2027",
+    "crankworkx-2027",
 }
 def visible_status(item):
     return (

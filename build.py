@@ -2069,6 +2069,8 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         event_logo = competition_event_logo(logos, competition, name)
         events[competition_round_slug(name)] = {
             "name": name, "instagram": entry.get("instagram") or "",
+            "date": entry.get("date") or "", "endDate": entry.get("end_date") or "",
+            "location": entry.get("location") or "", "status": entry.get("status") or "",
             "logo": prefix + event_logo["src"] if event_logo else "",
         }
     competition_events = [item for item in (competition.get("events") or []) if item.get("name")]
@@ -2090,6 +2092,7 @@ def ranking_share_assets(riders, competition, prefix, event=None):
                 "name": item.get("name") or "",
                 "date": "" if str(item.get("date") or "").startswith("9999-") else item.get("date") or "",
                 "location": item.get("location") or "",
+                "endDate": item.get("end_date") or "", "status": item.get("status") or "",
                 "country": item.get("country_code") or item.get("country") or "",
                 "discipline": item.get("discipline") or competition.get("discipline") or "",
             }
@@ -2114,7 +2117,7 @@ def ranking_share_assets(riders, competition, prefix, event=None):
             status = "Coming soon"
         if str(entry.get("status", "")).lower() in ("cancelled", "canceled"):
             status = "Cancelled"
-        event_card = {"date": date, "location": entry.get("location") or "",
+        event_card = {"date": date, "endDate": entry.get("end_date") or "", "location": entry.get("location") or "",
                       "discipline": competition.get("discipline") or "",
                       "status": status}
     payload = {
@@ -2126,8 +2129,8 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         "shareKind": "event" if event else "competition",
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
-            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=8">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=11" defer></script>')
+            f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=9">'
+            f'<script src="{prefix}assets/js/ranking-share.js?v=12" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):

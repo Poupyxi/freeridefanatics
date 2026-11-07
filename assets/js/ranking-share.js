@@ -15,6 +15,42 @@
       email: 'mailto:?' + new URLSearchParams({subject:title,body:url}).toString().replace(/\+/g,'%20'),
     };
   }
+  // Source dates have no start time: preserve the local date as an all-day event.
+  function calendarDate(value) {
+    const day=String(value || '').slice(0,10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day) || day.startsWith('9999-'))return null;
+    const date=new Date(day+'T00:00:00Z');
+    return Number.isFinite(date.getTime()) && date.toISOString().slice(0,10)===day ? day : null;
+  }
+  function calendarEvents(items, title, url) {
+    return items.flatMap(item=>{
+      const start=calendarDate(item.date);if(!start)return [];
+      const last=calendarDate(item.endDate)||start;
+      const end=new Date((last<start?start:last)+'T00:00:00Z');end.setUTCDate(end.getUTCDate()+1);
+      return [{title:item.name || title,start,end:end.toISOString().slice(0,10),location:item.location || '',
+        description:title+'\n'+url,url,cancelled:/cancelled|canceled|annulé/i.test(item.status || '')}];
+    });
+  }
+  function calendarLinks(event) {
+    return {
+      google:'https://calendar.google.com/calendar/render?'+new URLSearchParams({action:'TEMPLATE',text:event.title,dates:event.start.replace(/-/g,'')+'/'+event.end.replace(/-/g,''),details:event.description,location:event.location}),
+      outlook:'https://outlook.live.com/calendar/0/deeplink/compose?'+new URLSearchParams({path:'/calendar/action/compose',rru:'addevent',subject:event.title,startdt:event.start,enddt:event.end,allday:'true',body:event.description,location:event.location}),
+    };
+  }
+  function calendarFile(events, now=new Date()) {
+    const escape=value=>String(value).replace(/\\/g,'\\\\').replace(/\r\n|\r|\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,');
+    const stamp=now.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+    const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//RidersFanatics//Calendar//FR','CALSCALE:GREGORIAN'];
+    events.forEach(event=>lines.push('BEGIN:VEVENT',
+      'UID:'+encodeURIComponent(new URL(event.url).pathname+'|'+event.title)+'@ridersfanatics.com',
+      'DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+event.start.replace(/-/g,''),'DTEND;VALUE=DATE:'+event.end.replace(/-/g,''),
+      'SUMMARY:'+escape(event.title),'DESCRIPTION:'+escape(event.description),'LOCATION:'+escape(event.location),
+      'URL:'+event.url,...(event.cancelled?['STATUS:CANCELLED']:[]),'TRANSP:TRANSPARENT','END:VEVENT'));
+    lines.push('END:VCALENDAR');
+    // RFC 5545: fold at 75 octets, without splitting a UTF-8 character.
+    const encoder=new TextEncoder();
+    return lines.map(line=>{let folded='',length=0;for(const char of line){const size=encoder.encode(char).length;if(length+size>75){folded+='\r\n ';length=1;}folded+=char;length+=size;}return folded;}).join('\r\n')+'\r\n';
+  }
   const codes = {FRA:'FR',CAN:'CA',GBR:'GB',USA:'US',AUS:'AU',NZL:'NZ',GER:'DE',DEU:'DE',ITA:'IT',ESP:'ES',SUI:'CH',CHE:'CH',AUT:'AT',BEL:'BE',NED:'NL',NLD:'NL',NOR:'NO',SWE:'SE',DEN:'DK',DNK:'DK',FIN:'FI',POL:'PL',CZE:'CZ',SVK:'SK',SLO:'SI',SVN:'SI',POR:'PT',PRT:'PT',RSA:'ZA',ZAF:'ZA',JPN:'JP',KOR:'KR',BRA:'BR',ARG:'AR',CHI:'CL',CHL:'CL',COL:'CO',ECU:'EC',MEX:'MX',PER:'PE',IRL:'IE',ISR:'IL',UKR:'UA',HUN:'HU',CRO:'HR',HRV:'HR',EST:'EE',LAT:'LV',LVA:'LV',LTU:'LT',ROU:'RO',BUL:'BG',BGR:'BG',GRE:'GR',GRC:'GR',TUR:'TR',CHN:'CN',TPE:'TW',HKG:'HK',INA:'ID',IDN:'ID',MAS:'MY',MYS:'MY',THA:'TH',PHI:'PH',PHL:'PH',IND:'IN',NEP:'NP',NPL:'NP',VEN:'VE',URU:'UY',URY:'UY',CRC:'CR',CRI:'CR',GUA:'GT',GTM:'GT',BOL:'BO',AND:'AD',LUX:'LU',ISL:'IS',RUS:'RU',SRB:'RS',BIH:'BA',MKD:'MK',KAZ:'KZ',GEO:'GE',ARM:'AM',CYP:'CY',MLT:'MT',LIE:'LI',MON:'MC',MCO:'MC'};
   function flag(value) {
     let code = String(value || '').toUpperCase().trim();
@@ -28,11 +64,12 @@
     }
     return /^[A-Z]{2}$/.test(code) ? [...code].map(c => String.fromCodePoint(127397 + c.charCodeAt(0))).join('') : '';
   }
-  if (typeof module !== 'undefined') module.exports = {chunks, handle, flag, socialLinks, eventNation};
+  if (typeof module !== 'undefined') module.exports = {chunks, handle, flag, socialLinks, eventNation, calendarDate, calendarEvents, calendarLinks, calendarFile};
   if (typeof document === 'undefined') return;
   const source = document.getElementById('ranking-share-data');
   if (!source) return;
   const data = JSON.parse(source.dataset.payload);
+  const socialAssets=new URL('../img/social/',document.currentScript.src);
   const text = (node) => node ? node.textContent.trim() : '';
   const assets = new Map();
   function loadImage(url) {
@@ -204,7 +241,7 @@
     const context = {title:event.name || data.title, logo:event.logo || data.logo,
       handle:handle(event.instagram || data.instagram), team:panel?.dataset.standings === 'Teams',
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
-    const allPages = isEvent ? [[]] : chunks(rows), urls = [];
+    const allPages = isEvent ? [[]] : chunks(rows), urls = [], calendarUrls=[];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
     const heading=el('h2','Partager '+(isEvent ? (data.shareKind==='competition' ? 'le calendrier' : 'l’événement') : 'le classement'),dialog);
     heading.id='ranking-share-title';dialog.setAttribute('aria-labelledby',heading.id);
@@ -225,6 +262,54 @@
     });
     const instagram=el('button','Instagram',social);instagram.type='button';instagram.className='ranking-share-instagram';
     const share=el('button','Plus',social);share.type='button';
+    const logoFiles={'WhatsApp':'whatsapp.png','Facebook':'facebook.jpg','X':'x.png','Instagram':'instagram.png'};
+    const symbols={'Copier le lien':'M10 13a5 5 0 0 0 7 .5l3-3a5 5 0 0 0-7-7l-2 2 M14 11a5 5 0 0 0-7-.5l-3 3a5 5 0 0 0 7 7l2-2','Email':'M3 5h18v14H3z M3 5l9 7 9-7','Plus':'M12 4v16 M4 12h16'};
+    [...social.children].forEach(control=>{
+      const label=control.textContent;control.textContent='';
+      const logo=logoFiles[label];
+      if(logo){const img=el('img','',control);img.src=new URL(logo,socialAssets).href;img.alt='';img.width=56;img.height=56;img.className='ranking-share-logo';}
+      else{const icon=el('span','',control);icon.className='ranking-share-symbol';icon.setAttribute('aria-hidden','true');const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('width','26');svg.setAttribute('height','26');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',symbols[label]);svg.append(path);icon.append(svg);}
+      el('span',label,control);
+    });
+    const calendarItems=isEvent && data.shareKind==='event' ? [{...data.eventCard,name:context.title}]
+      : event.name ? [event] : data.competitionCard?.calendar || [];
+    const dated=calendarEvents(calendarItems,context.title,pageUrl);
+    const calendarToggle=el('button','Ajouter au calendrier',actions);calendarToggle.type='button';calendarToggle.className='ranking-share-calendar-toggle';
+    const calendarPanel=el('section','',actions);calendarPanel.id='ranking-share-calendar';calendarPanel.className='ranking-share-calendar';calendarPanel.hidden=true;
+    calendarToggle.setAttribute('aria-controls',calendarPanel.id);calendarToggle.setAttribute('aria-expanded','false');
+    calendarToggle.onclick=()=>{calendarPanel.hidden=!calendarPanel.hidden;calendarToggle.setAttribute('aria-expanded',String(!calendarPanel.hidden));};
+    if(!dated.length){el('p','Les dates ne sont pas encore confirmées. L’ajout sera disponible dès leur publication.',calendarPanel);}
+    else {
+      const label=el('label','À ajouter',calendarPanel),selection=el('select','',label);
+      if(dated.length>1){const all=el('option','Toute la compétition ('+dated.length+' événements)',selection);all.value='all';}
+      dated.forEach((item,i)=>{const option=el('option',item.start+' · '+item.title,selection);option.value=String(i);});
+      const choices=el('div','',calendarPanel);choices.className='ranking-share-calendar-options';
+      const google=el('a','Google Calendar',choices),outlook=el('a','Outlook',choices),ics=el('button','Apple Calendar / fichier .ics',choices);ics.type='button';
+      [google,outlook].forEach(link=>{link.target='_blank';link.rel='noopener noreferrer';});
+      const help=el('p','',calendarPanel);help.setAttribute('role','status');
+      const importLink=el('a','',calendarPanel);importLink.hidden=true;importLink.target='_blank';importLink.rel='noopener noreferrer';
+      const chosenEvents=()=>selection.value==='all'?dated:[dated[Number(selection.value)]];
+      function downloadCalendar(){
+        const url=URL.createObjectURL(new Blob([calendarFile(chosenEvents())],{type:'text/calendar;charset=utf-8'}));
+        calendarUrls.push(url);const a=el('a');a.href=url;a.download='ridersfanatics-calendrier.ics';document.body.append(a);a.click();a.remove();
+      }
+      function updateCalendar(){
+        const all=selection.value==='all',item=chosenEvents()[0],links=calendarLinks(item);
+        google.href=all?'https://calendar.google.com/calendar/u/0/r/settings/export':links.google;
+        outlook.href=all?'https://outlook.live.com/calendar/0/':links.outlook;
+        google.textContent=all?'Google Calendar · importer':'Google Calendar';outlook.textContent=all?'Outlook · importer':'Outlook';
+        importLink.hidden=true;
+        help.textContent='Journées entières, sans horaire annoncé. '+(all?'Le fichier contient tous les événements datés. Importez-le dans votre agenda. ':'Confirmez l’ajout dans votre agenda. ')+'Les imports ne se mettent pas à jour automatiquement.';
+      }
+      [google,outlook].forEach(link=>{link.onclick=e=>{
+        if(selection.value!=='all')return;
+        e.preventDefault();downloadCalendar();
+        help.textContent=link===google?'Fichier téléchargé. Dans Google Calendar sur ordinateur : Paramètres → Importer et exporter → choisissez le fichier .ics.':'Fichier téléchargé. Dans Outlook : Ajouter un calendrier → Charger à partir d’un fichier → choisissez le fichier .ics.';
+        importLink.href=link.href;importLink.textContent=link===google?'Ouvrir Google Calendar ↗':'Ouvrir Outlook ↗';importLink.hidden=false;
+      };});
+      ics.onclick=()=>{downloadCalendar();help.textContent='Ouvrez le fichier .ics dans Apple Calendar ou importez-le dans votre agenda (Outlook, Google Calendar, Thunderbird…). Confirmez l’ajout. Cet import ne se met pas à jour automatiquement.';};
+      selection.onchange=updateCalendar;updateCalendar();
+    }
     const urlLabel=el('label','Lien à partager',actions);urlLabel.htmlFor='ranking-share-url';
     const urlRow=el('div','',actions);urlRow.className='ranking-share-url';
     const urlInput=el('input','',urlRow);urlInput.id='ranking-share-url';urlInput.type='url';urlInput.readOnly=true;urlInput.value=pageUrl;
@@ -243,7 +328,7 @@
     let rendered=[], version=0;
     function selected() { return rendered.filter(item=>item.checkbox.checked); }
     function release() { urls.splice(0).forEach(url=>URL.revokeObjectURL(url)); }
-    function dispose() { version++; release(); dialog.remove(); opener.focus(); }
+    function dispose() { version++; release(); calendarUrls.forEach(url=>URL.revokeObjectURL(url)); dialog.remove(); opener.focus(); }
     close.onclick=()=>dialog.close(); dialog.addEventListener('close',dispose,{once:true});
     dialog.addEventListener('click', e=>{ if(e.target===dialog){ const b=dialog.getBoundingClientRect(); if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)dialog.close(); } });
     async function render() {

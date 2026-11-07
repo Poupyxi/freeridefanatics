@@ -68,6 +68,7 @@ CATEGORY_MAP = {
     "Crankseat": "Crankset",
     "Derailleur": "Derailleur",
     "Gearbox": "Derailleur",
+    "GearBox": "Derailleur",
     "Hub": "Hub",
     "Hubs": "Hub",
     "Spacer": "Spacer",

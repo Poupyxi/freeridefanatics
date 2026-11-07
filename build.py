@@ -3005,9 +3005,9 @@ def build_competitions_hub(riders, competitions=None, winter=False):
         f'<option value="{year}">{year}</option>' for year in competition_years
     )
     year_filter = (f'''<div class="competition-year-filter" data-competition-year-controls>
-      <label for="competition-year-select{'-winter' if winter else ''}">Season</label>
+      <label for="competition-year-select{'-winter' if winter else ''}">Year</label>
       <select id="competition-year-select{'-winter' if winter else ''}" data-competition-year-filter>
-        <option value="all">All seasons</option>{year_options}
+        <option value="all">All years</option>{year_options}
       </select>
       <span aria-live="polite" data-competition-year-count>{len(cards)} competitions</span>
     </div>''' if competition_years else "")

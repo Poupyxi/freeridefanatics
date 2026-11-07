@@ -105,12 +105,18 @@
     if(!toggle || !navLinks) return;
     function setMenu(open){
       navLinks.classList.toggle('open', open);
+      navLinks.style.setProperty('--mobile-nav-top', Math.max(0, navLinks.parentElement.getBoundingClientRect().bottom) + 'px');
+      if(!open) navLinks.querySelectorAll('.header-language[open]').forEach(function(menu){menu.open=false;});
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
     }
     toggle.addEventListener('click', function(){ setMenu(!navLinks.classList.contains('open')); });
-    navLinks.querySelectorAll('a').forEach(function(a){
-      a.addEventListener('click', function(){ setMenu(false); });
+    // Delegate so the responsive language links close the menu too.
+    navLinks.addEventListener('click', function(e){if(e.target.closest('a')) setMenu(false);});
+    window.addEventListener('resize', function(){
+      if(window.matchMedia('(max-width:820px)').matches){
+        if(navLinks.classList.contains('open')) setMenu(true);
+      } else setMenu(false);
     });
     document.addEventListener('keydown', function(e){
       if(e.key === 'Escape' && navLinks.classList.contains('open')){
@@ -155,6 +161,32 @@
       }).join('') + '</div>';
       navIcons.insertBefore(details, navIcons.firstChild);
     }
+  });
+
+  // Move the same selector (including server-rendered guide selectors) rather
+  // than duplicating language links or changing their existing destinations.
+  safe('mobile-language-placement', function(){
+    var navIcons=document.querySelector('header .nav-icons');
+    var navLinks=document.querySelector('header nav.links');
+    var details=navIcons && navIcons.querySelector('.header-language');
+    if(!details || !navLinks) return;
+    var marker=document.createComment('desktop language selector');
+    navIcons.insertBefore(marker,details);
+    var label=document.createElement('span');
+    label.className='mobile-language-label';label.textContent='Langue / Language';
+    details.querySelector('summary').prepend(label);
+    var mobile=window.matchMedia('(max-width:820px)');
+    function placeLanguage(){
+      var hadFocus=details.contains(document.activeElement);
+      details.open=false;
+      if(mobile.matches) navLinks.insertBefore(details,navLinks.firstChild);
+      else marker.after(details);
+      if(hadFocus){
+        var target=mobile.matches ? document.querySelector('.nav-toggle') : details.querySelector('summary');
+        if(target) target.focus();
+      }
+    }
+    placeLanguage();mobile.addEventListener('change',placeLanguage);
   });
 
   // Scroll-reveal

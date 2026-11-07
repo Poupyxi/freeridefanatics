@@ -624,7 +624,16 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
         if page_type == "article" else ""
     )
     schema_html = "\n".join(json_ld(s) for s in (schemas or []))
-    adsense_script = "" # Loaded only by footer-ad.js after CMP consent.
+    # Google Privacy & Messaging must be initialized before footer-ad.js can
+    # subscribe to __tcfapi. Keep the CMP completely out of preproduction so
+    # previews never contact Google or store advertising choices.
+    privacy_messaging = ""
+    if not IS_PREPROD:
+        privacy_messaging = (
+            f'<script src="{asset_prefix}assets/js/google-privacy-messaging.js?v={BUILD_VERSION}"></script>\n'
+            '<script async src="https://fundingchoicesmessages.google.com/i/pub-6372404738608947?ers=1"></script>'
+        )
+    adsense_script = privacy_messaging
     robots_content = robots or ('noindex,nofollow,noarchive' if IS_PREPROD else 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -4921,6 +4930,12 @@ def ensure_ad_placement():
                 continue
             depth = len(os.path.relpath(directory, ROOT).split(os.sep)) if directory != ROOT else 0
             asset_prefix = "../" * depth
+            if not IS_PREPROD and "fundingchoicesmessages.google.com/i/pub-6372404738608947" not in markup:
+                cmp_markup = (
+                    f'<script src="{asset_prefix}assets/js/google-privacy-messaging.js?v={BUILD_VERSION}"></script>\n'
+                    '<script async src="https://fundingchoicesmessages.google.com/i/pub-6372404738608947?ers=1"></script>\n'
+                )
+                markup = markup.replace("</head>", f"{cmp_markup}</head>", 1)
             markup = markup.replace("<footer>", f"{page_ad_html()}<footer>", 1)
             if "assets/js/footer-ad.js" not in markup:
                 markup = markup.replace(

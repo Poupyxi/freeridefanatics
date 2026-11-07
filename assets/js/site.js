@@ -89,7 +89,15 @@
 
   // Mobile nav toggle
   safe('mobile-nav', function(){
-    var toggle = document.querySelector('.nav-toggle');
+    document.querySelectorAll('.competition-menu-year-toggle').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var panel = button.nextElementSibling; var open = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', open ? 'false' : 'true'); if (panel) panel.hidden = open;
+      var mark = button.querySelector('span'); if (mark) mark.textContent = open ? '+' : '−';
+    });
+  });
+
+  var toggle = document.querySelector('.nav-toggle');
     var navLinks = document.querySelector('nav.links');
     if(!toggle || !navLinks) return;
     function setMenu(open){

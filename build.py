@@ -695,32 +695,35 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
     # The season switch already communicates the active context. Avoid adding
     # a changing rider total beside it, which makes the compact header noisy.
     rider_counter = "" if seasonal else f'<span class="icon-btn">{RIDER_COUNT} Riders</span>'
-    competition_groups = []
+    competition_year_groups = {}
     for organization in ORGANIZATIONS:
-        items = []
+        items_by_year = {}
         for competition in organization.get("competitions", []):
-            if not visible_status(competition):
-                continue
-            if competition_is_winter(competition):
+            if not visible_status(competition) or competition_is_winter(competition):
                 continue
             href = competition.get("existing_path")
             if href:
                 href = asset_prefix + href.lstrip("/")
             else:
                 href = f"{asset_prefix}competitions/{organization['id']}/{competition['id']}/"
-            items.append(f'<a href="{href}"><strong>{esc(competition_display_name(competition))}</strong><small>{esc(competition.get("discipline"))} · {competition.get("season", "")}</small></a>')
-        if items:
-            organization_href = f"{asset_prefix}competitions/{organization['id']}/"
-            competition_groups.append(f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>')
+            year = str(competition.get("season", ""))
+            items_by_year.setdefault(year, []).append(f'<a href="{href}"><strong>{esc(competition_display_name(competition))}</strong><small>{esc(competition.get("discipline"))}</small></a>')
+        organization_href = f"{asset_prefix}competitions/{organization['id']}/"
+        for year, items in items_by_year.items():
+            group = f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>'
+            competition_year_groups.setdefault(year, []).append(group)
+    competition_groups = [
+        f'<div class="competition-menu-year"><div class="competition-menu-year-label">{esc(year)}</div>{"".join(groups)}</div>'
+        for year, groups in sorted(competition_year_groups.items(), key=lambda item: item[0], reverse=True)
+    ]
     if not competition_groups:
+        fallback_by_year = {}
         for competition in COMPETITIONS:
             if competition_is_winter(competition):
                 continue
-            competition_groups.append(
-                f'<a href="{asset_prefix}competitions/{competition["id"]}.html">'
-                f'<strong>{esc(competition_display_name(competition))}</strong>'
-                f'<small>{esc(competition["discipline"])} · {competition["season"]}</small></a>'
-            )
+            year = str(competition.get("season", ""))
+            fallback_by_year.setdefault(year, []).append(f'<a href="{asset_prefix}competitions/{competition["id"]}.html"><strong>{esc(competition_display_name(competition))}</strong><small>{esc(competition["discipline"])}</small></a>')
+        competition_groups = [f'<div class="competition-menu-year"><div class="competition-menu-year-label">{esc(year)}</div>{"".join(items)}</div>' for year, items in sorted(fallback_by_year.items(), reverse=True)]
     winter_competition_groups = []
     if seasonal:
         for competition in COMPETITIONS:

@@ -713,7 +713,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
             group = f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>'
             competition_year_groups.setdefault(year, []).append(group)
     competition_groups = [
-        f'<div class="competition-menu-year"><div class="competition-menu-year-label">{esc(year)}</div>{"".join(groups)}</div>'
+        f'<div class="competition-menu-year"><button class="competition-menu-year-toggle" type="button" aria-expanded="false">{esc(year)}<span aria-hidden="true">+</span></button><div class="competition-menu-year-items" hidden>{"".join(groups)}</div></div>'
         for year, groups in sorted(competition_year_groups.items(), key=lambda item: item[0], reverse=True)
     ]
     if not competition_groups:
@@ -723,7 +723,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
                 continue
             year = str(competition.get("season", ""))
             fallback_by_year.setdefault(year, []).append(f'<a href="{asset_prefix}competitions/{competition["id"]}.html"><strong>{esc(competition_display_name(competition))}</strong><small>{esc(competition["discipline"])}</small></a>')
-        competition_groups = [f'<div class="competition-menu-year"><div class="competition-menu-year-label">{esc(year)}</div>{"".join(items)}</div>' for year, items in sorted(fallback_by_year.items(), reverse=True)]
+        competition_groups = [f'<div class="competition-menu-year"><button class="competition-menu-year-toggle" type="button" aria-expanded="false">{esc(year)}<span aria-hidden="true">+</span></button><div class="competition-menu-year-items" hidden>{"".join(items)}</div></div>' for year, items in sorted(fallback_by_year.items(), reverse=True)]
     winter_competition_groups = []
     if seasonal:
         for competition in COMPETITIONS:

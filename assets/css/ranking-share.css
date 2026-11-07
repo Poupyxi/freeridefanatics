@@ -75,3 +75,45 @@
 .ranking-share-calendar-options a:hover{background:#303137}
 @media(max-width:360px){.ranking-share-social{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .ranking-share-logo[src$="/x.png"]{box-sizing:border-box;padding:12px;background:#050505}
+
+/* Keep dismissal reachable while only the content scrolls. */
+.ranking-share-dialog{padding:0;overflow:hidden}
+.ranking-share-dialog[open]{display:flex;flex-direction:column}
+.ranking-share-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 24px;flex:none;background:#17181b;border-bottom:1px solid #35363b}
+.ranking-share-dialog .ranking-share-header h2{margin:0;font-size:24px}
+.ranking-share-dialog .ranking-share-close{position:static;flex:none;width:48px;min-height:48px}
+.ranking-share-layout{padding:24px;overflow:auto;overscroll-behavior:contain;min-height:0;scroll-padding-block:16px}
+.ranking-share-post{padding:18px;margin:0 0 20px;background:#232429;border:1px solid #5a4657;border-radius:14px;scroll-margin-block:16px}
+.ranking-share-post[hidden]{display:none}
+.ranking-share-post h3{margin:0;font:700 18px/1.4 Arial,sans-serif}
+.ranking-share-post label{display:block;font:14px Arial,sans-serif}
+.ranking-share-post button{width:100%;min-height:48px}
+.ranking-share-dialog .ranking-share-instagram-send{background:#a52e71;border-color:#d65ba3;font-weight:700}
+.ranking-share-post-status{color:#f8c59f}
+.ranking-share-instagram-help{padding:12px 0 0;border:0;background:transparent}
+.ranking-share-instagram-help a{display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:8px}
+.ranking-share-dialog button,.ranking-share-dialog a{touch-action:manipulation}
+@media(max-width:720px){
+ .ranking-share-dialog{inset:auto 0 0;width:100%;max-width:100%;max-height:96vh;max-height:96dvh;margin:0;border-radius:20px 20px 0 0}
+ .ranking-share-header{padding:8px max(12px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
+ .ranking-share-dialog .ranking-share-header h2{font-size:20px}
+ .ranking-share-layout{padding:14px max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));gap:12px}
+ .ranking-share-gallery canvas{max-height:30vh;max-height:30svh;margin-bottom:4px}
+ .ranking-share-gallery a{display:flex;justify-content:center;align-items:center;min-height:44px}
+ .ranking-share-actions>p:first-child{display:none}
+ .ranking-share-actions>[role=status]{font-size:13px;margin:0 0 8px}
+ .ranking-share-social{margin:8px 0 16px;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+ .ranking-share-dialog .ranking-share-social a,.ranking-share-dialog .ranking-share-social button{min-height:76px;font-size:11px;gap:5px}
+ .ranking-share-logo,.ranking-share-symbol{width:48px;height:48px}
+ .ranking-share-dialog textarea,.ranking-share-url input,.ranking-share-dialog .ranking-share-calendar select{font-size:16px}
+ .ranking-share-dialog textarea{min-height:100px}
+ .ranking-share-post{padding:14px;overflow-wrap:anywhere}
+}
+@media(max-height:480px) and (orientation:landscape){
+ .ranking-share-dialog{max-height:100dvh}
+ .ranking-share-layout{grid-template-columns:minmax(120px,.7fr) minmax(0,1fr)}
+ .ranking-share-gallery canvas{max-height:55svh}
+}
+.ranking-share-dialog button,.ranking-share-dialog a{-webkit-tap-highlight-color:transparent}
+.ranking-share-gallery .ranking-share-preview{display:block;min-height:0;cursor:zoom-in}
+.ranking-share-preview-hint{display:block;text-align:center;color:#b9b9c0;font:12px/1.5 Arial,sans-serif;margin:0 0 6px}

@@ -121,10 +121,12 @@ with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
 # New Notion competitions are staged on preproduction first. Production exposes
 # published series plus any series explicitly promoted through this allowlist.
 PRODUCTION_COMPETITION_IDS = {
-    item.strip() for item in os.environ.get(
-        "RF_PRODUCTION_COMPETITION_IDS",
-        "uci-mtb-world-cup-dh-2026,uci-world-series-cc-2027,uci-world-series-dh-2027,redbull-2026,project-17,beyondgravity",
-    ).split(",") if item.strip()
+    "uci-mtb-world-cup-dh-2026",
+    "uci-world-series-cc-2027",
+    "uci-world-series-dh-2027",
+    "redbull-2026",
+    "project-17",
+    "beyondgravity",
 }
 def visible_status(item):
     return (

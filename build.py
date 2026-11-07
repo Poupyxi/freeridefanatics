@@ -118,17 +118,21 @@ DRIVE_LOGO_MANIFEST_PATH = os.path.join(ROOT, "data", "drive-logo-manifest.json"
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
-def visible_status(item):
-    return item.get("status") == "published" or IS_PREPROD
-
-# New Notion competitions are staged on preproduction first. Production only
-# exposes series that have been explicitly promoted through this allowlist.
+# New Notion competitions are staged on preproduction first. Production exposes
+# published series plus any series explicitly promoted through this allowlist.
 PRODUCTION_COMPETITION_IDS = {
     item.strip() for item in os.environ.get(
         "RF_PRODUCTION_COMPETITION_IDS",
         "uci-mtb-world-cup-dh-2026,uci-world-series-cc-2027,uci-world-series-dh-2027,redbull-2026,project-17,beyondgravity",
     ).split(",") if item.strip()
 }
+def visible_status(item):
+    return (
+        item.get("status") == "published"
+        or IS_PREPROD
+        or item.get("id") in PRODUCTION_COMPETITION_IDS
+    )
+
 COMPETITIONS = [
     item for item in COMPETITION_CATALOG.get("series", [])
     if visible_status(item) and (IS_PREPROD or item.get("id") in PRODUCTION_COMPETITION_IDS)

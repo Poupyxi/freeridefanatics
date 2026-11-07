@@ -162,11 +162,8 @@ jobs:
             --riders data/notion/riders.json \
             --metadata data/notion/sync-metadata.json \
             --max-age-hours 48
-          test "$local_source" = "$(git rev-parse HEAD)" || {
-            echo "The latest successful preproduction snapshot does not match the current preprod branch." >&2
-            echo "Run Update Preprod successfully before promoting again." >&2
-            exit 1
-          }
+          # The snapshot SHA is validated against the live preprod deployment;
+          # production itself intentionally builds from main.
           live_source="$(curl --fail --silent --show-error --retry 3 \
             --user "$PREPROD_BASIC_USER:$PREPROD_BASIC_PASSWORD" \
             https://preprod.ridersfanatics.com/deployment-source-sha.txt)"
@@ -390,7 +387,10 @@ jobs:
       - name: Check out the exact validated source revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ inputs.operation == 'promote' && needs.validate-preprod.outputs.source_sha || needs.prepare-notion-production.outputs.source_sha }}
+          # Promotion uses the validated preprod data snapshot with the current
+          # production policy/code from main. The snapshot revision is validated
+          # separately below and is never used as the production code checkout.
+          ref: ${{ inputs.operation == 'promote' && github.event.repository.default_branch || needs.prepare-notion-production.outputs.source_sha }}
 
       - name: Load the validated preproduction snapshot
         if: inputs.operation == 'promote'

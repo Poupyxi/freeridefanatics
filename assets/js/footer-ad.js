@@ -48,11 +48,12 @@
   }
   var subscribed = false;
   function subscribe() {
-    if (subscribed || typeof window.__tcfapi !== 'function' ||
-        typeof window.googlefc.showRevocationMessage !== 'function') return;
+    if (subscribed || typeof window.__tcfapi !== 'function') return;
     subscribed = true;
-    preferences.hidden = false;
-    window.__tcfapi('addEventListener', 2, function (data, success) {
+    preferences.hidden = !(window.googlefc && typeof window.googlefc.showRevocationMessage === 'function');
+    // Version 0 asks the CMP for the latest supported TCF version (including
+    // TCF 2.2), instead of assuming an older numeric version.
+    window.__tcfapi('addEventListener', 0, function (data, success) {
       // Opening preferences isn't a revocation. Wait for the completed choice.
       if (success && data && data.eventStatus === 'cmpuishown') return;
       allowed = hasConsent(data, success);
@@ -67,6 +68,7 @@
   window.googlefc = window.googlefc || {};
   window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
   window.googlefc.callbackQueue.push({CONSENT_API_READY: subscribe});
+  window.googlefc.callbackQueue.push({CONSENT_DATA_READY: subscribe});
   subscribe();
   if ('IntersectionObserver' in window) {
     var observer = new IntersectionObserver(function (entries) {

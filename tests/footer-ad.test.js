@@ -22,6 +22,9 @@ for (const host of ['localhost', '127.0.0.1', 'preprod.ridersfanatics.com']) {
 }
 assert.equal(run({preview:true}).scripts.length, 0);
 const noCmp = run({cmp:false}); noCmp.see(); assert.equal(noCmp.scripts.length, 0);
+const noRevocationApi = run(); delete noRevocationApi.window.googlefc.showRevocationMessage;
+noRevocationApi.see(); noRevocationApi.consent(granted());
+assert.equal(noRevocationApi.scripts.length, 1);
 const p = run(); p.see(); assert.equal(p.scripts.length,0);
 p.consent({...granted(), vendor:{consents:{755:false}}}); assert.equal(p.scripts.length,0);
 p.consent(granted(), false); assert.equal(p.scripts.length,0);

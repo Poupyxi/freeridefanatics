@@ -1801,3 +1801,5 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
 
 body.equipment-lightbox-open { overflow: hidden; }
 @media(max-width:640px){.equipment-lightbox-panel{grid-template-columns:1fr}.equipment-lightbox-image{grid-row:auto}.equipment-lightbox-stats,.equipment-lightbox-leader,.equipment-lightbox-category{grid-column:auto}}
+
+.competition-menu-year-label{padding:12px 18px 6px;font-family:"Space Mono",monospace;font-size:.72rem;letter-spacing:.14em;color:#b4471f;border-bottom:1px solid #d6d2cc}.competition-menu-year+.competition-menu-year{border-top:1px solid #c9c5bf}

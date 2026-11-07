@@ -1803,3 +1803,5 @@ body.equipment-lightbox-open { overflow: hidden; }
 @media(max-width:640px){.equipment-lightbox-panel{grid-template-columns:1fr}.equipment-lightbox-image{grid-row:auto}.equipment-lightbox-stats,.equipment-lightbox-leader,.equipment-lightbox-category{grid-column:auto}}
 
 .competition-menu-year-label{padding:12px 18px 6px;font-family:"Space Mono",monospace;font-size:.72rem;letter-spacing:.14em;color:#b4471f;border-bottom:1px solid #d6d2cc}.competition-menu-year+.competition-menu-year{border-top:1px solid #c9c5bf}
+
+.competition-menu-year-toggle{display:flex;width:100%;justify-content:space-between;align-items:center;border:0;background:transparent;padding:14px 18px;font:700 .9rem "Space Mono",monospace;letter-spacing:.12em;color:#b4471f;cursor:pointer}.competition-menu-year-toggle span{font-size:1.1rem}.competition-menu-year-items{border-top:1px solid #d6d2cc}.competition-menu-year-items[hidden]{display:none}

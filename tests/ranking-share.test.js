@@ -23,5 +23,7 @@ assert.equal(eventNation({name:'Lake Placid'}),'USA');
 assert.equal(flag('unknown'),'');
 const links=socialLinks('https://preprod.ridersfanatics.com/test.html?a=1&b=2','Final / Men & Women');
 assert.equal(new URL(links.x).searchParams.get('text'),'Final / Men & Women');
-assert.equal(new URL(links.linkedin).searchParams.get('url'),'https://preprod.ridersfanatics.com/test.html?a=1&b=2');
+assert.equal(new URL(links.facebook).searchParams.get('u'),'https://preprod.ridersfanatics.com/test.html?a=1&b=2');
+assert.equal(new URL(links.whatsapp).searchParams.get('text'),'Final / Men & Women https://preprod.ridersfanatics.com/test.html?a=1&b=2');
+assert.equal(new URL(links.email).searchParams.get('subject'),'Final / Men & Women');
 console.log('Ranking share pagination, handles and flags: PASS');

@@ -10,7 +10,9 @@
   function socialLinks(url, title) {
     return {
       x: 'https://x.com/intent/tweet?' + new URLSearchParams({text:title,url}),
-      linkedin: 'https://www.linkedin.com/sharing/share-offsite/?' + new URLSearchParams({url}),
+      whatsapp: 'https://wa.me/?' + new URLSearchParams({text:title+' '+url}),
+      facebook: 'https://www.facebook.com/sharer/sharer.php?' + new URLSearchParams({u:url}),
+      email: 'mailto:?' + new URLSearchParams({subject:title,body:url}).toString().replace(/\+/g,'%20'),
     };
   }
   const codes = {FRA:'FR',CAN:'CA',GBR:'GB',USA:'US',AUS:'AU',NZL:'NZ',GER:'DE',DEU:'DE',ITA:'IT',ESP:'ES',SUI:'CH',CHE:'CH',AUT:'AT',BEL:'BE',NED:'NL',NLD:'NL',NOR:'NO',SWE:'SE',DEN:'DK',DNK:'DK',FIN:'FI',POL:'PL',CZE:'CZ',SVK:'SK',SLO:'SI',SVN:'SI',POR:'PT',PRT:'PT',RSA:'ZA',ZAF:'ZA',JPN:'JP',KOR:'KR',BRA:'BR',ARG:'AR',CHI:'CL',CHL:'CL',COL:'CO',ECU:'EC',MEX:'MX',PER:'PE',IRL:'IE',ISR:'IL',UKR:'UA',HUN:'HU',CRO:'HR',HRV:'HR',EST:'EE',LAT:'LV',LVA:'LV',LTU:'LT',ROU:'RO',BUL:'BG',BGR:'BG',GRE:'GR',GRC:'GR',TUR:'TR',CHN:'CN',TPE:'TW',HKG:'HK',INA:'ID',IDN:'ID',MAS:'MY',MYS:'MY',THA:'TH',PHI:'PH',PHL:'PH',IND:'IN',NEP:'NP',NPL:'NP',VEN:'VE',URU:'UY',URY:'UY',CRC:'CR',CRI:'CR',GUA:'GT',GTM:'GT',BOL:'BO',AND:'AD',LUX:'LU',ISL:'IS',RUS:'RU',SRB:'RS',BIH:'BA',MKD:'MK',KAZ:'KZ',GEO:'GE',ARM:'AM',CYP:'CY',MLT:'MT',LIE:'LI',MON:'MC',MCO:'MC'};
@@ -174,7 +176,7 @@
   }
   async function drawCompetition(height,context){
     const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
-    const ctx=canvas.getContext('2d'),card=data.competitionCard||{},calendar=(card.calendar||[]).slice(0,10);
+    const ctx=canvas.getContext('2d'),card=data.competitionCard||{},calendar=(card.calendar||[]);
     const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,'#111214');gradient.addColorStop(.55,'#1b1816');gradient.addColorStop(1,'#090a0b');ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,height);
     ctx.fillStyle='#27211d';ctx.beginPath();ctx.moveTo(0,height*.62);ctx.lineTo(210,height*.36);ctx.lineTo(390,height*.58);ctx.lineTo(620,height*.29);ctx.lineTo(880,height*.61);ctx.lineTo(1080,height*.4);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
     ctx.fillStyle='#171515';ctx.beginPath();ctx.moveTo(0,height*.75);ctx.lineTo(260,height*.5);ctx.lineTo(450,height*.7);ctx.lineTo(720,height*.46);ctx.lineTo(1080,height*.73);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
@@ -204,42 +206,40 @@
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
     const allPages = isEvent ? [[]] : chunks(rows), urls = [];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
-    const heading = el('h2',isEvent ? (data.shareKind === 'competition' ? 'Share competition' : 'Share event') : 'Share ranking',dialog); heading.id='ranking-share-title'; dialog.setAttribute('aria-labelledby',heading.id);
-    const close = el('button','Close ×',dialog); close.type='button'; close.className='ranking-share-close';
-    el('p',isEvent ? 'Share the event card, even before results are available.' : 'Choose how much of the ranking to prepare. Each image contains up to 10 entries.',dialog);
-    const controls=el('div','',dialog);controls.className='ranking-share-controls';
-    const label = el('label','Format ',controls), select = el('select','',label);
-    [['1350','Portrait · 1080 × 1350'],['1080','Square · 1080 × 1080']].forEach(([value,name]) => { const option=el('option',name,select); option.value=value; });
-    let range=null;
-    if(!isEvent && allPages.length>1){
-      const rangeLabel=el('label','Entries ',controls);range=el('select','',rangeLabel);
-      const choices=[[1,'Top 10']];
-      if(allPages.length>1)choices.push([2,'Top 20']);
-      choices.push([allPages.length,'Full ranking · '+rows.length]);
-      choices.forEach(([value,name])=>{const option=el('option',name,range);option.value=String(value);});
-      range.value=String(Math.min(2,allPages.length));
-    }
-    const status=el('p','',dialog); status.setAttribute('role','status');
-    const social=el('nav','',dialog); social.className='ranking-share-social'; social.setAttribute('aria-label','Share on social media');
-    const links=socialLinks(location.href.split('#')[0],context.title+' — '+context.subtitle);
-    [['X',links.x],['LinkedIn',links.linkedin]].forEach(([name,url])=>{
-      const link=el('a',name+' ↗',social);link.href=url;link.target='_blank';link.rel='noopener noreferrer';
-      link.setAttribute('aria-label','Share link on '+name+' (new tab)');
+    const heading=el('h2','Partager '+(isEvent ? (data.shareKind==='competition' ? 'le calendrier' : 'l’événement') : 'le classement'),dialog);
+    heading.id='ranking-share-title';dialog.setAttribute('aria-labelledby',heading.id);
+    const close=el('button','×',dialog);close.type='button';close.className='ranking-share-close';close.setAttribute('aria-label','Fermer');
+    const layout=el('div','',dialog);layout.className='ranking-share-layout';
+    const gallery=el('div','',layout);gallery.className='ranking-share-gallery';
+    const actions=el('div','',layout);actions.className='ranking-share-actions';
+    el('p','Partagez votre passion.',actions);
+    const status=el('p','',actions);status.setAttribute('role','status');
+    const social=el('nav','',actions);social.className='ranking-share-social';social.setAttribute('aria-label','Options de partage');
+    const pageUrl=location.href.split('#')[0];
+    const copyLink=el('button','Copier le lien',social);copyLink.type='button';
+    const links=socialLinks(pageUrl,context.title+' — '+context.subtitle);
+    [['WhatsApp',links.whatsapp],['Facebook',links.facebook],['X',links.x],['Email',links.email]].forEach(([name,url])=>{
+      const link=el('a',name,social);link.href=url;
+      if(name!=='Email'){link.target='_blank';link.rel='noopener noreferrer';}
+      link.setAttribute('aria-label','Partager via '+name);
     });
-    const instagram=el('button','Instagram',social); instagram.type='button';
-    el('p','X and LinkedIn open a link-sharing composer. To publish the ranking images, download them and attach them to your post, or use your phone’s image-sharing menu. Instagram handles are not reused as X handles.',dialog);
-    if(location.hostname.startsWith('preprod.')) el('p','Preview: this page link is password-protected. Downloaded images can still be shared.',dialog);
-    const instagramHelp=el('div','',dialog);instagramHelp.hidden=true;instagramHelp.className='ranking-share-instagram-help';
-    el('p','Download the selected images, copy the caption, then create an Instagram post and select the images in order. On a compatible phone, choose Instagram from the sharing menu.',instagramHelp);
-    const instagramLink=el('a','Open Instagram ↗',instagramHelp);instagramLink.href='https://www.instagram.com/';instagramLink.target='_blank';instagramLink.rel='noopener noreferrer';
-    const gallery=el('div','',dialog); gallery.className='ranking-share-gallery';
-    const captionLabel=el('label','Instagram caption',dialog), caption=el('textarea','',captionLabel);
-    caption.value=[context.title+' — '+context.subtitle,context.handle,location.href.split('#')[0],'#RidersFanatics'].filter(Boolean).join('\n');
-    el('p','The @handle is included in the caption. Instagram mentions are activated when you publish there; this button does not post automatically.',dialog);
-    const copy=el('button','Copy caption',dialog); copy.type='button';
-    copy.onclick=async()=>{ try { await navigator.clipboard.writeText(caption.value); status.textContent='Caption copied.'; } catch (_) { caption.focus(); caption.select(); status.textContent='Select and copy the caption manually.'; } };
-    const share=el('button','Share selected images',dialog); share.type='button';
-    const download=el('button','Download selected images',dialog); download.type='button';
+    const instagram=el('button','Instagram',social);instagram.type='button';instagram.className='ranking-share-instagram';
+    const share=el('button','Plus',social);share.type='button';
+    const urlLabel=el('label','Lien à partager',actions);urlLabel.htmlFor='ranking-share-url';
+    const urlRow=el('div','',actions);urlRow.className='ranking-share-url';
+    const urlInput=el('input','',urlRow);urlInput.id='ranking-share-url';urlInput.type='url';urlInput.readOnly=true;urlInput.value=pageUrl;
+    const copyUrl=el('button','Copier',urlRow);copyUrl.type='button';
+    copyLink.onclick=copyUrl.onclick=async()=>{try{await navigator.clipboard.writeText(pageUrl);status.textContent='Lien copié.';}catch(_){urlInput.focus();urlInput.select();status.textContent='Sélectionnez et copiez le lien manuellement.';}};
+    if(location.hostname.startsWith('preprod.'))el('p','Ce lien de préproduction est protégé par un mot de passe.',actions);
+    const download=el('button','Créer un post',actions);download.type='button';download.className='ranking-share-create';
+    const post=el('div','',actions);post.hidden=true;
+    const captionLabel=el('label','Texte du post',post),caption=el('textarea','',captionLabel);
+    caption.value=[context.title+' — '+context.subtitle,context.handle,pageUrl,'#RidersFanatics'].filter(Boolean).join('\n');
+    const copy=el('button','Copier le texte',post);copy.type='button';
+    copy.onclick=async()=>{try{await navigator.clipboard.writeText(caption.value);status.textContent='Texte copié.';}catch(_){caption.focus();caption.select();status.textContent='Sélectionnez et copiez le texte manuellement.';}};
+    const instagramHelp=el('div','',post);instagramHelp.hidden=true;instagramHelp.className='ranking-share-instagram-help';
+    el('p','Téléchargez l’image complète, copiez le texte puis ajoutez-les dans Instagram. Sur un téléphone compatible, choisissez Instagram dans le menu de partage.',instagramHelp);
+    const instagramLink=el('a','Ouvrir Instagram ↗',instagramHelp);instagramLink.href='https://www.instagram.com/';instagramLink.target='_blank';instagramLink.rel='noopener noreferrer';
     let rendered=[], version=0;
     function selected() { return rendered.filter(item=>item.checkbox.checked); }
     function release() { urls.splice(0).forEach(url=>URL.revokeObjectURL(url)); }
@@ -249,47 +249,48 @@
     async function render() {
       const token=++version;
       const previous=rendered.map(item=>item.checkbox.checked);
-      share.disabled=download.disabled=instagram.disabled=true; status.textContent='Generating images…';
+      share.disabled=download.disabled=instagram.disabled=true; status.textContent='Préparation de l’image…';
       release(); rendered=[]; gallery.replaceChildren();
       try {
-        const pages=allPages.slice(0,range ? Number(range.value) : allPages.length);
+        const pages=allPages;
         for(let i=0;i<pages.length;i++) {
-          const canvas=isEvent ? (data.shareKind==='competition' ? await drawCompetition(Number(select.value),context) : await drawEvent(Number(select.value),context)) : await draw(pages[i],i,pages.length,Number(select.value),context);
+          const canvas=isEvent ? (data.shareKind==='competition' ? await drawCompetition(1350,context) : await drawEvent(1350,context)) : await draw(pages[i],i,pages.length,1350,context);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
           if(token!==version)return;
           if(!blob)throw new Error('Image generation failed');
           const item=el('div','',gallery), choice=el('label','',item), checkbox=el('input','',choice);
           checkbox.type='checkbox'; checkbox.checked=previous[i] ?? true;
-          choice.append(document.createTextNode(isEvent ? ' Event card' : ' Entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)));
+          choice.append(document.createTextNode(' Image '+(i+1)));choice.hidden=isEvent;
           const url=URL.createObjectURL(blob); urls.push(url);
           canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',isEvent ? context.title+' — event card' : context.title+' — entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)); item.append(canvas);
           const file=new File([blob],'ridersfanatics-'+(isEvent ? 'event' : 'ranking')+'-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'});
-          const link=el('a','Download this image',item); link.href=url; link.download=file.name;
+          const link=el('a','Télécharger l’image',item); link.href=url; link.download=file.name;
           rendered.push({checkbox,file,url});
         }
-        status.textContent=pages.length+' images ready. Select only the pages you want.';
+        status.textContent='Aperçu intégral prêt — '+pages.length+' image(s).';
         share.disabled=download.disabled=instagram.disabled=false;
-      } catch (_) { if(token===version)status.textContent='Could not generate the images. Try another format or reload the page.'; }
+      } catch (_) { if(token===version)status.textContent='Impossible de préparer l’image. Rechargez la page pour réessayer.'; }
     }
-    download.onclick=()=>{ const chosen=selected(); if(!chosen.length){status.textContent='Select at least one image.';return;}
+    download.onclick=()=>{ post.hidden=false; const chosen=selected(); if(!chosen.length){status.textContent='Sélectionnez au moins une image.';return;}
       chosen.forEach(item=>{const a=el('a');a.href=item.url;a.download=item.file.name;document.body.append(a);a.click();a.remove();});
-      status.textContent='Download requested. If your browser blocks multiple downloads, use “Download this image” below each preview.'; };
-    share.onclick=async()=>{const files=selected().map(item=>item.file);if(!files.length){status.textContent='Select at least one image.';return;}
-      if(!navigator.canShare || !navigator.canShare({files})){status.textContent='File sharing is unavailable in this browser. Download the images and copy the caption instead.';return;}
-      try{await navigator.share({files,title:context.title,text:caption.value});status.textContent='Images shared.';}catch(e){status.textContent=e.name==='AbortError'?'Sharing cancelled.':'Sharing failed. Download the images instead.';}};
+      status.textContent='Téléchargement demandé. Copiez le texte et ajoutez-les à votre post. Pour plusieurs images, utilisez aussi les liens sous les aperçus.'; };
+    share.onclick=async()=>{const files=selected().map(item=>item.file);if(!files.length){status.textContent='Sélectionnez au moins une image.';return;}
+      if(!navigator.share){post.hidden=false;status.textContent='Le partage natif est indisponible. Utilisez Créer un post ou Copier le lien.';return;}
+      const payload=navigator.canShare && navigator.canShare({files}) ? {files,title:context.title,text:caption.value} : {url:pageUrl,title:context.title};
+      try{await navigator.share(payload);status.textContent='Partage effectué.';}catch(e){status.textContent=e.name==='AbortError'?'Partage annulé.':'Le partage a échoué. Téléchargez les images pour continuer.';}};
     instagram.onclick=async()=>{
       const files=selected().map(item=>item.file);
-      if(!files.length){status.textContent='Select at least one image.';return;}
-      instagramHelp.hidden=false;
+      if(!files.length){status.textContent='Sélectionnez au moins une image.';return;}
+      post.hidden=false;instagramHelp.hidden=false;
       if(navigator.share && navigator.canShare && navigator.canShare({files})) {
-        try { await navigator.share({files}); status.textContent='Images handed to the sharing menu. Paste the caption in Instagram to finish your post.'; }
-        catch(e){status.textContent=e.name==='AbortError'?'Sharing cancelled.':'Could not share the images. Download them and open Instagram instead.';}
+        try { await navigator.share({files}); status.textContent='Choisissez Instagram dans le menu, puis collez le texte pour terminer votre post.'; }
+        catch(e){status.textContent=e.name==='AbortError'?'Partage annulé.':'Partage impossible. Utilisez Créer un post, puis ouvrez Instagram.';}
       } else {
-        status.textContent='Instagram image sharing is unavailable in this browser. Download the images, copy the caption, then open Instagram.';
+        download.onclick();status.textContent='Téléchargement demandé. Copiez le texte, puis ouvrez Instagram pour publier.';
         instagramHelp.scrollIntoView({block:'nearest'});
       }
     };
-    select.onchange=render;if(range)range.onchange=render;
+
     document.body.append(dialog);dialog.showModal();await render();
   }
   if(data.eventCard){

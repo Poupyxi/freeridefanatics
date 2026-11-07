@@ -233,7 +233,12 @@
     ctx.fillStyle='#f5f1e9';fit(ctx,context.handle||'@ridersfanatics',48,height-50,510,20,true);ctx.fillStyle='#a99f94';fit(ctx,'RIDERSFANATICS.COM',760,height-50,270,17,true);
     return canvas;
   }
+  function canShareFiles(files){
+    try{return !!(files.length && navigator.share && navigator.canShare && navigator.canShare({files}));}catch(_){return false;}
+  }
   async function open(panel, opener) {
+    if(document.querySelector('.ranking-share-dialog'))return;
+
     const isEvent=!panel;
     const rows = isEvent ? [] : readRows(panel);
     if (!isEvent && !rows.length) return;
@@ -243,9 +248,10 @@
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
     const allPages = isEvent ? [[]] : chunks(rows), urls = [], calendarUrls=[];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
-    const heading=el('h2','Partager '+(isEvent ? (data.shareKind==='competition' ? 'le calendrier' : 'l’événement') : 'le classement'),dialog);
+    const header=el('header','',dialog);header.className='ranking-share-header';
+    const heading=el('h2','Partager '+(isEvent ? (data.shareKind==='competition' ? 'le calendrier' : 'l’événement') : 'le classement'),header);
     heading.id='ranking-share-title';dialog.setAttribute('aria-labelledby',heading.id);
-    const close=el('button','×',dialog);close.type='button';close.className='ranking-share-close';close.setAttribute('aria-label','Fermer');
+    const close=el('button','×',header);close.type='button';close.className='ranking-share-close';close.setAttribute('aria-label','Fermer');
     const layout=el('div','',dialog);layout.className='ranking-share-layout';
     const gallery=el('div','',layout);gallery.className='ranking-share-gallery';
     const actions=el('div','',layout);actions.className='ranking-share-actions';
@@ -317,18 +323,38 @@
     copyLink.onclick=copyUrl.onclick=async()=>{try{await navigator.clipboard.writeText(pageUrl);status.textContent='Lien copié.';}catch(_){urlInput.focus();urlInput.select();status.textContent='Sélectionnez et copiez le lien manuellement.';}};
     if(location.hostname.startsWith('preprod.'))el('p','Ce lien de préproduction est protégé par un mot de passe.',actions);
     const download=el('button','Créer un post',actions);download.type='button';download.className='ranking-share-create';
-    const post=el('div','',actions);post.hidden=true;
-    const captionLabel=el('label','Texte du post',post),caption=el('textarea','',captionLabel);
+    const post=el('section','',actions);post.hidden=true;post.className='ranking-share-post';post.id='ranking-share-post';
+    social.after(post);instagram.setAttribute('aria-controls',post.id);instagram.setAttribute('aria-expanded','false');
+    const postHeading=el('h3','Préparer votre post Instagram',post);postHeading.tabIndex=-1;
+    el('p','Copiez le texte, puis partagez l’image. Dans Instagram, collez le texte avant de publier.',post);
+    const captionLabel=el('label','Texte à publier',post),caption=el('textarea','',captionLabel);
     caption.value=[context.title+' — '+context.subtitle,context.handle,pageUrl,'#RidersFanatics'].filter(Boolean).join('\n');
-    const copy=el('button','Copier le texte',post);copy.type='button';
-    copy.onclick=async()=>{try{await navigator.clipboard.writeText(caption.value);status.textContent='Texte copié.';}catch(_){caption.focus();caption.select();status.textContent='Sélectionnez et copiez le texte manuellement.';}};
-    const instagramHelp=el('div','',post);instagramHelp.hidden=true;instagramHelp.className='ranking-share-instagram-help';
-    el('p','Téléchargez l’image complète, copiez le texte puis ajoutez-les dans Instagram. Sur un téléphone compatible, choisissez Instagram dans le menu de partage.',instagramHelp);
+    caption.rows=3;
+    const copy=el('button','1. Copier le texte',post);copy.type='button';
+    const postStatus=el('p','',post);postStatus.setAttribute('role','status');postStatus.className='ranking-share-post-status';
+    copy.onclick=async()=>{try{await navigator.clipboard.writeText(caption.value);copy.textContent='✓ Texte copié';postStatus.textContent='Texte copié. Partagez maintenant l’image, puis collez le texte dans Instagram.';}catch(_){caption.focus();caption.select();caption.setSelectionRange(0,caption.value.length);postStatus.textContent='La copie automatique est indisponible. Appuyez longuement sur le texte sélectionné, puis choisissez Copier.';}};
+    caption.addEventListener('input',()=>{copy.textContent='1. Copier le texte';postStatus.textContent='Texte modifié : copiez-le à nouveau avant de publier.';});
+    const instagramShare=el('button','2. Partager l’image',post);instagramShare.type='button';instagramShare.className='ranking-share-instagram-send';
+    const instagramHelp=el('div','',post);instagramHelp.className='ranking-share-instagram-help';
+    el('p','Choisissez Instagram dans le menu du téléphone. Si Instagram n’apparaît pas, enregistrez l’image, puis ouvrez Instagram pour l’ajouter à votre publication.',instagramHelp);
+    const saveImage=el('button','Télécharger l’image',instagramHelp);saveImage.type='button';
     const instagramLink=el('a','Ouvrir Instagram ↗',instagramHelp);instagramLink.href='https://www.instagram.com/';instagramLink.target='_blank';instagramLink.rel='noopener noreferrer';
+    function showPost(){
+      post.hidden=false;instagram.setAttribute('aria-expanded','true');
+      postHeading.focus({preventScroll:true});post.scrollIntoView({block:'start',behavior:'instant'});
+      instagramShare.textContent=canShareFiles(selected().map(item=>item.file))?'2. Partager l’image':'2. Télécharger l’image';
+    }
     let rendered=[], version=0;
     function selected() { return rendered.filter(item=>item.checkbox.checked); }
     function release() { urls.splice(0).forEach(url=>URL.revokeObjectURL(url)); }
-    function dispose() { version++; release(); calendarUrls.forEach(url=>URL.revokeObjectURL(url)); dialog.remove(); opener.focus(); }
+    const scrollPosition={x:window.scrollX,y:window.scrollY};
+    const bodyKeys=['position','top','left','right','width','overflow'];
+    const bodyStyles=bodyKeys.map(key=>[key,document.body.style.getPropertyValue(key),document.body.style.getPropertyPriority(key)]);
+    function dispose() {
+      version++;release();calendarUrls.forEach(url=>URL.revokeObjectURL(url));dialog.remove();
+      bodyStyles.forEach(([key,value,priority])=>value?document.body.style.setProperty(key,value,priority):document.body.style.removeProperty(key));
+      window.scrollTo({left:scrollPosition.x,top:scrollPosition.y,behavior:'instant'});opener.focus({preventScroll:true});
+    }
     close.onclick=()=>dialog.close(); dialog.addEventListener('close',dispose,{once:true});
     dialog.addEventListener('click', e=>{ if(e.target===dialog){ const b=dialog.getBoundingClientRect(); if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)dialog.close(); } });
     async function render() {
@@ -347,35 +373,44 @@
           checkbox.type='checkbox'; checkbox.checked=previous[i] ?? true;
           choice.append(document.createTextNode(' Image '+(i+1)));choice.hidden=isEvent;
           const url=URL.createObjectURL(blob); urls.push(url);
-          canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',isEvent ? context.title+' — event card' : context.title+' — entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)); item.append(canvas);
+          canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',isEvent ? context.title+' — event card' : context.title+' — entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)); const preview=el('a','',item);preview.href=url;preview.target='_blank';preview.rel='noopener';preview.className='ranking-share-preview';preview.setAttribute('aria-label','Agrandir l’image '+(i+1)+' (nouvel onglet)');preview.append(canvas);
           const file=new File([blob],'ridersfanatics-'+(isEvent ? 'event' : 'ranking')+'-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'});
           const link=el('a','Télécharger l’image',item); link.href=url; link.download=file.name;
+          const hint=el('span','Touchez l’aperçu pour l’agrandir',item);hint.className='ranking-share-preview-hint';
           rendered.push({checkbox,file,url});
         }
         status.textContent='Aperçu intégral prêt — '+pages.length+' image(s).';
         share.disabled=download.disabled=instagram.disabled=false;
       } catch (_) { if(token===version)status.textContent='Impossible de préparer l’image. Rechargez la page pour réessayer.'; }
     }
-    download.onclick=()=>{ post.hidden=false; const chosen=selected(); if(!chosen.length){status.textContent='Sélectionnez au moins une image.';return;}
+    function downloadImages(){
+      const chosen=selected();if(!chosen.length){postStatus.textContent='Sélectionnez au moins une image dans l’aperçu.';return;}
       chosen.forEach(item=>{const a=el('a');a.href=item.url;a.download=item.file.name;document.body.append(a);a.click();a.remove();});
-      status.textContent='Téléchargement demandé. Copiez le texte et ajoutez-les à votre post. Pour plusieurs images, utilisez aussi les liens sous les aperçus.'; };
-    share.onclick=async()=>{const files=selected().map(item=>item.file);if(!files.length){status.textContent='Sélectionnez au moins une image.';return;}
-      if(!navigator.share){post.hidden=false;status.textContent='Le partage natif est indisponible. Utilisez Créer un post ou Copier le lien.';return;}
-      const payload=navigator.canShare && navigator.canShare({files}) ? {files,title:context.title,text:caption.value} : {url:pageUrl,title:context.title};
-      try{await navigator.share(payload);status.textContent='Partage effectué.';}catch(e){status.textContent=e.name==='AbortError'?'Partage annulé.':'Le partage a échoué. Téléchargez les images pour continuer.';}};
-    instagram.onclick=async()=>{
-      const files=selected().map(item=>item.file);
-      if(!files.length){status.textContent='Sélectionnez au moins une image.';return;}
-      post.hidden=false;instagramHelp.hidden=false;
-      if(navigator.share && navigator.canShare && navigator.canShare({files})) {
-        try { await navigator.share({files}); status.textContent='Choisissez Instagram dans le menu, puis collez le texte pour terminer votre post.'; }
-        catch(e){status.textContent=e.name==='AbortError'?'Partage annulé.':'Partage impossible. Utilisez Créer un post, puis ouvrez Instagram.';}
-      } else {
-        download.onclick();status.textContent='Téléchargement demandé. Copiez le texte, puis ouvrez Instagram pour publier.';
-        instagramHelp.scrollIntoView({block:'nearest'});
-      }
+      postStatus.textContent='Téléchargement demandé. Retrouvez l’image dans vos téléchargements et ajoutez-la dans Instagram. Si nécessaire, enregistrez-la d’abord dans Photos.';
+    }
+    download.onclick=()=>{showPost();downloadImages();};saveImage.onclick=downloadImages;
+    let sharing=false;
+    async function nativeShare(payload,feedback){
+      if(sharing)return;
+      sharing=true;share.disabled=instagramShare.disabled=true;
+      try{await navigator.share(payload);feedback.textContent=feedback===postStatus?'Image transmise au menu de partage. Dans Instagram, collez le texte puis confirmez la publication.':'Contenu transmis au menu de partage.';}
+      catch(e){feedback.textContent=e.name==='AbortError'?'Partage annulé. Vous pouvez réessayer quand vous voulez.':'Le partage n’a pas abouti. Utilisez Télécharger l’image, puis ouvrez Instagram.';}
+      finally{sharing=false;share.disabled=instagramShare.disabled=false;}
+    }
+    share.onclick=()=>{
+      const files=selected().map(item=>item.file);if(!files.length){status.textContent='Sélectionnez au moins une image.';return;}
+      if(!navigator.share){showPost();postStatus.textContent='Le partage du téléphone est indisponible. Téléchargez l’image ou copiez le lien.';return;}
+      // Invoke the share sheet directly from this tap, without an awaited copy operation.
+      nativeShare(canShareFiles(files)?{files,title:context.title,text:caption.value}:{url:pageUrl,title:context.title},status);
     };
-
+    instagram.onclick=showPost;
+    instagramShare.onclick=()=>{
+      const files=selected().map(item=>item.file);
+      if(!files.length){postStatus.textContent='Sélectionnez au moins une image dans l’aperçu.';return;}
+      if(!canShareFiles(files)){downloadImages();return;}
+      nativeShare({files},postStatus);
+    };
+    Object.assign(document.body.style,{position:'fixed',top:-scrollPosition.y+'px',left:-scrollPosition.x+'px',right:'0',width:'100%',overflow:'hidden'});
     document.body.append(dialog);dialog.showModal();await render();
   }
   if(data.eventCard){

@@ -46,10 +46,13 @@ const {chromium}=require('playwright');
   await page.getByRole('button',{name:'Plus',exact:true}).click();
   assert.equal(await page.evaluate(()=>window.shared.files[0].type),'image/png');
   await page.getByRole('button',{name:'Instagram',exact:true}).click();
+  await page.getByRole('button',{name:'1. Copier le texte',exact:true}).click();
+  await page.getByRole('button',{name:'2. Partager l’image',exact:true}).click();
   assert.equal(await page.evaluate(()=>window.shared.files.length),1);
   await page.evaluate(()=>Object.defineProperty(navigator,'canShare',{value:()=>false,configurable:true}));
   await page.getByRole('button',{name:'Plus',exact:true}).click();assert.equal(await page.evaluate(()=>window.shared.url),page.url());
-  let pending=page.waitForEvent('download');await page.getByRole('button',{name:'Instagram',exact:true}).click();assert.equal(await (await pending).failure(),null);
+  await page.getByRole('button',{name:'Instagram',exact:true}).click();
+  let pending=page.waitForEvent('download');await page.getByRole('button',{name:'2. Télécharger l’image',exact:true}).click();assert.equal(await (await pending).failure(),null);
   assert(await page.locator('.ranking-share-instagram-help').isVisible());
   pending=page.waitForEvent('download');await page.getByRole('button',{name:'Créer un post',exact:true}).click();assert.equal(await (await pending).failure(),null);
   for(const width of [1280,390,320]){

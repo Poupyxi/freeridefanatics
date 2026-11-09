@@ -118,22 +118,6 @@ DRIVE_LOGO_MANIFEST_PATH = os.path.join(ROOT, "data", "drive-logo-manifest.json"
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
-# Future seasons can be prepared on the protected preview before they exist in
-# the live Notion catalogue.  They stay out of production and carry no invented
-# dates, riders or results.
-if IS_PREPROD:
-    planned_path = os.path.join(ROOT, "data", "planned-competitions.json")
-    if os.path.exists(planned_path):
-        with open(planned_path, encoding="utf-8") as planned_source:
-            planned_competitions = json.load(planned_source)
-        existing_ids = {
-            item.get("id") for item in COMPETITION_CATALOG.get("series", [])
-        }
-        COMPETITION_CATALOG.setdefault("series", []).extend(
-            item for item in planned_competitions
-            if item.get("id") not in existing_ids
-        )
-
 def visible_status(item):
     return item.get("status") == "published" or IS_PREPROD
 
@@ -3024,7 +3008,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
       <div class="competition-grid">{"".join(cards[len(ordered_competitions):])}</div>
     </section>''' if hub_organizations else "")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><div><span class="label">All competitions</span><h1 class="competition-hub-title">Choose a season.</h1></div><span class="see-all">{len(competitions)} competition series currently tracked here</span></div>{year_sections}{collection_section}</div></section>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><div><span class="label">All competitions</span><h1 class="competition-hub-title">Choose a season.</h1><p class="competition-hub-summary">Browse only competitions and seasons currently recorded in the RidersFanatics database.</p></div><span class="see-all">{len(competitions)} competition series currently tracked here</span></div>{year_sections}{collection_section}</div></section>
 </main>'''
     html += footer_html(prefix, seasonal=winter)
     return html

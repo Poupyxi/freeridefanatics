@@ -48,6 +48,7 @@ assert html.index('id="season-2027"') < html.index('id="season-2026"')
 assert html.index('data-competition-year="2027"') < html.index('data-competition-year="2026"')
 assert "Event 2026</h2>" not in html and "Event 2027</h2>" not in html
 assert "Winter Tour 2026 2027</h2>" not in html
+assert "Hardline" not in html and "Rampage" not in html and "Cerro Abajo" not in html
 
 script = (ROOT / "assets" / "js" / "site.js").read_text(encoding="utf-8")
 assert "safe('competition-year-filter'" in script

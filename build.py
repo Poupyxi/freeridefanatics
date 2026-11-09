@@ -4272,12 +4272,42 @@ def team_directory_card(record, prefix=""):
     rider_count = len(record["riders"])
     competition_count = len(record["competitions"])
     slug = competition_round_slug(team)
+    rider_stack = team_rider_stack_html(record["riders"].values(), prefix)
     return f'''<article class="team-directory-card">
       <div class="team-directory-card-top"><span>{year}</span><span>{rider_count} rider{'s' if rider_count != 1 else ''}</span></div>
-      {team_identity_html(team, prefix)}
-      <p>{competition_count} linked competition season{'s' if competition_count != 1 else ''}.</p>
-      <a class="btn btn-solid" href="{prefix}teams/{year}/{slug}.html">View {esc(team)}</a>
+      <div class="team-directory-card-main">{team_logo_visual_html(team, prefix)}<div><h3>{esc(team)}</h3><p>{competition_count} linked competition season{'s' if competition_count != 1 else ''}</p></div></div>
+      <div class="team-directory-card-footer">{rider_stack}<a href="{prefix}teams/{year}/{slug}.html" aria-label="View {esc_attr(team)} {year}">View team <span aria-hidden="true">→</span></a></div>
     </article>'''
+
+
+def team_logo_visual_html(team, prefix=""):
+    key = competition_round_slug(team)
+    logo = next(
+        (item for item in load_drive_logo_manifest()["teams"] if item["key"] == key),
+        None,
+    )
+    if logo:
+        negative = logo.get("negative_on_light") is True or (
+            "negative_on_light" not in logo and team_logo_needs_negative_filter(logo["src"])
+        )
+        logo_class = " team-logo-visual-negative" if negative else ""
+        return f'<span class="team-logo-visual{logo_class}"><img src="{prefix}{logo["src"]}" alt="" loading="lazy" width="120" height="80"></span>'
+    return f'<span class="team-logo-visual team-logo-fallback" aria-hidden="true">{esc(initials({"display_name": team}))}</span>'
+
+
+def team_rider_stack_html(riders, prefix=""):
+    ordered = sorted(riders, key=lambda rider: norm_product_text(rider["display_name"]))
+    portraits = []
+    for rider in ordered[:4]:
+        photo = has_photo(rider["slug"])
+        content = (
+            f'<img src="{prefix}assets/img/riders/{photo}?v={BUILD_VERSION}" alt="" loading="lazy" width="44" height="44">'
+            if photo else f'<span>{esc(initials(rider))}</span>'
+        )
+        portraits.append(f'<span class="team-rider-avatar" title="{esc_attr(rider["display_name"])}">{content}</span>')
+    if len(ordered) > 4:
+        portraits.append(f'<span class="team-rider-avatar team-rider-more">+{len(ordered) - 4}</span>')
+    return f'<div class="team-rider-stack" aria-label="{len(ordered)} recorded riders">{"".join(portraits)}</div>'
 
 
 def build_teams_directory(riders):
@@ -4313,7 +4343,10 @@ def build_teams_directory(riders):
         ],
     )
     html += header_html("", active="teams")
-    html += f'''<main id="main-content"><section class="section team-directory-intro"><div class="wrap"><div class="label">Teams · Riders · Seasons</div><h1>Professional teams by season.</h1><p>Every team shown here comes from a recorded Rider–Team–Season relationship. Rosters stay separated by year so a transfer never changes an earlier season.</p></div></section><section class="section team-directory"><div class="wrap">{"".join(sections)}</div></section></main>'''
+    team_total = sum(len(items) for items in seasons.values())
+    rider_total = len({slug for items in seasons.values() for record in items.values() for slug in record["riders"]})
+    season_links = "".join(f'<a href="#teams-{year}">{year}</a>' for year in years)
+    html += f'''<main id="main-content"><section class="section team-directory-intro"><div class="wrap team-directory-intro-grid"><div><div class="label">Teams · Riders · Seasons</div><h1>The paddock, team by team.</h1><p>Explore every recorded roster without mixing seasons. Transfers remain attached to the correct year, while each team page connects riders, competitions, results and documented equipment.</p><div class="team-season-jumps">{season_links}</div></div><dl class="team-directory-summary"><div><dt>{team_total}</dt><dd>Team seasons</dd></div><div><dt>{rider_total}</dt><dd>Linked riders</dd></div><div><dt>{len(years)}</dt><dd>Seasons</dd></div></dl></div></section><section class="section team-directory"><div class="wrap">{"".join(sections)}</div></section></main>'''
     return html + footer_html("")
 
 
@@ -4351,6 +4384,7 @@ def build_team_page(record):
     rider_cards = "".join(rider_card(rider, "../../", "../../riders/") for rider in riders)
     competition_links = "".join(f'<li>{esc(name)}</li>' for name in competitions)
     brand_links = "".join(f'<span>{esc(brand)}</span>' for brand in brands[:18])
+    hero_riders = team_rider_stack_html(riders, "../../")
     path = f"/teams/{year}/{slug}.html"
     description = f"{team} {year}: recorded rider roster, competition seasons, results and documented rider equipment on RidersFanatics."
     html = head(
@@ -4362,7 +4396,7 @@ def build_team_page(record):
         ],
     )
     html += header_html("../../", active="teams")
-    html += f'''<main id="main-content"><section class="competition-season-hero team-profile-hero"><div class="wrap competition-season-hero-grid"><div>{team_identity_html(team, "../../")}<div class="label">Mountain bike team · {year}</div><h1>{esc(team)}</h1><p>{len(riders)} recorded rider{'s' if len(riders) != 1 else ''} for the {year} season.</p></div><div class="team-profile-stats"><span><strong>{len(riders)}</strong> Riders</span><span><strong>{len(competitions)}</strong> Competitions</span><span><strong>{len(results)}</strong> Results</span><span><strong>{wins}</strong> Wins</span></div></div></section>
+    html += f'''<main id="main-content"><section class="competition-season-hero team-profile-hero"><div class="wrap team-profile-hero-grid"><div class="team-profile-logo-panel">{team_logo_visual_html(team, "../../")}</div><div class="team-profile-heading"><div class="label">Mountain bike team · {year}</div><h1>{esc(team)}</h1><p>{len(riders)} recorded rider{'s' if len(riders) != 1 else ''} for the {year} season.</p>{hero_riders}</div><div class="team-profile-stats"><span><strong>{len(riders)}</strong> Riders</span><span><strong>{len(competitions)}</strong> Competitions</span><span><strong>{len(results)}</strong> Results</span><span><strong>{wins}</strong> Wins</span></div></div></section>
 <section class="section"><div class="wrap"><div class="section-head"><div><span class="label">Recorded roster</span><h2>Riders.</h2></div></div><div class="rider-grid">{rider_cards}</div></div></section>
 <section class="section team-profile-context"><div class="wrap team-profile-context-grid"><article><span class="label">Competition seasons</span><h2>Linked competitions.</h2><ul>{competition_links}</ul></article><article><span class="label">Documented rider equipment</span><h2>Brands observed.</h2><p>These brands come from the linked riders’ documented setups. They are not presented as official team sponsors.</p><div class="team-brand-list">{brand_links}</div></article></div></section></main>'''
     return html + footer_html("../../")

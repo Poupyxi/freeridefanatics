@@ -38,14 +38,13 @@ with patch.object(build, "load_competition_logos", return_value={}), \
      patch.object(build, "ORGANIZATIONS", []):
     html = build.build_competitions_hub([], [events_2026, events_2027, cross_year])
 
-assert 'data-competition-year-filter' in html
-assert '<option value="all">All seasons</option>' in html
-assert '<option value="2027">2027</option>' in html
-assert '<option value="2026">2026</option>' in html
+assert 'id="season-2027"' in html
+assert 'id="season-2026"' in html
+assert '<h1 class="competition-hub-title">Choose a season.</h1>' in html
 assert 'data-competition-year="2026"' in html
 assert 'data-competition-year="2027"' in html
 assert 'data-competition-year="2026 2027"' in html
-assert html.index('<option value="2027">') < html.index('<option value="2026">')
+assert html.index('id="season-2027"') < html.index('id="season-2026"')
 assert html.index('data-competition-year="2027"') < html.index('data-competition-year="2026"')
 assert "Event 2026</h2>" not in html and "Event 2027</h2>" not in html
 assert "Winter Tour 2026 2027</h2>" not in html

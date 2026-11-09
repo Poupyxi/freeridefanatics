@@ -118,6 +118,22 @@ DRIVE_LOGO_MANIFEST_PATH = os.path.join(ROOT, "data", "drive-logo-manifest.json"
 with open(COMPETITIONS_PATH, encoding="utf-8") as competition_source:
     COMPETITION_CATALOG = json.load(competition_source)
 
+# Future seasons can be prepared on the protected preview before they exist in
+# the live Notion catalogue.  They stay out of production and carry no invented
+# dates, riders or results.
+if IS_PREPROD:
+    planned_path = os.path.join(ROOT, "data", "planned-competitions.json")
+    if os.path.exists(planned_path):
+        with open(planned_path, encoding="utf-8") as planned_source:
+            planned_competitions = json.load(planned_source)
+        existing_ids = {
+            item.get("id") for item in COMPETITION_CATALOG.get("series", [])
+        }
+        COMPETITION_CATALOG.setdefault("series", []).extend(
+            item for item in planned_competitions
+            if item.get("id") not in existing_ids
+        )
+
 def visible_status(item):
     return item.get("status") == "published" or IS_PREPROD
 
@@ -695,35 +711,20 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
     # The season switch already communicates the active context. Avoid adding
     # a changing rider total beside it, which makes the compact header noisy.
     rider_counter = "" if seasonal else f'<span class="icon-btn">{RIDER_COUNT} Riders</span>'
-    competition_year_groups = {}
-    for organization in ORGANIZATIONS:
-        items_by_year = {}
-        for competition in organization.get("competitions", []):
-            if not visible_status(competition) or competition_is_winter(competition):
-                continue
-            href = competition.get("existing_path")
-            if href:
-                href = asset_prefix + href.lstrip("/")
-            else:
-                href = f"{asset_prefix}competitions/{organization['id']}/{competition['id']}/"
-            year = str(competition.get("season", ""))
-            items_by_year.setdefault(year, []).append(f'<a href="{href}"><strong>{esc(competition_display_name(competition))}</strong><small>{esc(competition.get("discipline"))}</small></a>')
-        organization_href = f"{asset_prefix}competitions/{organization['id']}/"
-        for year, items in items_by_year.items():
-            group = f'<div class="competition-menu-group"><a href="{organization_href}" class="competition-menu-title">{esc(organization["name"])}</a>{"".join(items)}</div>'
-            competition_year_groups.setdefault(year, []).append(group)
+    competition_items_by_year = {}
+    for competition in COMPETITIONS:
+        if competition_is_winter(competition):
+            continue
+        year = str(competition.get("season", ""))
+        competition_items_by_year.setdefault(year, []).append(
+            f'<a href="{asset_prefix}competitions/{competition["id"]}.html">'
+            f'<strong>{esc(competition_display_name(competition))}</strong>'
+            f'<small>{esc(competition["discipline"])}</small></a>'
+        )
     competition_groups = [
-        f'<div class="competition-menu-year"><button class="competition-menu-year-toggle" type="button" aria-expanded="false">{esc(year)}<span aria-hidden="true">+</span></button><div class="competition-menu-year-items" hidden>{"".join(groups)}</div></div>'
-        for year, groups in sorted(competition_year_groups.items(), key=lambda item: item[0], reverse=True)
+        f'<div class="competition-menu-year"><button class="competition-menu-year-toggle" type="button" aria-expanded="false">{esc(year)}<span aria-hidden="true">+</span></button><div class="competition-menu-year-items" hidden>{"".join(items)}</div></div>'
+        for year, items in sorted(competition_items_by_year.items(), reverse=True)
     ]
-    if not competition_groups:
-        fallback_by_year = {}
-        for competition in COMPETITIONS:
-            if competition_is_winter(competition):
-                continue
-            year = str(competition.get("season", ""))
-            fallback_by_year.setdefault(year, []).append(f'<a href="{asset_prefix}competitions/{competition["id"]}.html"><strong>{esc(competition_display_name(competition))}</strong><small>{esc(competition["discipline"])}</small></a>')
-        competition_groups = [f'<div class="competition-menu-year"><button class="competition-menu-year-toggle" type="button" aria-expanded="false">{esc(year)}<span aria-hidden="true">+</span></button><div class="competition-menu-year-items" hidden>{"".join(items)}</div></div>' for year, items in sorted(fallback_by_year.items(), reverse=True)]
     winter_competition_groups = []
     if seasonal:
         for competition in COMPETITIONS:
@@ -2925,6 +2926,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
     prefix = "../" if winter else ""
     route_root = "/winter" if winter else ""
     cards = []
+    cards_by_year = {}
     item_list = []
     competition_logos = load_competition_logos()
     ordered_competitions = sorted(
@@ -2963,7 +2965,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
             if value > 0 and (singular != "team" or value >= 5)
         )
         competition_years = " ".join(competition_season_years(competition))
-        cards.append(f'''<article class="{card_class}" data-competition-year="{esc_attr(competition_years)}">
+        card_html = f'''<article class="{card_class}" data-competition-year="{esc_attr(competition_years)}">
           <div class="competition-card-top"><span class="competition-status competition-status-{status_class}">{esc(status_label)}</span><span>{competition['season']}</span></div>
           {logo_html}
           <div class="competition-sport">{esc(competition['sport'])} · {esc(competition['discipline'])}</div>
@@ -2971,7 +2973,10 @@ def build_competitions_hub(riders, competitions=None, winter=False):
           {description_html}
           {f'<div class="competition-card-stats">{stats_html}</div>' if stats_html else ''}
           <a class="btn btn-solid" href="competitions/{competition['id']}.html">Explore {esc(display_name)} results</a>
-        </article>''')
+        </article>'''
+        cards.append(card_html)
+        for year in competition_season_years(competition):
+            cards_by_year.setdefault(year, []).append(card_html)
         item_list.append({"@type": "ListItem", "position": position,
                           "name": competition["name"], "url": absolute_url(detail_path)})
     hub_organizations = [] if winter else [organization for organization in ORGANIZATIONS if organization.get("show_in_hub", True)]
@@ -3007,18 +3012,19 @@ def build_competitions_hub(riders, competitions=None, winter=False):
         {year for competition in competitions for year in competition_season_years(competition)},
         reverse=True,
     )
-    year_options = "".join(
-        f'<option value="{year}">{year}</option>' for year in competition_years
+    year_sections = "".join(
+        f'''<section class="competition-year-section" id="season-{year}" aria-labelledby="season-{year}-title">
+          <div class="competition-year-heading"><div><span class="label">Season</span><h2 id="season-{year}-title">{year}</h2></div><span>{len(cards_by_year.get(year, []))} competition{'s' if len(cards_by_year.get(year, [])) != 1 else ''}</span></div>
+          <div class="competition-grid">{"".join(cards_by_year.get(year, []))}</div>
+        </section>'''
+        for year in competition_years
     )
-    year_filter = (f'''<div class="competition-year-filter" data-competition-year-controls>
-      <label for="competition-year-select{'-winter' if winter else ''}">Year</label>
-      <select id="competition-year-select{'-winter' if winter else ''}" data-competition-year-filter>
-        <option value="all">All years</option>{year_options}
-      </select>
-      <span aria-live="polite" data-competition-year-count>{len(cards)} competitions</span>
-    </div>''' if competition_years else "")
+    collection_section = (f'''<section class="competition-year-section competition-collection-section" aria-labelledby="competition-collections-title">
+      <div class="competition-year-heading"><div><span class="label">Browse</span><h2 id="competition-collections-title">Competition collections</h2></div></div>
+      <div class="competition-grid">{"".join(cards[len(ordered_competitions):])}</div>
+    </section>''' if hub_organizations else "")
     html += f'''<main>
-<section class="section competitions-list"><div class="wrap"><div class="section-head"><h1 class="label competition-hub-title">Competitions tracked</h1><span class="see-all">{len(competitions) + len(hub_organizations)} competition series currently tracked here</span></div>{year_filter}<div class="competition-grid" data-competition-year-list>{"".join(cards)}</div><p class="competition-year-empty" data-competition-year-empty hidden>No competition is currently tracked for this season.</p></div></section>
+<section class="section competitions-list"><div class="wrap"><div class="section-head"><div><span class="label">All competitions</span><h1 class="competition-hub-title">Choose a season.</h1></div><span class="see-all">{len(competitions)} competition series currently tracked here</span></div>{year_sections}{collection_section}</div></section>
 </main>'''
     html += footer_html(prefix, seasonal=winter)
     return html

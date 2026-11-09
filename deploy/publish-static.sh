@@ -25,6 +25,9 @@ done
 if [[ "$BUILD_ENV" == "preprod" && -d "$SOURCE_DIR/winter" ]]; then
   rsync -a --delete "$SOURCE_DIR/winter/" "$PUBLIC_DIR/winter/"
 fi
+if [[ "$BUILD_ENV" == "preprod" && -d "$SOURCE_DIR/teams" ]]; then
+  rsync -a --delete "$SOURCE_DIR/teams/" "$PUBLIC_DIR/teams/"
+fi
 rsync -a "$SOURCE_DIR/" "$PUBLIC_DIR/" \
   --include='/*.html' \
   --include='/robots.txt' \

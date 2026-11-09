@@ -74,6 +74,7 @@ jobs:
           python3 tests/data_health_report.py
           python3 tests/workflow_contract.py
           python3 build.py
+          python3 tests/team_directory.py
           python3 tests/seo_ctr_contract.py
           python3 tests/adsense_seo_readiness.py
           python3 tests/ad_preview.py
@@ -81,6 +82,7 @@ jobs:
           test -s index.html
           test -s riders.html
           test -s equipment.html
+          test -s teams.html
           grep -q 'noindex,nofollow,noarchive' index.html
           grep -q 'Disallow: /' robots.txt
 
@@ -410,6 +412,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 build.py
+          python3 tests/team_directory.py
           python3 tests/seo_ctr_contract.py
           python3 tests/competition_featured_event.py
           python3 tests/seasonal_data_views.py
@@ -417,6 +420,8 @@ jobs:
           python3 tests/ad_preview.py
           node tests/footer-ad.test.js
           python3 tests/environment_visibility.py
+          test -s teams.html
+          find teams -mindepth 2 -maxdepth 2 -type f -name '*.html' | grep -q .
           grep -q 'Disallow: /' robots.txt
           grep -q 'noindex,nofollow,noarchive' index.html
           ! grep -q 'preprod-source-switcher' index.html

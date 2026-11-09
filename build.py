@@ -47,6 +47,7 @@ SYNC_METADATA_PATH = os.environ.get(
 RIDERS_DIR = os.path.join(ROOT, "riders")
 EQUIPMENT_DIR = os.path.join(ROOT, "equipment")
 COMPETITIONS_DIR = os.path.join(ROOT, "competitions")
+TEAMS_DIR = os.path.join(ROOT, "teams")
 IMG_DIR = os.path.join(ROOT, "assets", "img", "riders")
 DRIVE_RIDER_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-drive")
 ACTION_IMG_DIR = os.path.join(ROOT, "assets", "img", "riders-action")
@@ -709,6 +710,11 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
         f'<div class="competition-menu-year"><button class="competition-menu-year-toggle" type="button" aria-expanded="false">{esc(year)}<span aria-hidden="true">+</span></button><div class="competition-menu-year-items" hidden>{"".join(items)}</div></div>'
         for year, items in sorted(competition_items_by_year.items(), reverse=True)
     ]
+    summer_directory_links = (
+        f'<a href="{asset_prefix}teams.html"{cls("teams")}>Teams</a>'
+        f'<a href="{asset_prefix}brands.html"{cls("brands")}>Brands</a>'
+        if IS_PREPROD else ""
+    )
     winter_competition_groups = []
     if seasonal:
         for competition in COMPETITIONS:
@@ -748,8 +754,9 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
           </div>
         </div>
       </div>
+      {summer_directory_links}
       <a href="{asset_prefix}equipment.html" data-season-route="equipment"{cls('equipment')}>Equipment</a>
-      <a href="{home_href}#faq">FAQ</a>
+      {'' if IS_PREPROD else f'<a href="{home_href}#faq">FAQ</a>'}
     </nav>
     <div class="nav-icons">
       {seasonal_switch.strip()}
@@ -777,10 +784,11 @@ def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
   <div class="wrap footer-row">
     <a class="footer-logo" href="{home_href}">{footer_logo}RIDERSFANATICS</a>
     <nav class="footer-links" aria-label="Footer navigation">
-      <a href="{asset_prefix}riders.html#grid" data-season-route="riders">Riders</a>
       <a href="{asset_prefix}competitions.html" data-season-route="competitions">Competitions</a>
-      <a href="{asset_prefix}equipment.html" data-season-route="equipment">Equipment</a>
+      <a href="{asset_prefix}riders.html#grid" data-season-route="riders">Riders</a>
+      {f'<a href="{asset_prefix}teams.html"{summer_scope}>Teams</a>' if IS_PREPROD else ''}
       <a href="{asset_prefix}brands.html"{summer_scope}>Brands</a>
+      <a href="{asset_prefix}equipment.html" data-season-route="equipment">Equipment</a>
       <a href="{asset_prefix}contact.html">Contact</a>
       <a href="{asset_prefix}privacy.html">Privacy</a>
     </nav>
@@ -4229,6 +4237,136 @@ def build_brands_directory(riders):
     html += footer_html("")
     return html
 
+
+def collect_team_seasons(riders):
+    """Group Notion team memberships by calendar year without crossing seasons."""
+    seasons = {}
+    for rider in riders:
+        memberships = rider.get("team_history") or []
+        if not memberships:
+            team = str(rider.get("team") or "").strip()
+            if team and team.casefold() != "privateer":
+                memberships = [{"team": team, "season": str(rider.get("season") or 2026)}]
+        for membership in memberships:
+            team = str(membership.get("team") or "").strip()
+            season_name = str(membership.get("season") or "").strip()
+            year_match = re.search(r"\b(20\d{2})\b", season_name)
+            if not team or team.casefold() == "privateer" or not year_match:
+                continue
+            year = year_match.group(1)
+            record = seasons.setdefault(year, {}).setdefault(team, {
+                "team": team,
+                "year": year,
+                "riders": {},
+                "competitions": set(),
+            })
+            record["riders"][rider["slug"]] = rider
+            if season_name:
+                record["competitions"].add(season_name)
+    return seasons
+
+
+def team_directory_card(record, prefix=""):
+    team = record["team"]
+    year = record["year"]
+    rider_count = len(record["riders"])
+    competition_count = len(record["competitions"])
+    slug = competition_round_slug(team)
+    return f'''<article class="team-directory-card">
+      <div class="team-directory-card-top"><span>{year}</span><span>{rider_count} rider{'s' if rider_count != 1 else ''}</span></div>
+      {team_identity_html(team, prefix)}
+      <p>{competition_count} linked competition season{'s' if competition_count != 1 else ''}.</p>
+      <a class="btn btn-solid" href="{prefix}teams/{year}/{slug}.html">View {esc(team)}</a>
+    </article>'''
+
+
+def build_teams_directory(riders):
+    seasons = collect_team_seasons(riders)
+    years = sorted(seasons, reverse=True)
+    sections = []
+    schema_items = []
+    position = 0
+    for year in years:
+        records = sorted(seasons[year].values(), key=lambda item: norm_product_text(item["team"]))
+        cards = []
+        for record in records:
+            cards.append(team_directory_card(record))
+            position += 1
+            schema_items.append({
+                "@type": "ListItem",
+                "position": position,
+                "name": f'{record["team"]} {year}',
+                "url": absolute_url(f'/teams/{year}/{competition_round_slug(record["team"])}.html'),
+            })
+        sections.append(f'''<section class="team-season-section" id="teams-{year}" aria-labelledby="teams-{year}-title">
+          <div class="competition-year-heading"><div><span class="label">Season</span><h2 id="teams-{year}-title">{year}</h2></div><a href="teams/{year}/">{len(records)} team{'s' if len(records) != 1 else ''} →</a></div>
+          <div class="team-directory-grid">{"".join(cards)}</div>
+        </section>''')
+    path = "/teams.html"
+    description = "Explore professional mountain bike teams by season, with their recorded riders, competitions and results on RidersFanatics."
+    html = head(
+        f"Mountain Bike Teams by Season | {SITE_NAME}", description, "",
+        body_class="teams-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": "Mountain bike teams by season", "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "numberOfItems": len(schema_items), "itemListElement": schema_items}},
+            breadcrumb_schema([("Home", "/"), ("Teams", path)]),
+        ],
+    )
+    html += header_html("", active="teams")
+    html += f'''<main id="main-content"><section class="section team-directory-intro"><div class="wrap"><div class="label">Teams · Riders · Seasons</div><h1>Professional teams by season.</h1><p>Every team shown here comes from a recorded Rider–Team–Season relationship. Rosters stay separated by year so a transfer never changes an earlier season.</p></div></section><section class="section team-directory"><div class="wrap">{"".join(sections)}</div></section></main>'''
+    return html + footer_html("")
+
+
+def build_team_season_index(year, records):
+    ordered = sorted(records, key=lambda item: norm_product_text(item["team"]))
+    cards = "".join(team_directory_card(record, "../../") for record in ordered)
+    path = f"/teams/{year}/"
+    html = head(
+        f"Mountain Bike Teams {year} | {SITE_NAME}",
+        f"Browse the professional mountain bike teams and recorded rider rosters for the {year} season on RidersFanatics.",
+        "../../", body_class="teams-page", canonical_path=path,
+        schemas=[breadcrumb_schema([("Home", "/"), ("Teams", "/teams.html"), (year, path)])],
+    )
+    html += header_html("../../", active="teams")
+    html += f'''<main id="main-content"><section class="section team-directory-intro"><div class="wrap"><div class="label">Teams · Season</div><h1>Teams {year}.</h1><p>Only teams connected to at least one recorded rider for this season are listed.</p></div></section><section class="section team-directory"><div class="wrap"><div class="team-directory-grid">{cards}</div></div></section></main>'''
+    return html + footer_html("../../")
+
+
+def build_team_page(record):
+    team = record["team"]
+    year = record["year"]
+    slug = competition_round_slug(team)
+    riders = sorted(record["riders"].values(), key=lambda rider: norm_product_text(rider["display_name"]))
+    competitions = sorted(record["competitions"], key=norm_product_text)
+    results = [
+        result for rider in riders for result in (rider.get("competition_history") or [])
+        if result.get("category") in record["competitions"]
+    ]
+    wins = sum((result.get("place") == 1) for result in results)
+    brands = sorted({
+        str(item.get("brand") or "").strip()
+        for rider in riders for item in (rider.get("equipment") or [])
+        if str(item.get("brand") or "").strip()
+    }, key=norm_product_text)
+    rider_cards = "".join(rider_card(rider, "../../", "../../riders/") for rider in riders)
+    competition_links = "".join(f'<li>{esc(name)}</li>' for name in competitions)
+    brand_links = "".join(f'<span>{esc(brand)}</span>' for brand in brands[:18])
+    path = f"/teams/{year}/{slug}.html"
+    description = f"{team} {year}: recorded rider roster, competition seasons, results and documented rider equipment on RidersFanatics."
+    html = head(
+        f"{team} {year} Riders & Results | {SITE_NAME}", description, "../../",
+        body_class="team-page", canonical_path=path,
+        schemas=[
+            {"@context": "https://schema.org", "@type": "SportsTeam", "name": team, "url": absolute_url(path), "athlete": [{"@type": "Person", "name": rider["display_name"], "url": absolute_url(f'/riders/{rider["slug"]}.html')} for rider in riders]},
+            breadcrumb_schema([("Home", "/"), ("Teams", "/teams.html"), (year, f"/teams/{year}/"), (team, path)]),
+        ],
+    )
+    html += header_html("../../", active="teams")
+    html += f'''<main id="main-content"><section class="competition-season-hero team-profile-hero"><div class="wrap competition-season-hero-grid"><div>{team_identity_html(team, "../../")}<div class="label">Mountain bike team · {year}</div><h1>{esc(team)}</h1><p>{len(riders)} recorded rider{'s' if len(riders) != 1 else ''} for the {year} season.</p></div><div class="team-profile-stats"><span><strong>{len(riders)}</strong> Riders</span><span><strong>{len(competitions)}</strong> Competitions</span><span><strong>{len(results)}</strong> Results</span><span><strong>{wins}</strong> Wins</span></div></div></section>
+<section class="section"><div class="wrap"><div class="section-head"><div><span class="label">Recorded roster</span><h2>Riders.</h2></div></div><div class="rider-grid">{rider_cards}</div></div></section>
+<section class="section team-profile-context"><div class="wrap team-profile-context-grid"><article><span class="label">Competition seasons</span><h2>Linked competitions.</h2><ul>{competition_links}</ul></article><article><span class="label">Documented rider equipment</span><h2>Brands observed.</h2><p>These brands come from the linked riders’ documented setups. They are not presented as official team sponsors.</p><div class="team-brand-list">{brand_links}</div></article></div></section></main>'''
+    return html + footer_html("../../")
+
 EQUIPMENT_EDITORIAL = {
     "Frame": ("Frames define the chassis platform around which the rest of a downhill build is assembled.", "Compare the number of tracked riders, team representation and the suspension platform before using points as a measure of visibility."),
     "Fork": ("Downhill forks manage front-wheel impacts and help riders maintain control through braking zones and rough terrain.", "Look at rider adoption and team use alongside the model name; race tunes and internal settings are not captured by this table."),
@@ -5134,6 +5272,22 @@ def main():
 
     with open(os.path.join(ROOT, "brands.html"), "w", encoding="utf-8") as f:
         f.write(build_brands_directory(riders))
+
+    if IS_PREPROD:
+        team_seasons = collect_team_seasons(riders)
+        os.makedirs(TEAMS_DIR, exist_ok=True)
+        with open(os.path.join(ROOT, "teams.html"), "w", encoding="utf-8") as f:
+            f.write(build_teams_directory(riders))
+        for year, teams in team_seasons.items():
+            season_dir = os.path.join(TEAMS_DIR, year)
+            os.makedirs(season_dir, exist_ok=True)
+            records = list(teams.values())
+            with open(os.path.join(season_dir, "index.html"), "w", encoding="utf-8") as f:
+                f.write(build_team_season_index(year, records))
+            for record in records:
+                filename = f'{competition_round_slug(record["team"])}.html'
+                with open(os.path.join(season_dir, filename), "w", encoding="utf-8") as f:
+                    f.write(build_team_page(record))
 
     with open(os.path.join(ROOT, "compare.html"), "w", encoding="utf-8") as f:
         f.write(build_compare_page())

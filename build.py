@@ -4274,7 +4274,7 @@ def team_directory_card(record, prefix=""):
     slug = competition_round_slug(team)
     rider_stack = team_rider_stack_html(record["riders"].values(), prefix)
     return f'''<article class="team-directory-card">
-      <div class="team-directory-card-top"><span>{year}</span><span>{rider_count} rider{'s' if rider_count != 1 else ''}</span></div>
+      <div class="team-directory-card-top"><span>{rider_count} rider{'s' if rider_count != 1 else ''}</span></div>
       <div class="team-directory-card-main">{team_logo_visual_html(team, prefix)}<div><h3>{esc(team)}</h3><p>{competition_count} linked competition season{'s' if competition_count != 1 else ''}</p></div></div>
       <div class="team-directory-card-footer">{rider_stack}<a href="{prefix}teams/{year}/{slug}.html" aria-label="View {esc_attr(team)} {year}">View team <span aria-hidden="true">→</span></a></div>
     </article>'''
@@ -4396,7 +4396,7 @@ def build_team_page(record):
         ],
     )
     html += header_html("../../", active="teams")
-    html += f'''<main id="main-content"><section class="competition-season-hero team-profile-hero"><div class="wrap team-profile-hero-grid"><div class="team-profile-logo-panel">{team_logo_visual_html(team, "../../")}</div><div class="team-profile-heading"><div class="label">Mountain bike team · {year}</div><h1>{esc(team)}</h1><p>{len(riders)} recorded rider{'s' if len(riders) != 1 else ''} for the {year} season.</p>{hero_riders}</div><div class="team-profile-stats"><span><strong>{len(riders)}</strong> Riders</span><span><strong>{len(competitions)}</strong> Competitions</span><span><strong>{len(results)}</strong> Results</span><span><strong>{wins}</strong> Wins</span></div></div></section>
+    html += f'''<main id="main-content"><section class="competition-season-hero team-profile-hero"><div class="wrap team-profile-hero-grid"><div class="team-profile-logo-panel">{team_logo_visual_html(team, "../../")}</div><div class="team-profile-heading"><div class="label">Mountain bike team</div><h1>{esc(team)}</h1><p>{len(riders)} recorded rider{'s' if len(riders) != 1 else ''} in the current roster.</p>{hero_riders}</div><div class="team-profile-stats"><span><strong>{len(riders)}</strong> Riders</span><span><strong>{len(competitions)}</strong> Competitions</span><span><strong>{len(results)}</strong> Results</span><span><strong>{wins}</strong> Wins</span></div></div></section>
 <section class="section"><div class="wrap"><div class="section-head"><div><span class="label">Recorded roster</span><h2>Riders.</h2></div></div><div class="rider-grid">{rider_cards}</div></div></section>
 <section class="section team-profile-context"><div class="wrap team-profile-context-grid"><article><span class="label">Competition seasons</span><h2>Linked competitions.</h2><ul>{competition_links}</ul></article><article><span class="label">Documented rider equipment</span><h2>Brands observed.</h2><p>These brands come from the linked riders’ documented setups. They are not presented as official team sponsors.</p><div class="team-brand-list">{brand_links}</div></article></div></section></main>'''
     return html + footer_html("../../")

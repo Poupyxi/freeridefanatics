@@ -68,7 +68,7 @@
   if (typeof document === 'undefined') return;
   const source = document.getElementById('ranking-share-data');
   if (!source) return;
-  const data = JSON.parse(source.dataset.payload);
+  let data = JSON.parse(source.dataset.payload);
   const socialAssets=new URL('../img/social/',document.currentScript.src);
   const text = (node) => node ? node.textContent.trim() : '';
   const assets = new Map();
@@ -211,9 +211,9 @@
     fit(ctx,location.host+location.pathname,64,height-35,950,18);
     return canvas;
   }
-  async function drawCompetition(height,context){
+  async function drawCompetition(height,context,calendarOverride){
     const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
-    const ctx=canvas.getContext('2d'),card=data.competitionCard||{},calendar=(card.calendar||[]);
+    const ctx=canvas.getContext('2d'),card=data.competitionCard||{},calendar=(calendarOverride || card.calendar || []);
     const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,'#111214');gradient.addColorStop(.55,'#1b1816');gradient.addColorStop(1,'#090a0b');ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,height);
     ctx.fillStyle='#27211d';ctx.beginPath();ctx.moveTo(0,height*.62);ctx.lineTo(210,height*.36);ctx.lineTo(390,height*.58);ctx.lineTo(620,height*.29);ctx.lineTo(880,height*.61);ctx.lineTo(1080,height*.4);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
     ctx.fillStyle='#171515';ctx.beginPath();ctx.moveTo(0,height*.75);ctx.lineTo(260,height*.5);ctx.lineTo(450,height*.7);ctx.lineTo(720,height*.46);ctx.lineTo(1080,height*.73);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
@@ -246,10 +246,12 @@
     const context = {title:event.name || data.title, logo:event.logo || data.logo,
       handle:handle(event.instagram || data.instagram), team:panel?.dataset.standings === 'Teams',
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
-    const allPages = isEvent ? [[]] : chunks(rows), urls = [], calendarUrls=[];
+    const calendarShare=data.shareKind==='competition'||data.shareKind==='year';
+    const yearPages=chunks(data.competitionCard?.calendar || []);
+    const allPages = isEvent ? (data.shareKind==='year' ? (yearPages.length ? yearPages : [[]]) : [[]]) : chunks(rows), urls = [], calendarUrls=[];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
     const header=el('header','',dialog);header.className='ranking-share-header';
-    const heading=el('h2','Partager '+(isEvent ? (data.shareKind==='competition' ? 'le calendrier' : 'l’événement') : 'le classement'),header);
+    const heading=el('h2','Partager '+(isEvent ? (calendarShare ? 'le calendrier' : 'l’événement') : 'le classement'),header);
     heading.id='ranking-share-title';dialog.setAttribute('aria-labelledby',heading.id);
     const close=el('button','×',header);close.type='button';close.className='ranking-share-close';close.setAttribute('aria-label','Fermer');
     const layout=el('div','',dialog);layout.className='ranking-share-layout';
@@ -258,7 +260,7 @@
     el('p','Partagez votre passion.',actions);
     const status=el('p','',actions);status.setAttribute('role','status');
     const social=el('nav','',actions);social.className='ranking-share-social';social.setAttribute('aria-label','Options de partage');
-    const pageUrl=location.href.split('#')[0];
+    const pageUrl=data.shareUrl ? new URL(data.shareUrl,location.href).href : location.href.split('#')[0];
     const copyLink=el('button','Copier le lien',social);copyLink.type='button';
     const links=socialLinks(pageUrl,context.title+' — '+context.subtitle);
     [['WhatsApp',links.whatsapp],['Facebook',links.facebook],['X',links.x],['Email',links.email]].forEach(([name,url])=>{
@@ -365,13 +367,13 @@
       try {
         const pages=allPages;
         for(let i=0;i<pages.length;i++) {
-          const canvas=isEvent ? (data.shareKind==='competition' ? await drawCompetition(1350,context) : await drawEvent(1350,context)) : await draw(pages[i],i,pages.length,1350,context);
+          const canvas=isEvent ? (calendarShare ? await drawCompetition(1350,context,pages[i]) : await drawEvent(1350,context)) : await draw(pages[i],i,pages.length,1350,context);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
           if(token!==version)return;
           if(!blob)throw new Error('Image generation failed');
           const item=el('div','',gallery), choice=el('label','',item), checkbox=el('input','',choice);
           checkbox.type='checkbox'; checkbox.checked=previous[i] ?? true;
-          choice.append(document.createTextNode(' Image '+(i+1)));choice.hidden=isEvent;
+          choice.append(document.createTextNode(' Image '+(i+1)));choice.hidden=isEvent&&pages.length===1;
           const url=URL.createObjectURL(blob); urls.push(url);
           canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',isEvent ? context.title+' — event card' : context.title+' — entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)); const preview=el('a','',item);preview.href=url;preview.target='_blank';preview.rel='noopener';preview.className='ranking-share-preview';preview.setAttribute('aria-label','Agrandir l’image '+(i+1)+' (nouvel onglet)');preview.append(canvas);
           const file=new File([blob],'ridersfanatics-'+(isEvent ? 'event' : 'ranking')+'-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'});
@@ -425,6 +427,15 @@
       button.onclick=()=>open(null,button);host.append(button);
     }
   }
+  document.querySelectorAll('[data-year-share-payload]').forEach(host=>{
+    let payload;
+    try{payload=JSON.parse(host.dataset.yearSharePayload || '');}catch(_){return;}
+    const button=el('button','Share '+payload.season);button.type='button';
+    button.className='ranking-share-trigger competition-year-share-trigger';
+    button.setAttribute('aria-label','Share all '+payload.season+' competitions and add them to a calendar');
+    button.onclick=()=>{data=payload;open(null,button);};
+    host.append(button);
+  });
   document.querySelectorAll('main .standings-toolbar').forEach(toolbar=>{
     const section=toolbar.closest('section') || toolbar.parentElement;
     const panels=[...section.querySelectorAll('.standings-block')].filter(panel=>readRows(panel).length);

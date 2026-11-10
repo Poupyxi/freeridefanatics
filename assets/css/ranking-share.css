@@ -3,6 +3,7 @@
 .ranking-share-trigger:hover{background:#b4491c;color:#fff;transform:translateY(-1px)}
 .ranking-share-trigger:hover::before{color:#fff}
 .ranking-share-trigger:disabled{opacity:.6;cursor:default}
+.competition-year-share-trigger{min-height:36px;padding:7px 13px;font-size:10px}
 .ranking-share-toolbar-host{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
 .ranking-share-count-host{display:grid;grid-template-columns:auto auto;align-items:center;justify-content:start;gap:0 10px}
 .ranking-share-count-host>.label{grid-column:1/-1}

@@ -285,14 +285,15 @@
       var term = (searchInput && searchInput.value || '').trim().toLowerCase();
       cards.forEach(function(card){
         var cat = card.getAttribute('data-category');
+        var sports = (card.getAttribute('data-sports') || '').split(/\s+/).filter(Boolean);
         var haystack = card.getAttribute('data-search') || '';
-        var matchesFilter = activeFilter === 'all' || cat === activeFilter;
+        var matchesFilter = activeFilter === 'all' || cat === activeFilter || sports.indexOf(activeFilter) !== -1;
         var matchesSearch = !term || haystack.indexOf(term) !== -1;
         card.style.display = (matchesFilter && matchesSearch) ? '' : 'none';
       });
     }
 
-    var filterHashes = {'all':'grid', 'Men Elite':'men', 'Women Elite':'women'};
+    var filterHashes = {'all':'grid', 'Men Elite':'men', 'Women Elite':'women', 'ski':'ski', 'snowboard':'snowboard'};
 
     filterBtns.forEach(function(btn){
       btn.addEventListener('click', function(){
@@ -314,7 +315,7 @@
     // Legacy query-string links remain supported until their 301 redirects
     // have been fully processed by search engines.
     var params = new URLSearchParams(window.location.search);
-    var hashFilters = {'#grid':'all', '#men':'Men Elite', '#women':'Women Elite'};
+    var hashFilters = {'#grid':'all', '#men':'Men Elite', '#women':'Women Elite', '#ski':'ski', '#snowboard':'snowboard'};
     function activateLocationFilter(urlFilter){
       if(!urlFilter) return;
       var match = filterBtns.find(function(b){

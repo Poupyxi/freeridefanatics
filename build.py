@@ -1250,7 +1250,7 @@ def build_trust_pages():
 
 # ---------------------------------------------------------------- index page
 
-def rider_card(r, asset_prefix="", rider_prefix=None):
+def rider_card(r, asset_prefix="", rider_prefix=None, sports=None):
     rider_prefix = f"{asset_prefix}riders/" if rider_prefix is None else rider_prefix
     photo = has_photo(r["slug"])
     if photo:
@@ -1262,7 +1262,8 @@ def rider_card(r, asset_prefix="", rider_prefix=None):
     search_blob = " ".join([
         r.get("display_name",""), r.get("country") or "", r.get("team") or "", cat
     ]).lower()
-    return f"""<a class="rider-card reveal" href="{rider_prefix}{r['slug']}.html" data-category="{cat}" data-search="{esc(search_blob)}">
+    sport_attr = " ".join(sports or [])
+    return f"""<a class="rider-card reveal" href="{rider_prefix}{r['slug']}.html" data-category="{cat}" data-sports="{esc_attr(sport_attr)}" data-search="{esc(search_blob)}">
         <div class="photo">
           {photo_html}
           <span class="badge">{cat}</span>
@@ -3410,7 +3411,20 @@ def short_event(ev):
 def build_riders_directory(riders, women_count, men_count, winter=False):
     prefix = "../" if winter else ""
     route_root = "/winter" if winter else ""
-    cards = "\n      ".join(rider_card(r, prefix, "riders/" if winter else None) for r in riders)
+    ski_count = sum(rider_has_winter_discipline(rider, "ski") for rider in riders) if winter else 0
+    snowboard_count = sum(rider_has_winter_discipline(rider, "snowboard") for rider in riders) if winter else 0
+    cards = "\n      ".join(
+        rider_card(
+            rider,
+            prefix,
+            "riders/" if winter else None,
+            sports=[
+                sport for sport in ("ski", "snowboard")
+                if winter and rider_has_winter_discipline(rider, sport)
+            ],
+        )
+        for rider in riders
+    )
     html = head(
         f"{'Ski & Snowboard ' if winter else 'All '}Riders — {SITE_NAME}",
         ("Browse Ski and Snowboard athletes, teams and winter results tracked by RidersFanatics."
@@ -3444,6 +3458,7 @@ def build_riders_directory(riders, women_count, men_count, winter=False):
       <button class="filter-btn active" type="button" aria-pressed="true" data-filter="all">All ({len(riders)})</button>
       <button class="filter-btn" type="button" aria-pressed="false" data-filter="Men Elite">Men ({men_count})</button>
       <button class="filter-btn" type="button" aria-pressed="false" data-filter="Women Elite">Women ({women_count})</button>
+      {f'<button class="filter-btn" type="button" aria-pressed="false" data-filter="ski">Ski ({ski_count})</button><button class="filter-btn" type="button" aria-pressed="false" data-filter="snowboard">Snowboard ({snowboard_count})</button>' if winter else ''}
       <label class="search-label"><span class="visually-hidden">Search riders</span><input class="search-input" type="search" placeholder="Search a rider, team, country..." data-search></label>
     </div>
     <div class="grid-riders" data-rider-grid>

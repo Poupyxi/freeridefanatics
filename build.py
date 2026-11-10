@@ -1886,6 +1886,10 @@ def logo_identity_and_year(value):
     # depending on whether the source was "Corbet's" (``corbet-s``) or a plain
     # filename such as ``corbets``.  Both forms describe the same identity.
     identity = re.sub(r"-logo$", "", identity)
+    # The Notion source historically used "Crankworkx" while the official
+    # brand and Drive asset use "Crankworx". Keep the public route stable but
+    # normalize the identity used exclusively for logo matching.
+    identity = identity.replace("crankworkx", "crankworx")
     identity = identity.replace("kings-queens-of-corbet-s", "kings-queens-of-corbets")
     identity = identity.replace("ceroabajo", "cerro-abajo").replace("cerroabajo", "cerro-abajo")
     identity = re.sub(r"^red-?bull-", "", identity)

@@ -1743,6 +1743,71 @@ def competition_page_events(riders, competition):
     scheduled = [event.get("name") for event in competition.get("events", []) if event.get("name")]
     return list(dict.fromkeys(scheduled + recorded))
 
+def competition_calendar_entries(competition, winter=False):
+    """Return dated season events ready for an all-day iCalendar feed."""
+    entries = []
+    route_root = "/winter" if winter else ""
+    for event in competition.get("events") or []:
+        event_name = str(event.get("name") or "").strip()
+        official = red_bull_event_info(event_name)
+        start_value = (official or {}).get("start_date") or event.get("date")
+        try:
+            start_date = dt.date.fromisoformat(str(start_value)[:10])
+        except ValueError:
+            continue
+        end_value = (official or {}).get("end_date") or start_date.isoformat()
+        try:
+            final_date = dt.date.fromisoformat(str(end_value)[:10])
+        except ValueError:
+            final_date = start_date
+        location = ", ".join(
+            item for item in (
+                (official or {}).get("city"),
+                (official or {}).get("country"),
+                event.get("location"),
+            ) if item
+        )
+        event_slug = competition_round_path_slug(competition, event_name)
+        entries.append({
+            "name": competition_event_label(event_name),
+            "start": start_date,
+            "end": final_date + dt.timedelta(days=1),
+            "location": location,
+            "url": absolute_url(
+                f'{route_root}/competitions/{competition["id"]}/rounds/{event_slug}.html'
+            ),
+        })
+    return entries
+
+def ical_escape(value):
+    return (str(value).replace("\\", "\\\\").replace("\n", "\\n")
+            .replace(",", "\\,").replace(";", "\\;"))
+
+def build_competition_calendar(competition, winter=False):
+    entries = competition_calendar_entries(competition, winter)
+    calendar_name = competition_display_name(competition)
+    lines = [
+        "BEGIN:VCALENDAR", "VERSION:2.0", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+        "PRODID:-//RidersFanatics//Season Calendar//EN",
+        f"X-WR-CALNAME:{ical_escape(calendar_name)}",
+    ]
+    stamp = SITE_UPDATED.replace("-", "") + "T000000Z"
+    for entry in entries:
+        lines.extend([
+            "BEGIN:VEVENT",
+            f'UID:{competition["id"]}-{entry["start"].strftime("%Y%m%d")}-{competition_round_slug(entry["name"])}@ridersfanatics.com',
+            f"DTSTAMP:{stamp}",
+            f'DTSTART;VALUE=DATE:{entry["start"].strftime("%Y%m%d")}',
+            f'DTEND;VALUE=DATE:{entry["end"].strftime("%Y%m%d")}',
+            f'SUMMARY:{ical_escape(entry["name"] + " — " + calendar_name)}',
+            f'DESCRIPTION:{ical_escape("Season event tracked by RidersFanatics. " + entry["url"])}',
+            f'LOCATION:{ical_escape(entry["location"])}',
+            f'URL:{entry["url"]}',
+            "END:VEVENT",
+        ])
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(lines) + "\r\n"
+
 def competition_stats(riders, competition):
     name = competition["name"]
     scored = []
@@ -3366,13 +3431,22 @@ def build_competition_detail(riders, competition, winter=False):
             f'<span><strong>{int(edition_count)}</strong> edition{"s" if int(edition_count) != 1 else ""}</span>'
         )
     season_meta = f'<div class="competition-season-meta">{"".join(season_meta_items)}</div>'
+    calendar_event_count = len(competition_calendar_entries(competition, winter))
+    calendar_cta = (
+        f'<div class="season-calendar-cta"><a class="btn btn-solid" '
+        f'href="{competition["id"]}/season.ics" download>'
+        f'Add full season to calendar <span aria-hidden="true">＋</span></a>'
+        f'<small>{calendar_event_count} dated event'
+        f'{"s" if calendar_event_count != 1 else ""}</small></div>'
+        if calendar_event_count else ""
+    )
     season_context = (f'''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>What is Red Bull Cerro Abajo?</strong><div><p>Red Bull Cerro Abajo is an urban downhill mountain bike series contested against the clock on steep city streets, stairways and purpose-built obstacles. The 2026 calendar tracked here connects Valparaíso, Genova and Stuttgart.</p><p>Riders earn championship points through qualifying and finals across the season. RidersFanatics independently connects the {len(events)} recorded races with their finishing orders, season points and rider profiles.</p><p class="competition-source-links"><a href="{RED_BULL_CERRO_ABAJO_EVENTS['valparaiso']['official_url']}" rel="nofollow noopener" target="_blank">Valparaíso official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['genova']['official_url']}" rel="nofollow noopener" target="_blank">Genova official information ↗</a><a href="{RED_BULL_CERRO_ABAJO_EVENTS['stuttgart']['official_url']}" rel="nofollow noopener" target="_blank">Stuttgart official information ↗</a></p></div></div></div></section>'''
                       if is_red_bull else "")
     ranking_section = (redbull_event_ranking_selector(riders, competition)
                        if competition["id"] == "redbull-2026"
                        else season_ranking_selector(riders, competition))
     html += f'''<main>
-<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{season_meta}{hero_intro}</div>{featured_event_html}</div></section>
+<section class="competition-season-hero"><div class="wrap competition-season-hero-grid">{season_logo_html}<div class="competition-season-heading"><div class="label">{esc(competition['sport'])} · {esc(competition['discipline'])} · {competition['season']}</div><h1>{esc(display_name)}</h1>{season_meta}{calendar_cta}{hero_intro}</div>{featured_event_html}</div></section>
 {competition_view_selector(competition, "standings")}
 {season_visual}
 {season_context}
@@ -5373,6 +5447,8 @@ def main():
             competition_dir = os.path.join(winter_competitions_dir, competition["id"])
             rounds_dir = os.path.join(competition_dir, "rounds")
             os.makedirs(rounds_dir, exist_ok=True)
+            with open(os.path.join(competition_dir, "season.ics"), "w", encoding="utf-8", newline="") as f:
+                f.write(build_competition_calendar(competition, winter=True))
             with open(os.path.join(competition_dir, "riders.html"), "w", encoding="utf-8") as f:
                 f.write(build_competition_riders(winter_riders, competition, winter=True))
             events = competition_page_events(winter_riders, competition)
@@ -5400,6 +5476,8 @@ def main():
             f.write(build_competition_detail(competition_riders, competition))
         standings_dir = os.path.join(COMPETITIONS_DIR, competition["id"])
         os.makedirs(standings_dir, exist_ok=True)
+        with open(os.path.join(standings_dir, "season.ics"), "w", encoding="utf-8", newline="") as f:
+            f.write(build_competition_calendar(competition))
         with open(os.path.join(standings_dir, "riders.html"), "w", encoding="utf-8") as f:
             f.write(build_competition_riders(competition_riders, competition))
         standings_file = os.path.join(standings_dir, "standings.html")

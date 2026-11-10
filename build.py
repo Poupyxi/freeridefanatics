@@ -4273,11 +4273,11 @@ def team_directory_card(record, prefix=""):
     competition_count = len(record["competitions"])
     slug = competition_round_slug(team)
     rider_stack = team_rider_stack_html(record["riders"].values(), prefix)
-    return f'''<article class="team-directory-card">
+    return f'''<a class="team-directory-card" href="{prefix}teams/{year}/{slug}.html" aria-label="View {esc_attr(team)} {year}">
       <div class="team-directory-card-top"><span>{rider_count} rider{'s' if rider_count != 1 else ''}</span></div>
       <div class="team-directory-card-main">{team_logo_visual_html(team, prefix)}<div><h3>{esc(team)}</h3><p>{competition_count} linked competition season{'s' if competition_count != 1 else ''}</p></div></div>
-      <div class="team-directory-card-footer">{rider_stack}<a href="{prefix}teams/{year}/{slug}.html" aria-label="View {esc_attr(team)} {year}">View team <span aria-hidden="true">→</span></a></div>
-    </article>'''
+      <div class="team-directory-card-footer">{rider_stack}<span class="team-directory-card-cta">View team <span aria-hidden="true">→</span></span></div>
+    </a>'''
 
 
 def team_logo_visual_html(team, prefix=""):

@@ -36,6 +36,11 @@ assert build.resolve_logo(logos, "redbull-hardline-2027") == logos["redbull-hard
 future_only = {"redbull-rampage-2028": logos["redbull-rampage-2028"]}
 assert build.resolve_logo(future_only, "redbull-rampage-2027") == future_only["redbull-rampage-2028"]
 
+crankworx = {
+    "crankworx-2027": {"src": "assets/img/competitions/crankworx-2027.webp"},
+}
+assert build.resolve_logo(crankworx, "crankworkx-2027") == crankworx["crankworx-2027"]
+
 # Event pages fall back to the parent competition when no event logo exists.
 competition = {"id": "redbull-2026"}
 assert build.competition_event_logo(logos, competition, "Unknown Event 2026") == logos["redbull-2026"]

@@ -444,6 +444,8 @@
     button.setAttribute('aria-label','Share all '+payload.season+' competitions and add them to a calendar');
     button.onclick=()=>{data=payload;open(null,button);};
     host.append(button);
+    const calendar=el('button','Add season calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label','Add the '+payload.season+' season calendar');
+    calendar.onclick=()=>downloadCalendarItems(payload.competitionCard?.calendar || [],payload.season+' season');host.append(calendar);
   });
   document.querySelectorAll('main .standings-toolbar').forEach(toolbar=>{
     const section=toolbar.closest('section') || toolbar.parentElement;

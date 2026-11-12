@@ -5145,7 +5145,7 @@ def build_rider_page(r, riders, winter=False):
     if not winter:
         html += rider_feedback_html(r)
     html += footer_html(prefix, seasonal=winter)
-    html += f'<script src="{prefix}assets/js/equipment-lightbox.js" defer></script>\n'
+    html += f'<link rel="stylesheet" href="{prefix}assets/css/rider-setup-share.css?v=2"><script src="{prefix}assets/js/equipment-lightbox.js" defer></script><script src="{prefix}assets/js/rider-setup-share.js?v=2" defer></script>\n'
     return html
 
 # ---------------------------------------------------------------- main

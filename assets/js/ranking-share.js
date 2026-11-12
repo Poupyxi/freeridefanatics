@@ -415,6 +415,13 @@
     Object.assign(document.body.style,{position:'fixed',top:-scrollPosition.y+'px',left:-scrollPosition.x+'px',right:'0',width:'100%',overflow:'hidden'});
     document.body.append(dialog);dialog.showModal();await render();
   }
+  function downloadCalendarItems(items, title) {
+    const events=calendarEvents(items, title, location.href);
+    if(!events.length){window.alert('No confirmed dates are available for this calendar yet.');return;}
+    const url=URL.createObjectURL(new Blob([calendarFile(events)],{type:'text/calendar;charset=utf-8'}));
+    const link=document.createElement('a');link.href=url;link.download=(title||'ridersfanatics-calendar').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.ics';
+    document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
   if(data.eventCard){
     const isCompetition=data.shareKind === 'competition';
     const countHeading=isCompetition ? document.querySelector('#events .section-head h2') : null;
@@ -425,6 +432,8 @@
       button.className='ranking-share-trigger event-share-trigger'+(isCompetition?' competition-share-trigger':'');
       button.setAttribute('aria-label',(isCompetition ? 'Share competition' : 'Share event')+' as an image');
       button.onclick=()=>open(null,button);host.append(button);
+      const calendar=el('button',isCompetition ? 'Add season calendar' : 'Add to calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label',isCompetition ? 'Add the season calendar' : 'Add this event to your calendar');
+      calendar.onclick=()=>downloadCalendarItems(isCompetition ? (data.competitionCard?.calendar || []) : [{...(data.eventCard || {}),name:data.eventCard?.name || data.title}],isCompetition ? data.title+' season' : data.title);host.append(calendar);
     }
   }
   document.querySelectorAll('[data-year-share-payload]').forEach(host=>{

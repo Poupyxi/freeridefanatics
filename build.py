@@ -2167,7 +2167,7 @@ def ranking_share_assets(riders, competition, prefix, event=None):
             "location": next_event.get("location") or "",
         },
     }
-    event_card = {"date": "", "location": "", "discipline": competition.get("discipline") or "",
+    event_card = {"name": event or "", "date": "", "location": "", "discipline": competition.get("discipline") or "",
                   "status": competition_schedule_status(competition)[0]}
     if event:
         date = entry.get("date") or ""
@@ -2180,7 +2180,7 @@ def ranking_share_assets(riders, competition, prefix, event=None):
             status = "Coming soon"
         if str(entry.get("status", "")).lower() in ("cancelled", "canceled"):
             status = "Cancelled"
-        event_card = {"date": date, "endDate": entry.get("end_date") or "", "location": entry.get("location") or "",
+        event_card = {"name": event or "", "date": date, "endDate": entry.get("end_date") or "", "location": entry.get("location") or "",
                       "discipline": competition.get("discipline") or "",
                       "status": status}
     payload = {

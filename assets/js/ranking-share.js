@@ -432,7 +432,7 @@
       button.className='ranking-share-trigger event-share-trigger'+(isCompetition?' competition-share-trigger':'');
       button.setAttribute('aria-label',(isCompetition ? 'Share competition' : 'Share event')+' as an image');
       button.onclick=()=>open(null,button);host.append(button);
-      const calendar=el('button',isCompetition ? 'Add season calendar' : 'Add to calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label',isCompetition ? 'Add the season calendar' : 'Add this event to your calendar');
+      const calendar=el('button','Add calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label',isCompetition ? 'Add the season calendar' : 'Add this event to your calendar');
       calendar.onclick=()=>downloadCalendarItems(isCompetition ? (data.competitionCard?.calendar || []) : [{...(data.eventCard || {}),name:data.eventCard?.name || data.title}],isCompetition ? data.title+' season' : data.title);host.append(calendar);
     }
   }
@@ -444,7 +444,7 @@
     button.setAttribute('aria-label','Share all '+payload.season+' competitions and add them to a calendar');
     button.onclick=()=>{data=payload;open(null,button);};
     host.append(button);
-    const calendar=el('button','Add season calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label','Add the '+payload.season+' season calendar');
+    const calendar=el('button','Add calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label','Add the '+payload.season+' calendar');
     calendar.onclick=()=>downloadCalendarItems(payload.competitionCard?.calendar || [],payload.season+' season');host.append(calendar);
   });
   document.querySelectorAll('main .standings-toolbar').forEach(toolbar=>{

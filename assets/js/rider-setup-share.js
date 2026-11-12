@@ -1,0 +1,1 @@
+document.addEventListener('click',function(e){const b=e.target.closest('[data-rider-setup-share]');if(!b)return;const text=document.title+' — '+location.href;if(navigator.share){navigator.share({title:document.title,text,url:location.href}).catch(()=>{});}else{navigator.clipboard?.writeText(text);b.textContent='Link copied';setTimeout(()=>b.textContent='Share setup',1800);}});

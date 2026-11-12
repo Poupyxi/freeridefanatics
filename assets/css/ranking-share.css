@@ -118,3 +118,5 @@
 .ranking-share-dialog button,.ranking-share-dialog a{-webkit-tap-highlight-color:transparent}
 .ranking-share-gallery .ranking-share-preview{display:block;min-height:0;cursor:zoom-in}
 .ranking-share-preview-hint{display:block;text-align:center;color:#b9b9c0;font:12px/1.5 Arial,sans-serif;margin:0 0 6px}
+
+.calendar-trigger{border-color:#5e7865!important}.calendar-trigger::before{content:"📅"!important;color:#5e7865!important}.calendar-trigger:hover::before{color:#fff!important}

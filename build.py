@@ -5124,9 +5124,9 @@ def build_rider_page(r, riders, winter=False):
       </div>
     </div>
 
+    {f'<div class="rider-setup-share-row"><button class="rider-setup-share-trigger" type="button" data-rider-setup-share>Share setup</button></div>' if equipment and not winter else ''}
     {setup_head}{build_html}
     {equip_html}
-    {f'<div class="rider-setup-share-row"><button class="rider-setup-share-trigger" type="button" data-rider-setup-share>Share setup</button></div>' if equipment and not winter else ''}
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>

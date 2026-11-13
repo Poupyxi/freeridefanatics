@@ -665,7 +665,7 @@ def head(title, description, asset_prefix, body_class="", canonical_path="/",
 {image_preload}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{asset_prefix}assets/css/style.css?v={BUILD_VERSION}">
+<link rel="stylesheet" href="{asset_prefix}assets/css/style.css?v={BUILD_VERSION}&frame-reveal=2">
 {adsense_script}
 {schema_html}
 </head>

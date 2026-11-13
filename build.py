@@ -363,6 +363,57 @@ def bio_bullets(bio):
     parts = [p.strip(" -") for p in bio.split(" - ") if p.strip(" -")]
     return parts
 
+def rider_bio_html(bio):
+    """Render palmares with readable competition/result hierarchy."""
+    if not bio:
+        return '<p class="rider-bio">No public palmarès on file yet.</p>'
+    normalized = str(bio).replace("\\r\\n", "\n").replace("\\n", "\n")
+    raw_lines = [line.rstrip() for line in normalized.splitlines()]
+    lines = [line for line in raw_lines if line.strip()]
+    if not lines:
+        return '<p class="rider-bio">No public palmarès on file yet.</p>'
+
+    groups = []
+    current = None
+    for raw in lines:
+        stripped = raw.strip()
+        # A Notion heading can carry the first competition on the same line.
+        if stripped.casefold().startswith("palmarès"):
+            remainder = stripped[len("palmarès"):].lstrip(" :•·-")
+            if not remainder:
+                continue
+            stripped = remainder
+            raw = stripped
+        indent = len(raw) - len(raw.lstrip())
+        marker = re.match(r"^[•●·*\-]\s*", stripped)
+        text = re.sub(r"^[•●·*\-]\s*", "", stripped) if marker else stripped
+        if not text:
+            continue
+        nested = indent >= 2 or (marker and marker.group(0).startswith("-" ) and current is not None and indent > 0)
+        if nested and current is not None:
+            current["items"].append(text)
+        elif current is not None and current["items"]:
+            groups.append(current)
+            current = {"label": text, "items": []}
+        else:
+            current = {"label": text, "items": []}
+    if current is not None:
+        groups.append(current)
+
+    # A flat legacy value stays a simple list; structured input gets nested lists.
+    if not any(group["items"] for group in groups):
+        items = "".join(f"<li>{esc(group['label'])}</li>" for group in groups)
+        return f'<ul class="rider-bio rider-bio-legacy">{items}</ul>'
+    markup = []
+    for group in groups:
+        if group["items"]:
+            children = "".join(f"<li>{esc(item)}</li>" for item in group["items"])
+            markup.append(f'<li class="palmares-group">{esc(group["label"])}<ul>{children}</ul></li>')
+        else:
+            markup.append(f'<li>{esc(group["label"])}</li>')
+    return ('<div class="rider-bio rider-bio-structured"><h2 class="rider-palmares-title">'
+            f'Palmarès</h2><ul class="rider-palmares-list">{"".join(markup)}</ul></div>')
+
 def has_photo(slug):
     """Return the sharpest available portrait instead of a low-res thumbnail."""
     candidates = []
@@ -4971,12 +5022,7 @@ def build_rider_page(r, riders, winter=False):
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
 
     bullets = bio_bullets(r.get("bio"))
-    bio_html = ""
-    if bullets:
-        items = "".join(f"<li>{esc(b)}</li>" for b in bullets)
-        bio_html = f'<ul class="rider-bio" style="list-style:disc; padding-left:18px;">{items}</ul>'
-    else:
-        bio_html = '<p class="rider-bio">No public palmarès on file yet.</p>'
+    bio_html = rider_bio_html(r.get("bio"))
 
     sponsors = r.get("sponsors") or []
     sponsor_html = ""

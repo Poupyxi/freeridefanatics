@@ -1803,3 +1803,12 @@ body.equipment-lightbox-open { overflow: hidden; }
 @media(max-width:640px){.equipment-lightbox-panel{grid-template-columns:1fr}.equipment-lightbox-image{grid-row:auto}.equipment-lightbox-stats,.equipment-lightbox-leader,.equipment-lightbox-category{grid-column:auto}}
 
 .competition-menu-year-toggle{display:flex;width:100%;justify-content:space-between;align-items:center;border:0;background:transparent;padding:14px 18px;font:700 .9rem "Space Mono",monospace;letter-spacing:.12em;color:#b4471f;cursor:pointer}.competition-menu-year-toggle span{font-size:1.1rem}.competition-menu-year-items{border-top:1px solid #d6d2cc}.competition-menu-year-items[hidden]{display:none}
+
+.rider-bio-structured{padding-top:2px;}
+.rider-palmares-title{margin:0 0 9px; color:var(--text); font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;}
+.rider-palmares-list{display:grid; gap:8px; margin:0; padding-left:20px; list-style:disc; line-height:1.45;}
+.rider-palmares-list ul{display:grid; gap:4px; margin:5px 0 0; padding-left:20px; list-style:circle;}
+.rider-palmares-list li::marker{color:var(--orange);}
+.rider-bio-legacy{display:grid; gap:7px; padding-left:20px; list-style:disc; line-height:1.45;}
+.rider-bio-legacy li{display:list-item; margin:0; padding-left:4px; white-space:pre-line;}
+.rider-bio-legacy li::marker{color:var(--orange);}

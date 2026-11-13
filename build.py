@@ -429,7 +429,18 @@ def rider_bio_html(bio, competition_history=None):
                 items.append(f"Top {place}{count} • {', '.join(events)}")
             generated.append({"label": category, "items": items})
         # Keep non-result editorial notes (for example a Hardline win) visible.
+        generated_text = " ".join(
+            item.casefold()
+            for group in generated
+            for item in [group["label"], *group["items"]]
+        )
         for group in groups:
+            label = group["label"].casefold()
+            # Do not repeat an editorial note when the same event is already
+            # represented by an official result in competition_history.
+            event_tokens = ("hardline", "rampage", "cerro abajo", "project 17", "beyond gravity")
+            if any(token in label and token in generated_text for token in event_tokens):
+                continue
             if group["label"] not in {item["label"] for item in generated}:
                 generated.append(group)
         groups = generated

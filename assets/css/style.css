@@ -530,7 +530,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
    the sequence starts when the composition is scrolled into view. --- */
 .bb-reveal{position:relative; display:block;}
 .bb-reveal .bb-sketch, .bb-reveal .bb-draw{
-  position:absolute; inset:0; width:100%; height:100%;
+  position:absolute; inset:0; width:100%; height:100%; opacity:0;
   object-fit:contain; pointer-events:none;
 }
 .bb-reveal .bb-draw{z-index:3;}

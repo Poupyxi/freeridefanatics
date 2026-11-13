@@ -369,6 +369,102 @@ def bio_bullets(bio):
     parts = [p.strip(" -") for p in bio.split(" - ") if p.strip(" -")]
     return parts
 
+def rider_bio_html(bio, competition_history=None):
+    """Render palmares with readable competition/result hierarchy."""
+    if not bio:
+        return '<p class="rider-bio">No public palmarès on file yet.</p>'
+    normalized = str(bio).replace("\\r\\n", "\n").replace("\\n", "\n")
+    # Notion rich-text exports can flatten bullet paragraphs into one line.
+    # Recreate the known palmarès boundaries before parsing the hierarchy.
+    if "\n" not in normalized:
+        normalized = re.sub(r"\s+-\s+(?=Top\s+\d)", "\n  - ", normalized)
+        normalized = re.sub(r"\s+\*\s+(?=[A-Z])", "\n* ", normalized)
+    raw_lines = [line.rstrip() for line in normalized.splitlines()]
+    lines = [line for line in raw_lines if line.strip()]
+    if not lines:
+        return '<p class="rider-bio">No public palmarès on file yet.</p>'
+
+    groups = []
+    current = None
+    for raw in lines:
+        stripped = raw.strip()
+        # A Notion heading can carry the first competition on the same line.
+        if stripped.casefold().startswith("palmarès"):
+            remainder = stripped[len("palmarès"):].lstrip(" :•·-")
+            if not remainder:
+                continue
+            stripped = remainder
+            raw = stripped
+        indent = len(raw) - len(raw.lstrip())
+        marker = re.match(r"^[•●·*\-]\s*", stripped)
+        text = re.sub(r"^[•●·*\-]\s*", "", stripped) if marker else stripped
+        if not text:
+            continue
+        nested = indent >= 2 or (marker and marker.group(0).startswith("-" ) and current is not None and indent > 0)
+        if nested and current is not None:
+            current["items"].append(text)
+        elif current is not None and current["items"]:
+            groups.append(current)
+            current = {"label": text, "items": []}
+        else:
+            current = {"label": text, "items": []}
+    if current is not None:
+        groups.append(current)
+
+    # Fill the structured palmarès from recorded results when the editorial bio
+    # only contains a short note (a common Notion entry pattern).
+    history_groups = {}
+    for result in competition_history or []:
+        place = result.get("place")
+        if not isinstance(place, int) or place not in {1, 2, 3}:
+            continue
+        category = str(result.get("category") or "").strip()
+        event = str(result.get("event") or "").strip()
+        if not category or not event:
+            continue
+        category_label = re.sub(r"^UCI MTB World Cup DH", "UCI WC", category, flags=re.I)
+        grouped = history_groups.setdefault(category_label, {})
+        grouped.setdefault(place, []).append(event)
+    if history_groups:
+        generated = []
+        for category, places in history_groups.items():
+            items = []
+            for place in sorted(places):
+                events = places[place]
+                count = f" × {len(events)}" if len(events) > 1 else ""
+                items.append(f"Top {place}{count} • {', '.join(events)}")
+            generated.append({"label": category, "items": items})
+        # Keep non-result editorial notes (for example a Hardline win) visible.
+        generated_text = " ".join(
+            item.casefold()
+            for group in generated
+            for item in [group["label"], *group["items"]]
+        )
+        for group in groups:
+            label = group["label"].casefold()
+            # Do not repeat an editorial note when the same event is already
+            # represented by an official result in competition_history.
+            event_tokens = ("hardline", "rampage", "cerro abajo", "project 17", "beyond gravity")
+            if any(token in label and token in generated_text for token in event_tokens):
+                continue
+            if group["label"] not in {item["label"] for item in generated}:
+                generated.append(group)
+        groups = generated
+
+    # A flat legacy value stays a simple list; structured input gets nested lists.
+    if not any(group["items"] for group in groups):
+        items = "".join(f"<li>{esc(group['label'])}</li>" for group in groups)
+        return f'<ul class="rider-bio rider-bio-legacy">{items}</ul>'
+    markup = []
+    for group in groups:
+        if group["items"]:
+            children = "".join(f"<li>{esc(item)}</li>" for item in group["items"])
+            markup.append(f'<li class="palmares-group">{esc(group["label"])}<ul>{children}</ul></li>')
+        else:
+            markup.append(f'<li>{esc(group["label"])}</li>')
+    return ('<div class="rider-bio rider-bio-structured"><h2 class="rider-palmares-title">'
+            f'Palmarès</h2><ul class="rider-palmares-list">{"".join(markup)}</ul></div>')
+
 def has_photo(slug):
     """Return the sharpest available portrait instead of a low-res thumbnail."""
     candidates = []
@@ -4599,12 +4695,7 @@ def build_rider_page(r, riders, winter=False):
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
 
     bullets = bio_bullets(r.get("bio"))
-    bio_html = ""
-    if bullets:
-        items = "".join(f"<li>{esc(b)}</li>" for b in bullets)
-        bio_html = f'<ul class="rider-bio" style="list-style:disc; padding-left:18px;">{items}</ul>'
-    else:
-        bio_html = '<p class="rider-bio">No public palmarès on file yet.</p>'
+    bio_html = rider_bio_html(r.get("bio"), r.get("competition_history"))
 
     sponsors = r.get("sponsors") or []
     sponsor_html = ""

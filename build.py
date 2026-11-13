@@ -368,6 +368,11 @@ def rider_bio_html(bio):
     if not bio:
         return '<p class="rider-bio">No public palmarès on file yet.</p>'
     normalized = str(bio).replace("\\r\\n", "\n").replace("\\n", "\n")
+    # Notion rich-text exports can flatten bullet paragraphs into one line.
+    # Recreate the known palmarès boundaries before parsing the hierarchy.
+    if "\n" not in normalized:
+        normalized = re.sub(r"\s+-\s+(?=Top\s+\d)", "\n  - ", normalized)
+        normalized = re.sub(r"\s+\*\s+(?=[A-Z])", "\n* ", normalized)
     raw_lines = [line.rstrip() for line in normalized.splitlines()]
     lines = [line for line in raw_lines if line.strip()]
     if not lines:

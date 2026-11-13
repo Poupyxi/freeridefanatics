@@ -369,7 +369,7 @@ def bio_bullets(bio):
     parts = [p.strip(" -") for p in bio.split(" - ") if p.strip(" -")]
     return parts
 
-def rider_bio_html(bio):
+def rider_bio_html(bio, competition_history=None):
     """Render palmares with readable competition/result hierarchy."""
     if not bio:
         return '<p class="rider-bio">No public palmarès on file yet.</p>'
@@ -410,6 +410,35 @@ def rider_bio_html(bio):
             current = {"label": text, "items": []}
     if current is not None:
         groups.append(current)
+
+    # Fill the structured palmarès from recorded results when the editorial bio
+    # only contains a short note (a common Notion entry pattern).
+    history_groups = {}
+    for result in competition_history or []:
+        place = result.get("place")
+        if not isinstance(place, int) or place not in {1, 2, 3}:
+            continue
+        category = str(result.get("category") or "").strip()
+        event = str(result.get("event") or "").strip()
+        if not category or not event:
+            continue
+        category_label = re.sub(r"^UCI MTB World Cup DH", "UCI WC", category, flags=re.I)
+        grouped = history_groups.setdefault(category_label, {})
+        grouped.setdefault(place, []).append(event)
+    if history_groups:
+        generated = []
+        for category, places in history_groups.items():
+            items = []
+            for place in sorted(places):
+                events = places[place]
+                count = f" × {len(events)}" if len(events) > 1 else ""
+                items.append(f"Top {place}{count} • {', '.join(events)}")
+            generated.append({"label": category, "items": items})
+        # Keep non-result editorial notes (for example a Hardline win) visible.
+        for group in groups:
+            if group["label"] not in {item["label"] for item in generated}:
+                generated.append(group)
+        groups = generated
 
     # A flat legacy value stays a simple list; structured input gets nested lists.
     if not any(group["items"] for group in groups):
@@ -4655,7 +4684,7 @@ def build_rider_page(r, riders, winter=False):
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
 
     bullets = bio_bullets(r.get("bio"))
-    bio_html = rider_bio_html(r.get("bio"))
+    bio_html = rider_bio_html(r.get("bio"), r.get("competition_history"))
 
     sponsors = r.get("sponsors") or []
     sponsor_html = ""

@@ -38,35 +38,81 @@
     const wctx=work.getContext("2d",{willReadFrequently:true});
     wctx.drawImage(image,0,0,work.width,work.height);
     let data;
-    try{data=wctx.getImageData(0,0,work.width,work.height)}catch{return {canvas:work,bounds:{x:0,y:0,w:work.width,h:work.height}}}
+    try{data=wctx.getImageData(0,0,work.width,work.height)}catch{return null}
     const pixels=data.data,width=work.width,height=work.height;
-    const corners=[0,(width-1)*4,(height-1)*width*4,(height*width-1)*4];
-    const whiteCorners=corners.filter(index=>pixels[index]>235&&pixels[index+1]>235&&pixels[index+2]>235).length;
-    if(whiteCorners>=3){
-      const seen=new Uint8Array(width*height),queue=new Int32Array(width*height);
-      let head=0,tail=0;
-      const add=(x,y)=>{const i=y*width+x,p=i*4;if(seen[i]||pixels[p+3]<8||pixels[p]<231||pixels[p+1]<231||pixels[p+2]<231)return;seen[i]=1;queue[tail++]=i};
-      for(let x=0;x<width;x++){add(x,0);add(x,height-1)}
-      for(let y=0;y<height;y++){add(0,y);add(width-1,y)}
-      while(head<tail){
-        const i=queue[head++],x=i%width,y=(i-x)/width,p=i*4;
-        pixels[p+3]=0;
-        if(x>0)add(x-1,y);if(x<width-1)add(x+1,y);
-        if(y>0)add(x,y-1);if(y<height-1)add(x,y+1);
+    // Estimate the studio backdrop independently on each row: many Drive photos
+    // have a grey gradient, not a uniformly white background.
+    const edge=Math.max(1,Math.min(5,Math.floor(width/12)));
+    const backdrop=new Float32Array(height*6);
+    for(let y=0;y<height;y++)for(let side=0;side<2;side++){
+      const offset=y*6+side*3;
+      for(let k=0;k<edge;k++){
+        const x=side?width-1-k:k,p=(y*width+x)*4;
+        for(let c=0;c<3;c++)backdrop[offset+c]+=pixels[p+c]/edge;
       }
-      wctx.putImageData(data,0,0);
     }
+    const distance=(x,y)=>{
+      const p=(y*width+x)*4,t=width>1?x/(width-1):0,q=y*6;
+      let sum=0;
+      for(let c=0;c<3;c++){const delta=pixels[p+c]-(backdrop[q+c]*(1-t)+backdrop[q+3+c]*t);sum+=delta*delta}
+      return Math.sqrt(sum);
+    };
+    const seen=new Uint8Array(width*height),queue=new Int32Array(width*height);
+    let head=0,tail=0;
+    const add=(x,y)=>{
+      const i=y*width+x,p=i*4;
+      if(seen[i]||pixels[p+3]<8||distance(x,y)>43)return;
+      seen[i]=1;queue[tail++]=i;
+    };
+    for(let x=0;x<width;x++){add(x,0);add(x,height-1)}
+    for(let y=0;y<height;y++){add(0,y);add(width-1,y)}
+    while(head<tail){
+      const i=queue[head++],x=i%width,y=(i-x)/width;
+      if(x>0)add(x-1,y);if(x<width-1)add(x+1,y);
+      if(y>0)add(x,y-1);if(y<height-1)add(x,y+1);
+    }
+    const removed=tail/(width*height);
+    // Complex photos must stay in the following individual slides, never as a
+    // visible rectangular patch on the wooden cover.
+    let transparent=0;
+    for(let i=3;i<pixels.length;i+=4)if(pixels[i]<8)transparent++;
+    if(removed<.25&&transparent/(width*height)<.12)return null;
+    for(let i=0;i<width*height;i++)if(seen[i])pixels[i*4+3]=0;
+    // Suppress isolated photographic shadows/noise, preserving separate parts.
+    const visited=new Uint8Array(width*height),components=[];
+    for(let i=0;i<width*height;i++){
+      if(visited[i]||pixels[i*4+3]<25)continue;
+      let start=0,end=0;queue[end++]=i;visited[i]=1;
+      while(start<end){
+        const n=queue[start++],x=n%width,y=(n-x)/width;
+        const neighbors=[x>0?n-1:-1,x<width-1?n+1:-1,y>0?n-width:-1,y<height-1?n+width:-1];
+        for(const m of neighbors)if(m>=0&&!visited[m]&&pixels[m*4+3]>=25){visited[m]=1;queue[end++]=m}
+      }
+      components.push({size:end,indices:queue.slice(0,end)});
+    }
+    let largest=0;
+    for(const component of components)largest=Math.max(largest,component.size);
+    const minimum=Math.max(30,largest*.025);
+    for(const component of components)if(component.size<minimum)for(const i of component.indices)pixels[i*4+3]=0;
+    // Avoid a hard JPEG fringe along the cutout boundary.
+    for(let y=1;y<height-1;y++)for(let x=1;x<width-1;x++){
+      const i=y*width+x,p=i*4;
+      if(pixels[p+3]<25)continue;
+      if(!pixels[p-1]||!pixels[p+7]||!pixels[p-width*4+3]||!pixels[p+width*4+3])pixels[p+3]=Math.min(pixels[p+3],Math.max(80,Math.round((65-distance(x,y))*4)));
+    }
+    wctx.putImageData(data,0,0);
     let left=width,top=height,right=-1,bottom=-1;
     for(let y=0;y<height;y++)for(let x=0;x<width;x++){
       const p=(y*width+x)*4;if(pixels[p+3]<25)continue;
       if(x<left)left=x;if(x>right)right=x;if(y<top)top=y;if(y>bottom)bottom=y;
     }
-    return {canvas:work,bounds:right>=0?{x:left,y:top,w:right-left+1,h:bottom-top+1}:{x:0,y:0,w:width,h:height}};
+    return right>=0?{canvas:work,bounds:{x:left,y:top,w:right-left+1,h:bottom-top+1}}:null;
   }
   async function place(item,box){
     if(!item)return;
     const image=await loadImage(item.image);if(!image)return;
-    const prepared=transparentProduct(image),b=prepared.bounds;
+    const prepared=transparentProduct(image);if(!prepared)return;
+    const b=prepared.bounds;
     const scale=Math.min(box.w/b.w,box.h/b.h),w=b.w*scale,h=b.h*scale;
     const x=box.x+(box.w-w)/2,y=box.y+(box.h-h)/2;
     ctx.save();ctx.shadowColor="rgba(5,3,2,.72)";ctx.shadowBlur=22;

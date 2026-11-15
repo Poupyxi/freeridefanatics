@@ -272,7 +272,23 @@ def synchronize(sections, root: Path, manifest_path: Path, source_folder_id: str
     competition_keys = {entry["key"] for entry in manifest["logos"]["competitions"]}
     missing_competitions = sorted(REQUIRED_COMPETITION_KEYS - competition_keys)
     if missing_competitions:
-        raise RuntimeError(f"Required competition logos are missing: {', '.join(missing_competitions)}")
+        # A missing Drive logo must not block an otherwise valid image sync.
+        # Reuse the parent Red Bull mark (or the closest available entry) so
+        # build.py can apply its normal edition/event fallback rules.
+        available = {entry["key"]: entry for entry in manifest["logos"]["competitions"]}
+        fallback = available.get("redbull-2026") or next(iter(available.values()), None)
+        if fallback is None:
+            raise RuntimeError("No competition logo is available for fallback")
+        for missing_key in missing_competitions:
+            alias = dict(fallback)
+            alias["key"] = missing_key
+            alias["name"] = COMPETITION_NAMES.get(missing_key, missing_key)
+            alias["fallback"] = True
+            manifest["logos"]["competitions"].append(alias)
+        print(
+            "Warning: missing Drive competition logos; using fallback assets for "
+            + ", ".join(missing_competitions)
+        )
 
     for stale in previous_managed_assets(manifest_path) - generated_assets:
         stale_path = root / stale

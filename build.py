@@ -4378,7 +4378,7 @@ def build_equipment_directory(riders, winter=False):
 {compare_banner}
 <div class="guide-callout"><strong>How to read these rankings</strong><p>Combined rider points describe competitive presence in the tracked field. They are not a laboratory comparison: sponsorship, rider count and team selection influence every total.</p></div></div></section></main>'''
     html += footer_html(prefix, seasonal=winter)
-    html += f'<link rel="stylesheet" href="{prefix}assets/css/rider-setup-share.css?v=3"><script src="{prefix}assets/js/equipment-lightbox.js" defer></script><script src="{prefix}assets/js/rider-setup-share.js?v=3" defer></script>\n'
+    html += f'<link rel="stylesheet" href="{prefix}assets/css/rider-setup-share.css?v=3"><script src="{prefix}assets/js/equipment-lightbox.js" defer></script><script src="{prefix}assets/js/rider-setup-share.js?v=4" defer></script>\n'
     return html
 
 def collect_brands(riders):
@@ -5236,7 +5236,7 @@ def build_rider_page(r, riders, winter=False):
     if not winter:
         html += rider_feedback_html(r)
     html += footer_html(prefix, seasonal=winter)
-    html += f'<link rel="stylesheet" href="{prefix}assets/css/rider-setup-share.css?v=3"><script src="{prefix}assets/js/equipment-lightbox.js" defer></script><script src="{prefix}assets/js/rider-setup-share.js?v=3" defer></script>\n'
+    html += f'<link rel="stylesheet" href="{prefix}assets/css/rider-setup-share.css?v=3"><script src="{prefix}assets/js/equipment-lightbox.js" defer></script><script src="{prefix}assets/js/rider-setup-share.js?v=4" defer></script>\n'
     return html
 
 # ---------------------------------------------------------------- main

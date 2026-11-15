@@ -2,3 +2,5 @@
 .setup-share-socials{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.setup-share-socials a{border:1px solid #c9c2ba;color:#17191e;padding:8px 11px;text-decoration:none;font:600 11px/1 inherit;letter-spacing:.05em;text-transform:uppercase}.setup-share-socials a:hover{border-color:#b44b1f;color:#b44b1f}
 .setup-share-caption{white-space:pre-line;background:#fff;border:1px solid #ddd7d0;border-radius:8px;padding:12px;font-size:13px;line-height:1.5;color:#343840;margin:4px 0 12px;max-height:170px;overflow:auto}
 .setup-share-card-preview{display:block;width:100%;max-height:430px;object-fit:contain;background:#e2ddd6;border:1px solid #d1c8bf;border-radius:8px;margin:0 0 16px}
+.setup-share-preview img{height:min(52vh,430px)}
+@media(max-width:520px){.setup-share-preview img{height:min(44vh,340px)}}

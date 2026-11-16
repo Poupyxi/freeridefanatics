@@ -12,7 +12,7 @@ them onto the names build.py looks for. Nothing in the library is modified.
   ~/Desktop/freeride/PictureFaceRiders/@handle.jpg
                                                -> assets/img/riders-action/{slug}.jpg
                                                   (portrait, rider page hero)
-  ~/Desktop/freeride/Equipment/{Cat}/Brand;Model.webp
+  ~/Desktop/freeride/Equipment/{Summer|Winter}/{Cat}/Brand;Model.webp
                                                -> assets/img/equipment/{cat}-{brand}-{model}.jpg
 
 Riders are matched on the Instagram handle already present in riders.json, so
@@ -93,6 +93,12 @@ FOLDER_TO_CATEGORY = {
     "Brake": "BrakeLever", "Brake Lever": "BrakeLever", "Grip": "GRIP", "Chain": "CHAIN", "Disk": "Disk",
     "Wheels": "Wheels", "Tires": "Tires", "Pedals": "Pedals",
     "Shoes": "Shoes", "Helmet": "Helmet", "Protection": "Protection", "Goggles": "Goggles",
+    "Ski": "Skis", "Skis": "Skis", "Snowboard": "Snowboard", "Snowboards": "Snowboard",
+    "Ski Bindings": "Bindings", "Snowboard Bindings": "Bindings",
+    "Bindings": "Bindings", "Binding": "Bindings",
+    "Ski Boots": "Ski Boots", "Snowboard Boots": "Snowboard Boots",
+    "Boots": "Boots", "Poles": "Poles", "Ski Poles": "Poles",
+    "Avalanche Safety": "Avalanche Safety", "Avalanche Equipment": "Avalanche Safety",
 }
 
 # Photo-library names occasionally describe a production family or use a
@@ -450,8 +456,21 @@ def index_library_equipment(riders=()):
     if not os.path.isdir(SRC_EQUIP):
         return index, skipped_folders
 
-    for folder in sorted(os.listdir(SRC_EQUIP)):
-        path = os.path.join(SRC_EQUIP, folder)
+    category_folders = []
+    for season in ("Summer", "Winter"):
+        season_path = os.path.join(SRC_EQUIP, season)
+        if os.path.isdir(season_path):
+            category_folders.extend(
+                (folder, os.path.join(season_path, folder))
+                for folder in sorted(os.listdir(season_path))
+            )
+    # Preserve the previous flat Drive layout while folders are being moved.
+    category_folders.extend(
+        (folder, os.path.join(SRC_EQUIP, folder))
+        for folder in sorted(os.listdir(SRC_EQUIP))
+        if folder not in {"Summer", "Winter"}
+    )
+    for folder, path in category_folders:
         if not os.path.isdir(path):
             continue
         category = FOLDER_TO_CATEGORY.get(folder)
@@ -591,6 +610,11 @@ def pick_photo(candidates, brand, model, rider_slug=""):
         return min(same_brand, key=lambda c: len(c["full"]))
     return None
 
+def rider_equipment_items(rider):
+    """Include season-linked Notion equipment without mixing its page views."""
+    return (rider.get("equipment") or []) + (rider.get("winter_equipment") or [])
+
+
 def import_equipment(riders, force, dry):
     index, skipped_folders = index_library_equipment(riders)
     if not index:
@@ -600,7 +624,7 @@ def import_equipment(riders, force, dry):
     # every distinct product actually used by a rider
     products = {}
     for r in riders:
-        for item in r.get("equipment") or []:
+        for item in rider_equipment_items(r):
             brand = item.get("brand") or ""
             detail = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
             model = detail[0] if detail else ""
@@ -641,7 +665,7 @@ def import_equipment(riders, force, dry):
     # public builder resolves ``--<rider-slug>`` first and falls back to the
     # generic filename when no named photo exists.
     for rider in riders:
-        for item in rider.get("equipment") or []:
+        for item in rider_equipment_items(rider):
             detail = [part.strip() for part in (item.get("model_detail") or "").split(";") if part.strip()]
             model = detail[0] if detail else ""
             brand, model = build.canonical_equipment_product(

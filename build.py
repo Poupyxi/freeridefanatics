@@ -163,6 +163,12 @@ EQUIP_GROUP_MAP = {
     "Helmet": "Protection", "Protection": "Protection", "Goggles": "Protection", "Shoes": "Protection",
 }
 EQUIP_GROUP_ORDER = ["Chassis", "Cockpit", "Drivetrain", "Wheels & Tyres", "Protection"]
+WINTER_EQUIP_GROUP_MAP = {
+    "Skis": "Skis & Snowboards", "Snowboard": "Skis & Snowboards",
+    "Bindings": "Bindings", "Ski Boots": "Boots", "Snowboard Boots": "Boots",
+    "Boots": "Boots", "Poles": "Accessories", "Avalanche Safety": "Safety",
+}
+WINTER_EQUIP_GROUP_ORDER = ["Skis & Snowboards", "Bindings", "Boots", "Accessories", "Safety"]
 
 EQUIP_GROUP_ICONS = {
     "Chassis": '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 24 L16 8 L26 24 L16 20 Z"/><circle cx="6" cy="24" r="3"/><circle cx="26" cy="24" r="3"/></svg>',
@@ -3888,29 +3894,31 @@ def bike_build_html(equipment, rider_slug="", rider_name=""):
       </div>
     </div>"""
 
-def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category_href="../equipment/", rider_slug="", rider_name="", riders=None):
+def equipment_groups_html(equipment, hide_items=(), asset_prefix="../", category_href="../equipment/", rider_slug="", rider_name="", riders=None, winter=False):
     """Group equipment items into Chassis/Cockpit/Drivetrain/Wheels & Tyres/Protection
     sections, each with an icon + index number, matching the rest unsorted at the end."""
     # Parts already shown in the banner above are dropped so the page doesn't
     # list them twice. Filtering per item rather than per group matters: when
     # the banner can't show one of them (no photo), it stays in the list.
     hidden = {id(i) for i in hide_items}
-    buckets = {g: [] for g in EQUIP_GROUP_ORDER}
+    group_map = WINTER_EQUIP_GROUP_MAP if winter else EQUIP_GROUP_MAP
+    group_order = WINTER_EQUIP_GROUP_ORDER if winter else EQUIP_GROUP_ORDER
+    buckets = {g: [] for g in group_order}
     other = []
     for item in equipment:
         if id(item) in hidden:
             continue
-        group = EQUIP_GROUP_MAP.get(item.get("category"))
+        group = group_map.get(item.get("category"))
         if group:
             buckets[group].append(item)
         else:
             other.append(item)
 
-    shown = [g for g in EQUIP_GROUP_ORDER if buckets[g]]
+    shown = [g for g in group_order if buckets[g]]
 
     sections = []
     for idx, group in enumerate(shown, start=1):
-        icon = EQUIP_GROUP_ICONS.get(group, "")
+        icon = EQUIP_GROUP_ICONS.get(group, EQUIP_GROUP_ICONS["Protection"] if group == "Safety" else EQUIP_GROUP_ICONS["Chassis"])
         items_html = "\n        ".join(equip_item_html(i, asset_prefix, category_href, rider_slug, rider_name, riders) for i in buckets[group])
         sections.append(f"""<div class="equip-group reveal">
       <div class="equip-group-head">
@@ -5090,6 +5098,7 @@ def build_rider_page(r, riders, winter=False):
             category_href="../equipment.html#" if winter else "../equipment/",
             rider_slug=r["slug"], rider_name=r["display_name"],
             riders=riders,
+            winter=winter,
         )
     else:
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'

@@ -222,6 +222,38 @@ def previous_managed_assets(manifest_path: Path) -> set[str]:
     }
 
 
+def unique_logo_records(section: str, records: list[dict]) -> list[tuple[str, str, dict]]:
+    """Use the newest Drive file when multiple filenames map to one logo key."""
+    selected = {}
+    for record in records:
+        stem = Path(record["name"]).stem
+        key = competition_key(stem) if section == "competitions" else slugify(stem)
+        name = display_name(stem)
+        if section == "competitions":
+            name = COMPETITION_NAMES.get(key, name)
+        elif section == "brands" and key in BRAND_ALIASES:
+            key, name = BRAND_ALIASES[key]
+        if not key:
+            raise RuntimeError(f"Cannot generate a logo key from {record['name']!r}")
+        previous = selected.get(key)
+        rank = (record.get("modifiedTime") or "", record["name"].casefold(), record.get("id") or "")
+        if previous:
+            previous_rank = (
+                previous[2].get("modifiedTime") or "",
+                previous[2]["name"].casefold(),
+                previous[2].get("id") or "",
+            )
+            if rank > previous_rank:
+                selected[key] = (key, name, record)
+                kept, skipped = record["name"], previous[2]["name"]
+            else:
+                kept, skipped = previous[2]["name"], record["name"]
+            print(f"Warning: duplicate {section} logo key {key!r}; keeping {kept!r}, skipping {skipped!r}")
+        else:
+            selected[key] = (key, name, record)
+    return [selected[key] for key in sorted(selected)]
+
+
 def synchronize(sections, root: Path, manifest_path: Path, source_folder_id: str | None):
     manifest = {
         "source": "google-drive-read-only",
@@ -229,23 +261,10 @@ def synchronize(sections, root: Path, manifest_path: Path, source_folder_id: str
         "access_scope": READ_ONLY_SCOPE,
         "logos": {"brands": [], "competitions": [], "teams": []},
     }
-    seen = {section: set() for section in manifest["logos"]}
     generated_assets = set()
 
     for section, output_folder, records in sections:
-        for record in sorted(records, key=lambda item: item["name"].casefold()):
-            stem = Path(record["name"]).stem
-            key = competition_key(stem) if section == "competitions" else slugify(stem)
-            name = display_name(stem)
-            if section == "competitions":
-                name = COMPETITION_NAMES.get(key, name)
-            elif section == "brands" and key in BRAND_ALIASES:
-                key, name = BRAND_ALIASES[key]
-            if not key:
-                raise RuntimeError(f"Cannot generate a logo key from {record['name']!r}")
-            if key in seen[section]:
-                raise RuntimeError(f"Duplicate {section} logo key {key!r}")
-            seen[section].add(key)
+        for key, name, record in unique_logo_records(section, records):
             converted = to_webp(record["bytes"])
             relative = f"assets/img/{output_folder}/{key}.webp"
             destination = root / relative

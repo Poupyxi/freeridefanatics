@@ -3084,9 +3084,10 @@ def competition_season_years(competition):
     ))
     return tuple(dict.fromkeys(re.findall(r"\b20\d{2}\b", source)))
 
-def competition_year_share_payload(year, competitions, prefix="", winter=False):
+def competition_year_share_payload(year, competitions, prefix="", winter=False, logo_assets=None):
     """Build the share/calendar payload for every dated event in one year."""
     year_competitions = [competition for competition in competitions if year in competition_season_years(competition)]
+    logo_assets = logo_assets if logo_assets is not None else load_competition_logos()
     calendar = []
     for competition in year_competitions:
         for entry in competition_calendar_entries(competition, winter):
@@ -3104,6 +3105,13 @@ def competition_year_share_payload(year, competitions, prefix="", winter=False):
         "title": f"RidersFanatics {year}", "season": year, "instagram": "ridersfanatics",
         "logo": f"{prefix}assets/img/brand/freeride-fanatics-{'winter' if winter else 'summer'}.png",
         "seasonTitles": [competition_display_name(competition) for competition in year_competitions],
+        "seasonCompetitions": [
+            {
+                "title": competition_display_name(competition),
+                "logo": (f"{prefix}{logo['src']}" if (logo := competition_logo(logo_assets, competition)) else ""),
+            }
+            for competition in year_competitions
+        ],
         "riders": {}, "events": {},
         "eventCard": {"date": "", "location": scope, "status": f"{len(year_competitions)} competitions"},
         "competitionCard": {"discipline": scope, "eventsCount": len(calendar), "calendar": calendar},
@@ -3204,7 +3212,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
     )
     year_sections = "".join(
         f'''<section class="competition-year-section" id="season-{year}" aria-labelledby="season-{year}-title">
-          <div class="competition-year-heading"><div><span class="label">Season</span><h2 id="season-{year}-title">{year}</h2></div><div class="competition-year-actions"><span>{len(cards_by_year.get(year, []))} competition{'s' if len(cards_by_year.get(year, [])) != 1 else ''}</span>{f'<span data-year-share-payload="{esc_attr(json.dumps(competition_year_share_payload(year, competitions, prefix, winter)))}"></span>' if IS_PREPROD else ''}</div></div>
+          <div class="competition-year-heading"><div><span class="label">Season</span><h2 id="season-{year}-title">{year}</h2></div><div class="competition-year-actions"><span>{len(cards_by_year.get(year, []))} competition{'s' if len(cards_by_year.get(year, [])) != 1 else ''}</span>{f'<span data-year-share-payload="{esc_attr(json.dumps(competition_year_share_payload(year, competitions, prefix, winter, competition_logos)))}"></span>' if IS_PREPROD else ''}</div></div>
           <div class="competition-grid">{"".join(cards_by_year.get(year, []))}</div>
         </section>'''
         for year in competition_years

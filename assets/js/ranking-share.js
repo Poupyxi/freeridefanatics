@@ -238,12 +238,17 @@
     const ctx=canvas.getContext('2d');ctx.fillStyle='#f5f1e9';ctx.fillRect(0,0,1080,height);
     ctx.fillStyle='#17181b';fit(ctx,'RIDERSFANATICS / SEASON',64,80,950,26,true);
     ctx.strokeStyle='#ccc5b9';ctx.lineWidth=1;
-    const list=(titles||[]).slice(0,12), rowHeight=Math.min(72,(height-260)/Math.max(list.length,1));
+    const list=(titles||[]).slice(0,12).map(item=>typeof item==='string'?{title:item,logo:''}:item), rowHeight=Math.min(72,(height-260)/Math.max(list.length,1));
     const logo=await loadImage(context.logo);if(logo){const scale=Math.min(230/logo.width,130/logo.height);ctx.drawImage(logo,786,54,logo.width*scale,logo.height*scale);}
     ctx.fillStyle='#b4491c';ctx.fillRect(64,134,8,88);ctx.fillStyle='#17181b';
     lines(ctx,String(context.title||'Season').toUpperCase(),96,176,650,52,58,2,true);
     ctx.fillStyle='#8a8b8c';fit(ctx,'COMPETITIONS TRACKED',96,236,500,18,true);
-    list.forEach((title,index)=>{const y=270+index*rowHeight;ctx.strokeStyle='#ccc5b9';ctx.beginPath();ctx.moveTo(64,y+rowHeight-10);ctx.lineTo(1016,y+rowHeight-10);ctx.stroke();ctx.fillStyle='#b4491c';fit(ctx,String(index+1).padStart(2,'0'),72,y+34,64,22,true);ctx.fillStyle='#17181b';fit(ctx,String(title||'Competition'),160,y+34,820,28,true);});
+    for(const [index,item] of list.entries()){
+      const y=270+index*rowHeight;ctx.strokeStyle='#ccc5b9';ctx.beginPath();ctx.moveTo(64,y+rowHeight-10);ctx.lineTo(1016,y+rowHeight-10);ctx.stroke();
+      ctx.fillStyle='#b4491c';fit(ctx,String(index+1).padStart(2,'0'),72,y+34,64,22,true);
+      if(item.logo){const logo=await loadImage(item.logo);if(logo){const scale=Math.min(76/logo.width,(rowHeight-18)/logo.height);ctx.drawImage(logo,150,y+8,logo.width*scale,logo.height*scale);}}
+      ctx.fillStyle='#17181b';fit(ctx,String(item.title||'Competition'),250,y+34,730,28,true);
+    }
     ctx.fillStyle='#17181b';fit(ctx,context.handle || 'ridersfanatics.com',64,height-38,760,20,true);
     return canvas;
   }
@@ -263,7 +268,7 @@
     const seasonShare=data.shareKind==='season';
     const calendarShare=data.shareKind==='competition'||data.shareKind==='year';
     const yearPages=chunks(data.competitionCard?.calendar || []);
-    const seasonPages=chunks(data.seasonTitles || []);
+    const seasonPages=chunks(data.seasonCompetitions || data.seasonTitles || []);
     const allPages = isEvent ? (seasonShare ? (seasonPages.length ? seasonPages : [[]]) : (data.shareKind==='year' ? (yearPages.length ? yearPages : [[]]) : [[]])) : chunks(rows), urls = [], calendarUrls=[];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
     const header=el('header','',dialog);header.className='ranking-share-header';

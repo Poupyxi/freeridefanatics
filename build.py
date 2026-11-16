@@ -3109,6 +3109,7 @@ def competition_year_share_payload(year, competitions, prefix="", winter=False, 
             {
                 "title": competition_display_name(competition),
                 "logo": (f"{prefix}{logo['src']}" if (logo := competition_logo(logo_assets, competition)) else ""),
+                "events": len(competition.get("events") or []),
             }
             for competition in year_competitions
         ],

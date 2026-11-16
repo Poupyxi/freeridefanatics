@@ -29,6 +29,7 @@ except ImportError:
 FOLDER_MIME = "application/vnd.google-apps.folder"
 READ_ONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly"
 SUPPORTED_MIME = {"image/jpeg", "image/png", "image/webp", "image/avif"}
+SUPPORTED_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".avif"}
 SECTIONS = {
     "brand logo": ("brands", "brands"),
     "competition logo": ("competitions", "competitions"),
@@ -147,7 +148,7 @@ def local_sections(source: Path):
                     "bytes": item.read_bytes(),
                 }
                 for item in sorted(folder.iterdir(), key=lambda path: path.name.casefold())
-                if item.is_file()
+                if item.is_file() and item.suffix.casefold() in SUPPORTED_SUFFIXES
             ]
 
 

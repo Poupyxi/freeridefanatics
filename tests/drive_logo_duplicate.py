@@ -2,6 +2,7 @@
 """Regression checks for duplicate Drive logo filenames."""
 
 import importlib.util
+import tempfile
 from pathlib import Path
 
 
@@ -25,4 +26,15 @@ aliases = [
     {"name": "Forbidden.png", "id": "newer", "modifiedTime": "2026-11-15T00:00:00Z"},
 ]
 assert module.unique_logo_records("brands", aliases)[0][:2] == ("forbidden", "Forbidden")
+
+# The mirrored Drive library may contain SVGs, but this converter only reads
+# formats supported by Pillow. A raster alternative must still be selected.
+with tempfile.TemporaryDirectory() as directory:
+    brand_folder = Path(directory) / "Brand logo"
+    brand_folder.mkdir()
+    (brand_folder / "Leki.svg").write_text("<svg/>", encoding="utf-8")
+    (brand_folder / "Leki.png").write_bytes(b"raster-test")
+    section, _, mirrored = next(module.local_sections(Path(directory)))
+    assert section == "brands"
+    assert [record["name"] for record in mirrored] == ["Leki.png"]
 print("Duplicate Drive logo selection is deterministic")

@@ -3103,6 +3103,7 @@ def competition_year_share_payload(year, competitions, prefix="", winter=False):
     return {
         "title": f"RidersFanatics {year}", "season": year, "instagram": "ridersfanatics",
         "logo": f"{prefix}assets/img/brand/freeride-fanatics-{'winter' if winter else 'summer'}.png",
+        "seasonTitles": [competition_display_name(competition) for competition in year_competitions],
         "riders": {}, "events": {},
         "eventCard": {"date": "", "location": scope, "status": f"{len(year_competitions)} competitions"},
         "competitionCard": {"discipline": scope, "eventsCount": len(calendar), "calendar": calendar},

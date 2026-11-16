@@ -233,6 +233,20 @@
     ctx.fillStyle='#f5f1e9';fit(ctx,context.handle||'@ridersfanatics',48,height-50,510,20,true);ctx.fillStyle='#a99f94';fit(ctx,'RIDERSFANATICS.COM',760,height-50,270,17,true);
     return canvas;
   }
+  async function drawSeason(height,context,titles){
+    const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#f5f1e9';ctx.fillRect(0,0,1080,height);
+    ctx.fillStyle='#17181b';fit(ctx,'RIDERSFANATICS / SEASON',64,80,950,26,true);
+    ctx.strokeStyle='#ccc5b9';ctx.lineWidth=1;
+    const list=(titles||[]).slice(0,12), rowHeight=Math.min(72,(height-260)/Math.max(list.length,1));
+    const logo=await loadImage(context.logo);if(logo){const scale=Math.min(230/logo.width,130/logo.height);ctx.drawImage(logo,786,54,logo.width*scale,logo.height*scale);}
+    ctx.fillStyle='#b4491c';ctx.fillRect(64,134,8,88);ctx.fillStyle='#17181b';
+    lines(ctx,String(context.title||'Season').toUpperCase(),96,176,650,52,58,2,true);
+    ctx.fillStyle='#8a8b8c';fit(ctx,'COMPETITIONS TRACKED',96,236,500,18,true);
+    list.forEach((title,index)=>{const y=270+index*rowHeight;ctx.strokeStyle='#ccc5b9';ctx.beginPath();ctx.moveTo(64,y+rowHeight-10);ctx.lineTo(1016,y+rowHeight-10);ctx.stroke();ctx.fillStyle='#b4491c';fit(ctx,String(index+1).padStart(2,'0'),72,y+34,64,22,true);ctx.fillStyle='#17181b';fit(ctx,String(title||'Competition'),160,y+34,820,28,true);});
+    ctx.fillStyle='#17181b';fit(ctx,context.handle || 'ridersfanatics.com',64,height-38,760,20,true);
+    return canvas;
+  }
   function canShareFiles(files){
     try{return !!(files.length && navigator.share && navigator.canShare && navigator.canShare({files}));}catch(_){return false;}
   }
@@ -246,12 +260,14 @@
     const context = {title:event.name || data.title, logo:event.logo || data.logo,
       handle:handle(event.instagram || data.instagram), team:panel?.dataset.standings === 'Teams',
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
+    const seasonShare=data.shareKind==='season';
     const calendarShare=data.shareKind==='competition'||data.shareKind==='year';
     const yearPages=chunks(data.competitionCard?.calendar || []);
-    const allPages = isEvent ? (data.shareKind==='year' ? (yearPages.length ? yearPages : [[]]) : [[]]) : chunks(rows), urls = [], calendarUrls=[];
+    const seasonPages=chunks(data.seasonTitles || []);
+    const allPages = isEvent ? (seasonShare ? (seasonPages.length ? seasonPages : [[]]) : (data.shareKind==='year' ? (yearPages.length ? yearPages : [[]]) : [[]])) : chunks(rows), urls = [], calendarUrls=[];
     const dialog = el('dialog'); dialog.className='ranking-share-dialog';
     const header=el('header','',dialog);header.className='ranking-share-header';
-    const heading=el('h2','Partager '+(isEvent ? (calendarShare ? 'le calendrier' : 'l’événement') : 'le classement'),header);
+    const heading=el('h2','Partager '+(isEvent ? (seasonShare ? 'la saison' : (calendarShare ? 'le calendrier' : 'l’événement')) : 'le classement'),header);
     heading.id='ranking-share-title';dialog.setAttribute('aria-labelledby',heading.id);
     const close=el('button','×',header);close.type='button';close.className='ranking-share-close';close.setAttribute('aria-label','Fermer');
     const layout=el('div','',dialog);layout.className='ranking-share-layout';
@@ -282,7 +298,7 @@
     const calendarItems=isEvent && data.shareKind==='event' ? [{...data.eventCard,name:context.title}]
       : event.name ? [event] : data.competitionCard?.calendar || [];
     const dated=calendarEvents(calendarItems,context.title,pageUrl);
-    const calendarToggle=el('button','Ajouter au calendrier',actions);calendarToggle.type='button';calendarToggle.className='ranking-share-calendar-toggle';
+    const calendarToggle=el('button','Ajouter au calendrier',actions);calendarToggle.type='button';calendarToggle.className='ranking-share-calendar-toggle';calendarToggle.hidden=seasonShare;
     const calendarPanel=el('section','',actions);calendarPanel.id='ranking-share-calendar';calendarPanel.className='ranking-share-calendar';calendarPanel.hidden=true;
     calendarToggle.setAttribute('aria-controls',calendarPanel.id);calendarToggle.setAttribute('aria-expanded','false');
     calendarToggle.onclick=()=>{calendarPanel.hidden=!calendarPanel.hidden;calendarToggle.setAttribute('aria-expanded',String(!calendarPanel.hidden));};
@@ -365,9 +381,9 @@
       share.disabled=download.disabled=instagram.disabled=true; status.textContent='Préparation de l’image…';
       release(); rendered=[]; gallery.replaceChildren();
       try {
-        const pages=allPages;
+      const pages=allPages;
         for(let i=0;i<pages.length;i++) {
-          const canvas=isEvent ? (calendarShare ? await drawCompetition(1350,context,pages[i]) : await drawEvent(1350,context)) : await draw(pages[i],i,pages.length,1350,context);
+          const canvas=isEvent ? (seasonShare ? await drawSeason(1350,context,pages[i]) : (calendarShare ? await drawCompetition(1350,context,pages[i]) : await drawEvent(1350,context))) : await draw(pages[i],i,pages.length,1350,context);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
           if(token!==version)return;
           if(!blob)throw new Error('Image generation failed');
@@ -376,7 +392,7 @@
           choice.append(document.createTextNode(' Image '+(i+1)));choice.hidden=isEvent&&pages.length===1;
           const url=URL.createObjectURL(blob); urls.push(url);
           canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',isEvent ? context.title+' — event card' : context.title+' — entries '+(i*10+1)+'–'+Math.min((i+1)*10,rows.length)); const preview=el('a','',item);preview.href=url;preview.target='_blank';preview.rel='noopener';preview.className='ranking-share-preview';preview.setAttribute('aria-label','Agrandir l’image '+(i+1)+' (nouvel onglet)');preview.append(canvas);
-          const file=new File([blob],'ridersfanatics-'+(isEvent ? 'event' : 'ranking')+'-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'});
+          const file=new File([blob],'ridersfanatics-'+(seasonShare ? 'season' : (isEvent ? 'event' : 'ranking'))+'-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'});
           const link=el('a','Télécharger l’image',item); link.href=url; link.download=file.name;
           const hint=el('span','Touchez l’aperçu pour l’agrandir',item);hint.className='ranking-share-preview-hint';
           rendered.push({checkbox,file,url});
@@ -439,13 +455,13 @@
   document.querySelectorAll('[data-year-share-payload]').forEach(host=>{
     let payload;
     try{payload=JSON.parse(host.dataset.yearSharePayload || '');}catch(_){return;}
-    const button=el('button','Share '+payload.season);button.type='button';
-    button.className='ranking-share-trigger competition-year-share-trigger';
-    button.setAttribute('aria-label','Share all '+payload.season+' competitions and add them to a calendar');
-    button.onclick=()=>{data=payload;open(null,button);};
-    host.append(button);
-    const calendar=el('button','Add calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label','Add the '+payload.season+' calendar');
-    calendar.onclick=()=>downloadCalendarItems(payload.competitionCard?.calendar || [],payload.season+' season');host.append(calendar);
+    const season=el('button','Share season');season.type='button';
+    season.className='ranking-share-trigger competition-year-share-trigger';
+    season.setAttribute('aria-label','Share the '+payload.season+' competition titles');
+    season.onclick=()=>{data={...payload,shareKind:'season'};open(null,season);};
+    host.append(season);
+    const calendar=el('button','Share calendar');calendar.type='button';calendar.className='ranking-share-trigger calendar-trigger';calendar.setAttribute('aria-label','Share the '+payload.season+' calendar');
+    calendar.onclick=()=>{data=payload;open(null,calendar);};host.append(calendar);
   });
   document.querySelectorAll('main .standings-toolbar').forEach(toolbar=>{
     const section=toolbar.closest('section') || toolbar.parentElement;

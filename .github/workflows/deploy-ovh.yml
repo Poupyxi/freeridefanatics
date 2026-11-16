@@ -387,10 +387,10 @@ jobs:
       - name: Check out the exact validated source revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          # Promotion uses the validated preprod data snapshot with the current
-          # production policy/code from main. The snapshot revision is validated
-          # separately below and is never used as the production code checkout.
-          ref: ${{ inputs.operation == 'promote' && github.event.repository.default_branch || needs.prepare-notion-production.outputs.source_sha }}
+          # Promotion must rebuild from the exact preprod revision that passed
+          # validation, while RF_BUILD_ENV=production applies production-only
+          # visibility and consent rules during the build.
+          ref: ${{ inputs.operation == 'promote' && needs.validate-preprod.outputs.source_sha || needs.prepare-notion-production.outputs.source_sha }}
 
       - name: Load the validated preproduction snapshot
         if: inputs.operation == 'promote'

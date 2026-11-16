@@ -235,7 +235,7 @@
   }
   async function drawSeason(height,context,titles){
     const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=height;
-    const ctx=canvas.getContext('2d');ctx.fillStyle='#f5f1e9';ctx.fillRect(0,0,1080,height);
+    const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='#f5f1e9';ctx.fillRect(0,0,1080,height);
     ctx.fillStyle='#17181b';fit(ctx,'RIDERSFANATICS / SEASON',64,80,950,26,true);
     ctx.strokeStyle='#ccc5b9';ctx.lineWidth=1;
     const list=(titles||[]).slice(0,12).map(item=>typeof item==='string'?{title:item,logo:''}:item), rowHeight=Math.min(72,(height-260)/Math.max(list.length,1));
@@ -247,7 +247,8 @@
       const y=270+index*rowHeight;ctx.strokeStyle='#ccc5b9';ctx.beginPath();ctx.moveTo(64,y+rowHeight-10);ctx.lineTo(1016,y+rowHeight-10);ctx.stroke();
       ctx.fillStyle='#b4491c';fit(ctx,String(index+1).padStart(2,'0'),72,y+34,64,22,true);
       if(item.logo){const logo=await loadImage(item.logo);if(logo){const scale=Math.min(76/logo.width,(rowHeight-18)/logo.height);ctx.drawImage(logo,150,y+8,logo.width*scale,logo.height*scale);}}
-      ctx.fillStyle='#17181b';fit(ctx,String(item.title||'Competition'),250,y+34,730,28,true);
+      ctx.fillStyle='#17181b';fit(ctx,String(item.title||'Competition'),250,y+29,730,27,true);
+      if(item.events){ctx.fillStyle='#777b80';fit(ctx,String(item.events)+' event'+(item.events===1?'':'s'),250,y+52,300,14,true);}
     }
     ctx.fillStyle='#17181b';fit(ctx,context.handle || 'ridersfanatics.com',64,height-38,760,20,true);
     return canvas;

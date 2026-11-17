@@ -1735,6 +1735,44 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   outline-offset: 3px;
 }
 
+/* Ski product photos are very tall and nearly disappear in the 56px bike thumbnail. */
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] {
+  min-height: 136px;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb {
+  flex: 0 0 220px;
+  width: 220px;
+  height: 100px;
+  background: #f3f3ef;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb img {
+  width: 90px;
+  height: 200px;
+  max-width: none;
+  object-fit: contain;
+  transform: rotate(-90deg);
+}
+.season-winter.equipment-page #skis .equipment-directory-media img {
+  width: 62px;
+  height: 74px;
+  max-width: none;
+  padding: 0;
+  transform: rotate(-90deg);
+}
+@media (max-width: 560px) {
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb {
+    width: 120px;
+    height: 82px;
+  }
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb img {
+    width: 70px;
+    height: 112px;
+  }
+}
+
 .equipment-lightbox {
   position: fixed;
   inset: 0;

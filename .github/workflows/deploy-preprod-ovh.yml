@@ -59,6 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 tests/notion_only_source.py
+          python3 tests/winter_equipment_assignment.py
           python3 tests/result_status_logic.py
           python3 tests/rider_name_normalization.py
           python3 tests/seo_priority_content.py
@@ -128,6 +129,7 @@ jobs:
           test -s data/notion/competitions.json
           test -s data/notion/sync-metadata.json
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 tests/winter_equipment_snapshot.py
           python3 scripts/validate_notion_snapshot.py \
             --riders data/notion/riders.json \
             --metadata data/notion/sync-metadata.json \
@@ -316,6 +318,7 @@ jobs:
           test -s data/drive/live-drive-source-version.txt
           test -s data/drive-logo-manifest.json
           python3 scripts/validate_rider_snapshot.py data/notion/riders.json
+          python3 tests/winter_equipment_snapshot.py
           python3 scripts/validate_notion_snapshot.py \
             --riders data/notion/riders.json \
             --metadata data/notion/sync-metadata.json \

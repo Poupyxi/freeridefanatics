@@ -99,6 +99,7 @@ FOLDER_TO_CATEGORY = {
     "Ski Boots": "Ski Boots", "Snowboard Boots": "Snowboard Boots",
     "Boots": "Boots", "Poles": "Poles", "Ski Poles": "Poles",
     "Avalanche Safety": "Avalanche Safety", "Avalanche Equipment": "Avalanche Safety",
+    "SacAirbag": "Avalanche Safety", "Airbag": "Avalanche Safety",
 }
 
 # Photo-library names occasionally describe a production family or use a

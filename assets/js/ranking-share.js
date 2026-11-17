@@ -246,8 +246,8 @@
     for(const [index,item] of list.entries()){
       const y=270+index*rowHeight;ctx.strokeStyle='#ccc5b9';ctx.beginPath();ctx.moveTo(64,y+rowHeight-10);ctx.lineTo(1016,y+rowHeight-10);ctx.stroke();
       if(item.logo){const logo=await loadImage(item.logo);if(logo){const scale=Math.min(88/logo.width,(rowHeight-16)/logo.height);ctx.drawImage(logo,78,y+6,logo.width*scale,logo.height*scale);}}
-      ctx.fillStyle='#17181b';fit(ctx,String(item.title||'Competition'),194,y+29,786,31,true);
-      if(item.events){ctx.fillStyle='#777b80';fit(ctx,String(item.events)+' event'+(item.events===1?'':'s'),194,y+53,300,15,true);}
+      ctx.fillStyle='#17181b';fit(ctx,String(item.title||'Competition'),194,y+31,786,36,true);
+      if(item.events){ctx.fillStyle='#777b80';fit(ctx,String(item.events)+' event'+(item.events===1?'':'s'),194,y+57,300,16,true);}
     }
     ctx.fillStyle='#17181b';fit(ctx,context.handle || 'ridersfanatics.com',64,height-38,760,20,true);
     return canvas;

@@ -98,6 +98,12 @@ CATEGORY_MAP = {
     "Ski Poles": "Poles",
     "Avalanche Safety": "Avalanche Safety",
     "Avalanche Equipment": "Avalanche Safety",
+    "SacAirbag": "Avalanche Safety",
+}
+
+WINTER_EQUIPMENT_CATEGORIES = {
+    "Skis", "Snowboard", "Bindings", "Ski Boots", "Snowboard Boots",
+    "Boots", "Poles", "Avalanche Safety",
 }
 
 RESULT_STATUS_ALIASES = {
@@ -313,6 +319,23 @@ def season_sport_and_discipline(names):
     if "ski" in words:
         return "Ski", " / ".join(cleaned)
     return "Mountain bike", " / ".join(cleaned) or "Downhill"
+
+
+def equipment_link_scopes(season_ids, category, rider_disciplines,
+                          primary_season_id, winter_season_ids,
+                          has_primary_participation):
+    """Keep untagged winter gear with its rider without leaking it into Summer."""
+    if season_ids:
+        return (primary_season_id in season_ids, bool(season_ids & winter_season_ids))
+    winter_rider = any(
+        season_sport_and_discipline([name])[0] in {"Ski", "Snowboard"}
+        for name in rider_disciplines
+    )
+    winter_product = category in WINTER_EQUIPMENT_CATEGORIES
+    return (
+        has_primary_participation and not winter_product,
+        winter_rider and winter_product,
+    )
 
 
 def related_ids(page, targets, *preferred_names):
@@ -774,29 +797,32 @@ def export(client: Notion):
         season_id for season_id, season in seasons.items()
         if season_sport_and_discipline(season.get("disciplines") or [])[0] in {"Ski", "Snowboard"}
     }
+    rider_disciplines_by_id = {
+        page_id(item.get("id")): [
+            disciplines[identifier]
+            for identifier in list_value(item, "Discipline")
+            if identifier in disciplines
+        ]
+        for item in pages["riders"]
+    }
     for item in pages["equipment_links"]:
         season_ids = set(list_value(item, "☀️ Saison"))
-        # New equipment links are sometimes created before their season field
-        # is filled in. Keep an explicitly different season isolated, but infer
-        # the active season for an untagged link when the related rider already
-        # participates in, or has a result for, that season. This prevents a
-        # complete rider setup from disappearing because only the link's season
-        # cell was left blank.
-        is_primary_link = not season_ids or primary_season_id in season_ids
-        is_winter_link = bool(season_ids & winter_season_ids)
-        if season_ids and not is_primary_link and not is_winter_link:
+        if season_ids and primary_season_id not in season_ids and not season_ids & winter_season_ids:
             continue
         rider_ids = list_value(item, "🚻 Riders")
-        if not season_ids:
-            rider_ids = [
-                rider_id for rider_id in rider_ids
-                if rider_id in result_rows or rider_id in participations_by_rider
-            ]
         product_ids = list_value(item, "Equipments")
         for rider_id in rider_ids:
             for product_id in product_ids:
                 product = equipment.get(product_id)
                 if product and product.get("category") and (product.get("brand") or product.get("model_detail")):
+                    is_primary_link, is_winter_link = equipment_link_scopes(
+                        season_ids,
+                        product["category"],
+                        rider_disciplines_by_id.get(rider_id, []),
+                        primary_season_id,
+                        winter_season_ids,
+                        rider_id in result_rows or rider_id in participations_by_rider,
+                    )
                     normalized = dict(product)
                     normalized["brand_model"] = ";".join(part for part in (normalized["brand"], normalized["model_detail"]) if part)
                     if is_primary_link:

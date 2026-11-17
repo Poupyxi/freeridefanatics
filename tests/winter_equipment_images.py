@@ -17,6 +17,7 @@ rider = {
         {"category": "Skis", "brand": "Ski Brand", "model_detail": "Powder One"},
         {"category": "Bindings", "brand": "Binding Brand", "model_detail": "Tour One"},
         {"category": "Snowboard", "brand": "Board Brand", "model_detail": "Freeride One"},
+        {"category": "Avalanche Safety", "brand": "Safety Brand", "model_detail": "Airbag One"},
     ],
 }
 
@@ -27,6 +28,7 @@ with tempfile.TemporaryDirectory() as directory:
         ("Winter", "Ski", "Ski Brand;Powder One.jpg"),
         ("Winter", "Ski Bindings", "Binding Brand;Tour One.jpg"),
         ("Winter", "Snowboard", "Board Brand;Freeride One.jpg"),
+        ("Winter", "SacAirbag", "Safety Brand;Airbag One.jpg"),
     ):
         destination = library / season / folder / filename
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -36,9 +38,11 @@ with tempfile.TemporaryDirectory() as directory:
          patch.object(import_images, "validate_library_image"):
         index, skipped = import_images.index_library_equipment([rider])
         assert not skipped
-        assert len(index["Frame"]) == len(index["Skis"]) == len(index["Bindings"]) == len(index["Snowboard"]) == 1
+        assert all(len(index[category]) == 1 for category in (
+            "Frame", "Skis", "Bindings", "Snowboard", "Avalanche Safety"
+        ))
         matched, missing = import_images.import_equipment([rider], force=True, dry=True)
         assert not missing, missing
-        assert len(matched) == 4, matched
+        assert len(matched) == 5, matched
 
 print("Summer and Winter Drive equipment folders resolve to rider products")

@@ -50,10 +50,19 @@ for page in root.rglob("*.html"):
     assert ad_placement_count(source) == 1, f"Duplicate ad placement: {page.relative_to(root)}"
     assert source.index('class="rider-ad') < source.index('<footer>'), f"Ad must precede footer: {page.relative_to(root)}"
 assert complete_pages
-assert red_bull.is_file()
-assert red_bull_rounds.joinpath("cerroabajo-2026.html").is_file()
-assert red_bull_rounds.joinpath("rampage-2026.html").is_file()
-assert red_bull_rounds.joinpath("hardline-2026.html").is_file()
+if red_bull.is_file():
+    # Legacy umbrella layout: Red Bull is one competition with three rounds.
+    assert red_bull_rounds.joinpath("cerroabajo-2026.html").is_file()
+    assert red_bull_rounds.joinpath("rampage-2026.html").is_file()
+    assert red_bull_rounds.joinpath("hardline-2026.html").is_file()
+else:
+    # Current Notion layout: each Red Bull discipline is an independent
+    # competition. Keep the environment contract compatible with both layouts
+    # while still requiring all three public competition pages.
+    competition_pages = list((root / "competitions").glob("*.html"))
+    for tokens in (("cerro", "abajo"), ("rampage",), ("hardline",)):
+        assert any(all(token in page.stem.lower() for token in tokens)
+                   for page in competition_pages), tokens
 
 if environment == "preprod":
     assert "noindex,nofollow,noarchive" in home

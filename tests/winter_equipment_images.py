@@ -18,6 +18,9 @@ rider = {
         {"category": "Bindings", "brand": "Binding Brand", "model_detail": "Tour One"},
         {"category": "Snowboard", "brand": "Board Brand", "model_detail": "Freeride One"},
         {"category": "Avalanche Safety", "brand": "Safety Brand", "model_detail": "Airbag One"},
+        {"category": "Skis", "brand": "Majesty", "model_detail": "Vanguard 108 CTi Special Edition Zuza Witych"},
+        {"category": "Skis", "brand": "Volkl", "model_detail": "Revolte 114_2025"},
+        {"category": "Snowboard", "brand": "Headsnowboard", "model_detail": "E.B.I LYT_2027"},
     ],
 }
 
@@ -29,6 +32,9 @@ with tempfile.TemporaryDirectory() as directory:
         ("Winter", "Ski Bindings", "Binding Brand;Tour One.jpg"),
         ("Winter", "Snowboard", "Board Brand;Freeride One.jpg"),
         ("Winter", "SacAirbag", "Safety Brand;Airbag One.jpg"),
+        ("Winter", "Ski", "MAJESTY_Vanguard 108 CTI Zuza Witych_2027_front.webp"),
+        ("Winter", "Ski", "Volkl_Revolt 114_2025_front.webp"),
+        ("Winter", "Snowboard", "HEAD_E.B.I LYT_front.png"),
     ):
         destination = library / season / folder / filename
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -38,11 +44,11 @@ with tempfile.TemporaryDirectory() as directory:
          patch.object(import_images, "validate_library_image"):
         index, skipped = import_images.index_library_equipment([rider])
         assert not skipped
-        assert all(len(index[category]) == 1 for category in (
+        assert {category: len(index[category]) for category in (
             "Frame", "Skis", "Bindings", "Snowboard", "Avalanche Safety"
-        ))
+        )} == {"Frame": 1, "Skis": 3, "Bindings": 1, "Snowboard": 2, "Avalanche Safety": 1}
         matched, missing = import_images.import_equipment([rider], force=True, dry=True)
         assert not missing, missing
-        assert len(matched) == 5, matched
+        assert len(matched) == 8, matched
 
 print("Summer and Winter Drive equipment folders resolve to rider products")

@@ -51,6 +51,7 @@ COMPETITION_ALIASES = {
     "redbull-2026": "redbull-2026",
     "redbullcerroabajo2026": "red-bull-cerro-abajo-2026",
     "redbull-rampage-2026": "redbull-rampage-2026",
+    "redbull-hardline-colombie-britannique": "redbull-hardline-2026",
     "red-bull-hardline-colombie-britannique-logo": "redbull-hardline-2026",
     "uci-mountain-bike-world-series-2026": "uci-mtb-world-cup-dh-2026",
 }

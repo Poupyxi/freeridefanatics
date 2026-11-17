@@ -159,6 +159,12 @@ PHOTO_ALIASES = {
     ("Wheels", "dt swiss", "fr1500 + dt swiss 240"): ("dt swiss", "fr 1500 classic"),
     ("Wheels", "reserve", "30dh carbon"): ("reserve", "30dhcarbon"),
     ("Wheels", "reserve", "carbon dh"): ("reserve", "30dhcarbon"),
+    # Notion keeps the complete commercial names; Drive uses short labels on
+    # these verified Winter photos. Keep the equivalence product-specific.
+    ("Skis", "majesty", "vanguard 108 cti special edition zuza witych"):
+        ("majesty", "vanguard 108 cti zuza witych"),
+    ("Skis", "volkl", "revolte 114 2025"): ("volkl", "revolt 114 2025"),
+    ("Snowboard", "headsnowboard", "e b i lyt 2027"): ("head", "e b i lyt"),
 }
 
 # ---------------------------------------------------------------- helpers

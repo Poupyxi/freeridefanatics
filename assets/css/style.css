@@ -1773,6 +1773,49 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   }
 }
 
+/* Winter equipment cards: give long skis and snowboards a clear, editorial
+   presentation without changing the summer/bike equipment cards. */
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"],
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] {
+  min-height: 150px;
+  background: linear-gradient(135deg, #fff 0%, #f1f8fb 100%);
+  border-left-color: #6e9fb3;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb,
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] .equip-thumb {
+  border-color: #c7dfe8;
+  background: #eef7fa;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 8px 18px rgba(38,83,104,.08);
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] .equip-thumb {
+  flex-basis: 150px;
+  width: 150px;
+  height: 116px;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] .equip-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .cat,
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] .cat {
+  color: #3c748d;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] h4,
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] h4 {
+  font-size: 17px;
+}
+@media (max-width: 560px) {
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#snowboard"] .equip-thumb {
+    width: 120px;
+    height: 92px;
+  }
+}
+
 .equipment-lightbox {
   position: fixed;
   inset: 0;

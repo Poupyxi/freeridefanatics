@@ -82,8 +82,14 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     assert 'class="equip-item reveal"' in rider_html
     with patch.object(build, "has_equip_photo", return_value="skis-winter-brand-powder-110.jpg"):
         pictured_rider = build.build_winter_rider_page(ski, {"Ski Tour"})
-    assert 'class="equip-thumb equip-thumb-trigger"' in pictured_rider
-    assert 'src="../../assets/img/equipment/skis-winter-brand-powder-110.jpg"' in pictured_rider
+    assert 'class="equip-thumb winter-brand-thumb"' in pictured_rider
+    equipment_row = pictured_rider.split('class="equip-item reveal"', 1)[1].split('</h4>', 1)[0]
+    assert 'src="../../assets/img/equipment/skis-winter-brand-powder-110.jpg"' not in equipment_row
+    with patch.object(build, "load_drive_logo_manifest", return_value={"brands": [
+        {"key": "winter-brand", "src": "assets/img/brands/winter-brand.webp"}
+    ]}):
+        branded_rider = build.build_winter_rider_page(ski, {"Ski Tour"})
+    assert 'src="../../assets/img/brands/winter-brand.webp"' in branded_rider
 
     equipment_html = build.build_winter_equipment_directory([ski])
     summer_equipment_html = build.build_equipment_directory([bike])

@@ -98,9 +98,10 @@ header{
   position:sticky; top:0; z-index:50;
   background:var(--bg);
   border-bottom:1px solid var(--line);
-  transition:box-shadow .25s ease;
+  transition:box-shadow .25s ease, transform .24s ease;
 }
 header.scrolled{box-shadow:0 6px 24px rgba(15,16,19,0.08);}
+header.nav-hidden{transform:translateY(-105%);}
 .nav-row{
   position:relative;
   display:flex; align-items:center; justify-content:space-between;

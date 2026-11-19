@@ -330,9 +330,10 @@ def save_fitted(src, dest, max_side):
     else:
         img.save(dest, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
 
-def equipment_output_path(slug, source_path, rider_slug=""):
-    """Use the source PNG extension for equipment cut-outs when available."""
-    ext = ".png" if os.path.splitext(source_path)[1].lower() == ".png" else ".jpg"
+def equipment_output_path(slug, source_path, rider_slug="", category=""):
+    """Use PNG for all winter skis/snowboards and preserve PNG cut-outs."""
+    winter_png = str(category or "").strip().casefold() in {"skis", "snowboard"}
+    ext = ".png" if winter_png or os.path.splitext(source_path)[1].lower() == ".png" else ".jpg"
     suffix = f"--{rider_slug}" if rider_slug else ""
     return os.path.join(OUT_EQUIP, f"{slug}{suffix}{ext}")
 
@@ -679,7 +680,7 @@ def import_equipment(riders, force, dry):
             missing.append(f"{slug}  ({cat}: {brand} {model})".strip())
             continue
         used_files.add(choice["path"])
-        dest = equipment_output_path(slug, choice["path"])
+        dest = equipment_output_path(slug, choice["path"], category=cat)
         remove_equipment_format_siblings(dest)
         if os.path.exists(dest) and not force:
             continue
@@ -715,6 +716,7 @@ def import_equipment(riders, force, dry):
                 build.equip_image_slug(category, brand, model),
                 choice["path"],
                 rider["slug"],
+                category,
             )
             remove_equipment_format_siblings(destination)
             used_files.add(choice["path"])
@@ -734,7 +736,7 @@ def import_equipment(riders, force, dry):
     # the site generator can compose the two matching product photos.
     for choice in index.get("Tires", []):
         slug = build.equip_image_slug("Tires", choice["brand"], choice["model"])
-        dest = equipment_output_path(slug, choice["path"])
+        dest = equipment_output_path(slug, choice["path"], category="Tires")
         remove_equipment_format_siblings(dest)
         if os.path.exists(dest) and not force:
             continue

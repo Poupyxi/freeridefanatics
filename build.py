@@ -5095,10 +5095,10 @@ def winter_primary_equipment(r, prefix):
             continue
         title = " ".join(filter(None, [item.get("brand"), model]))
         figures = "".join(
-            f'<figure><figcaption>{side.upper()}</figcaption><img src="{prefix}{esc_attr(os.path.relpath(path, ROOT))}" alt="{esc_attr(title)} — {side}" fetchpriority="high"></figure>'
-            for side, path in views.items()
+            f'<figure data-equipment-view="{side}"><img src="{prefix}{esc_attr(os.path.relpath(views[side], ROOT))}" alt="{esc_attr(title)} — {side}" fetchpriority="high"></figure>'
+            for side in ("front", "back") if side in views
         )
-        return f'<div class="winter-primary-equipment"><h2>{esc(title)}</h2><div>{figures}</div></div>'
+        return f'<div class="winter-primary-equipment" role="group" aria-label="{esc_attr(title)}"><div>{figures}</div></div>'
     return ""
 
 

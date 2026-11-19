@@ -1896,7 +1896,7 @@ body.equipment-lightbox-open { overflow: hidden; }
 .rider-hero.winter-equipment-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);align-items:start;gap:48px}
 .winter-equipment-hero>.winter-primary-equipment{grid-column:2;grid-row:1}
 .winter-equipment-hero>.winter-primary-equipment+div{grid-column:1;grid-row:1}
-.winter-primary-equipment{min-width:0;aspect-ratio:1;overflow:hidden;background:radial-gradient(ellipse 65% 9% at 50% 95%,#b7cdd7 0%,transparent 100%),linear-gradient(#f2f7f9 0%,#e6f0f4 75%,#d8e7ed 100%);padding:5%;border-radius:0;box-sizing:border-box}
+.winter-primary-equipment{min-width:0;aspect-ratio:1;overflow:hidden;background:radial-gradient(ellipse 65% 9% at 50% 95%,#b7cdd7 0%,transparent 100%),linear-gradient(#f2f7f9 0%,#e6f0f4 75%,#d8e7ed 100%);padding:5% 1%;border-radius:0;box-sizing:border-box}
 .winter-primary-equipment>div{height:100%;display:flex;gap:0;justify-content:center;align-items:stretch}
 .winter-primary-equipment figure:has(+figure){transform:translateX(12%)}
 .winter-primary-equipment figure+figure{transform:translateX(-12%)}

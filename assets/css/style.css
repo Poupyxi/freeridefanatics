@@ -1806,6 +1806,28 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   background: #fff;
   grid-row: 1 / span 4;
 }
+.equipment-turntable .equipment-lightbox-image {
+  cursor: grab;
+  transform: perspective(900px) rotateY(var(--turn-angle, 0deg)) rotateX(0deg) scaleX(var(--turn-scale, 1));
+  transition: transform .22s ease, filter .22s ease;
+  filter: drop-shadow(0 18px 22px rgba(12,32,44,.16));
+  touch-action: none;
+}
+.equipment-turntable .equipment-lightbox-image.is-turning {
+  cursor: grabbing;
+  transition: none;
+}
+.equipment-turn-hint { display:none; }
+.equipment-turntable .equipment-turn-hint {
+  display:block;
+  margin:-7px 0 10px;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  text-align:center;
+}
 
 .equipment-lightbox-title {
   margin: 0;

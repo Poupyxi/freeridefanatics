@@ -316,9 +316,33 @@ def save_square(src, dest, size):
         dest, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
 
 def save_fitted(src, dest, max_side):
-    img = load_image(src)
+    ext = os.path.splitext(dest)[1].lower()
+    # Preserve alpha for PNG cut-outs; the generic loader intentionally
+    # flattens transparent images for JPEG portraits and legacy equipment.
+    img = ImageOps.exif_transpose(open_library_image(src)) if ext == ".png" else load_image(src)
     img.thumbnail((max_side, max_side), Image.LANCZOS)
-    img.save(dest, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+    if ext == ".png":
+        # Keep transparent Drive cut-outs as PNG instead of flattening them
+        # into a white JPEG during the import.
+        if img.mode not in ("RGBA", "LA"):
+            img = img.convert("RGBA")
+        img.save(dest, "PNG", optimize=True)
+    else:
+        img.save(dest, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+
+def equipment_output_path(slug, source_path, rider_slug=""):
+    """Use the source PNG extension for equipment cut-outs when available."""
+    ext = ".png" if os.path.splitext(source_path)[1].lower() == ".png" else ".jpg"
+    suffix = f"--{rider_slug}" if rider_slug else ""
+    return os.path.join(OUT_EQUIP, f"{slug}{suffix}{ext}")
+
+def remove_equipment_format_siblings(path):
+    """Prevent an older JPG from winning over a newly imported PNG."""
+    stem, current_ext = os.path.splitext(path)
+    for ext in (".jpg", ".jpeg", ".png", ".webp"):
+        candidate = stem + ext
+        if ext != current_ext.lower() and os.path.exists(candidate):
+            os.remove(candidate)
 
 # ---------------------------------------------------------------- riders
 
@@ -655,7 +679,8 @@ def import_equipment(riders, force, dry):
             missing.append(f"{slug}  ({cat}: {brand} {model})".strip())
             continue
         used_files.add(choice["path"])
-        dest = os.path.join(OUT_EQUIP, f"{slug}.jpg")
+        dest = equipment_output_path(slug, choice["path"])
+        remove_equipment_format_siblings(dest)
         if os.path.exists(dest) and not force:
             continue
         if dry:
@@ -686,10 +711,12 @@ def import_equipment(riders, force, dry):
             choice = pick_photo(index.get(category, []), photo_brand, photo_model, rider["slug"])
             if not choice or choice.get("rider_slug") != rider["slug"]:
                 continue
-            destination = os.path.join(
-                OUT_EQUIP,
-                f"{build.equip_image_slug(category, brand, model)}--{rider['slug']}.jpg",
+            destination = equipment_output_path(
+                build.equip_image_slug(category, brand, model),
+                choice["path"],
+                rider["slug"],
             )
+            remove_equipment_format_siblings(destination)
             used_files.add(choice["path"])
             if os.path.exists(destination) and not force:
                 continue
@@ -707,7 +734,8 @@ def import_equipment(riders, force, dry):
     # the site generator can compose the two matching product photos.
     for choice in index.get("Tires", []):
         slug = build.equip_image_slug("Tires", choice["brand"], choice["model"])
-        dest = os.path.join(OUT_EQUIP, f"{slug}.jpg")
+        dest = equipment_output_path(slug, choice["path"])
+        remove_equipment_format_siblings(dest)
         if os.path.exists(dest) and not force:
             continue
         if dry:

@@ -1903,3 +1903,5 @@ body.equipment-lightbox-open { overflow: hidden; }
 .winter-primary-equipment figcaption{color:#bf460d;font-weight:800;margin-bottom:12px}
 .winter-primary-equipment img{display:block;width:100%;height:65vh;min-height:420px;object-fit:contain;mix-blend-mode:multiply}
 @media(max-width:760px){.rider-hero.winter-equipment-hero{grid-template-columns:1fr;gap:24px}.winter-equipment-hero>.winter-primary-equipment,.winter-equipment-hero>.winter-primary-equipment+div{grid-column:auto;grid-row:auto}.winter-primary-equipment img{height:55vh;min-height:320px}}
+.winter-equipment-hero .winter-rider-portrait{width:min(100%,320px);height:320px;margin-bottom:24px;overflow:hidden;border-radius:16px}
+.winter-equipment-hero .winter-rider-portrait img{width:100%;height:100%;object-fit:cover}

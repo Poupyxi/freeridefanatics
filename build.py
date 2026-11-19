@@ -5257,6 +5257,7 @@ def build_rider_page(r, riders, winter=False):
     <div class="rider-hero{' winter-equipment-hero' if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else ''}">
       {winter_primary_equipment(r, prefix) if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else f'<div class="photo">{photo_html}</div>'}
       <div>
+        {f'<div class="photo winter-rider-portrait">{photo_html}</div>' if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else ''}
         <h1>{esc(r['display_name'])}</h1>
         <div class="rider-meta">
           {meta_html}

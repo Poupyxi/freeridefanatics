@@ -145,16 +145,26 @@
     var active = languages.filter(function(language){ return language[0] === activeCode; })[0] || languages[0];
     var logo = document.querySelector('header .logo');
     var siteRoot = logo ? new URL(logo.getAttribute('href'), document.baseURI) : new URL('./', document.baseURI);
-    if(!navIcons.querySelector('.header-language')){
-      var details = document.createElement('details');
+    var navLinks = document.querySelector('header nav.links');
+    var details = navIcons.querySelector('.header-language');
+    if(!details){
+      details = document.createElement('details');
       details.className = 'header-language';
       details.innerHTML = '<summary aria-label="Change language"><span class="language-flag" aria-hidden="true">' + active[4] + '</span><span>' + active[2] + '</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu" translate="no">' + languages.map(function(language){
         var current = language[0] === activeCode ? ' aria-current="page"' : '';
         var guideUrl = new URL('guides/' + language[0] + '/', siteRoot);
         return '<a href="' + guideUrl.href + '" hreflang="' + language[1] + '" lang="' + language[1] + '"' + current + '><span class="language-flag" aria-hidden="true">' + language[4] + '</span>' + language[3] + '</a>';
       }).join('') + '</div>';
-      navIcons.insertBefore(details, navIcons.firstChild);
     }
+    function placeLanguage(){
+      var mobile = window.matchMedia('(max-width: 820px)').matches;
+      if(mobile && navLinks) navLinks.appendChild(details);
+      else navIcons.insertBefore(details, navIcons.firstChild);
+    }
+    placeLanguage();
+    var media = window.matchMedia('(max-width: 820px)');
+    if(media.addEventListener) media.addEventListener('change', placeLanguage);
+    else if(media.addListener) media.addListener(placeLanguage);
   });
 
   // Scroll-reveal

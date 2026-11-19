@@ -63,7 +63,13 @@ SRC_PP = portrait_source_folder(LIBRARY, "PPInstaRiders", "PPRiders")
 SRC_ACTION = portrait_source_folder(
     LIBRARY, "PictureFaceRiders", "PictureRiders"
 )
-SRC_EQUIP = os.path.join(LIBRARY, "Equipment")
+# Drive may expose equipment either under the legacy ``Equipment`` folder or
+# directly at the configured root (the current Drive layout uses top-level
+# ``Ski``, ``Snowboard`` and binding folders). Prefer the legacy folder when it
+# exists, otherwise use the root so Notion-linked winter products are found.
+SRC_EQUIP = (os.path.join(LIBRARY, "Equipment")
+             if os.path.isdir(os.path.join(LIBRARY, "Equipment"))
+             else LIBRARY)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.environ.get("RF_DATA_PATH", os.path.join(ROOT, "data", "riders.json"))

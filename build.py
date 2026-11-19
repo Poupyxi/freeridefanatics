@@ -3799,6 +3799,19 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rid
                   f'data-equipment-second="{podium[2]}" data-equipment-third="{podium[3]}" aria-label="Zoom {esc_attr(title)}">'
                   f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></button>'
                   if photo else "")
+    if IS_PREPROD and raw_cat in {"Ski", "Skis", "Snowboard"} and asset_prefix == "../../":
+        brand_key = competition_round_slug(brand)
+        logo = next((entry.get("src") for entry in load_drive_logo_manifest()["brands"]
+                     if entry.get("key") == brand_key), None)
+        if not logo:
+            candidate = f"assets/img/brands/{brand_key}.webp"
+            if os.path.isfile(os.path.join(ROOT, candidate)):
+                logo = candidate
+        photo_html = (f'<span class="equip-thumb winter-brand-thumb"><img src="{asset_prefix}{esc_attr(logo)}" alt="{esc_attr(brand)}" loading="lazy"></span>'
+                      if logo else f'<span class="equip-thumb winter-brand-thumb">{esc(brand)}</span>')
+        # The thumbnail identifies the brand; it must not open a logo as a
+        # product photograph. The official Details link remains available.
+        photo = None
     detail_line = f'          <div class="detail">{esc(extra)}</div>\n' if extra else ""
     actions = []
     if link:

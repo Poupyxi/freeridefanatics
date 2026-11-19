@@ -5070,6 +5070,38 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
     )
 
 
+def winter_primary_equipment(r, prefix):
+    """Resolve front/back Drive images only for Notion-associated products."""
+    library = os.path.join(ROOT, "assets", "img", "drive-library")
+    for item in r.get("equipment") or []:
+        if item.get("category") not in {"Skis", "Ski", "Snowboard"}:
+            continue
+        model = (item.get("model_detail") or "").split(";")[0].strip()
+        identity = norm_product_text(f'{item.get("brand") or ""} {model}')
+        compact = lambda value: re.sub(r"[^a-z0-9]", "", norm_product_text(value))
+        target = compact(identity)
+        if len(target) < 5:
+            continue
+        views = {}
+        for directory, _, files in os.walk(library):
+            for filename in sorted(files):
+                stem, extension = os.path.splitext(filename)
+                if extension.lower() not in {".png", ".webp", ".jpg", ".jpeg"}:
+                    continue
+                match = re.search(r"[_ ;\-](front|back)$", stem, re.I)
+                if match and compact(stem[:match.start()]).startswith(target):
+                    views.setdefault(match.group(1).lower(), os.path.join(directory, filename))
+        if not views:
+            continue
+        title = " ".join(filter(None, [item.get("brand"), model]))
+        figures = "".join(
+            f'<figure><figcaption>{side.upper()}</figcaption><img src="{prefix}{esc_attr(os.path.relpath(path, ROOT))}" alt="{esc_attr(title)} — {side}" fetchpriority="high"></figure>'
+            for side, path in views.items()
+        )
+        return f'<div class="winter-primary-equipment"><h2>{esc(title)}</h2><div>{figures}</div></div>'
+    return ""
+
+
 def build_rider_page(r, riders, winter=False):
     prefix = "../../" if winter else "../"
     # The rider page hero prefers the portrait action shot; the square avatar
@@ -5222,8 +5254,8 @@ def build_rider_page(r, riders, winter=False):
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
-    <div class="rider-hero">
-      <div class="photo">{photo_html}</div>
+    <div class="rider-hero{' winter-equipment-hero' if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else ''}">
+      {winter_primary_equipment(r, prefix) if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else f'<div class="photo">{photo_html}</div>'}
       <div>
         <h1>{esc(r['display_name'])}</h1>
         <div class="rider-meta">

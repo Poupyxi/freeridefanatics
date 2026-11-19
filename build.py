@@ -5113,6 +5113,13 @@ def build_rider_page(r, riders, winter=False):
     else:
         equip_html = '<p style="color:var(--muted); font-size:14px;">No public equipment spec on file yet for this rider.</p>'
 
+    winter_feature_image_html = ""
+    if winter and r.get("slug") == "witych-zuzanna":
+        winter_feature_image_html = f'''<section class="winter-equipment-feature" aria-labelledby="winter-equipment-feature-title">
+          <div class="section-head"><div><div class="label">Ski equipment</div><h2 id="winter-equipment-feature-title">Majesty Vanguard</h2></div></div>
+          <img src="{prefix}assets/img/equipment/winter/majesty-vanguard-witych-zuzanna-front-back.png" alt="Majesty Vanguard ski pair shown from the front and back" loading="lazy">
+        </section>'''
+
     history = r.get("competition_history") or []
     category_rank, _season_analysis, _setup_analysis, _best_place = rider_editorial(r, riders)
     highlight_parts = []
@@ -5237,6 +5244,7 @@ def build_rider_page(r, riders, winter=False):
     {f'<div class="rider-setup-share-row"><button class="rider-setup-share-trigger" type="button" data-rider-setup-share>Share setup</button></div>' if IS_PREPROD and equipment and not winter else ''}
     {setup_head}{build_html}
     {equip_html}
+    {winter_feature_image_html}
 
     <div class="section-head reveal" style="border-bottom:none; margin:48px 0 24px;">
       <div>

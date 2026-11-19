@@ -35,15 +35,23 @@
   --body: 'Inter', sans-serif;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-html{scroll-behavior:smooth; overflow-x:clip;}
+/* Keep decorative artwork and wide components from widening the page itself.
+   Data tables and carousels retain their own intentional inner scrolling. */
+html,body{max-width:100%; overflow-x:clip;}
+@supports not (overflow:clip){html,body{overflow-x:hidden;}}
+html{scroll-behavior:smooth;}
 body{
   background:var(--bg);
   color:var(--ink);
   font-family:var(--body);
   line-height:1.5;
+  min-width:0;
   -webkit-font-smoothing:antialiased;
 }
-img{max-width:100%; display:block;}
+img,svg,video,canvas,iframe{max-width:100%;}
+img{display:block;}
+button,input,select,textarea{max-width:100%;}
+:where(h1,h2,h3,h4,p,a,span,strong){overflow-wrap:anywhere;}
 /* The optimizer keeps JPG/PNG fallbacks but lets modern browsers select WebP.
    display:contents preserves the existing grid and figure layouts. */
 picture.optimized-picture{display:contents;}
@@ -1003,7 +1011,7 @@ nav.links .header-language{display:none;}
 .contact-status.is-error{color:#b33b23;}
 .contact-required{margin-top:6px; color:var(--muted); font-size:10px;}
 @media(max-width:900px){.contact-layout{grid-template-columns:1fr; gap:36px; padding:42px 32px 80px}.contact-intro{max-width:720px}}
-@media(max-width:560px){.contact-layout{padding-left:20px;padding-right:20px}.contact-field-row{grid-template-columns:1fr}.contact-panel{padding:24px 18px}.contact-submit{width:100%}.guide-hero h1{font-size:clamp(27px,7.4vw,32px);overflow-wrap:anywhere}.guide-hero-feature{padding:22px 0}.guide-hero-feature .lead{font-size:15px;line-height:1.45}.guide-hero-actions{display:flex;width:100%;gap:8px}.guide-hero-actions .btn{flex:1;text-align:center;padding:12px 8px;font-size:9px}.guide-hero-feature .guide-meta{gap:8px 14px}.nav-icons .icon-btn{display:none}.header-language-menu{position:fixed;top:132px;left:20px;right:20px;width:auto;grid-template-columns:repeat(2,minmax(0,1fr))}.nav-row{padding-left:20px;padding-right:20px}.logo{font-size:17px}.logo .site-brand-logo{width:38px;height:38px}}
+@media(max-width:560px){.btn{min-width:0;max-width:100%;white-space:normal;text-align:center;overflow-wrap:anywhere}.contact-layout{padding-left:20px;padding-right:20px}.contact-field-row{grid-template-columns:1fr}.contact-panel{padding:24px 18px}.contact-submit{width:100%}.guide-hero h1{font-size:clamp(27px,7.4vw,32px);overflow-wrap:anywhere}.guide-hero-feature{padding:22px 0}.guide-hero-feature .lead{font-size:15px;line-height:1.45}.guide-hero-actions{display:flex;width:100%;gap:8px}.guide-hero-actions .btn{flex:1;text-align:center;padding:12px 8px;font-size:9px}.guide-hero-feature .guide-meta{gap:8px 14px}.nav-icons .icon-btn{display:none}.header-language-menu{position:fixed;top:132px;left:20px;right:20px;width:auto;grid-template-columns:repeat(2,minmax(0,1fr))}.nav-row{padding-left:20px;padding-right:20px}.logo{font-size:17px}.logo .site-brand-logo{width:38px;height:38px}}
 
 /* ===== Competitions ===== */
 .competition-hero,.competition-detail-hero{position:relative; overflow:hidden; background:var(--dark); color:#fff; padding:92px 0 82px;}

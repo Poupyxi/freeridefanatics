@@ -110,6 +110,57 @@
     update();
   });
 
+  // Rider pages get a compact liquid-glass section menu. It is generated from
+  // the sections that are actually present, so winter and summer profiles do
+  // not expose empty links and new equipment groups appear automatically.
+  safe('rider-glass-menu', function(){
+    if(!document.body.classList.contains('rider-page')) return;
+    var main = document.querySelector('main');
+    if(!main || document.querySelector('.rider-glass-menu')) return;
+
+    function slug(value){
+      return String(value || '').toLowerCase().trim()
+        .replace(/&amp;|&/g, 'and').replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'section';
+    }
+    function addId(element, fallback){
+      if(!element) return null;
+      if(!element.id) element.id = fallback;
+      return element.id;
+    }
+
+    var entries = [];
+    var hero = document.querySelector('.rider-hero');
+    if(hero) entries.push({label:'Rider', id:addId(hero, 'rider-profile')});
+
+    [['.bb-frame', 'Frame'], ['.bb-fork', 'Fork'], ['.bb-shock', 'Rear shock']].forEach(function(pair){
+      var part = document.querySelector('.bike-build ' + pair[0]);
+      if(part) entries.push({label:pair[1], id:addId(part, 'equipment-' + slug(pair[1]))});
+    });
+
+    document.querySelectorAll('.equip-group').forEach(function(group){
+      var heading = group.querySelector('h3');
+      var label = heading ? heading.textContent.trim() : '';
+      if(!label) return;
+      entries.push({label:label, id:addId(group, 'equipment-' + slug(label))});
+    });
+
+    var results = document.querySelector('[data-results-table]');
+    if(results){
+      var resultsSection = results.closest('.results-scroll') || results;
+      entries.push({label:'Results', id:addId(resultsSection, 'results')});
+    }
+    if(entries.length < 2) return;
+
+    var nav = document.createElement('nav');
+    nav.className = 'rider-glass-menu';
+    nav.setAttribute('aria-label', 'Rider page sections');
+    nav.innerHTML = entries.map(function(entry){
+      return '<a href="#' + entry.id + '">' + entry.label + '</a>';
+    }).join('');
+    main.appendChild(nav);
+  });
+
   // Mobile nav toggle
   safe('mobile-nav', function(){
     document.querySelectorAll('.competition-menu-year-toggle').forEach(function (button) {

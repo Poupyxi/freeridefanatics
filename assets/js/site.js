@@ -78,13 +78,36 @@
     }
   });
 
-  // Header shadow on scroll
+  // Header shadow and direction-aware visibility on scroll. The header stays
+  // available at the top, hides while reading down the page, and returns as
+  // soon as the visitor makes a meaningful upward scroll.
   safe('header-scroll', function(){
     var header = document.querySelector('header');
     if(!header) return;
+    var lastY = Math.max(0, window.scrollY || 0);
+    var ticking = false;
+    function update(){
+      var currentY = Math.max(0, window.scrollY || 0);
+      var delta = currentY - lastY;
+      var menuOpen = !!document.querySelector('nav.links.open');
+      header.classList.toggle('scrolled', currentY > 8);
+      if(currentY <= 8 || menuOpen){
+        header.classList.remove('nav-hidden');
+      } else if(delta > 6){
+        header.classList.add('nav-hidden');
+      } else if(delta < -6){
+        header.classList.remove('nav-hidden');
+      }
+      lastY = currentY;
+      ticking = false;
+    }
     window.addEventListener('scroll', function(){
-      header.classList.toggle('scrolled', window.scrollY > 8);
+      if(!ticking){
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }
     }, {passive:true});
+    update();
   });
 
   // Mobile nav toggle

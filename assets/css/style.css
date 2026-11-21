@@ -482,23 +482,37 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 }
 .rider-glass-menu{
   position:fixed; z-index:45; left:50%; bottom:max(18px, env(safe-area-inset-bottom));
-  display:flex; align-items:center; gap:5px; max-width:calc(100% - 32px); padding:7px;
-  transform:translateX(-50%); overflow-x:auto; scrollbar-width:none;
+  display:block; max-width:calc(100% - 32px); padding:7px;
+  transform:translateX(-50%); overflow:visible;
   border:1px solid rgba(255,255,255,.72); border-radius:999px;
   background:rgba(245,244,241,.68); box-shadow:0 14px 36px rgba(21,22,26,.18), inset 0 1px rgba(255,255,255,.78);
   -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%);
+  isolation:isolate;
 }
-.rider-glass-menu::-webkit-scrollbar{display:none;}
+.rider-glass-menu.is-liquidglass-ready{
+  border-color:transparent; background:transparent; box-shadow:none;
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+.rider-glass-menu-track{
+  position:relative; z-index:2; display:flex; align-items:center; gap:5px;
+  max-width:100%; overflow-x:auto; scrollbar-width:none; overscroll-behavior-inline:contain;
+}
+.rider-glass-menu-track::-webkit-scrollbar{display:none;}
 .rider-glass-menu a{
   flex:0 0 auto; display:inline-flex; align-items:center; min-height:34px; padding:8px 13px;
   border:1px solid transparent; border-radius:999px; color:var(--muted);
   font-family:var(--mono); font-size:10px; letter-spacing:.07em; text-transform:uppercase;
   white-space:nowrap; transition:color .16s ease,background .16s ease,border-color .16s ease,transform .16s ease;
 }
-.rider-glass-menu a:first-child{background:var(--ink); color:#fff;}
-.rider-glass-menu a:hover,.rider-glass-menu a:focus-visible{border-color:rgba(169,71,30,.45); background:rgba(255,255,255,.72); color:var(--orange-dark); transform:translateY(-1px);}
-.rider-glass-menu a:first-child:hover,.rider-glass-menu a:first-child:focus-visible{background:var(--orange); border-color:var(--orange); color:#fff;}
+.rider-glass-menu a.is-active,
+.rider-glass-menu a[aria-current="location"]{border-color:rgba(255,255,255,.55); background:rgba(21,22,26,.78); color:#fff; box-shadow:inset 0 1px rgba(255,255,255,.28);}
+.rider-glass-menu a:hover,.rider-glass-menu a:focus-visible{border-color:rgba(169,71,30,.45); background:rgba(255,255,255,.42); color:var(--orange-dark); transform:translateY(-1px);}
+.rider-glass-menu a.is-active:hover,.rider-glass-menu a[aria-current="location"]:hover,
+.rider-glass-menu a.is-active:focus-visible,.rider-glass-menu a[aria-current="location"]:focus-visible{background:rgba(169,71,30,.82); border-color:rgba(255,255,255,.58); color:#fff;}
 .rider-hero,.bike-build,.equip-group,.results-scroll{scroll-margin-top:110px; scroll-margin-bottom:110px;}
+@media(prefers-reduced-transparency:reduce){
+  .rider-glass-menu{background:rgba(245,244,241,.96); -webkit-backdrop-filter:none; backdrop-filter:none;}
+}
 @media(max-width:560px){
   .rider-glass-menu{max-width:calc(100% - 20px); bottom:max(10px, env(safe-area-inset-bottom)); padding:6px;}
   .rider-glass-menu a{min-height:32px; padding:7px 11px; font-size:9px;}

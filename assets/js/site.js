@@ -155,10 +155,88 @@
     var nav = document.createElement('nav');
     nav.className = 'rider-glass-menu';
     nav.setAttribute('aria-label', 'Rider page sections');
-    nav.innerHTML = entries.map(function(entry){
+    nav.innerHTML = '<div class="rider-glass-menu-track">' + entries.map(function(entry){
       return '<a href="#' + entry.id + '">' + entry.label + '</a>';
-    }).join('');
+    }).join('') + '</div>';
     main.appendChild(nav);
+
+    var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+    function setActive(link){
+      if(!link) return;
+      links.forEach(function(item){
+        var active = item === link;
+        item.classList.toggle('is-active', active);
+        if(active) item.setAttribute('aria-current', 'location');
+        else item.removeAttribute('aria-current');
+      });
+      link.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+    }
+    setActive(links[0]);
+
+    links.forEach(function(link){
+      link.addEventListener('click', function(){ setActive(link); });
+    });
+
+    if('IntersectionObserver' in window){
+      var sectionLinks = {};
+      entries.forEach(function(entry, index){ sectionLinks[entry.id] = links[index]; });
+      var observer = new IntersectionObserver(function(changes){
+        var visible = changes.filter(function(change){ return change.isIntersecting; })
+          .sort(function(a, b){ return Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top); });
+        if(visible[0]) setActive(sectionLinks[visible[0].target.id]);
+      }, {rootMargin:'-18% 0px -62% 0px', threshold:[0, .15, .5]});
+      entries.forEach(function(entry){
+        var section = document.getElementById(entry.id);
+        if(section) observer.observe(section);
+      });
+    }
+
+    var reducedTransparency = window.matchMedia && window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
+    var saveData = navigator.connection && navigator.connection.saveData;
+    if(reducedTransparency || saveData || !window.WebGLRenderingContext) return;
+
+    nav.dataset.config = JSON.stringify({
+      blurAmount:.12,
+      refraction:.78,
+      chromAberration:.025,
+      edgeHighlight:.12,
+      specular:.18,
+      fresnel:.82,
+      distortion:.012,
+      cornerRadius:34,
+      zRadius:22,
+      saturation:.08,
+      tintStrength:.025,
+      brightness:.035,
+      shadowOpacity:.24,
+      shadowSpread:14,
+      shadowOffsetY:5,
+      button:true
+    });
+
+    var script = document.querySelector('script[src*="assets/js/site.js"]');
+    if(!script || !script.src) return;
+    var moduleUrl = new URL('../vendor/liquidglass/index.js', script.src).href;
+    var fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    fontsReady.then(function(){ return import(moduleUrl); }).then(function(module){
+      return module.LiquidGlass.init({root:main, glassElements:[nav]});
+    }).then(function(instance){
+      nav.classList.add('is-liquidglass-ready');
+      window.__riderLiquidGlass = instance;
+      var invalidationPending = false;
+      window.addEventListener('scroll', function(){
+        if(invalidationPending) return;
+        invalidationPending = true;
+        window.setTimeout(function(){
+          invalidationPending = false;
+          instance.markChanged();
+        }, 90);
+      }, {passive:true});
+      window.addEventListener('pagehide', function(){ instance.destroy(); }, {once:true});
+    }).catch(function(error){
+      nav.classList.remove('is-liquidglass-ready');
+      console.warn('[site.js] WebGL liquid glass fallback:', error);
+    });
   });
 
   // Mobile nav toggle

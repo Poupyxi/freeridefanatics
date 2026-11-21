@@ -517,8 +517,20 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
   .rider-glass-menu{background:rgba(245,244,241,.96); -webkit-backdrop-filter:none; backdrop-filter:none;}
 }
 @media(max-width:560px){
-  .rider-glass-menu{max-width:calc(100% - 20px); bottom:max(10px, env(safe-area-inset-bottom)); padding:6px;}
-  .rider-glass-menu a{min-height:32px; padding:7px 11px; font-size:9px;}
+  .rider-glass-menu{
+    width:calc(100% - 20px); max-width:none;
+    bottom:max(10px, env(safe-area-inset-bottom)); padding:6px;
+  }
+  .rider-glass-menu-track{
+    justify-content:flex-start; scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain; overscroll-behavior-y:none;
+    touch-action:pan-x; cursor:grab;
+  }
+  .rider-glass-menu-track:active{cursor:grabbing;}
+  .rider-glass-menu a{
+    min-height:32px; padding:7px 11px; font-size:9px;
+    scroll-snap-align:center; scroll-snap-stop:normal;
+  }
 }
 @media(prefers-reduced-motion:reduce){
   .rider-glass-menu-track{scroll-behavior:auto;}

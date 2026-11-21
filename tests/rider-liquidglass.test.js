@@ -13,6 +13,8 @@ assert(site.includes('navigator.connection && navigator.connection.saveData'), '
 assert(css.includes('.rider-glass-menu.is-liquidglass-ready'), 'WebGL-ready styling is missing');
 assert(css.includes('.rider-glass-menu-track'), 'scrollable menu track is missing');
 assert(css.includes('.rider-page{padding-bottom:'), 'fixed menu must not cover the end of rider pages');
+assert(css.includes('scroll-snap-type:x proximity'), 'mobile rider menu must snap horizontally');
+assert(css.includes('touch-action:pan-x'), 'mobile rider menu must reserve horizontal gestures');
 assert(vendor.includes('var LiquidGlass = class'), 'vendored LiquidGlass bundle is incomplete');
 assert(build.includes('if winter else "rider-page"'), 'summer rider pages must receive the rider-page marker');
 assert(site.includes("track.scrollTo({left:Math.max(0, targetLeft), behavior:'smooth'})"), 'active item must scroll only inside the menu');

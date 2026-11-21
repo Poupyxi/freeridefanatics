@@ -160,6 +160,7 @@
     }).join('') + '</div>';
     main.appendChild(nav);
 
+    var track = nav.querySelector('.rider-glass-menu-track');
     var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
     function setActive(link){
       if(!link) return;
@@ -169,7 +170,10 @@
         if(active) item.setAttribute('aria-current', 'location');
         else item.removeAttribute('aria-current');
       });
-      link.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+      if(track && track.scrollWidth > track.clientWidth){
+        var targetLeft = link.offsetLeft - (track.clientWidth - link.offsetWidth) / 2;
+        track.scrollTo({left:Math.max(0, targetLeft), behavior:'smooth'});
+      }
     }
     setActive(links[0]);
 
@@ -223,15 +227,6 @@
     }).then(function(instance){
       nav.classList.add('is-liquidglass-ready');
       window.__riderLiquidGlass = instance;
-      var invalidationPending = false;
-      window.addEventListener('scroll', function(){
-        if(invalidationPending) return;
-        invalidationPending = true;
-        window.setTimeout(function(){
-          invalidationPending = false;
-          instance.markChanged();
-        }, 90);
-      }, {passive:true});
       window.addEventListener('pagehide', function(){ instance.destroy(); }, {once:true});
     }).catch(function(error){
       nav.classList.remove('is-liquidglass-ready');

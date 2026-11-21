@@ -5241,7 +5241,7 @@ def build_rider_page(r, riders, winter=False):
     html = head(
         page_title,
         meta_description,
-        prefix, body_class=("rider-page seasonal-home season-winter winter-data-page" if winter else ""),
+        prefix, body_class=("rider-page seasonal-home season-winter winter-data-page" if winter else "rider-page"),
         canonical_path=rider_url, page_type="article", image_path=rider_image,
         robots=rider_robots, schemas=[
             {"@context": "https://schema.org", "@type": "ProfilePage", "name": f"{r['display_name']} {'winter profile' if winter else 'bike setup and results'}", "description": meta_description, "url": absolute_url(rider_url), "dateModified": SITE_UPDATED, "mainEntity": {"@id": absolute_url(rider_url) + "#rider"}},

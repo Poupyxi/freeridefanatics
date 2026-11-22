@@ -64,6 +64,7 @@ assert import_images.PHOTO_ALIASES[
 verified_catalogue_aliases = {
     ("Crankset", "5dev", "r spec titanium rawti"): ("5dev", "r spec"),
     ("Disk", "brembo", "gr pro mtb"): ("brembo gr pro gravity disk", ""),
+    ("BrakeLever", "brembo", "gr pro mtb"): ("brembo gr pro gravity", ""),
     ("Pedals", "crankbrother", "mallet dh"): ("crankbrothers mallet dh clipless pedals", ""),
     ("Wheels", "reservewheels", "30dhcarbon"): ("reserve", "30dhcarbon"),
     ("Tires", "schwable", "magic mary"): ("schwalbe", "magic mary"),

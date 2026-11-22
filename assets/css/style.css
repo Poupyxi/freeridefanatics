@@ -482,7 +482,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 }
 .rider-glass-menu{
   position:fixed; z-index:45; left:50%; bottom:max(18px, env(safe-area-inset-bottom));
-  display:block; width:max-content; max-width:calc(100% - 32px); padding:7px; box-sizing:border-box;
+  display:none; width:max-content; max-width:calc(100% - 32px); padding:7px; box-sizing:border-box;
   transform:translateX(-50%); overflow:visible;
   border:1px solid rgba(255,255,255,.72); border-radius:999px;
   background:rgba(245,244,241,.68); box-shadow:0 14px 36px rgba(21,22,26,.18), inset 0 1px rgba(255,255,255,.78);
@@ -515,6 +515,9 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .rider-hero,.bike-build,.equip-group,.results-scroll{scroll-margin-top:110px; scroll-margin-bottom:110px;}
 @media(prefers-reduced-transparency:reduce){
   .rider-glass-menu{background:rgba(245,244,241,.96); -webkit-backdrop-filter:none; backdrop-filter:none;}
+}
+@media(max-width:1024px){
+  .rider-glass-menu{display:block;}
 }
 @media(max-width:560px){
   html,body.rider-page{overflow-x:hidden;}

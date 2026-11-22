@@ -118,6 +118,30 @@ PHOTO_ALIASES = {
     # Seatpost filenames now use the official Burgtec spelling and therefore
     # resolve through the exact matcher without an override.
     ("SeatClamp", "burgtec", "seat clamp"): ("burgtech", "seat clamp"),
+    # Verified Drive catalogue names that differ from the shorter or misspelt
+    # Notion references. These mappings are deliberately product-specific so
+    # neighbouring models never inherit the wrong photo.
+    ("Crankset", "5dev", "r spec titanium rawti"): ("5dev", "r spec"),
+    ("Disk", "brembo", "gr pro mtb"): ("brembo gr pro gravity disk", ""),
+    ("Pedals", "crankbrother", "mallet dh"):
+        ("crankbrothers mallet dh clipless pedals", ""),
+    ("Handlebar", "fsa", "gradientaluminium 40mm 25mm l 31 8 800mm 31 8 760mm noir"):
+        ("fsa", "gradient aluminium"),
+    ("Frame", "gamux", "sego prototype gearbox belt drive"): ("gamux sego", ""),
+    ("Frame", "scott", "scott gambler alloy frame blewitt jess"):
+        ("scott", "gambler alloy frame"),
+    ("Crankset", "nsb", "north shore billet talon crankset"):
+        ("northshorebillet", "talon crankset"),
+    ("Stem", "renthal", "integra 45mm zero rise stm107"):
+        ("renthal", "integra 45mm zero rise"),
+    ("Wheels", "reservewheels", "30dhcarbon"): ("reserve", "30dhcarbon"),
+    ("Tires", "schwable", "magic mary"): ("schwalbe", "magic mary"),
+    ("Crankset", "shimano", "saint fc m825"):
+        ("shimano", "shimano saint fc m825 single 10 speed crankset"),
+    ("RearShock", "sram", "vivid coil ultimate"):
+        ("rockshox", "vivid coil ultimate dh"),
+    ("Handlebar", "the gravity cartel", "spike 35 vibrocore"):
+        ("spank spike 35 vibrocore", ""),
     ("Fork", "sr suntour", "rux"): ("sr suntour", "rux38 evo boost eq rc"),
     ("Fork", "sr suntour", "rux 29"): ("sr suntour", "rux38 evo boost eq rc"),
     ("Fork", "sr suntour", "rux 38"): ("sr suntour", "rux38 evo boost eq rc"),

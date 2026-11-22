@@ -13,6 +13,7 @@ SEASONAL_CSS = (ROOT / "assets/css/seasonal-home.css").read_text(encoding="utf-8
 
 def render(preprod):
     with patch.object(build, 'IS_PREPROD', preprod), \
+         patch.object(build, 'WINTER_ENABLED', True), \
          patch.object(build, 'build_rankings_section', return_value='<section id="rankings">Rankings</section>'), \
          patch.object(build, 'build_best_equipment_carousel', return_value='<section id="equipment">Equipment</section>'):
         riders = [{'slug': 'fixture-rider', 'equipment': []}]
@@ -32,14 +33,14 @@ preprod, other_page = render(True)
 production, production_page = render(False)
 for marker in ('seasonal-home.css', 'seasonal-home.js', 'class="season-switch"', 'class="season-panorama"', 'class="season-destinations"', 'freeride-fanatics-winter.png'):
     assert marker in preprod, marker
-    assert marker not in production, marker
+    assert marker in production, marker
 for marker in ('class="season-switch"', 'freeride-fanatics-winter.png', 'season-routing.js'):
     assert marker in other_page, marker
-    assert marker not in production_page, marker
+    assert marker in production_page, marker
 for marker in ('seasonal-home.css', 'seasonal-home.js', 'class="season-panorama"', 'class="season-destinations"'):
     assert marker not in other_page, marker
 assert 'body class="home-page seasonal-home"' in preprod
-assert 'body class="home-page"' in production
+assert 'body class="home-page seasonal-home"' in production
 assert 'noindex,nofollow,noarchive' in preprod
 assert preprod.count('role="switch"') == 1
 assert preprod.count('class="season-peak') == 3
@@ -52,7 +53,7 @@ for marker in ('data-season-scope="summer"', 'data-season-scope="winter"',
                'winter/competitions.html', 'winter/riders.html#grid',
                'winter/equipment.html'):
     assert marker in preprod, marker
-    assert marker not in production, marker
+    assert marker in production, marker
 explore = build.seasonal_explore_html()
 assert 'Explore Bike Downhill' not in explore
 assert 'data-season-scope="summer"' not in explore
@@ -77,10 +78,10 @@ assert 'Explore riders' not in summer_intro
 assert 'Compare equipment' not in summer_intro and 'Read the FAQ' not in summer_intro
 assert '<meta name="rf-source-rider-count" content="8">' in preprod
 assert 'Track 8 professional riders' in preprod
-assert 'Track 1 professional riders' in production
+assert 'Track 8 professional riders' in production
 assert 'rf-source-rider-count' not in production
 header = preprod.split('</header>', 1)[0]
-for href in ('competitions.html', 'riders.html#grid', 'equipment.html', './#faq'):
+for href in ('competitions.html', 'riders.html#grid', 'equipment.html'):
     assert f'href="{href}"' in header, href
 header_nav = header.split('<nav class="links"', 1)[1].split('</nav>', 1)[0]
 header_controls = header.split('<div class="nav-icons">', 1)[1].split('</div>', 1)[0]

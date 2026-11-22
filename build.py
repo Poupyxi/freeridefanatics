@@ -66,6 +66,7 @@ BUILD_ENV = os.environ.get("RF_BUILD_ENV", "production").strip().lower()
 if BUILD_ENV not in {"production", "preprod"}:
     raise RuntimeError("RF_BUILD_ENV must be 'production' or 'preprod'")
 IS_PREPROD = BUILD_ENV == "preprod"
+WINTER_ENABLED = IS_PREPROD or os.environ.get("RF_ENABLE_WINTER", "1") == "1"
 SITE_URL = os.environ.get(
     "RF_SITE_URL",
     "https://preprod.ridersfanatics.com" if IS_PREPROD else "https://ridersfanatics.com",
@@ -127,7 +128,7 @@ def visible_status(item):
 PRODUCTION_COMPETITION_IDS = {
     item.strip() for item in os.environ.get(
         "RF_PRODUCTION_COMPETITION_IDS",
-        "uci-mtb-world-cup-dh-2026,redbull-2026,project-17,beyondgravity",
+        "uci-mtb-world-cup-dh-2026,redbull-cerroabajo-2026,redbull-hardline-2026,redbull-rampage-2026,project-17,freerideworldtour-2027,kings-queens-of-corbet-s-2027",
     ).split(",") if item.strip()
 }
 COMPETITIONS = [
@@ -783,11 +784,11 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
     # Preproduction exposes more than one sport season. Keep the selector in
     # the shared header so a visitor can change context from any generated
     # page, rather than only from the homepage or a winter directory.
-    seasonal = IS_PREPROD if seasonal is None else seasonal and IS_PREPROD
+    seasonal = WINTER_ENABLED if seasonal is None else seasonal and WINTER_ENABLED
     seasonal_counts = seasonal_counts or {}
     summer_scope = ' data-season-scope="summer"' if seasonal else ''
     winter_hidden = ' data-season-scope="winter" hidden' if seasonal else ''
-    preprod_summer_scope = ' data-season-scope="summer"' if IS_PREPROD else ''
+    preprod_summer_scope = ' data-season-scope="summer"' if WINTER_ENABLED else ''
     seasonal_switch = ('    <button class="season-switch" type="button" role="switch" '
                        'aria-label="Switch to Winter season" aria-checked="false" '
                        'hidden></button>\n' if seasonal else "")
@@ -871,7 +872,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
 
 def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
     home_href = asset_prefix or "./"
-    seasonal = IS_PREPROD if seasonal is None else seasonal and IS_PREPROD
+    seasonal = WINTER_ENABLED if seasonal is None else seasonal and WINTER_ENABLED
     summer_scope = ' data-season-scope="summer"' if seasonal else ''
     winter_hidden = ' data-season-scope="winter" hidden' if seasonal else ''
     footer_logo = f'<img class="site-brand-logo" src="{asset_prefix}assets/img/brand/freeride-fanatics-summer.png" alt="" width="28" height="28">'
@@ -901,7 +902,7 @@ def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
 
 <script src="{asset_prefix}assets/js/promo-pool.js?v={BUILD_VERSION}"></script>
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
-{f'<script src="{asset_prefix}assets/js/season-routing.js?v={BUILD_VERSION}"></script>' if IS_PREPROD else ''}
+{f'<script src="{asset_prefix}assets/js/season-routing.js?v={BUILD_VERSION}"></script>' if WINTER_ENABLED else ''}
 <script src="{asset_prefix}assets/js/footer-ad.js?v={BUILD_VERSION}" defer></script>
 </body>
 </html>
@@ -1433,7 +1434,7 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
                 winter_riders=None):
     displayed_rider_count = (
         source_rider_count
-        if IS_PREPROD and source_rider_count is not None
+        if WINTER_ENABLED and source_rider_count is not None
         else len(riders)
     )
     prefix = ""
@@ -1451,7 +1452,7 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
         f"{SITE_NAME} | Pro Riders, Equipment & Race Results",
         "RidersFanatics — also searched as Rider Fanatic or RiderFanatic — connects professional riders, competitions, equipment, setups and race results.",
         prefix,
-        body_class="home-page seasonal-home" if IS_PREPROD else "home-page",
+        body_class="home-page seasonal-home" if WINTER_ENABLED else "home-page",
         canonical_path="/",
         schemas=[
             {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "description": "Professional riders, competitions, equipment, setups and race results."},
@@ -1459,10 +1460,10 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
             faq_schema,
         ],
     )
-    if IS_PREPROD:
+    if WINTER_ENABLED:
         html = html.replace(
             '</head>',
-            f'<meta name="rf-source-rider-count" content="{displayed_rider_count}">\n'
+            (f'<meta name="rf-source-rider-count" content="{displayed_rider_count}">\n' if IS_PREPROD else '') +
             f'<link rel="stylesheet" href="assets/css/seasonal-home.css?v={BUILD_VERSION}">\n</head>',
         )
     winter_counts = winter_counts or {}
@@ -1475,13 +1476,13 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
         rider for rider in winter_riders
         if rider_has_winter_discipline(rider, "snowboard")
     ]
-    html += header_html(prefix, active="riders", seasonal=IS_PREPROD, seasonal_counts=winter_counts)
+    html += header_html(prefix, active="riders", seasonal=WINTER_ENABLED, seasonal_counts=winter_counts)
     html += f"""
 <main id="main-content">
 <section class="hero home-hero">
-  {seasonal_panorama_html() if IS_PREPROD else hero_waves_svg()}
+  {seasonal_panorama_html() if WINTER_ENABLED else hero_waves_svg()}
   <div class="wrap hero-inner">
-    {('<div data-season-scope="summer">' if IS_PREPROD else '')}
+    {('<div data-season-scope="summer">' if WINTER_ENABLED else '')}
     <div class="label">Professional racing · Riders · Equipment · Results</div>
     <h1>Their <em>exact</em> setup. Your next upgrade.</h1>
     <p class="sub">Track {displayed_rider_count} professional riders, explore their race setups and compare the equipment they trust across competitions.</p>
@@ -1502,17 +1503,17 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
       '<div class="hero-ctas">'
       f'{random_rider_button(winter_ski_riders, asset_prefix="winter/", label="Random skier")}'
       f'{random_rider_button(winter_snowboard_riders, asset_prefix="winter/", solid=False, label="Random snowboarder")}'
-      '</div></div>' if IS_PREPROD else '')}
+      '</div></div>' if WINTER_ENABLED else '')}
   </div>
 </section>
 
-{seasonal_explore_html(winter_counts) if IS_PREPROD else ""}
+{seasonal_explore_html(winter_counts) if WINTER_ENABLED else ""}
 
-{('<div data-season-scope="summer">' if IS_PREPROD else '')}
+{('<div data-season-scope="summer">' if WINTER_ENABLED else '')}
 {build_rankings_section(riders)}
 
 {build_best_equipment_carousel(riders)}
-{('</div>' if IS_PREPROD else '')}
+{('</div>' if WINTER_ENABLED else '')}
 
 <section class="section" id="faq">
   <div class="wrap">
@@ -1554,8 +1555,8 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
     <div class="cta-copy">
       <div class="label">RidersFanatics newsletter</div>
       <h2>Race updates. No noise.</h2>
-      <p class="sub"{(' data-season-scope="summer"' if IS_PREPROD else '')}>The useful changes from the downhill paddock, sent only when there is something worth sharing.</p>
-      {('<p class="sub" data-season-scope="winter" hidden>The useful changes from ski and snowboard freeride, sent only when there is something worth sharing.</p>' if IS_PREPROD else '')}
+      <p class="sub"{(' data-season-scope="summer"' if WINTER_ENABLED else '')}>The useful changes from the downhill paddock, sent only when there is something worth sharing.</p>
+      {('<p class="sub" data-season-scope="winter" hidden>The useful changes from ski and snowboard freeride, sent only when there is something worth sharing.</p>' if WINTER_ENABLED else '')}
       <ul class="newsletter-benefits" aria-label="Newsletter content">
         <li>Race results</li><li>Pro setup updates</li><li>New equipment</li>
       </ul>
@@ -1567,8 +1568,8 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
 </section>
 """
     html += "</main>"
-    html += footer_html(prefix, seasonal=IS_PREPROD)
-    if IS_PREPROD:
+    html += footer_html(prefix, seasonal=WINTER_ENABLED)
+    if WINTER_ENABLED:
         html = html.replace('</body>', f'<script src="assets/js/seasonal-home.js?v={BUILD_VERSION}"></script>\n</body>')
     return html
 
@@ -3799,7 +3800,7 @@ def equip_item_html(item, asset_prefix="../", category_href="../equipment/", rid
                   f'data-equipment-second="{podium[2]}" data-equipment-third="{podium[3]}" aria-label="Zoom {esc_attr(title)}">'
                   f'<img src="{asset_prefix}assets/img/equipment/{photo}" alt="{esc(title)}" loading="lazy"></button>'
                   if photo else "")
-    if IS_PREPROD and raw_cat in {"Ski", "Skis", "Snowboard"} and asset_prefix == "../../":
+    if WINTER_ENABLED and raw_cat in {"Ski", "Skis", "Snowboard"} and asset_prefix == "../../":
         brand_key = competition_round_slug(brand)
         logo = next((entry.get("src") for entry in load_drive_logo_manifest()["brands"]
                      if entry.get("key") == brand_key), None)
@@ -5267,10 +5268,10 @@ def build_rider_page(r, riders, winter=False):
     html += f"""
 <main class="section" style="padding-top:18px;">
   <div class="wrap">
-    <div class="rider-hero{' winter-equipment-hero' if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else ''}">
-      {winter_primary_equipment(r, prefix) if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else f'<div class="photo">{photo_html}</div>'}
+    <div class="rider-hero{' winter-equipment-hero' if winter and WINTER_ENABLED and winter_primary_equipment(r, prefix) else ''}">
+      {winter_primary_equipment(r, prefix) if winter and WINTER_ENABLED and winter_primary_equipment(r, prefix) else f'<div class="photo">{photo_html}</div>'}
       <div>
-        {f'<div class="photo winter-rider-portrait">{photo_html}</div>' if winter and IS_PREPROD and winter_primary_equipment(r, prefix) else ''}
+        {f'<div class="photo winter-rider-portrait">{photo_html}</div>' if winter and WINTER_ENABLED and winter_primary_equipment(r, prefix) else ''}
         <h1>{esc(r['display_name'])}</h1>
         <div class="rider-meta">
           {meta_html}
@@ -5515,7 +5516,7 @@ def main():
     ]
     winter_competitions = [competition for competition in COMPETITIONS if competition_is_winter(competition)]
     summer_competitions = [competition for competition in COMPETITIONS if competition_is_bike(competition) and not competition_is_winter(competition)]
-    published_riders = list({rider["slug"]: rider for rider in (riders + (winter_riders if IS_PREPROD else []))}.values())
+    published_riders = list({rider["slug"]: rider for rider in (riders + (winter_riders if WINTER_ENABLED else []))}.values())
     if not riders:
         raise RuntimeError("No Bike Downhill rider is available for the current site section")
     excluded_rider_count = len(all_riders) - len(riders)
@@ -5611,7 +5612,7 @@ def main():
 
     with open(os.path.join(ROOT, "competitions.html"), "w", encoding="utf-8") as f:
         f.write(build_competitions_hub(riders, summer_competitions))
-    if IS_PREPROD:
+    if WINTER_ENABLED:
         winter_dir = os.path.join(ROOT, "winter")
         winter_riders_dir = os.path.join(winter_dir, "riders")
         winter_competitions_dir = os.path.join(winter_dir, "competitions")

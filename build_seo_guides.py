@@ -140,6 +140,8 @@ pages = sorted(ROOT.glob("*.html"))
 pages += sorted((ROOT / "riders").glob("*.html"))
 pages += sorted((ROOT / "equipment").glob("*.html"))
 pages += sorted((ROOT / "competitions").rglob("*.html"))
+if (ROOT / "winter").is_dir():
+    pages += sorted((ROOT / "winter").rglob("*.html"))
 pages += [ROOT / "guides" / code / "index.html" for code in ORDER]
 xml_rows = []
 for item in pages:

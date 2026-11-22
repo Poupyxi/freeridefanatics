@@ -523,8 +523,8 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
   }
   .rider-glass-menu-track{
     justify-content:flex-start; scroll-snap-type:x proximity;
-    overscroll-behavior-x:contain; overscroll-behavior-y:none;
-    touch-action:pan-x; cursor:grab;
+    overscroll-behavior-x:contain; overscroll-behavior-y:auto;
+    touch-action:pan-x pan-y; cursor:grab;
   }
   .rider-glass-menu-track:active{cursor:grabbing;}
   .rider-glass-menu a{

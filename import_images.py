@@ -123,6 +123,7 @@ PHOTO_ALIASES = {
     # neighbouring models never inherit the wrong photo.
     ("Crankset", "5dev", "r spec titanium rawti"): ("5dev", "r spec"),
     ("Disk", "brembo", "gr pro mtb"): ("brembo gr pro gravity disk", ""),
+    ("BrakeLever", "brembo", "gr pro mtb"): ("brembo gr pro gravity", ""),
     ("Pedals", "crankbrother", "mallet dh"):
         ("crankbrothers mallet dh clipless pedals", ""),
     ("Handlebar", "fsa", "gradientaluminium 40mm 25mm l 31 8 800mm 31 8 760mm noir"):
@@ -131,7 +132,7 @@ PHOTO_ALIASES = {
     ("Frame", "scott", "scott gambler alloy frame blewitt jess"):
         ("scott", "gambler alloy frame"),
     ("Crankset", "nsb", "north shore billet talon crankset"):
-        ("northshorebillet", "talon crankset"),
+        ("north shore billet", "talon crankset"),
     ("Stem", "renthal", "integra 45mm zero rise stm107"):
         ("renthal", "integra 45mm zero rise"),
     ("Wheels", "reservewheels", "30dhcarbon"): ("reserve", "30dhcarbon"),

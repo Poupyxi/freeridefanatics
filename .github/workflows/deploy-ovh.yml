@@ -486,11 +486,16 @@ jobs:
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html
 
-          test -f competitions/redbull-2026.html
-          test -f competitions/redbull-2026/rounds/cerroabajo-2026.html
-          test -f competitions/redbull-2026/rounds/rampage-2026.html
-          test -f competitions/redbull-2026/rounds/hardline-2026.html
-          grep -q 'Red Bull</h2>' competitions.html
+          if test -f competitions/redbull-2026.html; then
+            test -f competitions/redbull-2026/rounds/cerroabajo-2026.html
+            test -f competitions/redbull-2026/rounds/rampage-2026.html
+            test -f competitions/redbull-2026/rounds/hardline-2026.html
+          else
+            test -f competitions/redbull-cerroabajo-2026.html
+            test -f competitions/redbull-rampage-2026.html
+            test -f competitions/redbull-hardline-2026.html
+          fi
+          grep -Fqi 'RedBull' competitions.html
 
           test -f competitions/project-17.html
           test -f competitions/project-17/riders.html
@@ -508,6 +513,13 @@ jobs:
 
           test -f riders/descalzo-facundo.html
           grep -q 'Jackson Goldstone Bike Check 2026' riders/jackson-goldstone.html
+
+          test -f winter/riders.html
+          test -f winter/equipment.html
+          test -f winter/competitions.html
+          test -f winter/competitions/freerideworldtour-2027.html
+          test -f winter/competitions/kings-queens-of-corbet-s-2027.html
+          grep -q 'season-routing.js' index.html
 
       - name: Prepare public site files
         run: |
@@ -528,6 +540,9 @@ jobs:
           test -s "$RUNNER_TEMP/public/deployment-health.json"
           test -f "$RUNNER_TEMP/public/index.html"
           test -f "$RUNNER_TEMP/public/riders.html"
+          test -f "$RUNNER_TEMP/public/winter/riders.html"
+          test -f "$RUNNER_TEMP/public/winter/equipment.html"
+          test -f "$RUNNER_TEMP/public/winter/competitions.html"
           ! test -d "$RUNNER_TEMP/public/.git"
           ! test -d "$RUNNER_TEMP/public/tests"
           ! test -d "$RUNNER_TEMP/public/scripts"

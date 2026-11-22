@@ -25,7 +25,9 @@ def expected_date(metadata: dict) -> tuple[str, str]:
     return parsed.date().isoformat(), f"{parsed.day} {months[parsed.month - 1]} {parsed.year}"
 
 
-def verify_live_site(html_path: Path, metadata_path: Path) -> None:
+def verify_live_site(
+    html_path: Path, metadata_path: Path, health_path: Path | None = None
+) -> None:
     try:
         html = html_path.read_text(encoding="utf-8")
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -37,9 +39,22 @@ def verify_live_site(html_path: Path, metadata_path: Path) -> None:
     count_marker = f'<span class="icon-btn">{rider_count} Riders</span>'
     source_count_marker = f'<meta name="rf-source-rider-count" content="{rider_count}">'
     if count_marker not in html and source_count_marker not in html:
-        raise LiveMetadataError(
-            f"homepage does not expose the snapshot count ({rider_count} riders)"
-        )
+        if health_path is None:
+            raise LiveMetadataError(
+                f"homepage does not expose the snapshot count ({rider_count} riders)"
+            )
+        try:
+            health = json.loads(health_path.read_text(encoding="utf-8"))
+            live_rider_count = health["counts"]["riders"]
+        except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+            raise LiveMetadataError(
+                f"cannot read the live deployment rider count: {exc}"
+            ) from exc
+        if live_rider_count != rider_count:
+            raise LiveMetadataError(
+                "live deployment rider count does not match the snapshot "
+                f"({live_rider_count} != {rider_count})"
+            )
     iso_date, date_label = expected_date(metadata)
     date_marker = f'<time datetime="{iso_date}">{date_label}</time>'
     if date_marker not in html:
@@ -52,9 +67,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--html", type=Path, required=True)
     parser.add_argument("--metadata", type=Path, required=True)
+    parser.add_argument("--health", type=Path)
     args = parser.parse_args()
     try:
-        verify_live_site(args.html, args.metadata)
+        verify_live_site(args.html, args.metadata, args.health)
     except LiveMetadataError as exc:
         raise SystemExit(f"Live site metadata verification failed: {exc}") from exc
     print("Live Notion source count and generation date match the deployed snapshot.")

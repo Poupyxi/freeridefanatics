@@ -814,7 +814,7 @@ def header_html(asset_prefix, active="", seasonal=None, seasonal_counts=None):
         for year, items in sorted(competition_items_by_year.items(), reverse=True)
     ]
     summer_directory_links = (
-        f'<a href="{asset_prefix}teams.html"{cls("teams")}>Teams</a>'
+        f'<a href="{asset_prefix}teams.html"{summer_scope}{cls("teams")}>Teams</a>'
         f'<a href="{asset_prefix}brands.html"{cls("brands")}>Brands</a>'
         if IS_PREPROD else ""
     )

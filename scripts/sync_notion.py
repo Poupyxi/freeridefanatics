@@ -38,6 +38,11 @@ PRIORITY_PUBLIC_NAMES = {
     "max-alran": "Max Alran",
 }
 
+
+def season_is_publishable(identifier, name):
+    """Keep a named Notion competition even before its stages are linked."""
+    return bool(identifier and name)
+
 DATA_SOURCES = {
     "seasons": "3c99cf6b-f148-80f4-a3ad-000b1635fee6",
     "riders": "3c89cf6b-f148-8044-9283-000b552443a8",
@@ -597,7 +602,11 @@ def export(client: Notion):
             disciplines[discipline_id]
             for discipline_id in related_ids(item, disciplines, "Discipline", "Disciplines", "Sport")
         ]
-        if not identifier or not name or not event_ids:
+        # Keep announced competitions even before their Event relations are
+        # populated. Winter series are often created in Notion before their
+        # individual stages, and the public competition directory must still
+        # expose those series as upcoming entries.
+        if not season_is_publishable(identifier, name):
             continue
         seasons[identifier] = {
             "name": name,
@@ -609,7 +618,7 @@ def export(client: Notion):
         for event_id in event_ids:
             event_seasons.setdefault(event_id, identifier)
     if not seasons:
-        raise RuntimeError("No Notion season with visible Event relations was found")
+        raise RuntimeError("No identifiable Notion season was found")
 
     teams = title_map(pages["teams"], "Nom", "Name", "Team")
     countries = title_map(pages["countries"], "Name")

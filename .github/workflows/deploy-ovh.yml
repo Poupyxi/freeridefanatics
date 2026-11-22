@@ -650,10 +650,38 @@ jobs:
             https://ridersfanatics.com/notion-sync-metadata.json \
             --output "$RUNNER_TEMP/live-notion-sync-metadata.json"
           grep -q '"sha256"' "$RUNNER_TEMP/live-notion-sync-metadata.json"
-          python3 scripts/verify_live_site_metadata.py \
-            --html "$RUNNER_TEMP/live-index.html" \
-            --metadata "$RUNNER_TEMP/live-notion-sync-metadata.json" \
-            --health "$RUNNER_TEMP/live-deployment-health.json"
+          python3 - "$RUNNER_TEMP/live-index.html" \
+            "$RUNNER_TEMP/live-notion-sync-metadata.json" \
+            "$RUNNER_TEMP/live-deployment-health.json" <<'PY'
+          import datetime as dt
+          import json
+          from pathlib import Path
+          import sys
+
+          html = Path(sys.argv[1]).read_text(encoding="utf-8")
+          metadata = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+          health = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
+          expected_count = metadata["riders"]
+          live_count = health["counts"]["riders"]
+          if live_count != expected_count:
+              raise SystemExit(
+                  f"Live rider count mismatch: {live_count} != {expected_count}"
+              )
+          generated = dt.datetime.fromisoformat(
+              metadata["generated_at"].replace("Z", "+00:00")
+          )
+          months = (
+              "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+          )
+          date_marker = (
+              f'<time datetime="{generated.date().isoformat()}">'
+              f'{generated.day} {months[generated.month - 1]} {generated.year}</time>'
+          )
+          if date_marker not in html:
+              raise SystemExit("Live homepage date does not match the Notion snapshot")
+          print("Live seasonal rider count and generation date match the snapshot.")
+          PY
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null

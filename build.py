@@ -128,7 +128,7 @@ def visible_status(item):
 PRODUCTION_COMPETITION_IDS = {
     item.strip() for item in os.environ.get(
         "RF_PRODUCTION_COMPETITION_IDS",
-        "uci-mtb-world-cup-dh-2026,redbull-cerroabajo-2026,redbull-hardline-2026,redbull-rampage-2026,project-17,freerideworldtour-2027,kings-queens-of-corbet-s-2027",
+        "uci-mtb-world-cup-dh-2026,redbull-cerroabajo-2026,redbull-hardline-2026,redbull-rampage-2026,project-17,freerideworldtour-2027,kings-queens-of-corbet-s-2027,natural-selection-2027,scandinavian-big-mountain-championships-2027",
     ).split(",") if item.strip()
 }
 COMPETITIONS = [

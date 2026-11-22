@@ -91,6 +91,10 @@ else:
         root / "winter" / "riders.html",
         root / "winter" / "competitions.html",
         root / "winter" / "equipment.html",
+        root / "winter" / "competitions" / "freerideworldtour-2027.html",
+        root / "winter" / "competitions" / "kings-queens-of-corbet-s-2027.html",
+        root / "winter" / "competitions" / "natural-selection-2027.html",
+        root / "winter" / "competitions" / "scandinavian-big-mountain-championships-2027.html",
     ):
         assert route.is_file(), f"Winter production route is missing: {route.relative_to(root)}"
 

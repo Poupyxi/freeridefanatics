@@ -22,8 +22,10 @@ rsync -a --delete "$SOURCE_DIR/assets/" "$PUBLIC_DIR/assets/"
 for directory in riders equipment competitions guides; do
   rsync -a --delete "$SOURCE_DIR/$directory/" "$PUBLIC_DIR/$directory/"
 done
-if [[ "$BUILD_ENV" == "preprod" && -d "$SOURCE_DIR/winter" ]]; then
+if [[ -d "$SOURCE_DIR/winter" ]]; then
   rsync -a --delete "$SOURCE_DIR/winter/" "$PUBLIC_DIR/winter/"
+else
+  rm -rf "$PUBLIC_DIR/winter"
 fi
 if [[ "$BUILD_ENV" == "preprod" && -d "$SOURCE_DIR/teams" ]]; then
   rsync -a --delete "$SOURCE_DIR/teams/" "$PUBLIC_DIR/teams/"

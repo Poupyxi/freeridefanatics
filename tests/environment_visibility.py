@@ -88,6 +88,10 @@ else:
     ):
         assert marker in home, f"Winter production marker is missing: {marker}"
     for route in (
+        root / "competitions" / "beyondgravity-2027.html",
+        root / "competitions" / "crankworkx-2027.html",
+        root / "competitions" / "uci-world-series-cc-2027.html",
+        root / "competitions" / "uci-world-series-dh-2027.html",
         root / "winter" / "riders.html",
         root / "winter" / "competitions.html",
         root / "winter" / "equipment.html",

@@ -54,6 +54,26 @@ class LiveSiteMetadataTests(unittest.TestCase):
             )
             verifier.verify_live_site(html, metadata)
 
+    def test_seasonal_home_uses_deployment_health_count(self):
+        with tempfile.TemporaryDirectory() as directory:
+            html, metadata = self.fixture(directory)
+            health = Path(directory) / "deployment-health.json"
+            html.write_text(
+                '<script src="assets/js/season-routing.js"></script>'
+                '<time datetime="2026-10-07">7 Oct 2026</time>',
+                encoding="utf-8",
+            )
+            health.write_text(
+                json.dumps({"counts": {"riders": 360}}), encoding="utf-8"
+            )
+            verifier.verify_live_site(html, metadata, health)
+
+            health.write_text(
+                json.dumps({"counts": {"riders": 359}}), encoding="utf-8"
+            )
+            with self.assertRaises(verifier.LiveMetadataError):
+                verifier.verify_live_site(html, metadata, health)
+
     def test_wrong_date_is_blocked(self):
         with tempfile.TemporaryDirectory() as directory:
             html, metadata = self.fixture(directory)

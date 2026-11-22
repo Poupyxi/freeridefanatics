@@ -105,6 +105,7 @@ FOLDER_TO_CATEGORY = {
     "Ski Boots": "Ski Boots", "Snowboard Boots": "Snowboard Boots",
     "Boots": "Boots", "Poles": "Poles", "Ski Poles": "Poles",
     "Avalanche Safety": "Avalanche Safety", "Avalanche Equipment": "Avalanche Safety",
+    "Avalanche Airbags": "Avalanche Safety",
     "SacAirbag": "Avalanche Safety", "Airbag": "Avalanche Safety",
 }
 
@@ -170,6 +171,7 @@ PHOTO_ALIASES = {
     ("Skis", "majesty", "vanguard 108 cti special edition zuza witych"):
         ("majesty", "vanguard 108 cti zuza witych"),
     ("Skis", "volkl", "revolte 114 2025"): ("volkl", "revolt 114 2025"),
+    ("Skis", "volkl", "revolte 114"): ("volkl", "revolt 114"),
     ("Snowboard", "headsnowboard", "e b i lyt 2027"): ("head", "e b i lyt"),
 }
 
@@ -573,6 +575,10 @@ def pick_photo(candidates, brand, model, rider_slug=""):
         return None
     target_full = f"{brand} {model}".strip()
     compact_brand = compact_text(brand)
+    compact_brand = {
+        "headski": "head",
+        "headsnowboard": "head",
+    }.get(compact_brand, compact_brand)
     compact_model = compact_text(model)
     compact_full = compact_text(target_full)
 
@@ -582,6 +588,11 @@ def pick_photo(candidates, brand, model, rider_slug=""):
     # matching; the public product title remains untouched.
     match_model = norm_text(model)
     model_words = match_model.split()
+    # Notion sometimes records a brake-width code (for example B115) in a
+    # binding title while the Drive filename omits it. It does not identify a
+    # different binding model, so ignore only this exact standalone token for
+    # image matching.
+    model_words = [word for word in model_words if not re.fullmatch(r"b\d{3}", word)]
     while model_words and model_words[0] in {"cadre", "frame"}:
         model_words.pop(0)
     brand_words = norm_text(brand).split()

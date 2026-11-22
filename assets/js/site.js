@@ -115,6 +115,7 @@
   // not expose empty links and new equipment groups appear automatically.
   safe('rider-glass-menu', function(){
     if(!document.body.classList.contains('rider-page')) return;
+    if(!window.matchMedia || !window.matchMedia('(max-width: 1024px)').matches) return;
     var main = document.querySelector('main');
     if(!main || document.querySelector('.rider-glass-menu')) return;
 

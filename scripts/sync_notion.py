@@ -629,6 +629,19 @@ def export(client: Notion):
     team_history_by_rider, team_link_health = team_season_assignments(
         pages["team_links"], rider_ids, teams, seasons
     )
+    # A Race can be the only reliable link between a Notion Event and its
+    # season (especially for multi-stage Red Bull series). Resolve that link
+    # before building the catalog so those stages are not silently dropped.
+    for race_page in pages["races"]:
+        race_event_ids = list_value(race_page, "🏆 Event ")
+        race_season_ids = related_ids(
+            race_page, seasons, "Season", "Saison", "Competition", "🏆 Season", "🏆 Competition"
+        )
+        if not race_season_ids:
+            continue
+        for event_id in race_event_ids:
+            event_seasons.setdefault(event_id, race_season_ids[0])
+
     events = {
         page_id(item.get("id")): {
             "name": scalar_value(item, "Name competition"),
@@ -645,7 +658,11 @@ def export(client: Notion):
         key=lambda entry: (not entry[1]["name"].lower().startswith("uci"), entry[1]["name"].lower()),
     )
     for identifier, season in ordered_seasons:
-        event_records = [events[event_id] for event_id in season["event_ids"] if event_id in events]
+        season_event_ids = list(dict.fromkeys(
+            list(season["event_ids"])
+            + [event_id for event_id, season_id in event_seasons.items() if season_id == identifier]
+        ))
+        event_records = [events[event_id] for event_id in season_event_ids if event_id in events]
         sport, discipline = season_sport_and_discipline(season.get("disciplines") or [])
         competition_catalog["series"].append({
             "id": competition_id(season["name"]),

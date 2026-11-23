@@ -314,8 +314,8 @@
   // query-string copies of every page: those URLs waste crawl budget and do
   // not provide distinct server-rendered content to search engines.
   safe('global-language-switcher', function(){
-    var navIcons = document.querySelector('header .nav-icons');
-    if(!navIcons) return;
+    var footer = document.querySelector('footer .footer-links') || document.querySelector('footer');
+    if(!footer) return;
 
     var languages = [
       ['en', 'en', 'EN', 'English', '🇬🇧'],
@@ -335,8 +335,7 @@
     var active = languages.filter(function(language){ return language[0] === activeCode; })[0] || languages[0];
     var logo = document.querySelector('header .logo');
     var siteRoot = logo ? new URL(logo.getAttribute('href'), document.baseURI) : new URL('./', document.baseURI);
-    var navLinks = document.querySelector('header nav.links');
-    var details = navIcons.querySelector('.header-language');
+    var details = document.querySelector('.header-language');
     if(!details){
       details = document.createElement('details');
       details.className = 'header-language';
@@ -346,15 +345,8 @@
         return '<a href="' + guideUrl.href + '" hreflang="' + language[1] + '" lang="' + language[1] + '"' + current + '><span class="language-flag" aria-hidden="true">' + language[4] + '</span>' + language[3] + '</a>';
       }).join('') + '</div>';
     }
-    function placeLanguage(){
-      var mobile = window.matchMedia('(max-width: 820px)').matches;
-      if(mobile && navLinks) navLinks.appendChild(details);
-      else navIcons.insertBefore(details, navIcons.firstChild);
-    }
-    placeLanguage();
-    var media = window.matchMedia('(max-width: 820px)');
-    if(media.addEventListener) media.addEventListener('change', placeLanguage);
-    else if(media.addListener) media.addListener(placeLanguage);
+    details.classList.add('footer-language');
+    footer.appendChild(details);
   });
 
   // Scroll-reveal

@@ -128,6 +128,24 @@ def slugify(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
 
+# Cerro Abajo stores one parent Event page, while each city is represented by
+# its own Race rows.  Keep those city stops as first-class public events.
+CERRO_ABAJO_STAGES = {
+    "valparaiso": {"name": "Valparaíso", "date": "2026-02-15", "end_date": "2026-02-15", "location": "Valparaíso"},
+    "genova": {"name": "Genova", "date": "2026-06-27", "end_date": "2026-06-28", "location": "Genova"},
+    "stuttgart": {"name": "Stuttgart", "date": "2026-09-05", "end_date": "2026-09-06", "location": "Stuttgart"},
+}
+
+
+def cerro_abajo_stage_name(value):
+    """Return the city stop encoded in a Cerro Abajo Race title."""
+    tokens = [token for token in re.split(r"\s*[—–-]\s*", value or "") if token]
+    if len(tokens) < 2 or "cerro" not in slugify(tokens[0]) or "abajo" not in slugify(tokens[0]):
+        return None
+    stage_key = slugify(tokens[1])
+    return stage_key if stage_key in CERRO_ABAJO_STAGES else None
+
+
 def rider_name_route_key(value: str) -> str:
     """Match stable public routes even when Notion stores LAST First."""
     return "-".join(sorted(part for part in slugify(value).split("-") if part))
@@ -646,11 +664,37 @@ def export(client: Notion):
         page_id(item.get("id")): {
             "name": scalar_value(item, "Name competition"),
             "date": scalar_value(item, "Date") or "9999-12-31",
+            "end_date": scalar_value(item, "Date end", "End date") or "",
             "location": event_location(item),
             "instagram": instagram_handle(scalar_value(item, "Instagram")),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }
+
+    # Cerro Abajo has one parent Event relation for three city stops.  The
+    # Race titles are the authoritative stage names, so expose one synthetic
+    # event record per city while leaving the Notion source read-only.
+    race_stage_ids = {}
+    for race_page in pages["races"]:
+        race_id = page_id(race_page.get("id"))
+        race_name = scalar_value(race_page, "Name") or ""
+        stage_key = cerro_abajo_stage_name(race_name)
+        if not race_id or not stage_key:
+            continue
+        base_event_id = next((identifier for identifier in list_value(race_page, "🏆 Event ") if identifier in events), None)
+        if not base_event_id or not events[base_event_id]["name"].casefold().startswith("cerroabajo"):
+            continue
+        stage_id = f"{base_event_id}:{stage_key}"
+        race_stage_ids[race_id] = stage_id
+        stage = CERRO_ABAJO_STAGES[stage_key]
+        events.setdefault(stage_id, {
+            "name": stage["name"],
+            "date": stage["date"],
+            "end_date": stage["end_date"],
+            "location": stage["location"],
+            "instagram": events[base_event_id].get("instagram"),
+        })
+        event_seasons.setdefault(stage_id, event_seasons.get(base_event_id))
 
     competition_catalog = {"organizations": [], "series": []}
     ordered_seasons = sorted(
@@ -680,9 +724,11 @@ def export(client: Notion):
 
     races = {}
     for item in pages["races"]:
+        race_id = page_id(item.get("id"))
         event_ids = list_value(item, "🏆 Event ")
-        event_id = next((identifier for identifier in event_ids if identifier in events), None)
-        season_id = event_seasons.get(event_id)
+        base_event_id = next((identifier for identifier in event_ids if identifier in events), None)
+        event_id = race_stage_ids.get(race_id, base_event_id)
+        season_id = event_seasons.get(event_id) or event_seasons.get(base_event_id)
         # The Race database now exposes explicit English property names. Keep
         # the former names as a fallback so an older snapshot still exports.
         phase = scalar_value(item, "Stage", "Sélectionner")

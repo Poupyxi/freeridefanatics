@@ -4280,6 +4280,52 @@ EQUIPMENT_DIRECTORY_LABELS = {
     "RearShock": "Shox",
 }
 
+# Winter equipment categories have their own landing pages so each search
+# intent can use a focused title, description and heading instead of sharing
+# the generic equipment-directory copy.
+WINTER_EQUIPMENT_CATEGORY_SEO = {
+    "Skis": {
+        "slug": "skis",
+        "title": "Freeride, Powder & Big Mountain Skis | RidersFanatics",
+        "h1": "Freeride & Powder Skis Used by Pro Riders",
+        "description": "Discover freeride, powder and big mountain skis used by pro riders. Find their exact ski models, explore professional setups and compare freeride ski gear.",
+        "subtitle": "Find the freeride, powder and big mountain skis used by pro riders. Discover their ski setups, compare models and see who's riding what.",
+        "h2": "Most Used Freeride & Powder Skis by Pro Riders",
+        "paragraph": "Explore our freeride ski gear database and discover the equipment choices of professional athletes. From powder ski setups to big mountain skis, find the models used by top freeriders and see which riders rely on each pair.",
+    },
+    "Snowboard": {
+        "slug": "snowboards",
+        "title": "Pro Freeride & Powder Snowboards | RidersFanatics",
+        "h1": "Freeride & Powder Snowboards Used by Pro Riders",
+        "description": "Discover freeride and powder snowboards used by professional riders. Find their exact boards, explore rider setups and see who's riding what.",
+        "subtitle": "Find the freeride and powder snowboards used by pro riders. Discover their setups, compare boards and see who's riding what.",
+        "h2": "Most Used Freeride & Powder Snowboards by Pro Riders",
+        "paragraph": "Find the freeride and powder snowboards used by pro riders. Discover their setups, compare boards and see who's riding what.",
+    },
+    "Bindings": {
+        "slug": "bindings",
+        "title": "Freeride Ski & Snowboard Bindings | RidersFanatics",
+        "h1": "Freeride Ski & Snowboard Bindings Used by Pro Riders",
+        "description": "Find freeride ski and snowboard bindings used by pro riders. Discover exact models, compare setups and explore bindings for powder and big mountain riding.",
+        "subtitle": "Find the freeride bindings used by professional skiers and snowboarders. Discover their setups, compare binding models and see who's riding what.",
+        "h2": "Most Used Freeride Bindings by Pro Riders",
+        "paragraph": "Explore our freeride binding database and discover the equipment used by professional skiers and snowboarders. From freeride ski bindings to snowboard bindings for deep powder and big mountain riding, find the exact models trusted by top athletes and explore their setups.",
+    },
+    "Avalanche Safety": {
+        "slug": "avalanche-safety",
+        "title": "Avalanche Safety Gear & Pro Rider Setups | RidersFanatics",
+        "h1": "Avalanche Safety Equipment Used by Pro Freeriders",
+        "description": "Discover avalanche safety gear used by pro freeriders. Find airbag backpacks, transceivers, probes and shovels in real ski and snowboard setups.",
+        "subtitle": "Find the avalanche safety equipment used by professional skiers and snowboarders. Discover their freeride setups, explore safety gear and see who's using what.",
+        "h2": "Most Used Avalanche Safety Gear by Pro Freeriders",
+        "paragraph": "Explore our avalanche safety gear database and discover the equipment used by professional freeride skiers and snowboarders. From avalanche airbag backpacks and transceivers to backcountry probes and shovels, find the exact safety gear featured in pro rider setups and explore their equipment choices.",
+    },
+}
+
+def winter_equipment_category_path(category):
+    seo = WINTER_EQUIPMENT_CATEGORY_SEO.get(category)
+    return f"/winter/equipment/{seo['slug']}.html" if seo else "/winter/equipment.html"
+
 def equipment_directory_label(category):
     return EQUIPMENT_DIRECTORY_LABELS.get(category, equipment_category_plural(category))
 
@@ -4362,6 +4408,8 @@ def build_equipment_directory(riders, winter=False):
         ranked_riders = {r["slug"] for p in products.values() for r in p["riders"]}
         category_id = equip_image_slug(category, "", "")
         category_href = f"#{category_id}" if winter else f"equipment/{category_id}.html"
+        if winter and category in WINTER_EQUIPMENT_CATEGORY_SEO:
+            category_href = f"equipment/{WINTER_EQUIPMENT_CATEGORY_SEO[category]['slug']}.html"
         category_sections.append(f'''<section class="equipment-directory-section" id="{category_id}">
           <div class="equipment-directory-head"><div><span class="label">Most used by riders</span><h2>{esc(equipment_directory_label(category))}</h2></div><a href="{category_href}">View category →</a></div>
           <div class="equipment-directory-scroll" tabindex="0" aria-label="All {esc_attr(equipment_directory_label(category))} references, ranked by rider usage">
@@ -4681,20 +4729,23 @@ EQUIPMENT_EDITORIAL = {
     "Disk": ("Brake rotors turn lever input into braking force at the wheel and must manage repeated heat cycles on long downhill tracks.", "Compare recorded diameters and product families in the rider profiles; rotor choice remains part of a complete brake setup."),
 }
 
-def build_equipment_category_page(category, products):
+def build_equipment_category_page(category, products, winter=False):
     label = equipment_category_plural(category)
     ranked = sorted(products.values(), key=lambda p: (-p["points"], -len(p["riders"]), p["brand"], p["model"]))
     tracked_riders = {r["slug"] for p in ranked for r in p["riders"]}
-    path = equipment_category_path(category)
+    seo = WINTER_EQUIPMENT_CATEGORY_SEO.get(category) if winter else None
+    path = winter_equipment_category_path(category) if winter else equipment_category_path(category)
+    root_prefix = "../../" if winter else "../"
+    rider_root = "../../winter/riders" if winter else "../riders"
     rows = []
     schema_items = []
     for position, p in enumerate(ranked, 1):
         title = " ".join([p["brand"], p["model"]]).strip()
-        rider_links = "".join(f'<a href="../riders/{r["slug"]}.html">{esc(r["display_name"])}</a>' for r in sorted(p["riders"], key=lambda x: season_rank_key(x)))
+        rider_links = "".join(f'<a href="{rider_root}/{r["slug"]}.html">{esc(r["display_name"])}</a>' for r in sorted(p["riders"], key=lambda x: season_rank_key(x)))
         photos = equipment_photos(category, p["brand"], p["model"])
         photo = photos[0] if photos else None
         photo_html = (f'<span class="equipment-photo-pair">' + "".join(
-            f'<img src="../assets/img/equipment/{item}" alt="{esc_attr(title)}" loading="lazy" width="80" height="120">'
+            f'<img src="{root_prefix}assets/img/equipment/{item}" alt="{esc_attr(title)}" loading="lazy" width="80" height="120">'
             for item in photos) + '</span>') if len(photos) == 2 else (f'<img src="../assets/img/equipment/{photo}" alt="{esc_attr(title)}" loading="lazy" width="160" height="120">' if photo else '<span class="equipment-placeholder" aria-hidden="true">FF</span>')
         external = ""
         if p["link"]:
@@ -4731,22 +4782,27 @@ def build_equipment_category_page(category, products):
         f"{label} form part of a complete professional downhill race setup.",
         "Compare documented rider and team adoption, and use points only as a measure of presence in the tracked field.",
     ))
-    description = f"Compare {len(ranked)} {label.lower()} used by {len(tracked_riders)} tracked professional downhill riders. See rider count, competition points and associated profiles."
+    description = seo["description"] if seo else f"Compare {len(ranked)} {label.lower()} used by {len(tracked_riders)} tracked professional downhill riders. See rider count, competition points and associated profiles."
+    page_title = seo["title"] if seo else f"Pro Downhill {label} | {SITE_NAME}"
+    page_h1 = seo["h1"] if seo else f"{label} used by professional downhill riders."
+    page_subtitle = seo["subtitle"] if seo else f"{description} The current points leader in this category is {leader}."
+    page_h2 = seo["h2"] if seo else f"{label} leaderboard"
+    seo_paragraph = seo["paragraph"] if seo else ""
     html = head(
-        f"Pro Downhill {label} | {SITE_NAME}", description,
-        "../", body_class="equipment-page", canonical_path=path,
+        page_title, description,
+        root_prefix, body_class="equipment-page" + (" seasonal-home season-winter winter-data-page" if winter else ""), canonical_path=path,
         schemas=[
-            {"@context": "https://schema.org", "@type": "Dataset", "name": f"Professional downhill {label.lower()} usage", "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED, "creator": {"@type": "Organization", "name": SITE_NAME, "url": SITE_URL}, "license": DATA_LICENSE_URL, "isAccessibleForFree": True, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
-            breadcrumb_schema([("Home", "/"), ("Equipment", "/equipment.html"), (label, path)]),
+            {"@context": "https://schema.org", "@type": "Dataset", "name": page_h1, "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED, "creator": {"@type": "Organization", "name": SITE_NAME, "url": SITE_URL}, "license": DATA_LICENSE_URL, "isAccessibleForFree": True, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
+            breadcrumb_schema([("Home", "/"), ("Equipment", "/winter/equipment.html" if winter else "/equipment.html"), (label, path)]),
         ],
     )
-    html += header_html("../", active="equipment")
-    html += f'''<main><section class="hero equipment-hero"><div class="wrap hero-inner"><div class="label">Professional downhill · Competition-based data</div><h1>{esc(label)} used by professional downhill riders.</h1><p class="sub">{esc(description)} The current points leader in this category is {esc(leader)}.</p></div></section>
-<div class="wrap">{breadcrumb_html([("Home", "../"), ("Equipment", "../equipment.html"), (label, equip_image_slug(category, '', '') + ".html")])}</div>
-<section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Ranked by combined rider points</div><h2>{esc(label)} leaderboard</h2></div><a class="see-all" href="../methodology.html">Read the methodology →</a></div><div class="equipment-ranking-list">{"".join(rows)}</div>
+    html += winter_header(root_prefix, "equipment", len(tracked_riders)) if winter else header_html(root_prefix, active="equipment")
+    html += f'''<main><section class="hero equipment-hero"><div class="wrap hero-inner"><div class="label">{'Professional freeride · Winter equipment' if winter else 'Professional downhill · Competition-based data'}</div><h1>{esc(page_h1)}</h1><p class="sub">{esc(page_subtitle)}</p></div></section>
+<div class="wrap">{breadcrumb_html([("Home", root_prefix), ("Equipment", "../equipment.html"), (label, (seo["slug"] if seo else equip_image_slug(category, '', '')) + ".html")])}</div>
+<section class="section"><div class="wrap"><div class="section-head"><div><div class="label">Ranked by combined rider points</div><h2>{esc(page_h2)}</h2></div><a class="see-all" href="{root_prefix}methodology.html">Read the methodology →</a></div>{f'<p class="seo-category-intro">{esc(seo_paragraph)}</p>' if seo_paragraph else ''}<div class="equipment-ranking-list">{"".join(rows)}</div>
 <section class="equipment-editorial reveal"><div><div class="label">How to read this category</div><h2>What the {esc(label.lower())} data tells us.</h2><p>{esc(context)} {esc(compare_note)}</p><p>The current RidersFanatics dataset connects {len(ranked)} products from {brand_count} brands to {len(tracked_riders)} rider profiles. {esc(leader)} leads by combined rider points and represents {leader_share}% of the points attached to this category. That figure measures competitive exposure, not technical superiority.</p></div><dl class="content-stats"><div><dt>{len(ranked)}</dt><dd>Products</dd></div><div><dt>{brand_count}</dt><dd>Brands</dd></div><div><dt>{len(tracked_riders)}</dt><dd>Riders</dd></div><div><dt>{leader_share}%</dt><dd>Leader share</dd></div></dl></section>
-<div class="guide-callout"><strong>Editorial and data status</strong><p>This table records competitive usage within the RidersFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications. Counts are recalculated from the rider records at build time, so every category stays connected to its supporting profiles. Page generated from data updated {esc(SITE_UPDATED)}; see the <a href="../methodology.html">methodology</a> or <a href="../contact.html">report a correction</a>.</p></div></div></section></main>'''
-    html += footer_html("../")
+<div class="guide-callout"><strong>Editorial and data status</strong><p>This table records competitive usage within the RidersFanatics dataset. It does not claim that the first product is universally better, and race prototypes may differ from retail specifications. Counts are recalculated from the rider records at build time, so every category stays connected to its supporting profiles. Page generated from data updated {esc(SITE_UPDATED)}; see the <a href="{root_prefix}methodology.html">methodology</a> or <a href="{root_prefix}contact.html">report a correction</a>.</p></div></div></section></main>'''
+    html += footer_html(root_prefix, seasonal=winter)
     return html
 
 def build_compare_page():
@@ -5663,6 +5719,15 @@ def main():
             f.write(build_winter_competitions_hub(winter_riders, winter_competitions))
         with open(os.path.join(winter_dir, "equipment.html"), "w", encoding="utf-8") as f:
             f.write(build_winter_equipment_directory(winter_riders))
+        winter_equipment_data = collect_equipment(winter_equipment_riders(winter_riders))
+        winter_equipment_dir = os.path.join(winter_dir, "equipment")
+        os.makedirs(winter_equipment_dir, exist_ok=True)
+        for category in WINTER_EQUIPMENT_CATEGORY_SEO:
+            products = winter_equipment_data.get(category) or {}
+            if not products:
+                continue
+            with open(os.path.join(winter_equipment_dir, f"{WINTER_EQUIPMENT_CATEGORY_SEO[category]['slug']}.html"), "w", encoding="utf-8") as f:
+                f.write(build_equipment_category_page(category, products, winter=True))
         winter_competition_names = {competition["name"] for competition in winter_competitions}
         for rider in winter_riders:
             with open(os.path.join(winter_riders_dir, f"{rider['slug']}.html"), "w", encoding="utf-8") as f:

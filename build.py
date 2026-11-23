@@ -722,6 +722,119 @@ def fit_meta_description(value, limit=160):
     shortened = value[:limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:.-")
     return shortened + "."
 
+
+def competition_seo_metadata(page_type, competition, year, event_name="", date="",
+                             venue="", city="", country="", discipline="",
+                             riders_count=0, results_count=0, ranking_count=0,
+                             has_results=False, has_standings=False, status="",
+                             category="", url="", events_count=0, dated_events=0):
+    """Generate conservative, data-led SEO copy for competition pages.
+
+    This is the Python build equivalent of the supplied Competition SEO
+    Generator. It only mentions results, riders, standings and locations when
+    those fields are actually present in the source data.
+    """
+    page_type = (page_type or "").strip().lower()
+    competition = " ".join(str(competition or "").split())
+    year = str(year or "")
+    event_name = " ".join(str(event_name or "").split())
+    discipline = " ".join(str(discipline or "").split())
+    date = str(date or "")[:10] if str(date or "")[:10] != "9999-12-31" else ""
+    venue = " ".join(str(venue or "").split())
+    city = " ".join(str(city or "").split())
+    country = " ".join(str(country or "").split())
+    place = city or venue
+    has_results = bool(has_results or results_count)
+    has_standings = bool(has_standings or ranking_count)
+    full_name = f"{competition} {year}".strip()
+
+    def dated(value):
+        try:
+            time.strptime(value, "%Y-%m-%d")
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    def format_date(value):
+        if not dated(value):
+            return ""
+        return time.strftime("%d %B %Y", time.strptime(value, "%Y-%m-%d")).lstrip("0")
+
+    def title_with_site(variants):
+        variants = [" ".join(str(v).split()) for v in variants if v]
+        full = variants[0] if variants else full_name
+        for variant in variants:
+            candidate = f"{variant} | {SITE_NAME}"
+            if len(candidate) <= 75:
+                return candidate
+        return variants[-1] if variants else SITE_NAME
+
+    if page_type in ("season", "competition", "overview"):
+        if has_standings:
+            variants = [f"{full_name}: Results & Standings", f"{full_name}: Standings", f"{full_name}: Results"]
+        elif has_results:
+            variants = [f"{full_name}: Calendar & Results", f"{full_name}: Results", f"{full_name}: Season Overview"]
+        elif dated_events and riders_count:
+            variants = [f"{full_name}: Calendar & Riders", f"{full_name}: Calendar", f"{full_name}: Season Overview"]
+        elif dated_events:
+            variants = [f"{full_name}: Calendar & Event Dates", f"{full_name}: Calendar", f"{full_name}: Season Overview"]
+        else:
+            variants = [f"{full_name}: Season Overview", f"{full_name}: Competition Guide"]
+        detail = []
+        if dated_events:
+            detail.append(f"{dated_events} dated event{'s' if dated_events != 1 else ''}")
+        if riders_count:
+            detail.append(f"{riders_count} documented riders")
+        if has_results:
+            detail.append("event results")
+        if has_standings:
+            detail.append("season standings")
+        subtitle = (f"Explore {full_name}: {', '.join(detail)}." if detail
+                    else f"Explore {full_name} and follow confirmed season information as it becomes available.")
+        description = (f"Explore the {full_name} {('results, ' if has_results else '')}"
+                       f"{('standings, ' if has_standings else '')}"
+                       f"{('calendar, event dates, ' if dated_events else '')}"
+                       f"{('riders and equipment setups' if riders_count else 'competition information')} on {SITE_NAME}.")
+        return {"title": title_with_site(variants), "description": fit_meta_description(description),
+                "h1": full_name, "subtitle": subtitle}
+
+    if page_type in ("standings", "ranking", "rankings"):
+        if has_standings:
+            variants = [f"{full_name}: Standings & Rankings", f"{full_name}: Standings", f"{full_name}: Rider Rankings"]
+            description = (f"Explore {full_name} standings and rider rankings"
+                           f"{f' for {category}' if category else ''}. Compare points, positions and recorded results on {SITE_NAME}.")
+            subtitle = f"Explore the {full_name} standings and compare documented rider rankings{f' for {category}' if category else ''}."
+        else:
+            variants = [f"{full_name}: Standings Pending", f"{full_name}: Season Overview"]
+            description = f"{full_name} standings are not available yet. Explore the season and confirmed event information on {SITE_NAME}."
+            subtitle = f"Season standings for {full_name} are not yet available in the database."
+        return {"title": title_with_site(variants), "description": fit_meta_description(description),
+                "h1": f"{full_name} Standings", "subtitle": subtitle}
+
+    # Event / round SEO: location-first when a real city or venue is present.
+    stage_label = event_name
+    if place and place.casefold() not in event_name.casefold():
+        stage_label = f"{event_name} – {place}"
+    label = f"{competition} – {stage_label} {year}".strip()
+    action = "Results & Rankings" if has_results else ("Date & Riders" if date and riders_count else ("Date & Event Details" if date else "Event Details"))
+    variants = [f"{label}: {action}", f"{competition} {place} {year}: {action}".strip(),
+                f"{label}: {'Results' if has_results else ('Event Date' if date else 'Event Guide')}"]
+    when = format_date(date)
+    where = ", ".join(x for x in (venue, city, country) if x) or place
+    context = "freeride" if "freeride" in discipline.lower() else ("downhill" if "downhill" in discipline.lower() or discipline.lower() == "dh" else "")
+    subtitle = (f"Explore the {competition} {context + ' ' if context else ''}stage {stage_label} {year}"
+                f"{f' on {when}' if when else ''}{f' in {where}' if where and where.casefold() not in stage_label.casefold() else ''}. "
+                f"{'Find recorded results and rider rankings.' if has_results else 'Find confirmed event information and participating riders as they are announced.'}")
+    description = (f"Find {competition} {year} {context + ' ' if context else ''}details for {stage_label}"
+                   f"{f' on {when}' if when else ''}. "
+                   f"{'Explore results and rankings.' if has_results else 'Explore dates, riders and event information.'}")
+    return {"title": title_with_site(variants), "description": fit_meta_description(description),
+            "h1": label, "subtitle": subtitle,
+            "sports_event": bool(date and url and venue and city and country),
+            "sports_event_status": {"cancelled": "EventCancelled", "canceled": "EventCancelled",
+                                     "postponed": "EventPostponed", "rescheduled": "EventRescheduled",
+                                     "scheduled": "EventScheduled"}.get(str(status).lower())}
+
 def head(title, description, asset_prefix, body_class="", canonical_path="/",
          schemas=None, image_path=None, page_type="website", robots=None):
     body_attr = f' class="{esc(body_class)}"' if body_class else ""
@@ -2517,6 +2630,17 @@ def build_competition_round(riders, competition, event, round_number, events, wi
     if focused_seo:
         page_title = focused_seo["title"]
         description = focused_seo["description"]
+    elif not official_event and all_entries:
+        generated = competition_seo_metadata(
+            "event", name, competition.get("season"), event_name=display_event,
+            date=scheduled_date, venue=scheduled_event.get("venue"),
+            city=scheduled_event.get("city"), country=scheduled_event.get("country") or scheduled_event.get("country_code"),
+            discipline=competition.get("discipline"), riders_count=len(all_entries),
+            results_count=len(all_entries), has_results=bool(all_entries),
+            status=scheduled_event.get("status"), url=absolute_url(path),
+        )
+        page_title = generated["title"]
+        description = generated["description"]
     schemas = [
         {"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{display_event} {name} {'results' if all_entries else 'event'}",
          "description": description, "url": absolute_url(path), "dateModified": SITE_UPDATED,
@@ -2844,11 +2968,18 @@ def build_competition_standings(riders, competition):
         f"{seo_name} standings: {ranking_metric} for {', '.join(ranking_groups)}, "
         f"led by {leader_summary or 'the current season leaders'}, with linked rider profiles."
     )
+    generated_standings = competition_seo_metadata(
+        "standings", seo_name, competition.get("season"),
+        discipline=competition.get("discipline"), ranking_count=len(item_list),
+        has_standings=bool(item_list), category=" and ".join(ranking_groups),
+    )
+    description = generated_standings["description"]
+    standings_page_title = generated_standings["title"]
     latest_round = stats["events"][-1] if stats["events"] else "Season start"
     latest_round_href = (f"rounds/{competition_round_path_slug(competition, latest_round)}.html"
                          if stats["events"] else "../../competitions.html")
     html = head(
-        f"{seo_name} Standings: Men, Women & Teams", description, "../../",
+        standings_page_title, description, "../../",
         body_class="competition-standings-page", canonical_path=path,
         schemas=[
             {"@context": "https://schema.org", "@type": "CollectionPage",
@@ -3493,9 +3624,20 @@ def build_competition_detail(riders, competition, winter=False):
                        "explore the event calendar, participating riders and rankings when available.")
         seo_context = ('''<section class="section competition-season-context"><div class="wrap"><div class="competition-note"><strong>About Beyond Gravity</strong><div><p>Beyond Gravity is a mountain bike event at Maydena Bike Park in Tasmania. Follow the event calendar and connected rider profiles here; results and rankings appear when they are recorded.</p><p><a href="beyondgravity/riders.html">Explore Beyond Gravity riders →</a> · <a href="https://www.maydenabikepark.com/event-calendar/" rel="nofollow noopener" target="_blank">Maydena Bike Park event calendar ↗</a></p></div></div></div></section>''')
     else:
-        page_title = f"{name} | Riders & Events"
-        description = (f"{name} competition guide: riders, event schedule, results, standings, "
-                       f"rankings and documented {'winter sports' if winter else 'mountain bike'} equipment.")
+        participants_for_seo = competition_participants(riders, competition)
+        dated_events = sum(
+            1 for item in competition.get("events", [])
+            if item.get("date") and not str(item.get("date")).startswith("9999-")
+        )
+        generated = competition_seo_metadata(
+            "season", name, competition.get("season"), discipline=competition.get("discipline"),
+            riders_count=len(participants_for_seo), results_count=len(stats.get("scored", [])),
+            ranking_count=len(stats.get("scored", [])),
+            has_results=bool(stats.get("scored")), has_standings=bool(stats.get("scored")),
+            events_count=len(events), dated_events=dated_events,
+        )
+        page_title = generated["title"]
+        description = generated["description"]
     description = fit_meta_description(description)
     html = head(
         page_title, description, prefix,

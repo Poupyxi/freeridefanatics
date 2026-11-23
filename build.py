@@ -342,6 +342,12 @@ EQUIPMENT_ALIASES = {
     ("Handlebar", "renthal", "fatbar 35mm"): ("Renthal", "Fatbar 35"),
     ("Handlebar", "renthal", "fatbar 35"): ("Renthal", "Fatbar 35"),
     ("Handlebar", "renthal", "fatbar"): ("Renthal", "Fatbar"),
+    # Winter catalogue filenames use the shorter trade names below.
+    ("Skis", "majesty", "vanguard 108 cti special edition zuza witych"):
+        ("Majesty", "Vanguard 108 CTi Zuza Witych"),
+    ("Skis", "volkl", "revolte 114 2025"): ("Volkl", "Revolt 114 2025"),
+    ("Skis", "volkl", "revolte 114"): ("Volkl", "Revolt 114"),
+    ("Snowboard", "headsnowboard", "e b i lyt 2027"): ("Head", "E.B.I LYT"),
 }
 
 BRAND_DISPLAY = {
@@ -5072,32 +5078,67 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
 
 
 def winter_primary_equipment(r, prefix):
-    """Resolve front/back Drive images only for Notion-associated products."""
+    """Resolve the winter product views linked to the rider's Notion setup.
+
+    Drive filenames are human-maintained, so separators, accents and optional
+    ``front``/``back`` suffixes are not reliable identifiers. Match the full
+    brand + model first, then allow a product-name substring match. A single
+    product image is still useful and is treated as the front view.
+    """
     library = os.path.join(ROOT, "assets", "img", "drive-library")
-    for item in r.get("equipment") or []:
+    # Accept both the normalized view used by the page builder and the raw
+    # ``winter_equipment`` field so this resolver remains correct for direct
+    # callers and future data snapshots.
+    equipment = r.get("equipment") or r.get("winter_equipment") or []
+    for item in equipment:
         if item.get("category") not in {"Skis", "Ski", "Snowboard"}:
             continue
         model = (item.get("model_detail") or "").split(";")[0].strip()
-        identity = norm_product_text(f'{item.get("brand") or ""} {model}')
+        brand = item.get("brand") or ""
+        identity = norm_product_text(f"{brand} {model}")
         compact = lambda value: re.sub(r"[^a-z0-9]", "", norm_product_text(value))
-        target = compact(identity)
-        if len(target) < 5:
+        variants = {compact(identity), compact(model)}
+        # Reuse the explicit product aliases used by the Drive importer. This
+        # covers known wording differences such as Revolte/Revolt and HEAD's
+        # Snowboard brand spelling without introducing broad fuzzy matching.
+        canonical_brand, canonical_model = canonical_equipment_product(
+            item.get("category"), brand, model
+        )
+        variants.update({compact(f"{canonical_brand} {canonical_model}"), compact(canonical_model)})
+        variants = {value for value in variants if len(value) >= 7}
+        if not variants:
             continue
-        views = {}
+        matches = {}
         for directory, _, files in os.walk(library):
             for filename in sorted(files):
                 stem, extension = os.path.splitext(filename)
                 if extension.lower() not in {".png", ".webp", ".jpg", ".jpeg"}:
                     continue
                 match = re.search(r"[_ ;\-](front|back)$", stem, re.I)
-                if match and compact(stem[:match.start()]).startswith(target):
-                    views.setdefault(match.group(1).lower(), os.path.join(directory, filename))
-        if not views:
+                side = match.group(1).lower() if match else "front"
+                candidate = compact(stem[:match.start()] if match else stem)
+                if not candidate:
+                    continue
+                scores = [
+                    (0, value) for value in variants if candidate == value
+                ] or [
+                    (1, value) for value in variants if candidate.startswith(value)
+                ] or [
+                    (2, value) for value in variants if value in candidate
+                ]
+                if not scores:
+                    continue
+                score = min(rank for rank, _ in scores)
+                current = matches.get(side)
+                candidate_value = (score, len(candidate), os.path.join(directory, filename))
+                if current is None or candidate_value < current:
+                    matches[side] = candidate_value
+        if not matches:
             continue
         title = " ".join(filter(None, [item.get("brand"), model]))
         figures = "".join(
-            f'<figure data-equipment-view="{side}"><img src="{prefix}{esc_attr(os.path.relpath(views[side], ROOT))}" alt="{esc_attr(title)} — {side}" fetchpriority="high"></figure>'
-            for side in ("front", "back") if side in views
+            f'<figure data-equipment-view="{side}"><img src="{prefix}{esc_attr(os.path.relpath(matches[side][2], ROOT))}" alt="{esc_attr(title)} — {side}" fetchpriority="high"></figure>'
+            for side in ("front", "back") if side in matches
         )
         return f'<div class="winter-primary-equipment" role="group" aria-label="{esc_attr(title)}"><div>{figures}</div></div>'
     return ""

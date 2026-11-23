@@ -6,11 +6,10 @@
     try { fn(); } catch(err) { console.error('[site.js] ' + name + ' failed:', err); }
   }
 
-  // GA4 is production-only and is loaded only after an explicit opt-in.
+  // Google Tag Manager is production-only and waits for explicit opt-in.
   safe('analytics-consent', function(){
     if(location.hostname !== 'ridersfanatics.com' && location.hostname !== 'www.ridersfanatics.com') return;
 
-    var measurementId = 'G-G82BKEDZ6P';
     var storageKey = 'rf_analytics_consent';
     var analyticsLoaded = false;
 
@@ -19,15 +18,10 @@
       analyticsLoaded = true;
       window.dataLayer = window.dataLayer || [];
       window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
-      window.gtag('js', new Date());
-      window.gtag('config', measurementId, {
-        anonymize_ip: true,
-        allow_google_signals: false,
-        allow_ad_personalization_signals: false
-      });
+      window.dataLayer.push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
       var script = document.createElement('script');
       script.async = true;
-      script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(measurementId);
+      script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-K5JPKT2K';
       document.head.appendChild(script);
     }
 

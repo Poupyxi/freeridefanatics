@@ -1569,13 +1569,13 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
         ],
     }
     html = head(
-        f"{SITE_NAME} | Pro Riders, Equipment & Race Results",
-        "RidersFanatics — also searched as Rider Fanatic or RiderFanatic — connects professional riders, competitions, equipment, setups and race results.",
+        f"{SITE_NAME} | Ski, Snowboard & Bike Downhill",
+        "RidersFanatics — also searched as Rider Fanatic or RiderFanatic — connects professional ski, snowboard and bike downhill riders with competitions, equipment, setups and race results.",
         prefix,
         body_class="home-page seasonal-home" if WINTER_ENABLED else "home-page",
         canonical_path="/",
         schemas=[
-            {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "description": "Professional riders, competitions, equipment, setups and race results."},
+            {"@context": "https://schema.org", "@type": "WebSite", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "description": "Professional ski, snowboard and bike downhill riders, competitions, equipment, setups and race results."},
             {"@context": "https://schema.org", "@type": "Organization", "name": SITE_NAME, "alternateName": ["RiderFanatic", "Rider Fanatic", "Riders Fanatics"], "url": SITE_URL + "/", "logo": absolute_url("/assets/img/brand/freeride-fanatics-summer.png")},
             faq_schema,
         ],

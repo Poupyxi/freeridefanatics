@@ -1021,6 +1021,7 @@ def footer_html(asset_prefix, seasonal=None, include_page_ad=True):
 
 <script src="{asset_prefix}assets/js/promo-pool.js?v={BUILD_VERSION}"></script>
 <script src="{asset_prefix}assets/js/site.js?v={BUILD_VERSION}"></script>
+{f'<script src="{asset_prefix}assets/js/french-preview.js?v={BUILD_VERSION}"></script>' if IS_PREPROD else ''}
 {f'<script src="{asset_prefix}assets/js/season-routing.js?v={BUILD_VERSION}"></script>' if WINTER_ENABLED else ''}
 <script src="{asset_prefix}assets/js/footer-ad.js?v={BUILD_VERSION}" defer></script>
 </body>

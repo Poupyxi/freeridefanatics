@@ -5143,6 +5143,48 @@ def rider_seo_metadata(rider, equipment, history, category_rank, highlight_parts
     )
 
 
+def winter_rider_seo_metadata(rider, equipment):
+    """Apply the supplied ski/snowboard rider SEO generator rules at build time.
+
+    Winter pages keep their existing layout and data source, while their
+    metadata and visible heading are generated from the exact models recorded
+    in Notion. No product names are invented when a setup field is empty.
+    """
+    name = rider["display_name"]
+    site = SITE_NAME
+
+    def product(item):
+        parts = [part.strip() for part in (item.get("model_detail") or "").split(";") if part.strip()]
+        model = parts[0] if parts else ""
+        brand = (item.get("brand") or "").strip()
+        return " ".join(part for part in (brand, model) if part).strip()
+
+    ski = next((item for item in equipment if item.get("category") in {"Skis", "Ski"}), None)
+    snowboard = next((item for item in equipment if item.get("category") == "Snowboard"), None)
+    bindings = next((item for item in equipment if item.get("category") == "Bindings"), None)
+    airbag = next((item for item in equipment if item.get("category") == "Avalanche Safety"), None)
+    ski_model = product(ski) if ski else ""
+    snowboard_model = product(snowboard) if snowboard else ""
+    bindings_model = product(bindings) if bindings else ""
+    airbag_model = product(airbag) if airbag else ""
+
+    if snowboard_model:
+        title_core = f"{name} – {snowboard_model}{f' + {bindings_model}' if bindings_model else ''}"
+        h1 = f"{name} – Freeride Snowboard Setup"
+        subtitle = f"Find the snowboard used by {name}. Discover their freeride and powder board setup, bindings and other listed equipment."
+        description = f"Find {name}'s snowboard setup: {snowboard_model}{f' with {bindings_model} bindings' if bindings_model else ''}{f' and {airbag_model} airbag' if airbag_model else ''}. Explore the gear on {site}."
+    else:
+        title_core = f"{name} – {ski_model or 'Freeride Ski Setup'}"
+        h1 = f"{name} – Freeride Ski Setup"
+        subtitle = f"Find the exact ski model used by {name} and discover the freeride, powder and big mountain equipment listed in this rider's setup."
+        description = f"Find {name}'s freeride ski setup: {ski_model or 'Freeride Ski Setup'}{f', {bindings_model} bindings' if bindings_model else ''}{f', {airbag_model} airbag' if airbag_model else ''}. Discover their equipment on {site}."
+    if len(title_core) + len(site) + 3 <= 75:
+        title = f"{title_core} | {site}"
+    else:
+        title = f"{name} – {'Freeride Snowboard' if snowboard_model else 'Freeride Ski'} | {site}"
+    return title, fit_meta_description(description), h1, subtitle
+
+
 def winter_primary_equipment(r, prefix):
     """Resolve the winter product views linked to the rider's Notion setup.
 
@@ -5275,12 +5317,13 @@ def build_rider_page(r, riders, winter=False):
         rider_summary += ", including " + ", ".join(highlight_parts)
     rider_summary += f". The season record below contains {len(history)} tracked result{'s' if len(history) != 1 else ''} and {rider_total_points(r)} cumulative points."
     if winter:
-        page_title = f"{r['display_name']} | Ski & Snowboard Athlete | {SITE_NAME}"
-        meta_description = f"{r['display_name']} winter athlete profile, results and documented Ski or Snowboard equipment."
+        page_title, meta_description, rider_seo_h1, rider_seo_subtitle = winter_rider_seo_metadata(r, equipment)
     else:
         page_title, meta_description = rider_seo_metadata(
             r, equipment, history, category_rank, highlight_parts,
         )
+        rider_seo_h1 = r["display_name"]
+        rider_seo_subtitle = ""
     if history:
         results_html = f"""{competition_filters(history)}
       <div class="results-scroll" tabindex="0" role="region" aria-label="Race results table, horizontally scrollable on small screens"><table class="results-table" data-results-table>
@@ -5366,7 +5409,8 @@ def build_rider_page(r, riders, winter=False):
       {winter_primary_equipment(r, prefix) if winter and WINTER_ENABLED and winter_primary_equipment(r, prefix) else f'<div class="photo">{photo_html}</div>'}
       <div>
         {f'<div class="photo winter-rider-portrait">{photo_html}</div>' if winter and WINTER_ENABLED and winter_primary_equipment(r, prefix) else ''}
-        <h1>{esc(r['display_name'])}</h1>
+        <h1>{esc(rider_seo_h1)}</h1>
+        {f'<p class="rider-seo-subtitle">{esc(rider_seo_subtitle)}</p>' if rider_seo_subtitle else ''}
         <div class="rider-meta">
           {meta_html}
         </div>

@@ -61,4 +61,16 @@ assert import_images.PHOTO_ALIASES[
     ("Wheels", "fanatik bike", "ex 471")
 ] == ("dtswiss", "fanatik")
 
+verified_catalogue_aliases = {
+    ("Crankset", "5dev", "r spec titanium rawti"): ("5dev", "r spec"),
+    ("Disk", "brembo", "gr pro mtb"): ("brembo gr pro gravity disk", ""),
+    ("BrakeLever", "brembo", "gr pro mtb"): ("brembo gr pro gravity", ""),
+    ("Pedals", "crankbrother", "mallet dh"): ("crankbrothers mallet dh clipless pedals", ""),
+    ("Wheels", "reservewheels", "30dhcarbon"): ("reserve", "30dhcarbon"),
+    ("Tires", "schwable", "magic mary"): ("schwalbe", "magic mary"),
+    ("RearShock", "sram", "vivid coil ultimate"): ("rockshox", "vivid coil ultimate dh"),
+}
+for source, target in verified_catalogue_aliases.items():
+    assert import_images.PHOTO_ALIASES[source] == target
+
 print("equipment category mapping: passed")

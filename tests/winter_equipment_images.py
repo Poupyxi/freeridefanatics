@@ -20,6 +20,9 @@ rider = {
         {"category": "Avalanche Safety", "brand": "Safety Brand", "model_detail": "Airbag One"},
         {"category": "Skis", "brand": "Majesty", "model_detail": "Vanguard 108 CTi Special Edition Zuza Witych"},
         {"category": "Skis", "brand": "Volkl", "model_detail": "Revolte 114_2025"},
+        {"category": "Skis", "brand": "Volkl", "model_detail": "Revolte 114"},
+        {"category": "Skis", "brand": "Headski", "model_detail": "KORE 112 Ti"},
+        {"category": "Bindings", "brand": "Look", "model_detail": "PIVOT 2.0 15 GW B115 ORANGE METAL"},
         {"category": "Snowboard", "brand": "Headsnowboard", "model_detail": "E.B.I LYT_2027"},
     ],
 }
@@ -31,9 +34,12 @@ with tempfile.TemporaryDirectory() as directory:
         ("Winter", "Ski", "Ski Brand;Powder One.jpg"),
         ("Winter", "Ski Bindings", "Binding Brand;Tour One.jpg"),
         ("Winter", "Snowboard", "Board Brand;Freeride One.jpg"),
-        ("Winter", "SacAirbag", "Safety Brand;Airbag One.jpg"),
+        ("Winter", "Avalanche Airbags", "Safety Brand;Airbag One.jpg"),
         ("Winter", "Ski", "MAJESTY_Vanguard 108 CTI Zuza Witych_2027_front.webp"),
         ("Winter", "Ski", "Volkl_Revolt 114_2025_front.webp"),
+        ("Winter", "Ski", "Volkl_Revolt 114_front.webp"),
+        ("Winter", "Ski", "Head_KORE 112 ti_2027_front.webp"),
+        ("Winter", "Ski Bindings", "LOOK_PIVOT 2.0 15 GW ORANGE METAL.png"),
         ("Winter", "Snowboard", "HEAD_E.B.I LYT_front.png"),
     ):
         destination = library / season / folder / filename
@@ -46,9 +52,9 @@ with tempfile.TemporaryDirectory() as directory:
         assert not skipped
         assert {category: len(index[category]) for category in (
             "Frame", "Skis", "Bindings", "Snowboard", "Avalanche Safety"
-        )} == {"Frame": 1, "Skis": 3, "Bindings": 1, "Snowboard": 2, "Avalanche Safety": 1}
+        )} == {"Frame": 1, "Skis": 5, "Bindings": 2, "Snowboard": 2, "Avalanche Safety": 1}
         matched, missing = import_images.import_equipment([rider], force=True, dry=True)
         assert not missing, missing
-        assert len(matched) == 8, matched
+        assert len(matched) == 11, matched
 
 print("Summer and Winter Drive equipment folders resolve to rider products")

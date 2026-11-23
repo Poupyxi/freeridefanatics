@@ -635,6 +635,15 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/project-17/riders.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 5 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html > /dev/null
+          for winter_competition in \
+            freerideworldtour-2027 \
+            kings-queens-of-corbet-s-2027 \
+            natural-selection-2027 \
+            scandinavian-big-mountain-championships-2027
+          do
+            curl --fail --silent --show-error --retry 5 --retry-delay 5 \
+              "https://ridersfanatics.com/winter/competitions/${winter_competition}.html" > /dev/null
+          done
           test "$(curl --silent --location --output /dev/null --write-out '%{http_code} %{url_effective}' \
             https://ridersfanatics.com/competitions/uci/ | sed 's/:443\//\//')" = \
             '200 https://ridersfanatics.com/competitions/uci-mtb-world-cup-dh-2026.html'

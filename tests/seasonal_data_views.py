@@ -82,14 +82,15 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     assert 'class="equip-item reveal"' in rider_html
     with patch.object(build, "has_equip_photo", return_value="skis-winter-brand-powder-110.jpg"):
         pictured_rider = build.build_winter_rider_page(ski, {"Ski Tour"})
-    assert 'class="equip-thumb winter-brand-thumb"' in pictured_rider
+    assert 'assets/img/equipment/skis-winter-brand-powder-110.jpg' in pictured_rider
+    assert 'class="equip-thumb winter-brand-thumb"' not in pictured_rider
     equipment_row = pictured_rider.split('class="equip-item reveal"', 1)[1].split('</h4>', 1)[0]
-    assert 'src="../../assets/img/equipment/skis-winter-brand-powder-110.jpg"' not in equipment_row
+    assert 'src="../../assets/img/equipment/skis-winter-brand-powder-110.jpg"' in equipment_row
     with patch.object(build, "load_drive_logo_manifest", return_value={"brands": [
         {"key": "winter-brand", "src": "assets/img/brands/winter-brand.webp"}
     ]}):
         branded_rider = build.build_winter_rider_page(ski, {"Ski Tour"})
-    assert 'src="../../assets/img/brands/winter-brand.webp"' in branded_rider
+    assert 'src="../../assets/img/brands/winter-brand.webp"' not in branded_rider
 
     equipment_html = build.build_winter_equipment_directory([ski])
     summer_equipment_html = build.build_equipment_directory([bike])
@@ -122,6 +123,7 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
     assert build.season_ranking_selector([ski], ski_competition) == ""
 
     with patch.object(build, "COMPETITIONS", [bike_competition, ski_competition, snowboard_competition]), \
+         patch.object(build, "IS_PREPROD", True), \
          patch.object(build, "ORGANIZATIONS", []):
         seasonal_header = build.header_html("../", seasonal=True)
         summer_menu = seasonal_header.split('class="dropdown" data-season-scope="summer"', 1)[1].split('</div>\n        </div>', 1)[0]
@@ -131,5 +133,6 @@ with patch.object(build, "IS_PREPROD", True), patch.object(build, "RIDER_COUNT",
         assert "Bike DH" not in winter_menu
         assert "Ski Tour" in winter_menu and "Snow Tour" in winter_menu
         assert '../winter/competitions/ski-tour.html' in winter_menu
+        assert '<a href="../teams.html" data-season-scope="summer">Teams</a>' in seasonal_header
 
 print("Seasonal data views: Bike Summer and Ski/Snowboard Winter scopes passed.")

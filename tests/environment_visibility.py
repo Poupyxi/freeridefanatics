@@ -70,13 +70,14 @@ if environment == "preprod":
     assert "sibforms.com" not in home
     assert "pagead2.googlesyndication.com" not in home
     assert cmp_marker not in home
+    assert (root / "winter" / "riders.html").is_file()
+    assert (root / "winter" / "competitions.html").is_file()
+    assert (root / "winter" / "equipment.html").is_file()
 else:
     assert "Allow: /" in robots
     assert "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" not in home
     assert cmp_marker in home
-    # Winter and the seasonal homepage direction remain preproduction-only.
-    # A promotion may share the same source revision, but production must keep
-    # the established Summer homepage and must not expose Winter navigation.
+    # The promoted site exposes the validated Winter season alongside Summer.
     for marker in (
         'class="season-switch"',
         'seasonal-home.css',
@@ -85,7 +86,20 @@ else:
         'data-season-scope="winter"',
         'href="winter/',
     ):
-        assert marker not in home, f"Preproduction-only seasonal marker leaked to production: {marker}"
-    assert not (root / "winter").exists(), "Winter routes must not be generated in production"
+        assert marker in home, f"Winter production marker is missing: {marker}"
+    for route in (
+        root / "competitions" / "beyondgravity-2027.html",
+        root / "competitions" / "crankworkx-2027.html",
+        root / "competitions" / "uci-world-series-cc-2027.html",
+        root / "competitions" / "uci-world-series-dh-2027.html",
+        root / "winter" / "riders.html",
+        root / "winter" / "competitions.html",
+        root / "winter" / "equipment.html",
+        root / "winter" / "competitions" / "freerideworldtour-2027.html",
+        root / "winter" / "competitions" / "kings-queens-of-corbet-s-2027.html",
+        root / "winter" / "competitions" / "natural-selection-2027.html",
+        root / "winter" / "competitions" / "scandinavian-big-mountain-championships-2027.html",
+    ):
+        assert route.is_file(), f"Winter production route is missing: {route.relative_to(root)}"
 
 print(f"Environment visibility checks passed for {environment}.")

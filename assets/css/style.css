@@ -35,15 +35,23 @@
   --body: 'Inter', sans-serif;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-html{scroll-behavior:smooth; overflow-x:clip;}
+/* Keep decorative artwork and wide components from widening the page itself.
+   Data tables and carousels retain their own intentional inner scrolling. */
+html,body{max-width:100%; overflow-x:clip;}
+@supports not (overflow:clip){html,body{overflow-x:hidden;}}
+html{scroll-behavior:smooth;}
 body{
   background:var(--bg);
   color:var(--ink);
   font-family:var(--body);
   line-height:1.5;
+  min-width:0;
   -webkit-font-smoothing:antialiased;
 }
-img{max-width:100%; display:block;}
+img,svg,video,canvas,iframe{max-width:100%;}
+img{display:block;}
+button,input,select,textarea{max-width:100%;}
+:where(h1,h2,h3,h4,p,a,span,strong){overflow-wrap:anywhere;}
 /* The optimizer keeps JPG/PNG fallbacks but lets modern browsers select WebP.
    display:contents preserves the existing grid and figure layouts. */
 picture.optimized-picture{display:contents;}
@@ -98,9 +106,10 @@ header{
   position:sticky; top:0; z-index:50;
   background:var(--bg);
   border-bottom:1px solid var(--line);
-  transition:box-shadow .25s ease;
+  transition:box-shadow .25s ease, transform .24s ease;
 }
 header.scrolled{box-shadow:0 6px 24px rgba(15,16,19,0.08);}
+header.nav-hidden{transform:translateY(-105%);}
 .nav-row{
   position:relative;
   display:flex; align-items:center; justify-content:space-between;
@@ -470,6 +479,82 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .sponsor-row span{
   font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.08em;
   border:1px solid var(--line); padding:5px 10px; color:var(--muted);
+}
+.rider-glass-menu{
+  position:fixed; z-index:45; left:50%; bottom:max(18px, env(safe-area-inset-bottom));
+  display:none; width:max-content; max-width:calc(100% - 32px); padding:7px; box-sizing:border-box;
+  transform:translateX(-50%); overflow:visible;
+  border:1px solid rgba(255,255,255,.72); border-radius:999px;
+  background:rgba(245,244,241,.68); box-shadow:0 14px 36px rgba(21,22,26,.18), inset 0 1px rgba(255,255,255,.78);
+  -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%);
+  isolation:isolate;
+}
+.rider-glass-menu.is-liquidglass-ready{
+  border-color:transparent; background:transparent; box-shadow:none;
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+.rider-glass-menu-track{
+  position:relative; z-index:2; display:flex; align-items:center; gap:5px;
+  width:100%; max-width:100%; overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+  overscroll-behavior-inline:contain; scroll-behavior:smooth; -webkit-overflow-scrolling:touch; touch-action:pan-x;
+}
+.rider-glass-menu-track::-webkit-scrollbar{display:none;}
+.rider-glass-menu a{
+  flex:0 0 auto; display:inline-flex; align-items:center; min-height:34px; padding:8px 13px;
+  border:1px solid transparent; border-radius:999px; color:var(--muted);
+  font-family:var(--mono); font-size:10px; letter-spacing:.07em; text-transform:uppercase;
+  white-space:nowrap; transition:color .16s ease,background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.rider-glass-menu a.is-active,
+.rider-glass-menu a[aria-current="location"]{border-color:rgba(255,255,255,.55); background:rgba(21,22,26,.78); color:#fff; box-shadow:inset 0 1px rgba(255,255,255,.28);}
+.rider-glass-menu a:hover,.rider-glass-menu a:focus-visible{border-color:rgba(169,71,30,.45); background:rgba(255,255,255,.42); color:var(--orange-dark); transform:translateY(-1px);}
+.rider-glass-menu a.is-active:hover,.rider-glass-menu a[aria-current="location"]:hover,
+.rider-glass-menu a.is-active:focus-visible,.rider-glass-menu a[aria-current="location"]:focus-visible{background:rgba(169,71,30,.82); border-color:rgba(255,255,255,.58); color:#fff;}
+.rider-glass-menu a:focus-visible{outline:2px solid var(--orange); outline-offset:2px;}
+.rider-page{padding-bottom:max(92px, calc(74px + env(safe-area-inset-bottom)));}
+.rider-hero,.bike-build,.equip-group,.results-scroll{scroll-margin-top:110px; scroll-margin-bottom:110px;}
+@media(prefers-reduced-transparency:reduce){
+  .rider-glass-menu{background:rgba(245,244,241,.96); -webkit-backdrop-filter:none; backdrop-filter:none;}
+}
+@media(max-width:1024px){
+  .rider-glass-menu{display:block;}
+}
+@media(max-width:560px){
+  html,body.rider-page{overflow-x:hidden;}
+  .rider-page main.section{padding-inline:0;}
+  .rider-page main.section > .wrap{
+    display:grid; grid-auto-flow:column; grid-auto-columns:calc(100vw - 32px);
+    align-items:start; gap:16px; width:100%; max-width:none; padding-inline:16px;
+    overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory;
+    scroll-padding-inline:16px; overscroll-behavior-x:contain;
+    scrollbar-width:none; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y;
+  }
+  .rider-page main.section > .wrap::-webkit-scrollbar{display:none;}
+  .rider-page main.section > .wrap > *{
+    min-width:0; max-width:100%; scroll-snap-align:start; scroll-snap-stop:always;
+  }
+  .rider-page main.section > .wrap > .bike-build{
+    width:100%; margin-inline:0;
+  }
+  .rider-mobile-results > .section-head{margin-top:0 !important;}
+  .rider-glass-menu{
+    width:calc(100% - 20px); max-width:none;
+    bottom:max(10px, env(safe-area-inset-bottom)); padding:6px;
+  }
+  .rider-glass-menu-track{
+    justify-content:flex-start; scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain; overscroll-behavior-y:auto;
+    touch-action:pan-x pan-y; cursor:grab;
+  }
+  .rider-glass-menu-track:active{cursor:grabbing;}
+  .rider-glass-menu a{
+    min-height:32px; padding:7px 11px; font-size:9px;
+    scroll-snap-align:center; scroll-snap-stop:normal;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .rider-glass-menu-track{scroll-behavior:auto;}
+  .rider-glass-menu a{transition:none;}
 }
 
 /* Equipment — grouped sections */
@@ -930,6 +1015,7 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .language-flag{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-size:15px; line-height:1; letter-spacing:0;}
 .header-language-menu a:hover{color:var(--orange-dark); background:#f6f4f0;}
 .header-language-menu a[aria-current="page"]{color:#fff; background:var(--dark);}
+nav.links .header-language{display:none;}
 .guide-hero-feature{padding:28px 0 26px; background:#f2f0ec; overflow:hidden;}
 .guide-hero-grid{display:block;}
 .guide-hero-feature h1{font-size:clamp(34px,4.1vw,52px); line-height:.95; max-width:980px; margin:11px 0 13px;}
@@ -1001,7 +1087,7 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .contact-status.is-error{color:#b33b23;}
 .contact-required{margin-top:6px; color:var(--muted); font-size:10px;}
 @media(max-width:900px){.contact-layout{grid-template-columns:1fr; gap:36px; padding:42px 32px 80px}.contact-intro{max-width:720px}}
-@media(max-width:560px){.contact-layout{padding-left:20px;padding-right:20px}.contact-field-row{grid-template-columns:1fr}.contact-panel{padding:24px 18px}.contact-submit{width:100%}.guide-hero h1{font-size:clamp(27px,7.4vw,32px);overflow-wrap:anywhere}.guide-hero-feature{padding:22px 0}.guide-hero-feature .lead{font-size:15px;line-height:1.45}.guide-hero-actions{display:flex;width:100%;gap:8px}.guide-hero-actions .btn{flex:1;text-align:center;padding:12px 8px;font-size:9px}.guide-hero-feature .guide-meta{gap:8px 14px}.nav-icons .icon-btn{display:none}.header-language-menu{position:fixed;top:132px;left:20px;right:20px;width:auto;grid-template-columns:repeat(2,minmax(0,1fr))}.nav-row{padding-left:20px;padding-right:20px}.logo{font-size:17px}.logo .site-brand-logo{width:38px;height:38px}}
+@media(max-width:560px){.btn{min-width:0;max-width:100%;white-space:normal;text-align:center;overflow-wrap:anywhere}.contact-layout{padding-left:20px;padding-right:20px}.contact-field-row{grid-template-columns:1fr}.contact-panel{padding:24px 18px}.contact-submit{width:100%}.guide-hero h1{font-size:clamp(27px,7.4vw,32px);overflow-wrap:anywhere}.guide-hero-feature{padding:22px 0}.guide-hero-feature .lead{font-size:15px;line-height:1.45}.guide-hero-actions{display:flex;width:100%;gap:8px}.guide-hero-actions .btn{flex:1;text-align:center;padding:12px 8px;font-size:9px}.guide-hero-feature .guide-meta{gap:8px 14px}.nav-icons .icon-btn{display:none}.header-language-menu{position:fixed;top:132px;left:20px;right:20px;width:auto;grid-template-columns:repeat(2,minmax(0,1fr))}.nav-row{padding-left:20px;padding-right:20px}.logo{font-size:17px}.logo .site-brand-logo{width:38px;height:38px}}
 
 /* ===== Competitions ===== */
 .competition-hero,.competition-detail-hero{position:relative; overflow:hidden; background:var(--dark); color:#fff; padding:92px 0 82px;}
@@ -1529,6 +1615,11 @@ a.clean-standing-row:hover{background:#fff5ef;}
   nav.links .dropdown-inner a{padding:14px 32px 14px 48px; color:var(--muted);}
   nav.links .dropdown-note{display:block; padding:12px 32px 12px 48px;}
   nav.links .dropdown-inner a:hover{background:transparent;}
+  nav.links .header-language{display:block; padding:12px 32px 16px; border-top:1px solid var(--line);}
+  nav.links .header-language summary{justify-content:flex-start; width:max-content; min-height:44px; padding:9px 12px;}
+  nav.links .header-language-menu{position:static; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:auto; margin-top:8px; padding:0; border:1px solid var(--line); box-shadow:none;}
+  nav.links .header-language-menu a{min-height:44px; padding:10px 11px; color:var(--muted);}
+  nav.links .header-language-menu a[aria-current="page"]{color:#fff;}
   .grid-riders{grid-template-columns:repeat(2,1fr);}
   .rider-hero{grid-template-columns:1fr; gap:22px;}
   .rider-hero .photo{max-width:220px;}

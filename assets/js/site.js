@@ -8,7 +8,8 @@
 
   // GA4 is production-only and is loaded only after an explicit opt-in.
   safe('analytics-consent', function(){
-    if(location.hostname !== 'ridersfanatics.com' && location.hostname !== 'www.ridersfanatics.com') return;
+    var tagManagerPreview = location.hostname === 'preprod.ridersfanatics.com';
+    if(!tagManagerPreview && location.hostname !== 'ridersfanatics.com' && location.hostname !== 'www.ridersfanatics.com') return;
 
     var measurementId = 'G-G82BKEDZ6P';
     var storageKey = 'rf_analytics_consent';
@@ -19,6 +20,14 @@
       analyticsLoaded = true;
       window.dataLayer = window.dataLayer || [];
       window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+      if(tagManagerPreview){
+        window.dataLayer.push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
+        var container = document.createElement('script');
+        container.async = true;
+        container.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-K5JPKT2K';
+        document.head.appendChild(container);
+        return;
+      }
       window.gtag('js', new Date());
       window.gtag('config', measurementId, {
         anonymize_ip: true,

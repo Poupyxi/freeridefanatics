@@ -4379,13 +4379,20 @@ def build_equipment_directory(riders, winter=False):
         {"@type": "ListItem", "position": i, "name": equipment_category_plural(cat), "url": absolute_url(path + f"#{equip_image_slug(cat, '', '')}" if winter else equipment_category_path(cat))}
         for i, cat in enumerate(categories, 1)
     ]
+    page_title = (
+        "Freeride Ski, Snowboard & Pro Rider Gear | RidersFanatics"
+        if winter else f"Professional Downhill Equipment Database | {SITE_NAME}"
+    )
+    page_description = (
+        "Explore the skis, snowboards, bindings and avalanche safety equipment used by professional freeriders. Discover real rider setups and gear choices."
+        if winter else f"Explore the frames, forks, shocks, brakes, wheels, tires and protection used by {RIDER_COUNT} tracked professional downhill riders."
+    )
     html = head(
-        f"Professional {'Ski & Snowboard' if winter else 'Downhill'} Equipment Database | {SITE_NAME}",
-        (f"Explore equipment connected to {len(riders)} tracked Ski and Snowboard athletes."
-         if winter else f"Explore the frames, forks, shocks, brakes, wheels, tires and protection used by {RIDER_COUNT} tracked professional downhill riders."),
+        page_title,
+        page_description,
         prefix, body_class="equipment-page" + (" seasonal-home season-winter winter-data-page" if winter else ""), canonical_path=path,
         schemas=[
-            {"@context": "https://schema.org", "@type": "CollectionPage", "name": "Professional downhill equipment database", "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
+            {"@context": "https://schema.org", "@type": "CollectionPage", "name": ("Freeride Ski & Snowboard Gear Database" if winter else "Professional downhill equipment database"), "url": absolute_url(path), "dateModified": SITE_UPDATED, "mainEntity": {"@type": "ItemList", "itemListElement": schema_items}},
             breadcrumb_schema([("Home", "/"), ("Equipment", path)]),
         ],
     )
@@ -4397,7 +4404,10 @@ def build_equipment_directory(riders, winter=False):
     compare_cta = '' if winter else '<a class="btn equipment-compare-cta" href="compare.html">Open comparator</a>'
     compare_banner = '' if winter else '<div class="equipment-compare-banner"><div><span class="label">Product comparator</span><h2>Build a side-by-side shortlist.</h2><p>Select two to four products from the same category and compare their tracked riders, teams and competition presence.</p></div><a class="btn btn-solid" href="compare.html">Start comparing</a></div>'
     methodology_href = f"{prefix}methodology.html"
-    html += f'''<main><section class="equipment-hero"><div class="wrap equipment-hero-layout"><div class="equipment-hero-copy"><div class="label">Professional race equipment · Verified setups</div><h1>Race equipment, <em>decoded.</em></h1><p>Explore what professional riders actually use. Every category connects products to riders, teams and results within the selected competition.</p><div class="hero-ctas"><a class="btn btn-solid" href="#equipment-catalogue">Browse categories</a>{compare_cta}</div><div class="equipment-hero-stats"><div><strong>{len(categories)}</strong><span>Categories</span></div><div><strong>{product_count}</strong><span>Products</span></div><div><strong>{len(riders)}</strong><span>Riders</span></div></div></div><div class="equipment-hero-visual" aria-label="Leading tracked equipment">{equipment_hero_visual(by_cat, prefix)}</div></div></section>
+    hero_label = "Professional freeride equipment · Verified setups" if winter else "Professional race equipment · Verified setups"
+    hero_title = "Freeride Ski & Snowboard Gear Database" if winter else "Race equipment, <em>decoded.</em>"
+    hero_copy = "Explore the skis, snowboards, bindings and avalanche safety equipment used by professional freeriders." if winter else "Explore what professional riders actually use. Every category connects products to riders, teams and results within the selected competition."
+    html += f'''<main><section class="equipment-hero"><div class="wrap equipment-hero-layout"><div class="equipment-hero-copy"><div class="label">{hero_label}</div><h1>{hero_title}</h1><p>{hero_copy}</p><div class="hero-ctas"><a class="btn btn-solid" href="#equipment-catalogue">Browse categories</a>{compare_cta}</div><div class="equipment-hero-stats"><div><strong>{len(categories)}</strong><span>Categories</span></div><div><strong>{product_count}</strong><span>Products</span></div><div><strong>{len(riders)}</strong><span>Riders</span></div></div></div><div class="equipment-hero-visual" aria-label="Leading tracked equipment">{equipment_hero_visual(by_cat, prefix)}</div></div></section>
 <div class="wrap">{breadcrumb_html([("Home", prefix), ("Equipment", "equipment.html")])}</div>
 <section class="section equipment-catalogue" id="equipment-catalogue"><div class="wrap"><div class="equipment-catalogue-head"><div><div class="label">Equipment catalogue</div><h2>Most used equipment.</h2><p>Each category is ranked by the number of associated riders. The first three references are visible; scroll within a category to see the complete ranking.</p></div><a class="see-all" href="{methodology_href}">How rankings work →</a></div><nav class="equipment-group-nav" aria-label="Equipment categories">{group_nav}</nav>{"".join(category_sections)}
 {compare_banner}

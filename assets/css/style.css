@@ -1999,3 +1999,7 @@ body.equipment-lightbox-open { overflow: hidden; }
 .winter-equipment-hero .winter-rider-portrait img{width:100%;height:100%;object-fit:cover}
 .equip-item .equip-thumb.winter-brand-thumb{display:flex;align-items:center;justify-content:center;padding:0;border:0;background:transparent;box-shadow:none;border-radius:0;box-sizing:border-box;font-size:12px;font-weight:700;overflow-wrap:anywhere}
 .winter-brand-thumb img{width:100%;height:100%;object-fit:contain}
+.footer-language{align-self:center;margin:8px 0}
+footer .footer-language summary{color:var(--ink);min-height:44px}
+footer .footer-language .header-language-menu{position:absolute;top:auto;bottom:calc(100% + 9px);left:auto;right:0;width:min(270px,calc(100vw - 40px));max-height:60vh;overflow-y:auto}
+@media(max-width:560px){footer .footer-language .header-language-menu{left:0;right:auto}}

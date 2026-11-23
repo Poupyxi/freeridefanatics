@@ -1,0 +1,64 @@
+name: Publish GTM script only
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ridersfanatics-production
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Validate the single asset
+        run: |
+          node --check assets/js/site.js
+          grep -q 'GTM-K5JPKT2K' assets/js/site.js
+          ! grep -q "gtag('config', measurementId" assets/js/site.js
+          curl -fsS https://ridersfanatics.com/assets/js/site.js -o "$RUNNER_TEMP/site.js.before"
+      - name: Keep previous script for recovery
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: production-site-js-before-gtm
+          path: ${{ runner.temp }}/site.js.before
+      - name: Install transfer client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Transfer only assets/js/site.js
+        env:
+          OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
+          OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
+          OVH_SFTP_USER: ${{ secrets.OVH_SFTP_USER }}
+          OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
+          OVH_REMOTE_DIR: ${{ secrets.OVH_REMOTE_DIR }}
+          OVH_SFTP_KNOWN_HOSTS: ${{ secrets.OVH_SFTP_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          case "$OVH_REMOTE_DIR" in /home/ridersi/www|/home/ridersi/www/) ;; *) exit 2 ;; esac
+          test -n "$OVH_SFTP_HOST" && test -n "$OVH_SFTP_PORT"
+          test -n "$OVH_SFTP_USER" && test -n "$OVH_SFTP_PASSWORD"
+          auto_confirm=yes
+          if test -n "$OVH_SFTP_KNOWN_HOSTS"; then
+            mkdir -p "$HOME/.ssh"
+            printf '%s\n' "$OVH_SFTP_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+            chmod 700 "$HOME/.ssh"
+            chmod 600 "$HOME/.ssh/known_hosts"
+            auto_confirm=no
+          fi
+          lftp -u "$OVH_SFTP_USER,$OVH_SFTP_PASSWORD" "sftp://$OVH_SFTP_HOST:$OVH_SFTP_PORT" <<LFTP
+          set sftp:auto-confirm $auto_confirm
+          set cmd:fail-exit yes
+          set net:max-retries 3
+          set net:timeout 20
+          cd "$OVH_REMOTE_DIR/assets/js"
+          put assets/js/site.js -o site.js.gtm-pending
+          mv site.js.gtm-pending site.js
+          bye
+          LFTP
+      - name: Verify exact published script
+        run: |
+          curl -fsS --retry 3 "https://ridersfanatics.com/assets/js/site.js?gtm=$GITHUB_RUN_ID" -o "$RUNNER_TEMP/site.js.live"
+          cmp assets/js/site.js "$RUNNER_TEMP/site.js.live"

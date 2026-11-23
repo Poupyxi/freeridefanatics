@@ -702,10 +702,18 @@ def export(client: Notion):
         key=lambda entry: (not entry[1]["name"].lower().startswith("uci"), entry[1]["name"].lower()),
     )
     for identifier, season in ordered_seasons:
+        stage_parent_ids = {
+            stage_id.split(":", 1)[0]
+            for stage_id in event_seasons
+            if event_seasons.get(stage_id) == identifier and ":" in stage_id
+        }
         season_event_ids = list(dict.fromkeys(
             list(season["event_ids"])
             + [event_id for event_id, season_id in event_seasons.items() if season_id == identifier]
         ))
+        # The parent Event is a Notion bookkeeping row when its races already
+        # provide the individual Cerro Abajo city stages.
+        season_event_ids = [event_id for event_id in season_event_ids if event_id not in stage_parent_ids]
         event_records = [events[event_id] for event_id in season_event_ids if event_id in events]
         sport, discipline = season_sport_and_discipline(season.get("disciplines") or [])
         competition_catalog["series"].append({

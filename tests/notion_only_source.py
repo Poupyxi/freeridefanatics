@@ -28,6 +28,8 @@ if 'list_value(item, "Discipline")' not in source:
     raise SystemExit("The live Notion Discipline relation is not mapped")
 if sync_notion.DATA_SOURCES.get("disciplines") != "3f79cf6b-f148-807f-80f9-000b14fa7f64":
     raise SystemExit("The Notion Discipline catalogue is not configured")
+if sync_notion.CATEGORY_MAP.get("GearBox") != "Derailleur":
+    raise SystemExit("The live Notion GearBox category is not mapped to Derailleur")
 
 routes = sync_notion.ROUTE_SLUGS_BY_HANDLE
 if not routes or not all(isinstance(key, str) and isinstance(value, str) for key, value in routes.items()):
@@ -36,5 +38,7 @@ if routes.get("finniles") != "finn-iles":
     raise SystemExit("Established rider URLs are not protected")
 if routes.get("valihoell") != "valentina-holl":
     raise SystemExit("Valentina Höll's current handle must preserve her established public URL")
+if sync_notion.ROUTE_SLUGS_BY_NAME.get(sync_notion.rider_name_route_key("ALRAN Max")) != "max-alran":
+    raise SystemExit("Max Alran's URL must remain stable when his Instagram handle changes")
 
 print("Notion-only profile contract valid; portraits remain a build-time Drive concern.")

@@ -35,15 +35,23 @@
   --body: 'Inter', sans-serif;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-html{scroll-behavior:smooth; overflow-x:clip;}
+/* Keep decorative artwork and wide components from widening the page itself.
+   Data tables and carousels retain their own intentional inner scrolling. */
+html,body{max-width:100%; overflow-x:clip;}
+@supports not (overflow:clip){html,body{overflow-x:hidden;}}
+html{scroll-behavior:smooth;}
 body{
   background:var(--bg);
   color:var(--ink);
   font-family:var(--body);
   line-height:1.5;
+  min-width:0;
   -webkit-font-smoothing:antialiased;
 }
-img{max-width:100%; display:block;}
+img,svg,video,canvas,iframe{max-width:100%;}
+img{display:block;}
+button,input,select,textarea{max-width:100%;}
+:where(h1,h2,h3,h4,p,a,span,strong){overflow-wrap:anywhere;}
 /* The optimizer keeps JPG/PNG fallbacks but lets modern browsers select WebP.
    display:contents preserves the existing grid and figure layouts. */
 picture.optimized-picture{display:contents;}
@@ -98,9 +106,10 @@ header{
   position:sticky; top:0; z-index:50;
   background:var(--bg);
   border-bottom:1px solid var(--line);
-  transition:box-shadow .25s ease;
+  transition:box-shadow .25s ease, transform .24s ease;
 }
 header.scrolled{box-shadow:0 6px 24px rgba(15,16,19,0.08);}
+header.nav-hidden{transform:translateY(-105%);}
 .nav-row{
   position:relative;
   display:flex; align-items:center; justify-content:space-between;
@@ -457,11 +466,95 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .rider-meta .item span{display:block; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:3px;}
 .rider-meta .ig-link{color:var(--orange); border-bottom:1px solid transparent; transition:border-color .15s ease;}
 .rider-meta .ig-link:hover{border-bottom-color:var(--orange);}
-.rider-bio{color:var(--muted); font-size:15px; max-width:560px; margin-bottom:18px;}
+.rider-bio{color:var(--muted); font-size:15px; max-width:560px; margin:0 0 18px;}
+.rider-bio-structured{padding-top:2px;}
+.rider-palmares-title{margin:0 0 9px; color:var(--text); font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;}
+.rider-palmares-list{display:grid; gap:8px; margin:0; padding-left:20px; list-style:disc; line-height:1.45;}
+.rider-palmares-list ul{display:grid; gap:4px; margin:5px 0 0; padding-left:20px; list-style:circle;}
+.rider-palmares-list li::marker{color:var(--orange);}
+.rider-bio-legacy{display:grid; gap:7px; padding-left:20px; list-style:disc; line-height:1.45;}
+.rider-bio-legacy li{display:list-item; margin:0; padding-left:4px; white-space:pre-line;}
+.rider-bio-legacy li::marker{color:var(--orange);}
 .sponsor-row{display:flex; flex-wrap:wrap; gap:8px;}
 .sponsor-row span{
   font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.08em;
   border:1px solid var(--line); padding:5px 10px; color:var(--muted);
+}
+.rider-glass-menu{
+  position:fixed; z-index:45; left:50%; bottom:max(18px, env(safe-area-inset-bottom));
+  display:none; width:max-content; max-width:calc(100% - 32px); padding:7px; box-sizing:border-box;
+  transform:translateX(-50%); overflow:visible;
+  border:1px solid rgba(255,255,255,.72); border-radius:999px;
+  background:rgba(245,244,241,.68); box-shadow:0 14px 36px rgba(21,22,26,.18), inset 0 1px rgba(255,255,255,.78);
+  -webkit-backdrop-filter:blur(18px) saturate(145%); backdrop-filter:blur(18px) saturate(145%);
+  isolation:isolate;
+}
+.rider-glass-menu.is-liquidglass-ready{
+  border-color:transparent; background:transparent; box-shadow:none;
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+.rider-glass-menu-track{
+  position:relative; z-index:2; display:flex; align-items:center; gap:5px;
+  width:100%; max-width:100%; overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+  overscroll-behavior-inline:contain; scroll-behavior:smooth; -webkit-overflow-scrolling:touch; touch-action:pan-x;
+}
+.rider-glass-menu-track::-webkit-scrollbar{display:none;}
+.rider-glass-menu a{
+  flex:0 0 auto; display:inline-flex; align-items:center; min-height:34px; padding:8px 13px;
+  border:1px solid transparent; border-radius:999px; color:var(--muted);
+  font-family:var(--mono); font-size:10px; letter-spacing:.07em; text-transform:uppercase;
+  white-space:nowrap; transition:color .16s ease,background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.rider-glass-menu a.is-active,
+.rider-glass-menu a[aria-current="location"]{border-color:rgba(255,255,255,.55); background:rgba(21,22,26,.78); color:#fff; box-shadow:inset 0 1px rgba(255,255,255,.28);}
+.rider-glass-menu a:hover,.rider-glass-menu a:focus-visible{border-color:rgba(169,71,30,.45); background:rgba(255,255,255,.42); color:var(--orange-dark); transform:translateY(-1px);}
+.rider-glass-menu a.is-active:hover,.rider-glass-menu a[aria-current="location"]:hover,
+.rider-glass-menu a.is-active:focus-visible,.rider-glass-menu a[aria-current="location"]:focus-visible{background:rgba(169,71,30,.82); border-color:rgba(255,255,255,.58); color:#fff;}
+.rider-glass-menu a:focus-visible{outline:2px solid var(--orange); outline-offset:2px;}
+.rider-page{padding-bottom:max(92px, calc(74px + env(safe-area-inset-bottom)));}
+.rider-hero,.bike-build,.equip-group,.results-scroll{scroll-margin-top:110px; scroll-margin-bottom:110px;}
+@media(prefers-reduced-transparency:reduce){
+  .rider-glass-menu{background:rgba(245,244,241,.96); -webkit-backdrop-filter:none; backdrop-filter:none;}
+}
+@media(max-width:1024px){
+  .rider-glass-menu{display:block;}
+}
+@media(max-width:560px){
+  html,body.rider-page{overflow-x:hidden;}
+  .rider-page main.section{padding-inline:0;}
+  .rider-page main.section > .wrap{
+    display:grid; grid-auto-flow:column; grid-auto-columns:calc(100vw - 32px);
+    align-items:start; gap:16px; width:100%; max-width:none; padding-inline:16px;
+    overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory;
+    scroll-padding-inline:16px; overscroll-behavior-x:contain;
+    scrollbar-width:none; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y;
+  }
+  .rider-page main.section > .wrap::-webkit-scrollbar{display:none;}
+  .rider-page main.section > .wrap > *{
+    min-width:0; max-width:100%; scroll-snap-align:start; scroll-snap-stop:always;
+  }
+  .rider-page main.section > .wrap > .bike-build{
+    width:100%; margin-inline:0;
+  }
+  .rider-mobile-results > .section-head{margin-top:0 !important;}
+  .rider-glass-menu{
+    width:calc(100% - 20px); max-width:none;
+    bottom:max(10px, env(safe-area-inset-bottom)); padding:6px;
+  }
+  .rider-glass-menu-track{
+    justify-content:flex-start; scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain; overscroll-behavior-y:auto;
+    touch-action:pan-x pan-y; cursor:grab;
+  }
+  .rider-glass-menu-track:active{cursor:grabbing;}
+  .rider-glass-menu a{
+    min-height:32px; padding:7px 11px; font-size:9px;
+    scroll-snap-align:center; scroll-snap-stop:normal;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .rider-glass-menu-track{scroll-behavior:auto;}
+  .rider-glass-menu a{transition:none;}
 }
 
 /* Equipment — grouped sections */
@@ -527,7 +620,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
    the sequence starts when the composition is scrolled into view. --- */
 .bb-reveal{position:relative; display:block;}
 .bb-reveal .bb-sketch, .bb-reveal .bb-draw{
-  position:absolute; inset:0; width:100%; height:100%;
+  position:absolute; inset:0; width:100%; height:100%; opacity:0;
   object-fit:contain; pointer-events:none;
 }
 .bb-reveal .bb-draw{z-index:3;}
@@ -922,6 +1015,7 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .language-flag{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-size:15px; line-height:1; letter-spacing:0;}
 .header-language-menu a:hover{color:var(--orange-dark); background:#f6f4f0;}
 .header-language-menu a[aria-current="page"]{color:#fff; background:var(--dark);}
+nav.links .header-language{display:none;}
 .guide-hero-feature{padding:28px 0 26px; background:#f2f0ec; overflow:hidden;}
 .guide-hero-grid{display:block;}
 .guide-hero-feature h1{font-size:clamp(34px,4.1vw,52px); line-height:.95; max-width:980px; margin:11px 0 13px;}
@@ -993,7 +1087,7 @@ footer{background:var(--bg); border-top:1px solid var(--line); padding:36px 0;}
 .contact-status.is-error{color:#b33b23;}
 .contact-required{margin-top:6px; color:var(--muted); font-size:10px;}
 @media(max-width:900px){.contact-layout{grid-template-columns:1fr; gap:36px; padding:42px 32px 80px}.contact-intro{max-width:720px}}
-@media(max-width:560px){.contact-layout{padding-left:20px;padding-right:20px}.contact-field-row{grid-template-columns:1fr}.contact-panel{padding:24px 18px}.contact-submit{width:100%}.guide-hero h1{font-size:clamp(27px,7.4vw,32px);overflow-wrap:anywhere}.guide-hero-feature{padding:22px 0}.guide-hero-feature .lead{font-size:15px;line-height:1.45}.guide-hero-actions{display:flex;width:100%;gap:8px}.guide-hero-actions .btn{flex:1;text-align:center;padding:12px 8px;font-size:9px}.guide-hero-feature .guide-meta{gap:8px 14px}.nav-icons .icon-btn{display:none}.header-language-menu{position:fixed;top:132px;left:20px;right:20px;width:auto;grid-template-columns:repeat(2,minmax(0,1fr))}.nav-row{padding-left:20px;padding-right:20px}.logo{font-size:17px}.logo .site-brand-logo{width:38px;height:38px}}
+@media(max-width:560px){.btn{min-width:0;max-width:100%;white-space:normal;text-align:center;overflow-wrap:anywhere}.contact-layout{padding-left:20px;padding-right:20px}.contact-field-row{grid-template-columns:1fr}.contact-panel{padding:24px 18px}.contact-submit{width:100%}.guide-hero h1{font-size:clamp(27px,7.4vw,32px);overflow-wrap:anywhere}.guide-hero-feature{padding:22px 0}.guide-hero-feature .lead{font-size:15px;line-height:1.45}.guide-hero-actions{display:flex;width:100%;gap:8px}.guide-hero-actions .btn{flex:1;text-align:center;padding:12px 8px;font-size:9px}.guide-hero-feature .guide-meta{gap:8px 14px}.nav-icons .icon-btn{display:none}.header-language-menu{position:fixed;top:132px;left:20px;right:20px;width:auto;grid-template-columns:repeat(2,minmax(0,1fr))}.nav-row{padding-left:20px;padding-right:20px}.logo{font-size:17px}.logo .site-brand-logo{width:38px;height:38px}}
 
 /* ===== Competitions ===== */
 .competition-hero,.competition-detail-hero{position:relative; overflow:hidden; background:var(--dark); color:#fff; padding:92px 0 82px;}
@@ -1521,6 +1615,11 @@ a.clean-standing-row:hover{background:#fff5ef;}
   nav.links .dropdown-inner a{padding:14px 32px 14px 48px; color:var(--muted);}
   nav.links .dropdown-note{display:block; padding:12px 32px 12px 48px;}
   nav.links .dropdown-inner a:hover{background:transparent;}
+  nav.links .header-language{display:block; padding:12px 32px 16px; border-top:1px solid var(--line);}
+  nav.links .header-language summary{justify-content:flex-start; width:max-content; min-height:44px; padding:9px 12px;}
+  nav.links .header-language-menu{position:static; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:auto; margin-top:8px; padding:0; border:1px solid var(--line); box-shadow:none;}
+  nav.links .header-language-menu a{min-height:44px; padding:10px 11px; color:var(--muted);}
+  nav.links .header-language-menu a[aria-current="page"]{color:#fff;}
   .grid-riders{grid-template-columns:repeat(2,1fr);}
   .rider-hero{grid-template-columns:1fr; gap:22px;}
   .rider-hero .photo{max-width:220px;}
@@ -1727,6 +1826,44 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   outline-offset: 3px;
 }
 
+/* Ski product photos are very tall and nearly disappear in the 56px bike thumbnail. */
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] {
+  min-height: 136px;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb {
+  flex: 0 0 220px;
+  width: 220px;
+  height: 100px;
+  background: #f3f3ef;
+}
+.season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb img {
+  width: 90px;
+  height: 200px;
+  max-width: none;
+  object-fit: contain;
+  transform: rotate(-90deg);
+}
+.season-winter.equipment-page #skis .equipment-directory-media img {
+  width: 62px;
+  height: 74px;
+  max-width: none;
+  padding: 0;
+  transform: rotate(-90deg);
+}
+@media (max-width: 560px) {
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb {
+    width: 120px;
+    height: 82px;
+  }
+  .season-winter.rider-page .equip-item[data-equipment-category-url$="#skis"] .equip-thumb img {
+    width: 70px;
+    height: 112px;
+  }
+}
+
 .equipment-lightbox {
   position: fixed;
   inset: 0;
@@ -1759,6 +1896,28 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
   object-fit: contain;
   background: #fff;
   grid-row: 1 / span 4;
+}
+.equipment-turntable .equipment-lightbox-image {
+  cursor: grab;
+  transform: perspective(900px) rotateY(var(--turn-angle, 0deg)) rotateX(0deg) scaleX(var(--turn-scale, 1));
+  transition: transform .22s ease, filter .22s ease;
+  filter: drop-shadow(0 18px 22px rgba(12,32,44,.16));
+  touch-action: none;
+}
+.equipment-turntable .equipment-lightbox-image.is-turning {
+  cursor: grabbing;
+  transition: none;
+}
+.equipment-turn-hint { display:none; }
+.equipment-turntable .equipment-turn-hint {
+  display:block;
+  margin:-7px 0 10px;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  text-align:center;
 }
 
 .equipment-lightbox-title {
@@ -1802,13 +1961,45 @@ body.season-winter>header{background:linear-gradient(165deg,#f7fcff,#e4f1f7);box
 body.equipment-lightbox-open { overflow: hidden; }
 @media(max-width:640px){.equipment-lightbox-panel{grid-template-columns:1fr}.equipment-lightbox-image{grid-row:auto}.equipment-lightbox-stats,.equipment-lightbox-leader,.equipment-lightbox-category{grid-column:auto}}
 
+.competition-menu-year-label{padding:12px 18px 6px;font-family:"Space Mono",monospace;font-size:.72rem;letter-spacing:.14em;color:#b4471f;border-bottom:1px solid #d6d2cc}.competition-menu-year+.competition-menu-year{border-top:1px solid #c9c5bf}
+
 .competition-menu-year-toggle{display:flex;width:100%;justify-content:space-between;align-items:center;border:0;background:transparent;padding:14px 18px;font:700 .9rem "Space Mono",monospace;letter-spacing:.12em;color:#b4471f;cursor:pointer}.competition-menu-year-toggle span{font-size:1.1rem}.competition-menu-year-items{border-top:1px solid #d6d2cc}.competition-menu-year-items[hidden]{display:none}
 
-.rider-bio-structured{padding-top:2px;}
-.rider-palmares-title{margin:0 0 9px; color:var(--text); font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;}
-.rider-palmares-list{display:grid; gap:8px; margin:0; padding-left:20px; list-style:disc; line-height:1.45;}
-.rider-palmares-list ul{display:grid; gap:4px; margin:5px 0 0; padding-left:20px; list-style:circle;}
-.rider-palmares-list li::marker{color:var(--orange);}
-.rider-bio-legacy{display:grid; gap:7px; padding-left:20px; list-style:disc; line-height:1.45;}
-.rider-bio-legacy li{display:list-item; margin:0; padding-left:4px; white-space:pre-line;}
-.rider-bio-legacy li::marker{color:var(--orange);}
+.competition-year-section+.competition-year-section{margin-top:64px}.competition-year-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--line)}.competition-year-heading h2{margin:4px 0 0;font-family:var(--head);font-size:clamp(38px,6vw,72px);line-height:.9}.competition-year-heading>span,.competition-year-actions>span:first-child{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.competition-year-actions{display:flex;align-items:center;justify-content:flex-end;gap:24px}.competition-year-actions>[data-year-share-payload]{display:flex;align-items:center;gap:24px}.competition-collection-section{padding-top:8px}@media(max-width:620px){.competition-year-section+.competition-year-section{margin-top:46px}.competition-year-heading{align-items:start}.competition-year-heading h2{font-size:46px}.competition-year-actions{align-items:flex-end;flex-direction:column;gap:8px}.competition-year-actions>span:first-child{text-align:right}}
+
+.competition-hub-summary{max-width:620px;margin:14px 0 0;color:var(--muted);line-height:1.6}
+
+.team-directory-intro{padding-bottom:34px}.team-directory-intro h1{max-width:900px;margin:10px 0 18px;font-family:var(--head);font-size:clamp(42px,7vw,82px);line-height:.92;text-transform:uppercase}.team-directory-intro p{max-width:760px;color:var(--muted);line-height:1.7}.team-season-section+.team-season-section{margin-top:64px}.team-directory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.team-directory-card{display:flex;min-height:260px;flex-direction:column;align-items:flex-start;padding:28px;background:#fff;border:1px solid var(--line)}.team-directory-card-top{display:flex;width:100%;justify-content:space-between;margin-bottom:34px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.team-directory-card .team-identity strong{font-family:var(--head);font-size:clamp(23px,3vw,34px);line-height:1;text-transform:uppercase}.team-directory-card p{margin:18px 0;color:var(--muted)}.team-directory-card .btn{margin-top:auto}.team-profile-hero .competition-season-hero-grid{grid-template-columns:minmax(0,1fr) minmax(300px,520px)}.team-profile-hero .team-identity{margin-bottom:24px}.team-profile-hero .team-identity strong{font-family:var(--mono);font-size:11px;text-transform:uppercase}.team-profile-stats{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}.team-profile-stats span{display:flex;min-height:110px;flex-direction:column;justify-content:center;padding:20px;background:#fff;font-family:var(--mono);font-size:10px;text-transform:uppercase;color:var(--muted)}.team-profile-stats strong{display:block;margin-bottom:6px;font-family:var(--head);font-size:32px;color:var(--ink)}.team-profile-context{background:#fff}.team-profile-context-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:64px}.team-profile-context h2{margin:10px 0 18px;font-family:var(--head);font-size:clamp(30px,4vw,48px);text-transform:uppercase}.team-profile-context p,.team-profile-context li{color:var(--muted);line-height:1.65}.team-profile-context ul{padding-left:18px}.team-brand-list{display:flex;flex-wrap:wrap;gap:8px}.team-brand-list span{padding:8px 11px;border:1px solid var(--line);font-family:var(--mono);font-size:9px;text-transform:uppercase}@media(max-width:760px){.team-directory-grid,.team-profile-context-grid,.team-profile-hero .competition-season-hero-grid{grid-template-columns:1fr}.team-profile-context-grid{gap:42px}.team-profile-stats{margin-top:24px}.team-directory-card{min-height:230px}}
+
+.team-directory-intro{background:linear-gradient(135deg,#f6f3ee 0%,#ebe7df 100%)}.team-directory-intro-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);gap:70px;align-items:end}.team-season-jumps{display:flex;gap:8px;margin-top:26px}.team-season-jumps a{padding:10px 16px;border:1px solid var(--ink);border-radius:999px;font:700 10px var(--mono);letter-spacing:.08em}.team-season-jumps a:hover{background:var(--ink);color:#fff}.team-directory-summary{display:grid;grid-template-columns:repeat(3,1fr);margin:0;border:1px solid var(--line);background:#fff}.team-directory-summary div{padding:22px 16px;border-right:1px solid var(--line)}.team-directory-summary div:last-child{border-right:0}.team-directory-summary dt{font-family:var(--head);font-size:34px}.team-directory-summary dd{margin:6px 0 0;font:9px var(--mono);text-transform:uppercase;color:var(--muted)}.team-directory-card{position:relative;overflow:hidden;min-height:300px;padding:0;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}.team-directory-card:hover{transform:translateY(-3px);border-color:#b9b3aa;box-shadow:0 18px 38px rgba(21,22,26,.08)}.team-directory-card-top{margin:0;padding:18px 22px;border-bottom:1px solid var(--line);background:#f7f5f1}.team-directory-card-main{display:grid;grid-template-columns:100px minmax(0,1fr);gap:22px;align-items:center;width:100%;padding:28px 22px}.team-directory-card-main h3{margin:0;font-family:var(--head);font-size:clamp(23px,3vw,36px);line-height:1;text-transform:uppercase}.team-directory-card-main p{margin:10px 0 0;font:10px var(--mono);text-transform:uppercase}.team-logo-visual{display:flex;width:100px;height:82px;align-items:center;justify-content:center;padding:10px;border-radius:12px;background:#f1eee8;color:var(--orange);font-family:var(--head);font-size:28px}.team-logo-visual img{display:block;width:100%;height:100%;object-fit:contain}.team-logo-visual-negative img{filter:invert(1)}.team-logo-fallback{border:1px solid var(--line)}.team-directory-card-footer{display:flex;width:100%;align-items:center;justify-content:space-between;gap:18px;margin-top:auto;padding:18px 22px;border-top:1px solid var(--line)}.team-directory-card-footer>a{font:700 10px var(--mono);letter-spacing:.07em;text-transform:uppercase}.team-directory-card-footer>a:hover{color:var(--orange)}.team-rider-stack{display:flex;align-items:center;padding-left:8px}.team-rider-avatar{display:flex;width:40px;height:40px;align-items:center;justify-content:center;overflow:hidden;margin-left:-8px;border:2px solid #fff;border-radius:50%;background:#ddd7cf;font:700 9px var(--mono);color:var(--ink)}.team-rider-avatar img{width:100%;height:100%;object-fit:cover}.team-rider-more{background:var(--ink);color:#fff}.team-profile-hero{background:linear-gradient(135deg,#121419,#252a31);color:#fff}.team-profile-hero-grid{display:grid;grid-template-columns:180px minmax(0,1fr) minmax(300px,440px);gap:44px;align-items:center}.team-profile-logo-panel{display:flex;min-height:150px;align-items:center;justify-content:center;border:1px solid #3b4048;background:#1b1e24}.team-profile-logo-panel .team-logo-visual{width:145px;height:110px;background:transparent}.team-profile-heading h1{margin:10px 0 18px;font-family:var(--head);font-size:clamp(38px,6vw,72px);line-height:.92;text-transform:uppercase}.team-profile-heading p{color:#b8bdc5}.team-profile-heading .team-rider-stack{margin-top:26px}.team-profile-heading .team-rider-avatar{border-color:#252a31}.team-profile-stats{border-color:#3b4048;background:#3b4048}.team-profile-stats span{background:#1b1e24;color:#aeb4bd}.team-profile-stats strong{color:#fff}@media(max-width:980px){.team-directory-intro-grid,.team-profile-hero-grid{grid-template-columns:1fr}.team-directory-summary{max-width:520px}.team-profile-logo-panel{justify-content:flex-start;min-height:110px;padding:16px}.team-profile-logo-panel .team-logo-visual{width:120px;height:80px}.team-profile-stats{margin-top:0}}@media(max-width:620px){.team-directory-summary{grid-template-columns:1fr}.team-directory-summary div{display:flex;align-items:baseline;justify-content:space-between;border-right:0;border-bottom:1px solid var(--line)}.team-directory-summary div:last-child{border-bottom:0}.team-directory-card-main{grid-template-columns:76px minmax(0,1fr)}.team-logo-visual{width:76px;height:68px}.team-directory-card-footer{align-items:flex-end}.team-profile-heading h1{overflow-wrap:anywhere}}
+
+.team-directory-card-top{justify-content:flex-end}.team-directory-card-main{grid-template-columns:150px minmax(0,1fr)}.team-directory-card-main .team-logo-visual{width:150px;height:112px;padding:14px;border:1px solid #ded8cf;background:linear-gradient(145deg,#faf8f4,#ece7df)}.team-profile-hero-grid{grid-template-columns:250px minmax(0,1fr) minmax(300px,440px)}.team-profile-logo-panel{min-height:220px;border-color:#4a505a;background:linear-gradient(145deg,#20242b,#15181d);box-shadow:0 24px 60px rgba(0,0,0,.25)}.team-profile-logo-panel .team-logo-visual{width:210px;height:160px;padding:18px}@media(max-width:980px){.team-profile-logo-panel{min-height:170px;justify-content:center}.team-profile-logo-panel .team-logo-visual{width:180px;height:130px}}@media(max-width:620px){.team-directory-card-main{grid-template-columns:105px minmax(0,1fr)}.team-directory-card-main .team-logo-visual{width:105px;height:84px}.team-profile-logo-panel{min-height:145px}.team-profile-logo-panel .team-logo-visual{width:155px;height:110px}}
+
+.team-directory-card-main{display:flex;flex-direction:column;align-items:flex-start;gap:0;padding-top:34px}.team-directory-card-main .team-logo-visual{justify-content:flex-start;width:100%;height:150px;padding:0;border:0;border-radius:0;background:transparent}.team-directory-card-main .team-logo-visual img{max-width:240px;object-position:left center}.team-directory-card-main h3{margin-top:20px;font-family:var(--mono);font-size:15px;line-height:1.35;letter-spacing:.04em}.team-directory-card-main p{margin-top:8px}.team-logo-fallback{justify-content:flex-start!important;border:0!important;background:transparent!important;font-size:54px!important}.team-profile-hero-grid{grid-template-columns:minmax(240px,330px) minmax(0,1fr) minmax(300px,440px)}.team-profile-logo-panel{justify-content:flex-start;min-height:0;border:0;background:transparent;box-shadow:none}.team-profile-logo-panel .team-logo-visual{justify-content:flex-start;width:100%;height:190px;padding:0}.team-profile-logo-panel .team-logo-visual img{max-width:300px;object-position:left center}.team-profile-heading h1{font-family:var(--mono);font-size:clamp(27px,3.5vw,46px);line-height:1.1;letter-spacing:.03em}@media(max-width:980px){.team-profile-logo-panel{min-height:0;justify-content:flex-start;padding:0}.team-profile-logo-panel .team-logo-visual{width:100%;height:150px}.team-profile-logo-panel .team-logo-visual img{max-width:260px}.team-profile-heading h1{margin-top:6px}}@media(max-width:620px){.team-directory-card-main{display:flex}.team-directory-card-main .team-logo-visual{width:100%;height:120px}.team-directory-card-main .team-logo-visual img{max-width:200px}.team-profile-logo-panel .team-logo-visual{width:100%;height:125px}.team-profile-logo-panel .team-logo-visual img{max-width:220px}}
+
+.team-directory{padding-top:34px}.team-directory-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.team-directory-card{min-height:0}.team-directory-card-top{padding:12px 18px}.team-directory-card-main{padding:20px 18px 16px}.team-directory-card-main .team-logo-visual{height:96px}.team-directory-card-main .team-logo-visual img{max-width:190px}.team-directory-card-main h3{margin-top:12px;font-size:13px}.team-directory-card-main p{margin-top:5px;font-size:8px}.team-directory-card-footer{padding:13px 18px}.team-rider-avatar{width:34px;height:34px}.team-profile-hero{padding:48px 0}.team-profile-hero-grid{grid-template-columns:minmax(190px,260px) minmax(0,1fr) minmax(280px,400px);gap:30px}.team-profile-logo-panel .team-logo-visual{height:135px}.team-profile-logo-panel .team-logo-visual img{max-width:235px}.team-profile-heading h1{margin-bottom:10px}.team-profile-heading .team-rider-stack{margin-top:16px}.team-profile-stats span{min-height:88px;padding:15px}.team-profile-stats strong{font-size:27px}@media(max-width:1180px){.team-directory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.team-directory{padding-top:24px}.team-directory-grid{grid-template-columns:1fr}.team-profile-hero{padding:36px 0}.team-profile-hero-grid{grid-template-columns:1fr;gap:18px}.team-profile-logo-panel .team-logo-visual{height:105px}.team-profile-logo-panel .team-logo-visual img{max-width:200px}.team-profile-stats{grid-template-columns:repeat(4,1fr)}.team-profile-stats span{min-height:70px;padding:10px}.team-profile-stats strong{font-size:22px}}@media(max-width:520px){.team-profile-stats{grid-template-columns:repeat(2,1fr)}}
+
+.team-page .rider-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}@media(max-width:1000px){.team-page .rider-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.team-page .rider-grid{grid-template-columns:1fr}}
+
+.team-directory-card{color:inherit;text-decoration:none;cursor:pointer}.team-directory-card:focus-visible{outline:3px solid var(--orange);outline-offset:3px}.team-directory-card-cta{font:700 10px var(--mono);letter-spacing:.07em;text-transform:uppercase}.team-directory-card:hover .team-directory-card-cta,.team-directory-card:focus-visible .team-directory-card-cta{color:var(--orange)}
+
+.season-calendar-cta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:24px}.season-calendar-cta .btn{white-space:nowrap}.season-calendar-cta small{font:10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}@media(max-width:560px){.season-calendar-cta{align-items:stretch;flex-direction:column}.season-calendar-cta .btn{width:100%;white-space:normal;text-align:center}}
+.rider-hero.winter-equipment-hero{display:grid;grid-template-columns:minmax(260px,.7fr) minmax(0,1.5fr);align-items:start;gap:24px}
+.winter-equipment-hero>.winter-primary-equipment{grid-column:2;grid-row:1}
+.winter-equipment-hero>.winter-primary-equipment+div{grid-column:1;grid-row:1}
+.winter-primary-equipment{min-width:0;aspect-ratio:1;overflow:hidden;background:radial-gradient(ellipse 65% 9% at 50% 99%,#b7cdd7 0%,transparent 100%),linear-gradient(#f2f7f9 0%,#e6f0f4 75%,#d8e7ed 100%);padding:1% 0;border-radius:0;box-sizing:border-box}
+.winter-primary-equipment>div{height:100%;display:flex;gap:0;justify-content:center;align-items:stretch}
+.winter-primary-equipment figure:has(+figure){transform:translateX(12%)}
+.winter-primary-equipment figure+figure{transform:translateX(-12%)}
+.winter-primary-equipment figure{flex:1;min-width:0;margin:0;text-align:center;position:relative;isolation:isolate}
+.winter-primary-equipment figure::after{content:"";position:absolute;z-index:0;pointer-events:none;bottom:-1%;left:10%;width:80%;height:2%;background:radial-gradient(ellipse at center,#243c487a 0%,#354e5c42 35%,transparent 72%);filter:blur(2px)}
+.winter-primary-equipment img{position:relative;z-index:1;display:block;width:100%;height:100%;min-height:0;object-fit:contain;object-position:center bottom;mix-blend-mode:multiply;filter:drop-shadow(0 2px 1px #233a4526)}
+@media(max-width:760px){.rider-hero.winter-equipment-hero{grid-template-columns:1fr;gap:24px}.winter-equipment-hero>.winter-primary-equipment,.winter-equipment-hero>.winter-primary-equipment+div{grid-column:auto;grid-row:auto}}
+.winter-equipment-hero .winter-rider-portrait{width:min(100%,320px);height:320px;margin-bottom:24px;overflow:hidden;border-radius:16px}
+.winter-equipment-hero .winter-rider-portrait img{width:100%;height:100%;object-fit:cover}
+.equip-item .equip-thumb.winter-brand-thumb{display:flex;align-items:center;justify-content:center;padding:0;border:0;background:transparent;box-shadow:none;border-radius:0;box-sizing:border-box;font-size:12px;font-weight:700;overflow-wrap:anywhere}
+.winter-brand-thumb img{width:100%;height:100%;object-fit:contain}
+.footer-language{align-self:center;margin:8px 0}
+footer .footer-language summary{color:var(--ink);min-height:44px}
+footer .footer-language .header-language-menu{position:absolute;top:auto;bottom:calc(100% + 9px);left:auto;right:0;width:min(270px,calc(100vw - 40px));max-height:60vh;overflow-y:auto}
+@media(max-width:560px){footer .footer-language .header-language-menu{left:0;right:auto}}

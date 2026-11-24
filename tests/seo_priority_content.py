@@ -204,7 +204,8 @@ assert fitted_description.endswith(".")
 assert "…" not in fitted_description
 
 competitions_hub_html = build.build_competitions_hub([])
-assert '<h1 class="label competition-hub-title">Competitions tracked</h1>' in competitions_hub_html
+assert '<h1 class="competition-hub-title">Choose a season.</h1>' in competitions_hub_html
+assert 'id="season-2026"' in competitions_hub_html
 assert "competition-hub-intro" not in competitions_hub_html
 assert "Mountain bike competitions, standings and race results" not in competitions_hub_html
 assert "Choose a tracked series to explore its calendar" not in competitions_hub_html

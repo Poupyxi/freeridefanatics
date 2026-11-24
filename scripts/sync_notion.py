@@ -38,6 +38,11 @@ PRIORITY_PUBLIC_NAMES = {
     "max-alran": "Max Alran",
 }
 
+
+def season_is_publishable(identifier, name):
+    """Keep a named Notion competition even before its stages are linked."""
+    return bool(identifier and name)
+
 DATA_SOURCES = {
     "seasons": "3c99cf6b-f148-80f4-a3ad-000b1635fee6",
     "riders": "3c89cf6b-f148-8044-9283-000b552443a8",
@@ -68,6 +73,7 @@ CATEGORY_MAP = {
     "Crankseat": "Crankset",
     "Derailleur": "Derailleur",
     "Gearbox": "Derailleur",
+    "GearBox": "Derailleur",
     "Hub": "Hub",
     "Hubs": "Hub",
     "Spacer": "Spacer",
@@ -97,6 +103,12 @@ CATEGORY_MAP = {
     "Ski Poles": "Poles",
     "Avalanche Safety": "Avalanche Safety",
     "Avalanche Equipment": "Avalanche Safety",
+    "SacAirbag": "Avalanche Safety",
+}
+
+WINTER_EQUIPMENT_CATEGORIES = {
+    "Skis", "Snowboard", "Bindings", "Ski Boots", "Snowboard Boots",
+    "Boots", "Poles", "Avalanche Safety",
 }
 
 RESULT_STATUS_ALIASES = {
@@ -114,6 +126,34 @@ RESULT_STATUS_ALIASES = {
 def slugify(value: str) -> str:
     value = unicodedata.normalize("NFKD", value or "").encode("ascii", "ignore").decode("ascii")
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+# Cerro Abajo stores one parent Event page, while each city is represented by
+# its own Race rows.  Keep those city stops as first-class public events.
+CERRO_ABAJO_STAGES = {
+    "valparaiso": {"name": "Valparaíso", "date": "2026-02-15", "end_date": "2026-02-15", "location": "Valparaíso"},
+    "genova": {"name": "Genova", "date": "2026-06-27", "end_date": "2026-06-28", "location": "Genova"},
+    "stuttgart": {"name": "Stuttgart", "date": "2026-09-05", "end_date": "2026-09-06", "location": "Stuttgart"},
+}
+
+
+def cerro_abajo_stage_name(value):
+    """Return the city stop encoded in a Cerro Abajo Race title."""
+    tokens = [token for token in re.split(r"\s*[—–-]\s*", value or "") if token]
+    if len(tokens) < 2 or "cerro" not in slugify(tokens[0]) or "abajo" not in slugify(tokens[0]):
+        return None
+    stage_key = slugify(tokens[1])
+    return stage_key if stage_key in CERRO_ABAJO_STAGES else None
+
+
+def rider_name_route_key(value: str) -> str:
+    """Match stable public routes even when Notion stores LAST First."""
+    return "-".join(sorted(part for part in slugify(value).split("-") if part))
+
+
+ROUTE_SLUGS_BY_NAME = {
+    rider_name_route_key(name): slug for slug, name in PRIORITY_PUBLIC_NAMES.items()
+}
 
 
 def page_id(value: str | None) -> str | None:
@@ -304,6 +344,23 @@ def season_sport_and_discipline(names):
     return "Mountain bike", " / ".join(cleaned) or "Downhill"
 
 
+def equipment_link_scopes(season_ids, category, rider_disciplines,
+                          primary_season_id, winter_season_ids,
+                          has_primary_participation):
+    """Keep untagged winter gear with its rider without leaking it into Summer."""
+    if season_ids:
+        return (primary_season_id in season_ids, bool(season_ids & winter_season_ids))
+    winter_rider = any(
+        season_sport_and_discipline([name])[0] in {"Ski", "Snowboard"}
+        for name in rider_disciplines
+    )
+    winter_product = category in WINTER_EQUIPMENT_CATEGORIES
+    return (
+        has_primary_participation and not winter_product,
+        winter_rider and winter_product,
+    )
+
+
 def related_ids(page, targets, *preferred_names):
     """Resolve relations by target page ids, even after a property rename."""
     ordered_names = list(preferred_names)
@@ -372,7 +429,15 @@ def team_season_assignments(link_pages, rider_ids, teams, seasons):
 def instagram_handle(url: str | None) -> str | None:
     if not url:
         return None
-    candidate = url.strip().rstrip("/").split("/")[-1].split("?")[0]
+    candidate = url.strip()
+    if "://" in candidate or candidate.lower().startswith(("instagram.com/", "www.instagram.com/")):
+        parsed = urllib.parse.urlparse(candidate if "://" in candidate else "https://" + candidate)
+        if parsed.scheme not in ("http", "https") or parsed.hostname not in ("instagram.com", "www.instagram.com"):
+            return None
+        parts = parsed.path.strip("/").split("/")
+        if len(parts) != 1 or parts[0].lower() in ("p", "reel", "reels", "stories", "explore", "accounts"):
+            return None
+        candidate = parts[0]
     candidate = candidate.lstrip("@")
     # Instagram usernames contain only letters, numbers, periods and
     # underscores. Reject domains and editorial placeholders instead of
@@ -555,7 +620,11 @@ def export(client: Notion):
             disciplines[discipline_id]
             for discipline_id in related_ids(item, disciplines, "Discipline", "Disciplines", "Sport")
         ]
-        if not identifier or not name or not event_ids:
+        # Keep announced competitions even before their Event relations are
+        # populated. Winter series are often created in Notion before their
+        # individual stages, and the public competition directory must still
+        # expose those series as upcoming entries.
+        if not season_is_publishable(identifier, name):
             continue
         seasons[identifier] = {
             "name": name,
@@ -567,7 +636,7 @@ def export(client: Notion):
         for event_id in event_ids:
             event_seasons.setdefault(event_id, identifier)
     if not seasons:
-        raise RuntimeError("No Notion season with visible Event relations was found")
+        raise RuntimeError("No identifiable Notion season was found")
 
     teams = title_map(pages["teams"], "Nom", "Name", "Team")
     countries = title_map(pages["countries"], "Name")
@@ -578,14 +647,54 @@ def export(client: Notion):
     team_history_by_rider, team_link_health = team_season_assignments(
         pages["team_links"], rider_ids, teams, seasons
     )
+    # A Race can be the only reliable link between a Notion Event and its
+    # season (especially for multi-stage Red Bull series). Resolve that link
+    # before building the catalog so those stages are not silently dropped.
+    for race_page in pages["races"]:
+        race_event_ids = list_value(race_page, "🏆 Event ")
+        race_season_ids = related_ids(
+            race_page, seasons, "Season", "Saison", "Competition", "🏆 Season", "🏆 Competition"
+        )
+        if not race_season_ids:
+            continue
+        for event_id in race_event_ids:
+            event_seasons.setdefault(event_id, race_season_ids[0])
+
     events = {
         page_id(item.get("id")): {
             "name": scalar_value(item, "Name competition"),
             "date": scalar_value(item, "Date") or "9999-12-31",
+            "end_date": scalar_value(item, "Date end", "End date") or "",
             "location": event_location(item),
+            "instagram": instagram_handle(scalar_value(item, "Instagram")),
         }
         for item in pages["events"] if page_id(item.get("id")) in event_seasons
     }
+
+    # Cerro Abajo has one parent Event relation for three city stops.  The
+    # Race titles are the authoritative stage names, so expose one synthetic
+    # event record per city while leaving the Notion source read-only.
+    race_stage_ids = {}
+    for race_page in pages["races"]:
+        race_id = page_id(race_page.get("id"))
+        race_name = scalar_value(race_page, "Name") or ""
+        stage_key = cerro_abajo_stage_name(race_name)
+        if not race_id or not stage_key:
+            continue
+        base_event_id = next((identifier for identifier in list_value(race_page, "🏆 Event ") if identifier in events), None)
+        if not base_event_id or not events[base_event_id]["name"].casefold().startswith("cerroabajo"):
+            continue
+        stage_id = f"{base_event_id}:{stage_key}"
+        race_stage_ids[race_id] = stage_id
+        stage = CERRO_ABAJO_STAGES[stage_key]
+        events.setdefault(stage_id, {
+            "name": stage["name"],
+            "date": stage["date"],
+            "end_date": stage["end_date"],
+            "location": stage["location"],
+            "instagram": events[base_event_id].get("instagram"),
+        })
+        event_seasons.setdefault(stage_id, event_seasons.get(base_event_id))
 
     competition_catalog = {"organizations": [], "series": []}
     ordered_seasons = sorted(
@@ -593,7 +702,19 @@ def export(client: Notion):
         key=lambda entry: (not entry[1]["name"].lower().startswith("uci"), entry[1]["name"].lower()),
     )
     for identifier, season in ordered_seasons:
-        event_records = [events[event_id] for event_id in season["event_ids"] if event_id in events]
+        stage_parent_ids = {
+            stage_id.split(":", 1)[0]
+            for stage_id in event_seasons
+            if event_seasons.get(stage_id) == identifier and ":" in stage_id
+        }
+        season_event_ids = list(dict.fromkeys(
+            list(season["event_ids"])
+            + [event_id for event_id, season_id in event_seasons.items() if season_id == identifier]
+        ))
+        # The parent Event is a Notion bookkeeping row when its races already
+        # provide the individual Cerro Abajo city stages.
+        season_event_ids = [event_id for event_id in season_event_ids if event_id not in stage_parent_ids]
+        event_records = [events[event_id] for event_id in season_event_ids if event_id in events]
         sport, discipline = season_sport_and_discipline(season.get("disciplines") or [])
         competition_catalog["series"].append({
             "id": competition_id(season["name"]),
@@ -611,9 +732,11 @@ def export(client: Notion):
 
     races = {}
     for item in pages["races"]:
+        race_id = page_id(item.get("id"))
         event_ids = list_value(item, "🏆 Event ")
-        event_id = next((identifier for identifier in event_ids if identifier in events), None)
-        season_id = event_seasons.get(event_id)
+        base_event_id = next((identifier for identifier in event_ids if identifier in events), None)
+        event_id = race_stage_ids.get(race_id, base_event_id)
+        season_id = event_seasons.get(event_id) or event_seasons.get(base_event_id)
         # The Race database now exposes explicit English property names. Keep
         # the former names as a fallback so an older snapshot still exports.
         phase = scalar_value(item, "Stage", "Sélectionner")
@@ -754,29 +877,32 @@ def export(client: Notion):
         season_id for season_id, season in seasons.items()
         if season_sport_and_discipline(season.get("disciplines") or [])[0] in {"Ski", "Snowboard"}
     }
+    rider_disciplines_by_id = {
+        page_id(item.get("id")): [
+            disciplines[identifier]
+            for identifier in list_value(item, "Discipline")
+            if identifier in disciplines
+        ]
+        for item in pages["riders"]
+    }
     for item in pages["equipment_links"]:
         season_ids = set(list_value(item, "☀️ Saison"))
-        # New equipment links are sometimes created before their season field
-        # is filled in. Keep an explicitly different season isolated, but infer
-        # the active season for an untagged link when the related rider already
-        # participates in, or has a result for, that season. This prevents a
-        # complete rider setup from disappearing because only the link's season
-        # cell was left blank.
-        is_primary_link = not season_ids or primary_season_id in season_ids
-        is_winter_link = bool(season_ids & winter_season_ids)
-        if season_ids and not is_primary_link and not is_winter_link:
+        if season_ids and primary_season_id not in season_ids and not season_ids & winter_season_ids:
             continue
         rider_ids = list_value(item, "🚻 Riders")
-        if not season_ids:
-            rider_ids = [
-                rider_id for rider_id in rider_ids
-                if rider_id in result_rows or rider_id in participations_by_rider
-            ]
         product_ids = list_value(item, "Equipments")
         for rider_id in rider_ids:
             for product_id in product_ids:
                 product = equipment.get(product_id)
                 if product and product.get("category") and (product.get("brand") or product.get("model_detail")):
+                    is_primary_link, is_winter_link = equipment_link_scopes(
+                        season_ids,
+                        product["category"],
+                        rider_disciplines_by_id.get(rider_id, []),
+                        primary_season_id,
+                        winter_season_ids,
+                        rider_id in result_rows or rider_id in participations_by_rider,
+                    )
                     normalized = dict(product)
                     normalized["brand_model"] = ";".join(part for part in (normalized["brand"], normalized["model_detail"]) if part)
                     if is_primary_link:
@@ -816,7 +942,11 @@ def export(client: Notion):
         })
         raw_name = name.strip()
         route_handle = (handle or "").lower().lstrip("@")
-        public_slug = ROUTE_SLUGS_BY_HANDLE.get(route_handle) or slugify(raw_name)
+        public_slug = (
+            ROUTE_SLUGS_BY_HANDLE.get(route_handle)
+            or ROUTE_SLUGS_BY_NAME.get(rider_name_route_key(raw_name))
+            or slugify(raw_name)
+        )
         display_name = PRIORITY_PUBLIC_NAMES.get(public_slug, display_rider_name(raw_name))
         if not display_name:
             continue

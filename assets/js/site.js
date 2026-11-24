@@ -72,22 +72,215 @@
     }
   });
 
-  // Header shadow on scroll
+  // Header shadow and direction-aware visibility on scroll. The header stays
+  // available at the top, hides while reading down the page, and returns as
+  // soon as the visitor makes a meaningful upward scroll.
   safe('header-scroll', function(){
     var header = document.querySelector('header');
     if(!header) return;
+    var lastY = Math.max(0, window.scrollY || 0);
+    var ticking = false;
+    function update(){
+      var currentY = Math.max(0, window.scrollY || 0);
+      var delta = currentY - lastY;
+      var menuOpen = !!document.querySelector('nav.links.open');
+      header.classList.toggle('scrolled', currentY > 8);
+      if(currentY <= 8 || menuOpen){
+        header.classList.remove('nav-hidden');
+      } else if(delta > 6){
+        header.classList.add('nav-hidden');
+      } else if(delta < -6){
+        header.classList.remove('nav-hidden');
+      }
+      lastY = currentY;
+      ticking = false;
+    }
     window.addEventListener('scroll', function(){
-      header.classList.toggle('scrolled', window.scrollY > 8);
+      if(!ticking){
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }
     }, {passive:true});
+    update();
+  });
+
+  // Rider pages get a compact liquid-glass section menu. It is generated from
+  // the sections that are actually present, so winter and summer profiles do
+  // not expose empty links and new equipment groups appear automatically.
+  safe('rider-glass-menu', function(){
+    if(!document.body.classList.contains('rider-page')) return;
+    if(!window.matchMedia || !window.matchMedia('(max-width: 1024px)').matches) return;
+    var main = document.querySelector('main');
+    if(!main || document.querySelector('.rider-glass-menu')) return;
+
+    function slug(value){
+      return String(value || '').toLowerCase().trim()
+        .replace(/&amp;|&/g, 'and').replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'section';
+    }
+    function addId(element, fallback){
+      if(!element) return null;
+      if(!element.id) element.id = fallback;
+      return element.id;
+    }
+
+    var entries = [];
+    var hero = document.querySelector('.rider-hero');
+    if(hero) entries.push({label:'Rider', id:addId(hero, 'rider-profile')});
+
+    [['.bb-frame', 'Frame'], ['.bb-fork', 'Fork'], ['.bb-shock', 'Rear shock']].forEach(function(pair){
+      var part = document.querySelector('.bike-build ' + pair[0]);
+      if(part) entries.push({label:pair[1], id:addId(part, 'equipment-' + slug(pair[1]))});
+    });
+
+    document.querySelectorAll('.equip-group').forEach(function(group){
+      var heading = group.querySelector('h3');
+      var label = heading ? heading.textContent.trim() : '';
+      if(!label) return;
+      entries.push({label:label, id:addId(group, 'equipment-' + slug(label))});
+    });
+
+    var results = document.querySelector('[data-results-table]');
+    if(results){
+      var resultsSection = results.closest('.results-scroll') || results;
+      entries.push({label:'Results', id:addId(resultsSection, 'results')});
+    }
+    if(entries.length < 2) return;
+
+    var nav = document.createElement('nav');
+    nav.className = 'rider-glass-menu';
+    nav.setAttribute('aria-label', 'Rider page sections');
+    nav.innerHTML = '<div class="rider-glass-menu-track">' + entries.map(function(entry){
+      return '<a href="#' + entry.id + '">' + entry.label + '</a>';
+    }).join('') + '</div>';
+    main.appendChild(nav);
+
+    var track = nav.querySelector('.rider-glass-menu-track');
+    var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+    var pageTrack = main.querySelector(':scope > .wrap');
+    var mobileCarousel = window.matchMedia && window.matchMedia('(max-width: 560px)').matches;
+
+    if(mobileCarousel && pageTrack){
+      var resultsHeading = Array.prototype.find.call(pageTrack.querySelectorAll(':scope > .section-head'), function(heading){
+        var title = heading.querySelector('h2');
+        return title && title.textContent.trim().toLowerCase() === 'results';
+      });
+      if(resultsHeading){
+        var resultsPanel = document.createElement('section');
+        resultsPanel.className = 'rider-mobile-panel rider-mobile-results';
+        pageTrack.insertBefore(resultsPanel, resultsHeading);
+        var panelNode = resultsHeading;
+        while(panelNode && !(panelNode.classList && panelNode.classList.contains('rider-related'))){
+          var nextPanelNode = panelNode.nextElementSibling;
+          resultsPanel.appendChild(panelNode);
+          panelNode = nextPanelNode;
+        }
+      }
+    }
+
+    function pageSlideFor(element){
+      if(!pageTrack || !element) return null;
+      var slide = element;
+      while(slide && slide.parentElement !== pageTrack) slide = slide.parentElement;
+      return slide && slide.parentElement === pageTrack ? slide : null;
+    }
+
+    function setActive(link){
+      if(!link) return;
+      links.forEach(function(item){
+        var active = item === link;
+        item.classList.toggle('is-active', active);
+        if(active) item.setAttribute('aria-current', 'location');
+        else item.removeAttribute('aria-current');
+      });
+      if(track && track.scrollWidth > track.clientWidth){
+        var targetLeft = link.offsetLeft - (track.clientWidth - link.offsetWidth) / 2;
+        track.scrollTo({left:Math.max(0, targetLeft), behavior:'smooth'});
+      }
+    }
+    setActive(links[0]);
+
+    links.forEach(function(link){
+      link.addEventListener('click', function(event){
+        setActive(link);
+        if(!mobileCarousel || !pageTrack) return;
+        var target = document.getElementById(link.getAttribute('href').slice(1));
+        var slide = pageSlideFor(target);
+        if(!slide) return;
+        event.preventDefault();
+        pageTrack.scrollTo({left:Math.max(0, slide.offsetLeft - pageTrack.offsetLeft), behavior:'smooth'});
+      });
+    });
+
+    if('IntersectionObserver' in window){
+      var sectionLinks = {};
+      entries.forEach(function(entry, index){ sectionLinks[entry.id] = links[index]; });
+      var observer = new IntersectionObserver(function(changes){
+        var visible = changes.filter(function(change){ return change.isIntersecting; })
+          .sort(function(a, b){
+            var aDistance = mobileCarousel ? Math.abs(a.boundingClientRect.left) : Math.abs(a.boundingClientRect.top);
+            var bDistance = mobileCarousel ? Math.abs(b.boundingClientRect.left) : Math.abs(b.boundingClientRect.top);
+            return aDistance - bDistance;
+          });
+        if(visible[0]) setActive(sectionLinks[visible[0].target.id]);
+      }, mobileCarousel
+        ? {root:pageTrack, rootMargin:'0px -42% 0px -42%', threshold:[0, .15, .5]}
+        : {rootMargin:'-18% 0px -62% 0px', threshold:[0, .15, .5]});
+      entries.forEach(function(entry){
+        var section = document.getElementById(entry.id);
+        if(section) observer.observe(section);
+      });
+    }
+
+    var reducedTransparency = window.matchMedia && window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
+    var saveData = navigator.connection && navigator.connection.saveData;
+    if(reducedTransparency || saveData || !window.WebGLRenderingContext) return;
+
+    nav.dataset.config = JSON.stringify({
+      blurAmount:.12,
+      refraction:.78,
+      chromAberration:.025,
+      edgeHighlight:.12,
+      specular:.18,
+      fresnel:.82,
+      distortion:.012,
+      cornerRadius:34,
+      zRadius:22,
+      saturation:.08,
+      tintStrength:.025,
+      brightness:.035,
+      shadowOpacity:.24,
+      shadowSpread:14,
+      shadowOffsetY:5,
+      button:true
+    });
+
+    var script = document.querySelector('script[src*="assets/js/site.js"]');
+    if(!script || !script.src) return;
+    var moduleUrl = new URL('../vendor/liquidglass/index.js', script.src).href;
+    var fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    fontsReady.then(function(){ return import(moduleUrl); }).then(function(module){
+      return module.LiquidGlass.init({root:main, glassElements:[nav]});
+    }).then(function(instance){
+      nav.classList.add('is-liquidglass-ready');
+      window.__riderLiquidGlass = instance;
+      window.addEventListener('pagehide', function(){ instance.destroy(); }, {once:true});
+    }).catch(function(error){
+      nav.classList.remove('is-liquidglass-ready');
+      console.warn('[site.js] WebGL liquid glass fallback:', error);
+    });
   });
 
   // Mobile nav toggle
   safe('mobile-nav', function(){
     document.querySelectorAll('.competition-menu-year-toggle').forEach(function (button) {
     button.addEventListener('click', function () {
-      var panel = button.nextElementSibling; var open = button.getAttribute('aria-expanded') === 'true';
-      button.setAttribute('aria-expanded', open ? 'false' : 'true'); if (panel) panel.hidden = open;
-      var mark = button.querySelector('span'); if (mark) mark.textContent = open ? '+' : '−';
+      var panel = button.nextElementSibling;
+      var open = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', open ? 'false' : 'true');
+      if (panel) panel.hidden = open;
+      var mark = button.querySelector('span');
+      if (mark) mark.textContent = open ? '+' : '−';
     });
   });
 
@@ -115,19 +308,13 @@
   // query-string copies of every page: those URLs waste crawl budget and do
   // not provide distinct server-rendered content to search engines.
   safe('global-language-switcher', function(){
-    var navIcons = document.querySelector('header .nav-icons');
-    if(!navIcons) return;
+    var footer = document.querySelector('footer .footer-links') || document.querySelector('footer');
+    if(!footer) return;
 
     var languages = [
       ['en', 'en', 'EN', 'English', '🇬🇧'],
       ['fr', 'fr', 'FR', 'Français', '🇫🇷'],
-      ['de', 'de', 'DE', 'Deutsch', '🇩🇪'],
       ['es', 'es', 'ES', 'Español', '🇪🇸'],
-      ['it', 'it', 'IT', 'Italiano', '🇮🇹'],
-      ['pt', 'pt', 'PT', 'Português', '🇵🇹'],
-      ['nl', 'nl', 'NL', 'Nederlands', '🇳🇱'],
-      ['pl', 'pl', 'PL', 'Polski', '🇵🇱'],
-      ['ja', 'ja', 'JA', '日本語', '🇯🇵'],
       ['zh-cn', 'zh-CN', 'ZH', '简体中文', '🇨🇳']
     ];
     var guideMatch = location.pathname.match(/\/guides\/([^/]+)\/?/);
@@ -136,16 +323,18 @@
     var active = languages.filter(function(language){ return language[0] === activeCode; })[0] || languages[0];
     var logo = document.querySelector('header .logo');
     var siteRoot = logo ? new URL(logo.getAttribute('href'), document.baseURI) : new URL('./', document.baseURI);
-    if(!navIcons.querySelector('.header-language')){
-      var details = document.createElement('details');
+    var details = document.querySelector('.header-language');
+    if(!details){
+      details = document.createElement('details');
       details.className = 'header-language';
       details.innerHTML = '<summary aria-label="Change language"><span class="language-flag" aria-hidden="true">' + active[4] + '</span><span>' + active[2] + '</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu" translate="no">' + languages.map(function(language){
         var current = language[0] === activeCode ? ' aria-current="page"' : '';
         var guideUrl = new URL('guides/' + language[0] + '/', siteRoot);
         return '<a href="' + guideUrl.href + '" hreflang="' + language[1] + '" lang="' + language[1] + '"' + current + '><span class="language-flag" aria-hidden="true">' + language[4] + '</span>' + language[3] + '</a>';
       }).join('') + '</div>';
-      navIcons.insertBefore(details, navIcons.firstChild);
     }
+    details.classList.add('footer-language');
+    footer.appendChild(details);
   });
 
   // Scroll-reveal
@@ -276,14 +465,15 @@
       var term = (searchInput && searchInput.value || '').trim().toLowerCase();
       cards.forEach(function(card){
         var cat = card.getAttribute('data-category');
+        var sports = (card.getAttribute('data-sports') || '').split(/\s+/).filter(Boolean);
         var haystack = card.getAttribute('data-search') || '';
-        var matchesFilter = activeFilter === 'all' || cat === activeFilter;
+        var matchesFilter = activeFilter === 'all' || cat === activeFilter || sports.indexOf(activeFilter) !== -1;
         var matchesSearch = !term || haystack.indexOf(term) !== -1;
         card.style.display = (matchesFilter && matchesSearch) ? '' : 'none';
       });
     }
 
-    var filterHashes = {'all':'grid', 'Men Elite':'men', 'Women Elite':'women'};
+    var filterHashes = {'all':'grid', 'Men Elite':'men', 'Women Elite':'women', 'ski':'ski', 'snowboard':'snowboard'};
 
     filterBtns.forEach(function(btn){
       btn.addEventListener('click', function(){
@@ -305,7 +495,7 @@
     // Legacy query-string links remain supported until their 301 redirects
     // have been fully processed by search engines.
     var params = new URLSearchParams(window.location.search);
-    var hashFilters = {'#grid':'all', '#men':'Men Elite', '#women':'Women Elite'};
+    var hashFilters = {'#grid':'all', '#men':'Men Elite', '#women':'Women Elite', '#ski':'ski', '#snowboard':'snowboard'};
     function activateLocationFilter(urlFilter){
       if(!urlFilter) return;
       var match = filterBtns.find(function(b){

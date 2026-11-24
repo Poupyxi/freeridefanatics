@@ -1,0 +1,8 @@
+.not-found-page{min-height:100vh;display:flex;flex-direction:column}
+.not-found{flex:1;padding-top:clamp(40px,8vh,100px);padding-bottom:64px;text-align:center}
+.not-found-code{font-size:clamp(120px,25vw,260px);font-weight:900;line-height:1;margin:16px 0;color:var(--orange,#b7471b);letter-spacing:-.06em}
+.not-found h1{font-size:clamp(28px,5vw,56px);line-height:1.1;margin:20px auto;max-width:800px}
+.not-found-copy{max-width:580px;margin:20px auto 32px;line-height:1.7}
+.not-found-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.not-found-page footer{padding:24px;text-align:center}
+@media(max-width:560px){.not-found-actions{flex-direction:column}.not-found-actions a{width:100%}}

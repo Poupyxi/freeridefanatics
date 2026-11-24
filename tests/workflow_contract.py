@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 workflows = ROOT / ".github" / "workflows"
 actual = {path.name for path in workflows.glob("*.yml")}
 expected = {
+    "audit-equipment-photos.yml",
     "deploy-preprod-drive-ovh.yml",
     "deploy-preprod-ovh.yml",
     "deploy-ovh.yml",

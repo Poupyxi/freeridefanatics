@@ -3,6 +3,7 @@
 
   var dialog;
   var previousFocus;
+  var turnState = null;
   function ordinal(value) {
     var n = Number(value) || 0;
     if (n % 100 >= 11 && n % 100 <= 13) return n + 'th';
@@ -20,6 +21,7 @@
     dialog.innerHTML = '<div class="equipment-lightbox-panel" role="document">' +
       '<button class="equipment-lightbox-close" type="button" aria-label="Close equipment image">×</button>' +
       '<img class="equipment-lightbox-image" alt="">' +
+      '<span class="equipment-turn-hint" aria-hidden="true">Drag to turn</span>' +
       '<h2 class="equipment-lightbox-title" id="equipment-lightbox-title"></h2>' +
       '<p class="equipment-lightbox-stats"></p>' +
       '<p class="equipment-lightbox-leader"><img class="equipment-lightbox-leader-photo" alt=""><span class="equipment-lightbox-leader-copy"></span></p>' +
@@ -42,6 +44,9 @@
     var leaderPhoto = layer.querySelector('.equipment-lightbox-leader-photo');
     var leaderCopy = layer.querySelector('.equipment-lightbox-leader-copy');
     var label = button.getAttribute('data-equipment-title') || 'Equipment';
+    var winterTurn = document.body.classList.contains('season-winter') &&
+      /#(skis|snowboard)$/.test(button.getAttribute('data-equipment-category-url') || '');
+    layer.classList.toggle('equipment-turntable', winterTurn);
     image.src = button.getAttribute('data-equipment-image');
     image.alt = label;
     title.textContent = label;
@@ -70,6 +75,33 @@
     layer.querySelector('.equipment-lightbox-close').focus();
   }
 
+  function bindTurntable() {
+    var layer = createDialog();
+    var image = layer.querySelector('.equipment-lightbox-image');
+    image.addEventListener('pointerdown', function (event) {
+      if (!layer.classList.contains('equipment-turntable')) return;
+      turnState = { x: event.clientX, angle: 0 };
+      image.setPointerCapture(event.pointerId);
+      image.classList.add('is-turning');
+      event.preventDefault();
+    });
+    image.addEventListener('pointermove', function (event) {
+      if (!turnState) return;
+      turnState.angle = Math.max(-32, Math.min(32, (event.clientX - turnState.x) * .18));
+      image.style.setProperty('--turn-angle', turnState.angle + 'deg');
+      image.style.setProperty('--turn-scale', String(1 - Math.abs(turnState.angle) * .003));
+    });
+    function stopTurning() {
+      if (!turnState) return;
+      turnState = null;
+      image.classList.remove('is-turning');
+      image.style.removeProperty('--turn-angle');
+      image.style.removeProperty('--turn-scale');
+    }
+    image.addEventListener('pointerup', stopTurning);
+    image.addEventListener('pointercancel', stopTurning);
+  }
+
   function close() {
     if (!dialog) return;
     dialog.hidden = true;
@@ -86,6 +118,7 @@
       if (trigger) open(trigger);
     }
   });
+  bindTurntable();
   document.addEventListener('keydown', function (event) {
     var card = event.target.closest('[data-equipment-card="true"]');
     if (card && (event.key === 'Enter' || event.key === ' ')) {

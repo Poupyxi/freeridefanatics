@@ -12,7 +12,7 @@ them onto the names build.py looks for. Nothing in the library is modified.
   ~/Desktop/freeride/PictureFaceRiders/@handle.jpg
                                                -> assets/img/riders-action/{slug}.jpg
                                                   (portrait, rider page hero)
-  ~/Desktop/freeride/Equipment/{Cat}/Brand;Model.webp
+  ~/Desktop/freeride/Equipment/{Summer|Winter}/{Cat}/Brand;Model.webp
                                                -> assets/img/equipment/{cat}-{brand}-{model}.jpg
 
 Riders are matched on the Instagram handle already present in riders.json, so
@@ -63,7 +63,13 @@ SRC_PP = portrait_source_folder(LIBRARY, "PPInstaRiders", "PPRiders")
 SRC_ACTION = portrait_source_folder(
     LIBRARY, "PictureFaceRiders", "PictureRiders"
 )
-SRC_EQUIP = os.path.join(LIBRARY, "Equipment")
+# Drive may expose equipment either under the legacy ``Equipment`` folder or
+# directly at the configured root (the current Drive layout uses top-level
+# ``Ski``, ``Snowboard`` and binding folders). Prefer the legacy folder when it
+# exists, otherwise use the root so Notion-linked winter products are found.
+SRC_EQUIP = (os.path.join(LIBRARY, "Equipment")
+             if os.path.isdir(os.path.join(LIBRARY, "Equipment"))
+             else LIBRARY)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.environ.get("RF_DATA_PATH", os.path.join(ROOT, "data", "riders.json"))
@@ -93,6 +99,14 @@ FOLDER_TO_CATEGORY = {
     "Brake": "BrakeLever", "Brake Lever": "BrakeLever", "Grip": "GRIP", "Chain": "CHAIN", "Disk": "Disk",
     "Wheels": "Wheels", "Tires": "Tires", "Pedals": "Pedals",
     "Shoes": "Shoes", "Helmet": "Helmet", "Protection": "Protection", "Goggles": "Goggles",
+    "Ski": "Skis", "Skis": "Skis", "Snowboard": "Snowboard", "Snowboards": "Snowboard",
+    "Ski Bindings": "Bindings", "Snowboard Bindings": "Bindings",
+    "Bindings": "Bindings", "Binding": "Bindings",
+    "Ski Boots": "Ski Boots", "Snowboard Boots": "Snowboard Boots",
+    "Boots": "Boots", "Poles": "Poles", "Ski Poles": "Poles",
+    "Avalanche Safety": "Avalanche Safety", "Avalanche Equipment": "Avalanche Safety",
+    "Avalanche Airbags": "Avalanche Safety",
+    "SacAirbag": "Avalanche Safety", "Airbag": "Avalanche Safety",
 }
 
 # Photo-library names occasionally describe a production family or use a
@@ -104,6 +118,31 @@ PHOTO_ALIASES = {
     # Seatpost filenames now use the official Burgtec spelling and therefore
     # resolve through the exact matcher without an override.
     ("SeatClamp", "burgtec", "seat clamp"): ("burgtech", "seat clamp"),
+    # Verified Drive catalogue names that differ from the shorter or misspelt
+    # Notion references. These mappings are deliberately product-specific so
+    # neighbouring models never inherit the wrong photo.
+    ("Crankset", "5dev", "r spec titanium rawti"): ("5dev", "r spec"),
+    ("Disk", "brembo", "gr pro mtb"): ("brembo gr pro gravity disk", ""),
+    ("BrakeLever", "brembo", "gr pro mtb"): ("brembo gr pro gravity", ""),
+    ("Pedals", "crankbrother", "mallet dh"):
+        ("crankbrothers mallet dh clipless pedals", ""),
+    ("Handlebar", "fsa", "gradientaluminium 40mm 25mm l 31 8 800mm 31 8 760mm noir"):
+        ("fsa", "gradient aluminium"),
+    ("Frame", "gamux", "sego prototype gearbox belt drive"): ("gamux sego", ""),
+    ("Frame", "scott", "scott gambler alloy frame blewitt jess"):
+        ("scott", "gambler alloy frame"),
+    ("Crankset", "nsb", "north shore billet talon crankset"):
+        ("north shore billet", "talon crankset"),
+    ("Stem", "renthal", "integra 45mm zero rise stm107"):
+        ("renthal", "integra 45mm zero rise"),
+    ("Wheels", "reservewheels", "30dhcarbon"): ("reserve", "30dhcarbon"),
+    ("Tires", "schwable", "magic mary"): ("schwalbe", "magic mary"),
+    ("Crankset", "shimano", "saint fc m825"):
+        ("shimano", "shimano saint fc m825 single 10 speed crankset"),
+    ("RearShock", "sram", "vivid coil ultimate"):
+        ("rockshox", "vivid coil ultimate dh"),
+    ("Handlebar", "the gravity cartel", "spike 35 vibrocore"):
+        ("spank spike 35 vibrocore", ""),
     ("Fork", "sr suntour", "rux"): ("sr suntour", "rux38 evo boost eq rc"),
     ("Fork", "sr suntour", "rux 29"): ("sr suntour", "rux38 evo boost eq rc"),
     ("Fork", "sr suntour", "rux 38"): ("sr suntour", "rux38 evo boost eq rc"),
@@ -113,6 +152,7 @@ PHOTO_ALIASES = {
     ("Frame", "norco", "prototype dh"): ("norco", "torrent dh"),
     ("Frame", "norco", "dh prototype"): ("norco", "torrent dh"),
     ("Frame", "specialized", "demo"): ("s works", "demo"),
+    ("Frame", "specialized", "demo 11 ltd jordan williams"): ("s works", "demo 11 ltd jordan williams"),
     ("RearShock", "ohlins", "prototype coil"): ("ohlins", "ttx22 m2 coil"),
     ("RearShock", "float x2 factory", ""): ("fox", "float x2 factory 2026"),
     ("Tires", "continental", "kryptotal"): ("continental", "kryptotal r"),
@@ -147,9 +187,17 @@ PHOTO_ALIASES = {
     ("Wheels", "crankbrothers", "synthesis dh"): ("crankbrother", "synthesis dh alloy 2 0 i9"),
     ("Wheels", "dt swiss", ""): ("dtswiss", "fanatik"),
     ("Wheels", "dt swiss", "ex471 + dt swiss 240"): ("dtswiss", "fanatik"),
+    ("Wheels", "fanatik bike", "ex 471"): ("dtswiss", "fanatik"),
     ("Wheels", "dt swiss", "fr1500 + dt swiss 240"): ("dt swiss", "fr 1500 classic"),
     ("Wheels", "reserve", "30dh carbon"): ("reserve", "30dhcarbon"),
     ("Wheels", "reserve", "carbon dh"): ("reserve", "30dhcarbon"),
+    # Notion keeps the complete commercial names; Drive uses short labels on
+    # these verified Winter photos. Keep the equivalence product-specific.
+    ("Skis", "majesty", "vanguard 108 cti special edition zuza witych"):
+        ("majesty", "vanguard 108 cti zuza witych"),
+    ("Skis", "volkl", "revolte 114 2025"): ("volkl", "revolt 114 2025"),
+    ("Skis", "volkl", "revolte 114"): ("volkl", "revolt 114"),
+    ("Snowboard", "headsnowboard", "e b i lyt 2027"): ("head", "e b i lyt"),
 }
 
 # ---------------------------------------------------------------- helpers
@@ -301,9 +349,34 @@ def save_square(src, dest, size):
         dest, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
 
 def save_fitted(src, dest, max_side):
-    img = load_image(src)
+    ext = os.path.splitext(dest)[1].lower()
+    # Preserve alpha for PNG cut-outs; the generic loader intentionally
+    # flattens transparent images for JPEG portraits and legacy equipment.
+    img = ImageOps.exif_transpose(open_library_image(src)) if ext == ".png" else load_image(src)
     img.thumbnail((max_side, max_side), Image.LANCZOS)
-    img.save(dest, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+    if ext == ".png":
+        # Keep transparent Drive cut-outs as PNG instead of flattening them
+        # into a white JPEG during the import.
+        if img.mode not in ("RGBA", "LA"):
+            img = img.convert("RGBA")
+        img.save(dest, "PNG", optimize=True)
+    else:
+        img.save(dest, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+
+def equipment_output_path(slug, source_path, rider_slug="", category=""):
+    """Use PNG for all winter skis/snowboards and preserve PNG cut-outs."""
+    winter_png = str(category or "").strip().casefold() in {"skis", "snowboard"}
+    ext = ".png" if winter_png or os.path.splitext(source_path)[1].lower() == ".png" else ".jpg"
+    suffix = f"--{rider_slug}" if rider_slug else ""
+    return os.path.join(OUT_EQUIP, f"{slug}{suffix}{ext}")
+
+def remove_equipment_format_siblings(path):
+    """Prevent an older JPG from winning over a newly imported PNG."""
+    stem, current_ext = os.path.splitext(path)
+    for ext in (".jpg", ".jpeg", ".png", ".webp"):
+        candidate = stem + ext
+        if ext != current_ext.lower() and os.path.exists(candidate):
+            os.remove(candidate)
 
 # ---------------------------------------------------------------- riders
 
@@ -448,8 +521,21 @@ def index_library_equipment(riders=()):
     if not os.path.isdir(SRC_EQUIP):
         return index, skipped_folders
 
-    for folder in sorted(os.listdir(SRC_EQUIP)):
-        path = os.path.join(SRC_EQUIP, folder)
+    category_folders = []
+    for season in ("Summer", "Winter"):
+        season_path = os.path.join(SRC_EQUIP, season)
+        if os.path.isdir(season_path):
+            category_folders.extend(
+                (folder, os.path.join(season_path, folder))
+                for folder in sorted(os.listdir(season_path))
+            )
+    # Preserve the previous flat Drive layout while folders are being moved.
+    category_folders.extend(
+        (folder, os.path.join(SRC_EQUIP, folder))
+        for folder in sorted(os.listdir(SRC_EQUIP))
+        if folder not in {"Summer", "Winter"}
+    )
+    for folder, path in category_folders:
         if not os.path.isdir(path):
             continue
         category = FOLDER_TO_CATEGORY.get(folder)
@@ -514,6 +600,10 @@ def pick_photo(candidates, brand, model, rider_slug=""):
         return None
     target_full = f"{brand} {model}".strip()
     compact_brand = compact_text(brand)
+    compact_brand = {
+        "headski": "head",
+        "headsnowboard": "head",
+    }.get(compact_brand, compact_brand)
     compact_model = compact_text(model)
     compact_full = compact_text(target_full)
 
@@ -523,6 +613,11 @@ def pick_photo(candidates, brand, model, rider_slug=""):
     # matching; the public product title remains untouched.
     match_model = norm_text(model)
     model_words = match_model.split()
+    # Notion sometimes records a brake-width code (for example B115) in a
+    # binding title while the Drive filename omits it. It does not identify a
+    # different binding model, so ignore only this exact standalone token for
+    # image matching.
+    model_words = [word for word in model_words if not re.fullmatch(r"b\d{3}", word)]
     while model_words and model_words[0] in {"cadre", "frame"}:
         model_words.pop(0)
     brand_words = norm_text(brand).split()
@@ -589,6 +684,11 @@ def pick_photo(candidates, brand, model, rider_slug=""):
         return min(same_brand, key=lambda c: len(c["full"]))
     return None
 
+def rider_equipment_items(rider):
+    """Include season-linked Notion equipment without mixing its page views."""
+    return (rider.get("equipment") or []) + (rider.get("winter_equipment") or [])
+
+
 def import_equipment(riders, force, dry):
     index, skipped_folders = index_library_equipment(riders)
     if not index:
@@ -598,7 +698,7 @@ def import_equipment(riders, force, dry):
     # every distinct product actually used by a rider
     products = {}
     for r in riders:
-        for item in r.get("equipment") or []:
+        for item in rider_equipment_items(r):
             brand = item.get("brand") or ""
             detail = [p.strip() for p in (item.get("model_detail") or "").split(";") if p.strip()]
             model = detail[0] if detail else ""
@@ -622,7 +722,8 @@ def import_equipment(riders, force, dry):
             missing.append(f"{slug}  ({cat}: {brand} {model})".strip())
             continue
         used_files.add(choice["path"])
-        dest = os.path.join(OUT_EQUIP, f"{slug}.jpg")
+        dest = equipment_output_path(slug, choice["path"], category=cat)
+        remove_equipment_format_siblings(dest)
         if os.path.exists(dest) and not force:
             continue
         if dry:
@@ -639,7 +740,7 @@ def import_equipment(riders, force, dry):
     # public builder resolves ``--<rider-slug>`` first and falls back to the
     # generic filename when no named photo exists.
     for rider in riders:
-        for item in rider.get("equipment") or []:
+        for item in rider_equipment_items(rider):
             detail = [part.strip() for part in (item.get("model_detail") or "").split(";") if part.strip()]
             model = detail[0] if detail else ""
             brand, model = build.canonical_equipment_product(
@@ -653,10 +754,13 @@ def import_equipment(riders, force, dry):
             choice = pick_photo(index.get(category, []), photo_brand, photo_model, rider["slug"])
             if not choice or choice.get("rider_slug") != rider["slug"]:
                 continue
-            destination = os.path.join(
-                OUT_EQUIP,
-                f"{build.equip_image_slug(category, brand, model)}--{rider['slug']}.jpg",
+            destination = equipment_output_path(
+                build.equip_image_slug(category, brand, model),
+                choice["path"],
+                rider["slug"],
+                category,
             )
+            remove_equipment_format_siblings(destination)
             used_files.add(choice["path"])
             if os.path.exists(destination) and not force:
                 continue
@@ -674,7 +778,8 @@ def import_equipment(riders, force, dry):
     # the site generator can compose the two matching product photos.
     for choice in index.get("Tires", []):
         slug = build.equip_image_slug("Tires", choice["brand"], choice["model"])
-        dest = os.path.join(OUT_EQUIP, f"{slug}.jpg")
+        dest = equipment_output_path(slug, choice["path"], category="Tires")
+        remove_equipment_format_siblings(dest)
         if os.path.exists(dest) and not force:
             continue
         if dry:

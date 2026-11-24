@@ -29,6 +29,7 @@ except ImportError:
 FOLDER_MIME = "application/vnd.google-apps.folder"
 READ_ONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly"
 SUPPORTED_MIME = {"image/jpeg", "image/png", "image/webp", "image/avif"}
+SUPPORTED_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".avif"}
 SECTIONS = {
     "brand logo": ("brands", "brands"),
     "competition logo": ("competitions", "competitions"),
@@ -50,6 +51,7 @@ COMPETITION_ALIASES = {
     "redbull-2026": "redbull-2026",
     "redbullcerroabajo2026": "red-bull-cerro-abajo-2026",
     "redbull-rampage-2026": "redbull-rampage-2026",
+    "redbull-hardline-colombie-britannique": "redbull-hardline-2026",
     "red-bull-hardline-colombie-britannique-logo": "redbull-hardline-2026",
     "uci-mountain-bike-world-series-2026": "uci-mtb-world-cup-dh-2026",
 }
@@ -147,7 +149,7 @@ def local_sections(source: Path):
                     "bytes": item.read_bytes(),
                 }
                 for item in sorted(folder.iterdir(), key=lambda path: path.name.casefold())
-                if item.is_file()
+                if item.is_file() and item.suffix.casefold() in SUPPORTED_SUFFIXES
             ]
 
 
@@ -222,6 +224,38 @@ def previous_managed_assets(manifest_path: Path) -> set[str]:
     }
 
 
+def unique_logo_records(section: str, records: list[dict]) -> list[tuple[str, str, dict]]:
+    """Use the newest Drive file when multiple filenames map to one logo key."""
+    selected = {}
+    for record in records:
+        stem = Path(record["name"]).stem
+        key = competition_key(stem) if section == "competitions" else slugify(stem)
+        name = display_name(stem)
+        if section == "competitions":
+            name = COMPETITION_NAMES.get(key, name)
+        elif section == "brands" and key in BRAND_ALIASES:
+            key, name = BRAND_ALIASES[key]
+        if not key:
+            raise RuntimeError(f"Cannot generate a logo key from {record['name']!r}")
+        previous = selected.get(key)
+        rank = (record.get("modifiedTime") or "", record["name"].casefold(), record.get("id") or "")
+        if previous:
+            previous_rank = (
+                previous[2].get("modifiedTime") or "",
+                previous[2]["name"].casefold(),
+                previous[2].get("id") or "",
+            )
+            if rank > previous_rank:
+                selected[key] = (key, name, record)
+                kept, skipped = record["name"], previous[2]["name"]
+            else:
+                kept, skipped = previous[2]["name"], record["name"]
+            print(f"Warning: duplicate {section} logo key {key!r}; keeping {kept!r}, skipping {skipped!r}")
+        else:
+            selected[key] = (key, name, record)
+    return [selected[key] for key in sorted(selected)]
+
+
 def synchronize(sections, root: Path, manifest_path: Path, source_folder_id: str | None):
     manifest = {
         "source": "google-drive-read-only",
@@ -229,23 +263,10 @@ def synchronize(sections, root: Path, manifest_path: Path, source_folder_id: str
         "access_scope": READ_ONLY_SCOPE,
         "logos": {"brands": [], "competitions": [], "teams": []},
     }
-    seen = {section: set() for section in manifest["logos"]}
     generated_assets = set()
 
     for section, output_folder, records in sections:
-        for record in sorted(records, key=lambda item: item["name"].casefold()):
-            stem = Path(record["name"]).stem
-            key = competition_key(stem) if section == "competitions" else slugify(stem)
-            name = display_name(stem)
-            if section == "competitions":
-                name = COMPETITION_NAMES.get(key, name)
-            elif section == "brands" and key in BRAND_ALIASES:
-                key, name = BRAND_ALIASES[key]
-            if not key:
-                raise RuntimeError(f"Cannot generate a logo key from {record['name']!r}")
-            if key in seen[section]:
-                raise RuntimeError(f"Duplicate {section} logo key {key!r}")
-            seen[section].add(key)
+        for key, name, record in unique_logo_records(section, records):
             converted = to_webp(record["bytes"])
             relative = f"assets/img/{output_folder}/{key}.webp"
             destination = root / relative
@@ -272,7 +293,23 @@ def synchronize(sections, root: Path, manifest_path: Path, source_folder_id: str
     competition_keys = {entry["key"] for entry in manifest["logos"]["competitions"]}
     missing_competitions = sorted(REQUIRED_COMPETITION_KEYS - competition_keys)
     if missing_competitions:
-        raise RuntimeError(f"Required competition logos are missing: {', '.join(missing_competitions)}")
+        # A missing Drive logo must not block an otherwise valid image sync.
+        # Reuse the parent Red Bull mark (or the closest available entry) so
+        # build.py can apply its normal edition/event fallback rules.
+        available = {entry["key"]: entry for entry in manifest["logos"]["competitions"]}
+        fallback = available.get("redbull-2026") or next(iter(available.values()), None)
+        if fallback is None:
+            raise RuntimeError("No competition logo is available for fallback")
+        for missing_key in missing_competitions:
+            alias = dict(fallback)
+            alias["key"] = missing_key
+            alias["name"] = COMPETITION_NAMES.get(missing_key, missing_key)
+            alias["fallback"] = True
+            manifest["logos"]["competitions"].append(alias)
+        print(
+            "Warning: missing Drive competition logos; using fallback assets for "
+            + ", ".join(missing_competitions)
+        )
 
     for stale in previous_managed_assets(manifest_path) - generated_assets:
         stale_path = root / stale

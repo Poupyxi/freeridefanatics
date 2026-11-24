@@ -50,10 +50,19 @@ for page in root.rglob("*.html"):
     assert ad_placement_count(source) == 1, f"Duplicate ad placement: {page.relative_to(root)}"
     assert source.index('class="rider-ad') < source.index('<footer>'), f"Ad must precede footer: {page.relative_to(root)}"
 assert complete_pages
-assert red_bull.is_file()
-assert red_bull_rounds.joinpath("cerroabajo-2026.html").is_file()
-assert red_bull_rounds.joinpath("rampage-2026.html").is_file()
-assert red_bull_rounds.joinpath("hardline-2026.html").is_file()
+if red_bull.is_file():
+    # Legacy umbrella layout: Red Bull is one competition with three rounds.
+    assert red_bull_rounds.joinpath("cerroabajo-2026.html").is_file()
+    assert red_bull_rounds.joinpath("rampage-2026.html").is_file()
+    assert red_bull_rounds.joinpath("hardline-2026.html").is_file()
+else:
+    # Current Notion layout: each Red Bull discipline is an independent
+    # competition. Keep the environment contract compatible with both layouts
+    # while still requiring all three public competition pages.
+    competition_pages = list((root / "competitions").glob("*.html"))
+    for tokens in (("cerro", "abajo"), ("rampage",), ("hardline",)):
+        assert any(all(token in page.stem.lower() for token in tokens)
+                   for page in competition_pages), tokens
 
 if environment == "preprod":
     assert "noindex,nofollow,noarchive" in home
@@ -61,13 +70,14 @@ if environment == "preprod":
     assert "sibforms.com" not in home
     assert "pagead2.googlesyndication.com" not in home
     assert cmp_marker not in home
+    assert (root / "winter" / "riders.html").is_file()
+    assert (root / "winter" / "competitions.html").is_file()
+    assert (root / "winter" / "equipment.html").is_file()
 else:
     assert "Allow: /" in robots
     assert "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" not in home
     assert cmp_marker in home
-    # Winter and the seasonal homepage direction remain preproduction-only.
-    # A promotion may share the same source revision, but production must keep
-    # the established Summer homepage and must not expose Winter navigation.
+    # The promoted site exposes the validated Winter season alongside Summer.
     for marker in (
         'class="season-switch"',
         'seasonal-home.css',
@@ -76,7 +86,20 @@ else:
         'data-season-scope="winter"',
         'href="winter/',
     ):
-        assert marker not in home, f"Preproduction-only seasonal marker leaked to production: {marker}"
-    assert not (root / "winter").exists(), "Winter routes must not be generated in production"
+        assert marker in home, f"Winter production marker is missing: {marker}"
+    for route in (
+        root / "competitions" / "beyondgravity-2027.html",
+        root / "competitions" / "crankworkx-2027.html",
+        root / "competitions" / "uci-world-series-cc-2027.html",
+        root / "competitions" / "uci-world-series-dh-2027.html",
+        root / "winter" / "riders.html",
+        root / "winter" / "competitions.html",
+        root / "winter" / "equipment.html",
+        root / "winter" / "competitions" / "freerideworldtour-2027.html",
+        root / "winter" / "competitions" / "kings-queens-of-corbet-s-2027.html",
+        root / "winter" / "competitions" / "natural-selection-2027.html",
+        root / "winter" / "competitions" / "scandinavian-big-mountain-championships-2027.html",
+    ):
+        assert route.is_file(), f"Winter production route is missing: {route.relative_to(root)}"
 
 print(f"Environment visibility checks passed for {environment}.")

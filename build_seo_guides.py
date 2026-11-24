@@ -78,6 +78,7 @@ SEO_TITLES = {
 }
 
 def page(lang, d):
+    selector_languages = ("fr", "en", "es", "zh-cn") if IS_PREPROD else ORDER
     path = f"/guides/{lang}/"
     alternates = "\n".join(f'<link rel="alternate" hreflang="{HREFLANG.get(code, code)}" href="{BASE}/guides/{code}/">' for code in ORDER)
     alternates += f'\n<link rel="alternate" hreflang="x-default" href="{BASE}/guides/en/">'
@@ -86,9 +87,9 @@ def page(lang, d):
     breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"RidersFanatics","item":BASE+"/"},{"@type":"ListItem","position":2,"name":d["title"],"item":BASE+path}]}
     sections = "\n".join(f'<section id="s{i}"><h2>{escape(h)}</h2>'+"".join(f'<p>{escape(p)}</p>' for p in ps)+"</section>" for i,(h,ps) in enumerate(d["sections"],1))
     toc = "".join(f'<a href="#s{i}">{escape(h)}</a>' for i,(h,_) in enumerate(d["sections"],1))
-    langs = "".join(f'<a href="../{code}/" hreflang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'>{escape(LANGS[code]["name"])}</a>' for code in ORDER)
+    langs = "".join(f'<a href="../{code}/" hreflang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'>{escape(LANGS[code]["name"])}</a>' for code in selector_languages)
     active_lang = "ZH" if lang == "zh-cn" else lang.upper()
-    header_langs = "".join(f'<a href="../{code}/" lang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[code]}</span>{escape(LANGS[code]["name"])}</a>' for code in ORDER)
+    header_langs = "".join(f'<a href="../{code}/" lang="{HREFLANG.get(code, code)}"'+(' aria-current="page"' if code==lang else '')+f'><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[code]}</span>{escape(LANGS[code]["name"])}</a>' for code in selector_languages)
     language_switcher = f'<details class="header-language"><summary aria-label="Change language"><span class="language-flag" aria-hidden="true">{LANGUAGE_FLAGS[lang]}</span><span>{active_lang}</span><span aria-hidden="true">⌄</span></summary><div class="header-language-menu">{header_langs}</div></details>'
     season_switch = ""
     season_script = ""

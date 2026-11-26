@@ -4,9 +4,14 @@
   var script=document.currentScript;
   var root=new URL('../../',script.src);
   var originals=new WeakMap(), attributes=new WeakMap(), language='en', catalog={};
+  function isTranslatablePage(){
+    var path=location.pathname.replace(/^\/winter(?=\/|$)/,'');
+    return /^\/(?:competitions(?:\/|\.html)|equipment(?:\/|\.html))/.test(path);
+  }
   function excluded(node){return node.parentElement && node.parentElement.closest('script,style,svg,code,pre,[translate="no"],.header-language-menu,.logo,.rider-meta a,.equip-item h4,.winter-brand-thumb');}
   function phrase(value){var key=value.trim();return catalog[key] ? value.replace(key,catalog[key]) : value;}
   function render(){
+    if(!isTranslatablePage())return;
     document.documentElement.lang=language;
     var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),node;
     while((node=walker.nextNode())){

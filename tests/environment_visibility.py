@@ -50,7 +50,7 @@ for page in root.rglob("*.html"):
     assert ad_placement_count(source) == 1, f"Duplicate ad placement: {page.relative_to(root)}"
     assert source.index('class="rider-ad') < source.index('<footer>'), f"Ad must precede footer: {page.relative_to(root)}"
 assert complete_pages
-if red_bull.is_file():
+if red_bull.is_file() and "have separate event pages and rankings" not in red_bull.read_text(encoding="utf-8"):
     # Legacy umbrella layout: Red Bull is one competition with three rounds.
     assert red_bull_rounds.joinpath("cerroabajo-2026.html").is_file()
     assert red_bull_rounds.joinpath("rampage-2026.html").is_file()

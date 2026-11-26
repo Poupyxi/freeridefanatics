@@ -35,7 +35,7 @@ RewriteCond %{QUERY_STRING} (^|&)filter= [NC]
 RewriteRule ^riders\.html$ https://ridersfanatics.com/riders.html [R=301,L,NE,QSD]
 # Serve the translation catalogs and the public synchronization receipt. All
 # other JSON files remain forbidden.
-RewriteRule ^assets/i18n/(de|es|es-overrides|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn)\.json$ - [L,NC]
+RewriteRule ^assets/i18n/(de|es|es-overrides|fr|fr-overrides|it|ja|nl|pl|pt|zh-cn|zh-cn-overrides)\.json$ - [L,NC]
 RewriteRule ^notion-sync-metadata\.json$ - [L,NC]
 RewriteRule ^deployment-(?:health|manifest)\.json$ - [L,NC]
 RewriteRule \.json$ - [F,L,NC]

@@ -1,4 +1,4 @@
-/* Preproduction-only French/Spanish interface; no crawlable language URL variants. */
+/* Preproduction-only French/Spanish/Chinese interface; no crawlable language URL variants. */
 (function(){
   'use strict';
   var script=document.currentScript;
@@ -31,16 +31,17 @@
       });attributes.set(el,saved);
     });
     var summary=document.querySelector('.header-language summary');
-    var label=language==='fr'?'🇫🇷 FR ⌄':language==='es'?'🇪🇸 ES ⌄':'🇬🇧 EN ⌄';
+    var label=language==='fr'?'🇫🇷 FR ⌄':language==='es'?'🇪🇸 ES ⌄':language==='zh-cn'?'🇨🇳 ZH ⌄':'🇬🇧 EN ⌄';
     if(summary && summary.textContent!==label)summary.textContent=label;
   }
   function select(value){language=value;catalog=catalogs[value]||{};try{localStorage.setItem('rf-preview-language',value);}catch(e){} render();}
-  Promise.all(['fr.json','fr-overrides.json','es.json','es-overrides.json'].map(function(file){return fetch(new URL('assets/i18n/'+file,root)).then(function(r){if(!r.ok)throw Error('Language catalog unavailable');return r.json();});})).then(function(data){
+  Promise.all(['fr.json','fr-overrides.json','es.json','es-overrides.json','zh-cn.json','zh-cn-overrides.json'].map(function(file){return fetch(new URL('assets/i18n/'+file,root)).then(function(r){if(!r.ok)throw Error('Language catalog unavailable');return r.json();});})).then(function(data){
     catalogs.fr=Object.assign({},data[0],data[1],{'CAN':'CAN','USA':'USA','Amazon':'Amazon','Pro':'Pro','Home':'Accueil','Points':'Points','Round':'Manche','Rounds':'Manches','Rider':'Pilote','Riders':'Pilotes','riders':'pilotes','Share setup':'Partager les équipements','Share competition':'Partager la compétition','Add calendar':'Ajouter au calendrier','Details':'Détails','Skis & Snowboards':'Skis et snowboards','Random skier':'Skieur au hasard','Random snowboarder':'Snowboardeur au hasard','Equipment':'Équipement','Global ranking':'Classement général','Qualifier':'Qualifications','Final':'Finale','Coming soon':'À venir','Used by':'Utilisé par'});
     catalogs.es=Object.assign({},data[2],data[3],{'CAN':'CAN','USA':'EE. UU.','Amazon':'Amazon','Pro':'Pro','Home':'Inicio','Points':'Puntos','Round':'Ronda','Rounds':'Rondas','Rider':'Piloto','Riders':'Pilotos','riders':'pilotos','Share setup':'Compartir el equipamiento','Share competition':'Compartir la competición','Add calendar':'Añadir al calendario','Details':'Detalles','Skis & Snowboards':'Esquís y snowboards','Random skier':'Esquiador aleatorio','Random snowboarder':'Snowboarder aleatorio','Equipment':'Equipamiento','Global ranking':'Clasificación general','Qualifier':'Clasificación','Final':'Final','Coming soon':'Próximamente','Used by':'Usado por'});
-    try{var saved=localStorage.getItem('rf-preview-language');language=saved==='fr'||saved==='es'?saved:'en';}catch(e){}
+    catalogs['zh-cn']=Object.assign({},data[4],data[5],{'CAN':'CAN','USA':'美国','Amazon':'Amazon','Pro':'职业','Home':'首页','Points':'积分','Round':'分站','Rounds':'分站赛','Rider':'车手','Riders':'车手','riders':'车手','Share setup':'分享装备','Share competition':'分享比赛','Add calendar':'添加到日历','Details':'详情','Skis & Snowboards':'滑雪板与单板滑雪板','Random skier':'随机滑雪者','Random snowboarder':'随机单板滑雪者','Equipment':'装备','Global ranking':'总排名','Qualifier':'资格赛','Final':'决赛','Coming soon':'即将开始','Used by':'使用者'});
+    try{var saved=localStorage.getItem('rf-preview-language');language=saved==='fr'||saved==='es'||saved==='zh-cn'?saved:'en';}catch(e){}
     catalog=catalogs[language]||{};
-    document.addEventListener('click',function(event){var link=event.target.closest('.header-language-menu a');if(!link)return;var code=link.getAttribute('lang');if(code==='fr'||code==='es'||code==='en'){event.preventDefault();select(code);link.closest('details').open=false;}},true);
+    document.addEventListener('click',function(event){var link=event.target.closest('.header-language-menu a');if(!link)return;var code=link.getAttribute('lang').toLowerCase();if(code==='fr'||code==='es'||code==='en'||code==='zh-cn'){event.preventDefault();select(code);link.closest('details').open=false;}},true);
     render();
     var pending=false;new MutationObserver(function(){if(pending)return;pending=true;requestAnimationFrame(function(){pending=false;render();});}).observe(document.body,{childList:true,subtree:true});
   }).catch(function(error){console.warn(error.message);});

@@ -81,7 +81,8 @@ assert "test -f competitions/beyondgravity.html" not in production, (
 assert "ridersfanatics.com/competitions/beyondgravity.html" not in production, (
     "Draft 2027 competitions must not be required by live production verification"
 )
-assert "<h1>UCI World Series - 2026 standings." in production
+assert "grep -Fqi 'UCI World Series'" in production
+assert "grep -Fqi 'Standings'" in production
 assert 'select(.event != "pull_request")' in production
 assert "actions/runs/$candidate/artifacts?per_page=100" in production
 assert 'actions/runs?status=success&per_page=100' in production

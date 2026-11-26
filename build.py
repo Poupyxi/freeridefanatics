@@ -1961,8 +1961,8 @@ def competition_events(riders, competition_name):
 def competition_page_events(riders, competition):
     """Show all scheduled RedBull events, including those without results yet."""
     recorded = competition_events(riders, competition["name"])
-    if competition["id"] != "redbull-2026" and not IS_PREPROD:
-        return recorded
+    # Calendar cards already link to scheduled events. Generate their pages
+    # even before results exist, otherwise those public links lead to 404s.
     scheduled = [event.get("name") for event in competition.get("events", []) if event.get("name")]
     return list(dict.fromkeys(scheduled + recorded))
 
@@ -2419,11 +2419,26 @@ def ranking_share_assets(riders, competition, prefix, event=None):
             f'<script src="{prefix}assets/js/ranking-share.js?v=13" defer></script>')
 
 
+def build_redbull_legacy_hub(competitions):
+    """Keep the former umbrella URL useful after its events became series."""
+    children = [c for c in competitions if c.get("id") in {
+        "redbull-cerroabajo-2026", "redbull-rampage-2026", "redbull-hardline-2026"}]
+    if not children:
+        return ""
+    html = head("Red Bull 2026 Events | RidersFanatics",
+                "Explore Red Bull Cerro Abajo, Rampage and Hardline events, riders and recorded results.",
+                "../", canonical_path="/competitions/redbull-2026.html")
+    html += header_html("../", active="competitions")
+    links = "".join(f'<li><a href="{esc_attr(c["id"])}.html">{esc(c["name"])}</a></li>' for c in children)
+    html += f'<main class="section"><div class="wrap"><div class="label">2026 events</div><h1>Red Bull</h1><p>Cerro Abajo, Rampage and Hardline have separate event pages and rankings.</p><ul>{links}</ul></div></main>'
+    return html + footer_html("../")
+
+
 def build_competition_round(riders, competition, event, round_number, events, winter=False):
     """One crawlable page per recorded round or scheduled RedBull event."""
     name = competition["name"]
     cid = competition["id"]
-    slug = competition_round_slug(event)
+    slug = competition_round_path_slug(competition, event)
     route_root = "/winter" if winter else ""
     path = f"{route_root}/competitions/{cid}/rounds/{slug}.html"
     asset_prefix = "../../../../" if winter else "../../../"
@@ -5992,6 +6007,12 @@ def main():
         filename = f"{equip_image_slug(category, '', '')}.html"
         with open(os.path.join(EQUIPMENT_DIR, filename), "w", encoding="utf-8") as f:
             f.write(build_equipment_category_page(category, products))
+
+    if not any(c.get("id") == "redbull-2026" for c in COMPETITIONS):
+        legacy_hub = build_redbull_legacy_hub(COMPETITIONS)
+        if legacy_hub:
+            with open(os.path.join(COMPETITIONS_DIR, "redbull-2026.html"), "w", encoding="utf-8") as f:
+                f.write(legacy_hub)
 
     for filename, content in build_trust_pages().items():
         with open(os.path.join(ROOT, filename), "w", encoding="utf-8") as f:

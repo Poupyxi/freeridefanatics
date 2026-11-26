@@ -1961,8 +1961,8 @@ def competition_events(riders, competition_name):
 def competition_page_events(riders, competition):
     """Show all scheduled RedBull events, including those without results yet."""
     recorded = competition_events(riders, competition["name"])
-    if competition["id"] != "redbull-2026" and not IS_PREPROD:
-        return recorded
+    # Calendar cards already link to scheduled events. Generate their pages
+    # even before results exist, otherwise those public links lead to 404s.
     scheduled = [event.get("name") for event in competition.get("events", []) if event.get("name")]
     return list(dict.fromkeys(scheduled + recorded))
 

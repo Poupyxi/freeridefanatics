@@ -13,3 +13,7 @@ for name in ('La Thuile','Lake Placid','Lenzerheide','Leogang','Les Gets','Loude
     assert f'rel="canonical" href="{build.SITE_URL}{route}"' in page, route
     assert '-2026.html' not in route
 print('All nine UCI round canonical routes match generated filenames.')
+scheduled = {'id':'freerideworldtour-2027', 'name':'Freeride World Tour',
+             'events':[{'name':'Val Thorens Pro 2027'}]}
+assert 'Val Thorens Pro 2027' in build.competition_page_events([], scheduled)
+print('Scheduled winter events receive pages before results exist.')

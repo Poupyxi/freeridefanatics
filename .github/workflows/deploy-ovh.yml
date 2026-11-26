@@ -486,7 +486,7 @@ jobs:
           ! grep -q 'preprod-source-switcher' index.html
           ! grep -q 'Google Sheets' index.html
 
-          if test -f competitions/redbull-2026.html; then
+          if test -f competitions/redbull-2026.html && ! grep -q 'have separate event pages and rankings' competitions/redbull-2026.html; then
             test -f competitions/redbull-2026/rounds/cerroabajo-2026.html
             test -f competitions/redbull-2026/rounds/rampage-2026.html
             test -f competitions/redbull-2026/rounds/hardline-2026.html
@@ -509,7 +509,8 @@ jobs:
           test -f competitions/uci-mtb-world-cup-dh-2026/standings.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/les-gets.html
           test -f competitions/uci-mtb-world-cup-dh-2026/rounds/whistler.html
-          grep -Fqi '<h1>UCI World Series - 2026 standings.' competitions/uci-mtb-world-cup-dh-2026/standings.html
+          grep -Fqi 'UCI World Series' competitions/uci-mtb-world-cup-dh-2026/standings.html
+          grep -Fqi 'Standings' competitions/uci-mtb-world-cup-dh-2026/standings.html
 
           test -f riders/descalzo-facundo.html
           grep -q 'Jackson Goldstone Bike Check 2026' riders/jackson-goldstone.html

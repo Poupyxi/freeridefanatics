@@ -320,13 +320,7 @@
     var languages = [
       ['en', 'en', 'EN', 'English', '🇬🇧'],
       ['fr', 'fr', 'FR', 'Français', '🇫🇷'],
-      ['de', 'de', 'DE', 'Deutsch', '🇩🇪'],
       ['es', 'es', 'ES', 'Español', '🇪🇸'],
-      ['it', 'it', 'IT', 'Italiano', '🇮🇹'],
-      ['pt', 'pt', 'PT', 'Português', '🇵🇹'],
-      ['nl', 'nl', 'NL', 'Nederlands', '🇳🇱'],
-      ['pl', 'pl', 'PL', 'Polski', '🇵🇱'],
-      ['ja', 'ja', 'JA', '日本語', '🇯🇵'],
       ['zh-cn', 'zh-CN', 'ZH', '简体中文', '🇨🇳']
     ];
     var guideMatch = location.pathname.match(/\/guides\/([^/]+)\/?/);

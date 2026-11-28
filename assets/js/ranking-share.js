@@ -149,46 +149,81 @@
     if(text.includes('ski'))return 'SKI';
     return String(value||'EVENT').replace(/bike\s*/i,'').slice(0,8).toUpperCase();
   }
+  const MEDALS=['#d4a537','#b8bcc2','#b8743d'];
+  function centered(ctx,label,x,y,width,size,weight){
+    let font=size;
+    do{ctx.font=weight+' '+font+'px Arial, sans-serif';font--;}while(ctx.measureText(label).width>width&&font>14);
+    ctx.textAlign='center';ctx.fillText(label,x,y);ctx.textAlign='left';
+  }
+  function rightText(ctx,label,x,y,width,size,weight){
+    let font=size;
+    do{ctx.font=weight+' '+font+'px Arial, sans-serif';font--;}while(ctx.measureText(label).width>width&&font>14);
+    ctx.textAlign='right';ctx.fillText(label,x,y);ctx.textAlign='left';
+  }
+  function drawLogo(ctx,img,x,y,maxWidth,maxHeight,align){
+    if(!img)return;
+    const scale=Math.min(maxWidth/img.width,maxHeight/img.height),w=img.width*scale,h=img.height*scale;
+    ctx.drawImage(img,align==='right'?x-w:x,y+(maxHeight-h)/2,w,h);
+  }
+  function portrait(ctx,img,cx,cy,radius,ring,name){
+    ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.closePath();ctx.fillStyle='#2c2724';ctx.fill();ctx.clip();
+    if(img){const side=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,cx-radius,cy-radius,radius*2,radius*2);}
+    else{ctx.fillStyle='#a99f94';centered(ctx,String(name||'?').charAt(0),cx,cy+radius*.35,radius,radius,700);}
+    ctx.restore();
+    if(ring){ctx.strokeStyle=ring;ctx.lineWidth=4;ctx.beginPath();ctx.arc(cx,cy,radius+2,0,Math.PI*2);ctx.stroke();}
+  }
+  function points(value){const number=Number(String(value||'').replace(/[^\d.-]/g,''));return String(value||'').trim()&&Number.isFinite(number)?number:null;}
+  function gapLabel(lead,value,metric){
+    if(metric!=='PTS')return '';
+    const first=points(lead),current=points(value);
+    if(first===null||current===null)return '';
+    return first===current?'=':'−'+(first-current);
+  }
+  // Dark mountain backdrop shared with the competition card, with the top three as a podium on the first image.
   async function draw(rows, index, count, height, context) {
     const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#f5f1e9'; ctx.fillRect(0, 0, 1080, height);
-    ctx.fillStyle = '#17181b';
-    const logo = await loadImage(context.logo);
-    if (logo) {
-      const scale = Math.min(270 / logo.width, 120 / logo.height);
-      ctx.drawImage(logo, 54, 40, logo.width * scale, logo.height * scale);
-    } else fit(ctx, 'COMPETITION', 54, 95, 300, 24, true);
-    fit(ctx, 'RIDERSFANATICS', 690, 85, 336, 26, true);
-    ctx.fillStyle = '#b4491c'; ctx.fillRect(54, 180, 7, 110);
-    ctx.fillStyle = '#17181b';
-    fit(ctx, context.title.toUpperCase(), 82, 217, 944, 46, true);
-    fit(ctx, context.subtitle.toUpperCase(), 82, 268, 944, 26);
-    const top = 330, rowHeight = (height - top - 104) / 10;
-    const metric = rows.find(row => row.metric)?.metric || '';
-    fit(ctx, '#', 64, top - 17, 85, 23, true);
-    fit(ctx, context.team ? 'TEAM' : 'RIDER', 260, top - 17, 530, 23, true);
-    fit(ctx, metric, 866, top - 17, 170, 23, true);
-    const images = await Promise.all(rows.map(row => loadImage(row.photo)));
-    rows.forEach((row, i) => {
-      const y = top + i * rowHeight, baseline = y + rowHeight * .64;
-      ctx.strokeStyle = '#aca79f'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(54,y); ctx.lineTo(1026,y); ctx.stroke();
-      ctx.fillStyle = index === 0 && i < 3 ? '#b4491c' : '#17181b';
-      fit(ctx, row.rank, 64, baseline, 98, 31, true);
-      const radius = Math.min(25, rowHeight * .34), cy = y + rowHeight / 2;
-      ctx.save(); ctx.beginPath(); ctx.arc(200, cy, radius, 0, Math.PI * 2); ctx.clip();
-      const img = images[i];
-      if (img) { const side = Math.min(img.width, img.height); ctx.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,200-radius,cy-radius,radius*2,radius*2); }
-      else { ctx.fillStyle = '#ddd8ce'; ctx.fillRect(170,y,60,rowHeight); ctx.fillStyle='#777'; fit(ctx,row.name.charAt(0),190,baseline,26,23,true); }
-      ctx.restore();
-      ctx.fillStyle = '#17181b';
-      ctx.font = '30px Arial'; ctx.fillText(flag(row.country), 246, baseline);
-      fit(ctx,row.name,306,baseline,530,30,true);
-      fit(ctx,row.value,866,baseline,160,29);
+    const ctx = canvas.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,'#111214');gradient.addColorStop(.55,'#1b1816');gradient.addColorStop(1,'#090a0b');
+    ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,height);
+    ctx.fillStyle='#231e1a';ctx.beginPath();ctx.moveTo(0,height*.45);ctx.lineTo(210,height*.25);ctx.lineTo(390,height*.4);ctx.lineTo(620,height*.18);ctx.lineTo(880,height*.42);ctx.lineTo(1080,height*.28);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
+    ctx.fillStyle='#191614';ctx.beginPath();ctx.moveTo(0,height*.62);ctx.lineTo(260,height*.44);ctx.lineTo(450,height*.58);ctx.lineTo(720,height*.4);ctx.lineTo(1080,height*.6);ctx.lineTo(1080,height);ctx.lineTo(0,height);ctx.fill();
+    const [logo,brand,images]=await Promise.all([loadImage(context.logo),loadImage(context.brandLogo),Promise.all(rows.map(row=>loadImage(row.photo)))]);
+    ctx.fillStyle='#f5f1e9';ctx.beginPath();ctx.roundRect(54,36,300,84,14);ctx.fill();
+    if(logo)drawLogo(ctx,logo,68,44,272,68);else{ctx.fillStyle='#17181b';fit(ctx,'COMPETITION',74,92,260,24,true);}
+    if(brand)drawLogo(ctx,brand,1026,26,104,104,'right');else{ctx.fillStyle='#f5f1e9';rightText(ctx,'RIDERSFANATICS',1026,92,300,24,700);}
+    ctx.fillStyle='#f5f1e9';centered(ctx,context.title.toUpperCase(),540,178,960,44,800);
+    ctx.fillStyle='#c9c0b5';centered(ctx,context.subtitle.toUpperCase(),540,214,960,22,600);
+    ctx.fillStyle='#b4491c';ctx.fillRect(486,236,54,5);ctx.fillStyle='#e8dfd1';ctx.fillRect(540,236,54,5);
+    const metric=rows.find(row=>row.metric)?.metric||'';
+    const podium=index===0&&!context.team&&rows.length>=3?3:0;
+    if(podium){
+      [[0,540,362,96],[1,240,400,80],[2,840,420,74]].forEach(([i,cx,cy,radius])=>{
+        const row=rows[i];
+        ctx.save();ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=30;ctx.fillStyle='#000';ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.restore();
+        portrait(ctx,images[i],cx,cy,radius,MEDALS[i],row.name);
+        ctx.fillStyle=MEDALS[i];ctx.beginPath();ctx.arc(cx+radius*.72,cy+radius*.72,24,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#17181b';centered(ctx,String(row.rank||i+1).replace(/^0+/,''),cx+radius*.72,cy+radius*.72+10,40,28,800);
+        ctx.fillStyle='#f5f1e9';centered(ctx,(flag(row.country)+' '+row.name).trim(),cx,cy+radius+52,300,i?27:31,700);
+        ctx.fillStyle=MEDALS[i];centered(ctx,row.value+(metric==='PTS'?' PTS':''),cx,cy+radius+88,300,i?24:28,800);
+      });
+    }
+    const list=rows.slice(podium),top=podium?668:276,footer=height-118;
+    const rowHeight=Math.min(podium?78:86,(footer-top)/Math.max(list.length,1));
+    list.forEach((row,k)=>{
+      const i=k+podium,y=top+k*rowHeight,cy=y+rowHeight/2,baseline=cy+11,medal=index===0&&i<3?MEDALS[i]:'';
+      ctx.fillStyle=medal?'#2a2420ee':(k%2?'#151416dd':'#1f1b19dd');ctx.beginPath();ctx.roundRect(54,y+4,972,rowHeight-8,12);ctx.fill();
+      if(medal){ctx.fillStyle=medal;ctx.fillRect(54,y+4,8,rowHeight-8);}
+      ctx.fillStyle=medal||'#a99f94';fit(ctx,String(row.rank).padStart(2,'0'),80,baseline,70,30,true);
+      portrait(ctx,images[i],180,cy,Math.min(28,rowHeight*.36),medal||'#3a3430',row.name);
+      ctx.font='28px Arial';ctx.fillText(flag(row.country),226,baseline);
+      ctx.fillStyle='#f5f1e9';fit(ctx,row.name,276,baseline,540,29,true);
+      const gap=i===0&&index===0&&metric==='PTS'?'LEADER':gapLabel(context.lead,row.value,metric);
+      if(gap){ctx.fillStyle='#8f867c';rightText(ctx,gap,880,baseline,120,20,700);}
+      ctx.fillStyle='#f5f1e9';rightText(ctx,row.value,1004,baseline,metric==='TIME'?200:120,30,800);
     });
-    ctx.fillStyle='#b4491c'; ctx.fillRect(54,height-76,972,3);
-    ctx.fillStyle='#17181b'; fit(ctx,context.handle || 'ridersfanatics.com',54,height-36,760,23);
-    fit(ctx,(index+1)+' / '+count,900,height-36,130,23);
+    ctx.fillStyle='#b4491c';ctx.fillRect(54,height-94,54,5);ctx.fillStyle='#e8dfd1';ctx.fillRect(108,height-94,54,5);
+    ctx.fillStyle='#f5f1e9';fit(ctx,['@ridersfanatics',context.handle].filter(Boolean).join('  ·  '),54,height-50,560,22,true);
+    ctx.fillStyle='#a99f94';rightText(ctx,'RIDERSFANATICS.COM · '+(index+1)+' / '+count,1026,height-50,420,18,700);
     return canvas;
   }
   async function drawEvent(height, context) {
@@ -264,6 +299,7 @@
     const event = isEvent ? {} : data.events[panel.dataset.competition] || {};
     const context = {title:event.name || data.title, logo:event.logo || data.logo,
       handle:handle(event.instagram || data.instagram), team:panel?.dataset.standings === 'Teams',
+      brandLogo:data.brandLogo || new URL('../img/brand/freeride-fanatics-summer.png',socialAssets).href, lead:rows[0]?.value || '',
       subtitle:isEvent ? [data.eventCard.date,data.eventCard.location,data.eventCard.status].filter(Boolean).join(' · ') : [panel.dataset.standings, panel.dataset.standingStage || (event.name ? 'Event ranking' : 'Overall ranking'), data.season].filter(Boolean).join(' · ')};
     const seasonShare=data.shareKind==='season';
     const calendarShare=data.shareKind==='competition'||data.shareKind==='year';

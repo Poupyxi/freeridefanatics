@@ -2438,10 +2438,11 @@ def ranking_share_assets(riders, competition, prefix, event=None):
         "riders": portraits, "events": events, "eventCard": event_card,
         "competitionCard": competition_card,
         "shareKind": "event" if event else "competition",
+        "brandLogo": f"{prefix}assets/img/brand/freeride-fanatics-{'winter' if competition_is_winter(competition) else 'summer'}.png",
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
             f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=10">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=13" defer></script>')
+            f'<script src="{prefix}assets/js/ranking-share.js?v=15" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):
@@ -3393,7 +3394,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
         empty_share_payload = {"title": "Competitions", "riders": {}, "events": {}, "shareKind": "year"}
         html += (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(empty_share_payload))}"></div>'
                  f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=11">'
-                 f'<script src="{prefix}assets/js/ranking-share.js?v=14" defer></script>')
+                 f'<script src="{prefix}assets/js/ranking-share.js?v=15" defer></script>')
     html += footer_html(prefix, seasonal=winter)
     return html
 

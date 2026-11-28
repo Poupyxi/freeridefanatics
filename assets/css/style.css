@@ -592,7 +592,7 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 .bb-stage{
   position:relative;
   display:flex; align-items:center; justify-content:center;
-  min-height:285px;
+  min-height:clamp(320px, 38vw, 500px);
 }
 .bb-part{margin:0; text-align:center;}
 .bb-part img{display:block; margin:0 auto; object-fit:contain;}
@@ -610,9 +610,11 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
 /* the frame is the centrepiece */
 /* explicit width: as a flex item with only max-width, the figure would
    shrink to nothing and collapse the 100%-wide image inside it */
-.bb-frame{position:relative; z-index:2; flex:0 0 auto; width:min(560px, 62%);}
-.bb-frame img{width:100%; max-height:260px;}
-.bb-frame .bb-name{font-size:15px;}
+/* sized to dominate the banner: the frame is the reason the section exists,
+   so it takes most of the width and a tall cap; fork and shock sit at the edges */
+.bb-frame{position:relative; z-index:2; flex:0 0 auto; width:min(880px, 66%);}
+.bb-frame img{width:100%; height:auto; max-height:clamp(260px, 32vw, 460px);}
+.bb-frame .bb-name{font-size:17px;}
 
 /* --- frame reveal: outline draws itself, becomes a pencil sketch, then the
    photo resolves. Layers are stacked; only the photo is in normal flow so the
@@ -673,8 +675,8 @@ nav.links .dropdown-note{padding:11px 16px; color:var(--muted); font-family:var(
    right-hand side — checked across every frame photo in use. The insets are
    chosen so both boxes overlap the frame instead of floating at the edges. */
 .bb-fork, .bb-shock{position:absolute; top:50%; transform:translateY(-50%); width:clamp(110px, 15vw, 170px);}
-.bb-fork{right:15%; z-index:3;}
-.bb-shock{left:15%; z-index:1; opacity:0.92;}
+.bb-fork{right:4%; z-index:3;}
+.bb-shock{left:4%; z-index:1; opacity:0.92;}
 /* no drop-shadow here: the JPEGs are opaque white rectangles, so the shadow
    traces the image box instead of the part and reads as a stray card */
 .bb-fork img{width:100%; max-height:210px;}
@@ -1590,7 +1592,7 @@ a.clean-standing-row:hover{background:#fff5ef;}
   .bb-frame{order:1; width:100%; max-width:100%;}
   .bb-fork{order:2;}
   .bb-shock{order:3;}
-  .bb-frame img{max-height:220px;}
+  .bb-frame img{max-height:300px;}
   .bb-fork, .bb-shock{
     position:static; transform:none; width:auto;
     display:flex; align-items:center; gap:16px; text-align:left;

@@ -48,6 +48,11 @@ def load_importer(library: Path):
     # import_images reads RF_IMAGE_LIBRARY at import time.  Set it before the
     # module is loaded so the audit uses exactly the downloaded Drive snapshot.
     os.environ["RF_IMAGE_LIBRARY"] = str(library)
+    # import_images.py does `import build` from the repository root. When this
+    # audit is started as `python3 scripts/audit_equipment_photos.py`, Python
+    # only puts scripts/ on sys.path, so make the root importable explicitly.
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
     spec = importlib.util.spec_from_file_location("ridersfanatics_import_images", ROOT / "import_images.py")
     if spec is None or spec.loader is None:
         raise RuntimeError("cannot load import_images.py")
@@ -145,7 +150,36 @@ def relation_audit(importer, library_index: dict, drive_files: dict, rider: dict
     return row
 
 
-def markdown(rows: list[dict], library: Path, skipped_folders: list[tuple[str, int]] | None = None) -> str:
+def unreferenced_drive_images(library_index: dict, rows: list[dict], library: Path) -> list[dict]:
+    """Drive equipment images that no rider equipment relation in Notion uses.
+
+    These usually mean the product exists in Drive but its reference is missing
+    (or spelled differently) in Notion.  Files only proposed as suggestions are
+    still listed, because no relation selected them.
+    """
+    used = {row["drive_file"] for row in rows if row.get("drive_file")}
+    images = []
+    for category, candidates in sorted(library_index.items()):
+        for candidate in candidates:
+            relative = str(Path(candidate["path"]).relative_to(library))
+            if relative in used:
+                continue
+            images.append({
+                "category": category,
+                "brand": candidate.get("brand", ""),
+                "model": candidate.get("model", ""),
+                "drive_file": relative,
+            })
+    images.sort(key=lambda item: (item["category"], item["brand"], item["model"], item["drive_file"]))
+    return images
+
+
+def markdown(
+    rows: list[dict],
+    library: Path,
+    skipped_folders: list[tuple[str, int]] | None = None,
+    unreferenced: list[dict] | None = None,
+) -> str:
     counts = Counter(row["status"] for row in rows)
     lines = [
         "# Equipment photo audit",
@@ -181,6 +215,22 @@ def markdown(rows: list[dict], library: Path, skipped_folders: list[tuple[str, i
         "- `ambiguous`: several close candidates exist; no automatic selection is made.",
         "- `missing`: no safe candidate was found.",
     ])
+    if unreferenced is not None:
+        lines.extend([
+            "",
+            "## Drive images without a Notion reference",
+            "",
+            f"Images not used by any rider equipment relation: **{len(unreferenced)}**",
+            "",
+            "| Category | Brand | Model | Drive file |",
+            "|---|---|---|---|",
+        ])
+        if not unreferenced:
+            lines.append("| None |  |  |  |")
+        lines.extend(
+            f"| {item['category']} | {item['brand']} | {item['model']} | {item['drive_file']} |"
+            for item in unreferenced
+        )
     if skipped_folders:
         lines.extend([
             "",
@@ -219,6 +269,7 @@ def main() -> int:
         for item in rider.get("equipment") or []:
             rows.append(relation_audit(importer, library_index, drive_files, rider, item))
     counts = Counter(row["status"] for row in rows)
+    unreferenced = unreferenced_drive_images(library_index, rows, Path(importer.LIBRARY))
     payload = {
         "schema_version": 1,
         "read_only": True,
@@ -226,6 +277,7 @@ def main() -> int:
         "relations": len(rows),
         "counts": dict(sorted(counts.items())),
         "rows": rows,
+        "drive_images_without_notion_reference": unreferenced,
         "unmapped_drive_folders": [
             {"name": name, "images": count} for name, count in skipped_folders
         ],
@@ -237,11 +289,12 @@ def main() -> int:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()) if rows else ["status"])
         writer.writeheader()
         writer.writerows(rows)
-    args.output_markdown.write_text(markdown(rows, library, skipped_folders), encoding="utf-8")
+    args.output_markdown.write_text(markdown(rows, library, skipped_folders, unreferenced), encoding="utf-8")
     print(
         f"Equipment photo audit: {len(rows)} relations; "
         f"found={counts['found']} review={counts['review']} "
-        f"ambiguous={counts['ambiguous']} missing={counts['missing']}"
+        f"ambiguous={counts['ambiguous']} missing={counts['missing']} "
+        f"drive_without_notion={len(unreferenced)}"
     )
     return 0
 

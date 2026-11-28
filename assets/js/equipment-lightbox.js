@@ -61,14 +61,32 @@
     var leaderPoints = button.getAttribute('data-equipment-leader-points') || '0';
     var leaderPlace = button.getAttribute('data-equipment-leader-place') || '0';
     var leaderImage = button.getAttribute('data-equipment-leader-image') || '';
-    stats.innerHTML = '<span title="Professional downhill riders using this equipment">👥 Used by <strong>' + users + '</strong> / ' + total + ' downhill riders</span>' +
-      '<span title="First-place finishes">🥇 <strong>' + first + '</strong> 1st</span>' +
-      '<span title="Second-place finishes">🥈 <strong>' + second + '</strong> 2nd</span>' +
-      '<span title="Third-place finishes">🥉 <strong>' + third + '</strong> 3rd</span>';
+    var count = function (value) { return String(parseInt(value, 10) || 0); };
+    stats.textContent = '';
+    [
+      ['Professional downhill riders using this equipment', '👥 Used by ', count(users), ' / ' + count(total) + ' downhill riders'],
+      ['First-place finishes', '🥇 ', count(first), ' 1st'],
+      ['Second-place finishes', '🥈 ', count(second), ' 2nd'],
+      ['Third-place finishes', '🥉 ', count(third), ' 3rd']
+    ].forEach(function (row) {
+      var span = document.createElement('span');
+      var strong = document.createElement('strong');
+      span.title = row[0];
+      strong.textContent = row[2];
+      span.append(row[1], strong, row[3]);
+      stats.appendChild(span);
+    });
     leader.hidden = leaderName === '—';
     leaderPhoto.hidden = !leaderImage;
     if (leaderImage) { leaderPhoto.src = leaderImage; leaderPhoto.alt = leaderName; }
-    leaderCopy.innerHTML = leaderName === '—' ? '' : '⭐ <strong>' + leaderName + '</strong><br><small>best ' + ordinal(leaderPlace) + '</small>';
+    leaderCopy.textContent = '';
+    if (leaderName !== '—') {
+      var leaderStrong = document.createElement('strong');
+      var leaderSmall = document.createElement('small');
+      leaderStrong.textContent = leaderName;
+      leaderSmall.textContent = 'best ' + ordinal(leaderPlace);
+      leaderCopy.append('⭐ ', leaderStrong, document.createElement('br'), leaderSmall);
+    }
     previousFocus = document.activeElement;
     layer.hidden = false;
     document.body.classList.add('equipment-lightbox-open');

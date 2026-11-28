@@ -370,6 +370,25 @@ def is_rankable_equipment_product(main_model):
     """Rankings require a product reference, not a brand-only observation."""
     return bool((main_model or "").strip())
 
+def _load_bio_overrides():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "bio-en-overrides.json")
+    try:
+        with open(path, encoding="utf-8") as handle:
+            rules = json.load(handle).get("replacements", [])
+    except (OSError, ValueError):
+        return []
+    return [(re.compile(pattern), replacement) for pattern, replacement in rules]
+
+BIO_EN_OVERRIDES = _load_bio_overrides()
+
+def english_bio(bio):
+    """Keep English rider pages in English when the source palmarès has French phrases."""
+    if not bio or not isinstance(bio, str):
+        return bio
+    for pattern, replacement in BIO_EN_OVERRIDES:
+        bio = pattern.sub(replacement, bio)
+    return bio
+
 def bio_bullets(bio):
     if not bio:
         return []
@@ -386,6 +405,9 @@ def rider_bio_html(bio, competition_history=None):
     if "\n" not in normalized:
         normalized = re.sub(r"\s+-\s+(?=Top\s+\d)", "\n  - ", normalized)
         normalized = re.sub(r"\s+\*\s+(?=[A-Z])", "\n* ", normalized)
+        # Sheet values written as "- item - item - item" are a flat list.
+        if normalized.lstrip().startswith("- ") and "\n" not in normalized:
+            normalized = re.sub(r"\s+-\s+(?=\S)", "\n- ", normalized)
     raw_lines = [line.rstrip() for line in normalized.splitlines()]
     lines = [line for line in raw_lines if line.strip()]
     if not lines:
@@ -410,7 +432,8 @@ def rider_bio_html(bio, competition_history=None):
         nested = indent >= 2 or (marker and marker.group(0).startswith("-" ) and current is not None and indent > 0)
         if nested and current is not None:
             current["items"].append(text)
-        elif current is not None and current["items"]:
+        elif current is not None:
+            # Keep flat entries too: a label without nested items is still content.
             groups.append(current)
             current = {"label": text, "items": []}
         else:
@@ -1619,7 +1642,9 @@ def build_index(riders, women_count, men_count, winter_counts=None, source_rider
     {('</div><div class="season-winter-intro" data-season-scope="winter" hidden>'
       '<div class="label">Professional freeride · Riders · Equipment · Results</div>'
       '<h1>Their <em>exact</em> setup. Your next line.</h1>'
-      f'<p class="sub">Track {len(winter_riders)} ski and snowboard athletes, explore their competition results and compare their documented equipment.</p>'
+      + (f'<p class="sub">Track {len(winter_riders)} ski and snowboard athletes, explore their competition results and compare their documented equipment.</p>'
+         if winter_riders else
+         '<p class="sub">Ski and snowboard athlete profiles are on their way. Explore the winter competitions and equipment in the meantime.</p>') +
       '<div class="hero-ctas">'
       f'{random_rider_button(winter_ski_riders, asset_prefix="winter/", label="Random skier")}'
       f'{random_rider_button(winter_snowboard_riders, asset_prefix="winter/", solid=False, label="Random snowboarder")}'
@@ -5409,8 +5434,9 @@ def build_rider_page(r, riders, winter=False):
     else:
         photo_html = f'<span class="initials">{esc(initials(r))}</span>'
 
-    bullets = bio_bullets(r.get("bio"))
-    bio_html = rider_bio_html(r.get("bio"), r.get("competition_history"))
+    bio_en = english_bio(r.get("bio"))
+    bullets = bio_bullets(bio_en)
+    bio_html = rider_bio_html(bio_en, r.get("competition_history"))
 
     sponsors = r.get("sponsors") or []
     sponsor_html = ""

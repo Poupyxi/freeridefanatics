@@ -2442,7 +2442,7 @@ def ranking_share_assets(riders, competition, prefix, event=None):
     }
     return (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(payload))}"></div>'
             f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=10">'
-            f'<script src="{prefix}assets/js/ranking-share.js?v=15" defer></script>')
+            f'<script src="{prefix}assets/js/ranking-share.js?v=16" defer></script>')
 
 
 def build_competition_round(riders, competition, event, round_number, events, winter=False):
@@ -3269,6 +3269,7 @@ def competition_year_share_payload(year, competitions, prefix="", winter=False, 
     return {
         "title": f"RidersFanatics {year}", "season": year, "instagram": "ridersfanatics",
         "logo": f"{prefix}assets/img/brand/freeride-fanatics-{'winter' if winter else 'summer'}.png",
+        "brandLogo": f"{prefix}assets/img/brand/freeride-fanatics-{'winter' if winter else 'summer'}.png",
         "seasonTitles": [competition_display_name(competition) for competition in year_competitions],
         "seasonCompetitions": [
             {
@@ -3394,7 +3395,7 @@ def build_competitions_hub(riders, competitions=None, winter=False):
         empty_share_payload = {"title": "Competitions", "riders": {}, "events": {}, "shareKind": "year"}
         html += (f'<div id="ranking-share-data" hidden data-payload="{esc_attr(json.dumps(empty_share_payload))}"></div>'
                  f'<link rel="stylesheet" href="{prefix}assets/css/ranking-share.css?v=11">'
-                 f'<script src="{prefix}assets/js/ranking-share.js?v=15" defer></script>')
+                 f'<script src="{prefix}assets/js/ranking-share.js?v=16" defer></script>')
     html += footer_html(prefix, seasonal=winter)
     return html
 

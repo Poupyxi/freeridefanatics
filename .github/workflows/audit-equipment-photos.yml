@@ -74,6 +74,11 @@ jobs:
             --output-csv "$RUNNER_TEMP/equipment-photo-audit/audit.csv" \
             --output-markdown "$RUNNER_TEMP/equipment-photo-audit/audit.md"
           cat "$RUNNER_TEMP/equipment-photo-audit/audit.md" >> "$GITHUB_STEP_SUMMARY"
+          # Also print the report in the job log, so the weekly read-only
+          # check can read it from the log API without downloading artifacts.
+          echo "::group::Equipment photo audit report"
+          cat "$RUNNER_TEMP/equipment-photo-audit/audit.md"
+          echo "::endgroup::"
 
       - name: Publish the read-only audit report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

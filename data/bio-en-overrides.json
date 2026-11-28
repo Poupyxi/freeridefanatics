@@ -1,0 +1,14 @@
+{
+  "_comment": "English wording for French phrases that reach rider palmarès from the Sheet/Notion. Applied at build time, in order. Prefer fixing the source; keep this list for phrases that come back.",
+  "replacements": [
+    ["\\b(\\d+x\\s+)?Championne de France\\b", "\\1French Champion"],
+    ["\\bChampion(?:ne)? d'Europe\\b", "European Champion"],
+    ["\\bChampion(?:ne)? de Norvège\\b", "Norwegian Champion"],
+    ["\\bChampion(?:ne)? Brésil\\b", "Brazilian Champion"],
+    ["\\b1ère femme\\b", "First woman at"],
+    ["\\b1ère Canadienne\\b", "First Canadian woman"],
+    ["\\b1ère Latino-Américaine\\b", "First Latin American woman"],
+    ["\\bLégende du DH\\b", "DH legend"],
+    ["\\ben (\\d{4})\\b", "in \\1"]
+  ]
+}

@@ -941,7 +941,7 @@
 
   // "Random rider" CTA — the markup ships with a working href so the button
   // still goes somewhere without JS; here we make it land on a random rider,
-  // and on a *different* one each time it is used.
+  // and never on the rider opened just before, even after coming back.
   safe('random-rider', function(){
     document.querySelectorAll('[data-random-rider]').forEach(function(btn){
       var slugs = (btn.getAttribute('data-random-rider') || '').split(',').filter(Boolean);
@@ -952,7 +952,17 @@
         : 0;
       if(slugs.length < 2) return;
       var prefix = btn.getAttribute('data-rider-prefix') || 'riders/';
-      var last = null;
+      // Remember the last rider opened for the whole browsing session, so
+      // coming back to the homepage never offers the rider just visited.
+      var storageKey = 'rf_random_rider_last:' + prefix;
+      function readLast(){
+        try { return window.sessionStorage.getItem(storageKey); } catch(e){ return null; }
+      }
+      function writeLast(slug){
+        try { window.sessionStorage.setItem(storageKey, slug); } catch(e){}
+      }
+      var last = readLast();
+      var next = null;
 
       function roll(){
         var pool = prioritySlugs.length && Math.random() < priorityChance ? prioritySlugs : slugs;
@@ -960,17 +970,36 @@
         // A priority pool containing only the previous rider must not trap the
         // selector. Fall back to every other rider while keeping all profiles eligible.
         if(!choices.length) choices = slugs.filter(function(slug){ return slug !== last; });
-        var slug = choices[Math.floor(Math.random() * choices.length)];
-        last = slug;
-        return prefix + slug + '.html';
+        next = choices[Math.floor(Math.random() * choices.length)];
+        btn.setAttribute('href', prefix + next + '.html');
       }
 
-      btn.setAttribute('href', roll());
+      // The href always shows the rider the button will open: what is
+      // hovered, middle-clicked or opened in a new tab is what you get.
+      function used(){
+        last = next;
+        writeLast(last);
+      }
+
+      roll();
       btn.addEventListener('click', function(e){
-        // Let modifier-clicks and middle-clicks open the current href normally
-        if(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-        e.preventDefault();
-        window.location.href = roll();
+        if(e.button !== 0) return;
+        used();
+        // Modifier-clicks open the current href in a new tab or window; draw
+        // the following rider once the browser has read this one.
+        if(e.metaKey || e.ctrlKey || e.shiftKey) setTimeout(roll, 0);
+      });
+      btn.addEventListener('auxclick', function(e){
+        if(e.button !== 1) return;
+        used();
+        setTimeout(roll, 0);
+      });
+      // Back/forward cache restores the old page as it was: re-draw against
+      // the rider opened most recently.
+      window.addEventListener('pageshow', function(e){
+        if(!e.persisted) return;
+        last = readLast();
+        roll();
       });
     });
   });
